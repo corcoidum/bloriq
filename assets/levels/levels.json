@@ -1,0 +1,642 @@
+[
+  {
+    "id": 1,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 0,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 4,
+      "y": 4
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 1,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 0,
+        "y": 1
+      }
+    ],
+    "obstacles": [],
+    "specialRules": [],
+    "minimumMoves": 1,
+    "difficulty": "beginner"
+  },
+  {
+    "id": 2,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 2,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 2,
+      "y": 4
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 4,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 3,
+        "y": 1
+      },
+      {
+        "id": "b3",
+        "x": 3,
+        "y": 2
+      },
+      {
+        "id": "b4",
+        "x": 2,
+        "y": 1
+      },
+      {
+        "id": "b5",
+        "x": 1,
+        "y": 2
+      },
+      {
+        "id": "b6",
+        "x": 0,
+        "y": 1
+      },
+      {
+        "id": "b7",
+        "x": 0,
+        "y": 2
+      },
+      {
+        "id": "b8",
+        "x": 0,
+        "y": 4
+      }
+    ],
+    "obstacles": [],
+    "specialRules": [],
+    "minimumMoves": 1,
+    "difficulty": "beginner"
+  },
+  {
+    "id": 3,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 4,
+      "y": 2
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 2
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 3,
+        "y": 4
+      },
+      {
+        "id": "b2",
+        "x": 1,
+        "y": 4
+      },
+      {
+        "id": "b3",
+        "x": 4,
+        "y": 3
+      },
+      {
+        "id": "b4",
+        "x": 3,
+        "y": 3
+      },
+      {
+        "id": "b5",
+        "x": 2,
+        "y": 2
+      },
+      {
+        "id": "b6",
+        "x": 1,
+        "y": 2
+      },
+      {
+        "id": "b7",
+        "x": 2,
+        "y": 1
+      },
+      {
+        "id": "b8",
+        "x": 0,
+        "y": 1
+      }
+    ],
+    "obstacles": [],
+    "specialRules": [],
+    "minimumMoves": 1,
+    "difficulty": "beginner"
+  },
+  {
+    "id": 4,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 2,
+      "y": 4
+    },
+    "exitPosition": {
+      "x": 2,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 1,
+        "y": 4
+      },
+      {
+        "id": "b2",
+        "x": 1,
+        "y": 0
+      },
+      {
+        "id": "b3",
+        "x": 2,
+        "y": 1
+      },
+      {
+        "id": "b4",
+        "x": 3,
+        "y": 4
+      },
+      {
+        "id": "b5",
+        "x": 3,
+        "y": 2
+      },
+      {
+        "id": "b6",
+        "x": 4,
+        "y": 4
+      },
+      {
+        "id": "b7",
+        "x": 4,
+        "y": 2
+      },
+      {
+        "id": "b8",
+        "x": 4,
+        "y": 1
+      }
+    ],
+    "obstacles": [],
+    "specialRules": [],
+    "minimumMoves": 1,
+    "difficulty": "beginner"
+  },
+  {
+    "id": 5,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 0,
+      "y": 2
+    },
+    "exitPosition": {
+      "x": 4,
+      "y": 2
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 0,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 2,
+        "y": 0
+      },
+      {
+        "id": "b3",
+        "x": 3,
+        "y": 1
+      },
+      {
+        "id": "b4",
+        "x": 4,
+        "y": 1
+      },
+      {
+        "id": "b5",
+        "x": 3,
+        "y": 2
+      },
+      {
+        "id": "b6",
+        "x": 3,
+        "y": 3
+      },
+      {
+        "id": "b7",
+        "x": 4,
+        "y": 3
+      }
+    ],
+    "obstacles": [],
+    "specialRules": [],
+    "minimumMoves": 2,
+    "difficulty": "beginner"
+  },
+  {
+    "id": 6,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 2,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 2,
+      "y": 4
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 4,
+        "y": 1
+      },
+      {
+        "id": "b2",
+        "x": 4,
+        "y": 4
+      },
+      {
+        "id": "b3",
+        "x": 3,
+        "y": 1
+      },
+      {
+        "id": "b4",
+        "x": 2,
+        "y": 1
+      },
+      {
+        "id": "b5",
+        "x": 2,
+        "y": 2
+      },
+      {
+        "id": "b6",
+        "x": 1,
+        "y": 0
+      },
+      {
+        "id": "b7",
+        "x": 0,
+        "y": 0
+      },
+      {
+        "id": "b8",
+        "x": 0,
+        "y": 1
+      }
+    ],
+    "obstacles": [],
+    "specialRules": [],
+    "minimumMoves": 2,
+    "difficulty": "beginner"
+  },
+  {
+    "id": 7,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 4,
+      "y": 2
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 2
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 2,
+        "y": 4
+      },
+      {
+        "id": "b2",
+        "x": 4,
+        "y": 3
+      },
+      {
+        "id": "b3",
+        "x": 3,
+        "y": 3
+      },
+      {
+        "id": "b4",
+        "x": 3,
+        "y": 2
+      },
+      {
+        "id": "b5",
+        "x": 3,
+        "y": 1
+      },
+      {
+        "id": "b6",
+        "x": 2,
+        "y": 1
+      },
+      {
+        "id": "b7",
+        "x": 1,
+        "y": 1
+      },
+      {
+        "id": "b8",
+        "x": 0,
+        "y": 1
+      },
+      {
+        "id": "b9",
+        "x": 2,
+        "y": 0
+      },
+      {
+        "id": "b10",
+        "x": 1,
+        "y": 0
+      }
+    ],
+    "obstacles": [],
+    "specialRules": [],
+    "minimumMoves": 2,
+    "difficulty": "beginner"
+  },
+  {
+    "id": 8,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 0,
+      "y": 2
+    },
+    "exitPosition": {
+      "x": 4,
+      "y": 2
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 0,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 2,
+        "y": 0
+      },
+      {
+        "id": "b3",
+        "x": 0,
+        "y": 1
+      },
+      {
+        "id": "b4",
+        "x": 1,
+        "y": 1
+      },
+      {
+        "id": "b5",
+        "x": 4,
+        "y": 1
+      },
+      {
+        "id": "b6",
+        "x": 1,
+        "y": 2
+      },
+      {
+        "id": "b7",
+        "x": 2,
+        "y": 2
+      },
+      {
+        "id": "b8",
+        "x": 1,
+        "y": 3
+      },
+      {
+        "id": "b9",
+        "x": 2,
+        "y": 3
+      },
+      {
+        "id": "b10",
+        "x": 4,
+        "y": 3
+      },
+      {
+        "id": "b11",
+        "x": 0,
+        "y": 4
+      },
+      {
+        "id": "b12",
+        "x": 1,
+        "y": 4
+      },
+      {
+        "id": "b13",
+        "x": 4,
+        "y": 4
+      }
+    ],
+    "obstacles": [],
+    "specialRules": [],
+    "minimumMoves": 3,
+    "difficulty": "beginner"
+  },
+  {
+    "id": 9,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 2,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 2,
+      "y": 4
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 4,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 4,
+        "y": 2
+      },
+      {
+        "id": "b3",
+        "x": 3,
+        "y": 2
+      },
+      {
+        "id": "b4",
+        "x": 3,
+        "y": 3
+      },
+      {
+        "id": "b5",
+        "x": 2,
+        "y": 1
+      },
+      {
+        "id": "b6",
+        "x": 2,
+        "y": 2
+      },
+      {
+        "id": "b7",
+        "x": 2,
+        "y": 3
+      },
+      {
+        "id": "b8",
+        "x": 1,
+        "y": 1
+      },
+      {
+        "id": "b9",
+        "x": 1,
+        "y": 2
+      },
+      {
+        "id": "b10",
+        "x": 1,
+        "y": 3
+      },
+      {
+        "id": "b11",
+        "x": 1,
+        "y": 4
+      },
+      {
+        "id": "b12",
+        "x": 0,
+        "y": 3
+      },
+      {
+        "id": "b13",
+        "x": 0,
+        "y": 4
+      }
+    ],
+    "obstacles": [],
+    "specialRules": [],
+    "minimumMoves": 3,
+    "difficulty": "beginner"
+  },
+  {
+    "id": 10,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 2,
+      "y": 4
+    },
+    "exitPosition": {
+      "x": 2,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 0,
+        "y": 4
+      },
+      {
+        "id": "b2",
+        "x": 0,
+        "y": 2
+      },
+      {
+        "id": "b3",
+        "x": 0,
+        "y": 0
+      },
+      {
+        "id": "b4",
+        "x": 1,
+        "y": 4
+      },
+      {
+        "id": "b5",
+        "x": 1,
+        "y": 2
+      },
+      {
+        "id": "b6",
+        "x": 1,
+        "y": 1
+      },
+      {
+        "id": "b7",
+        "x": 1,
+        "y": 0
+      },
+      {
+        "id": "b8",
+        "x": 2,
+        "y": 3
+      },
+      {
+        "id": "b9",
+        "x": 2,
+        "y": 1
+      },
+      {
+        "id": "b10",
+        "x": 3,
+        "y": 4
+      },
+      {
+        "id": "b11",
+        "x": 3,
+        "y": 1
+      },
+      {
+        "id": "b12",
+        "x": 3,
+        "y": 0
+      },
+      {
+        "id": "b13",
+        "x": 4,
+        "y": 1
+      }
+    ],
+    "obstacles": [],
+    "specialRules": [],
+    "minimumMoves": 3,
+    "difficulty": "beginner"
+  }
+]

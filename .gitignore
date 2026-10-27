@@ -1,0 +1,17 @@
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+build/
+coverage/
+android/.gradle/
+android/local.properties
+android/key.properties
+*.jks
+*.keystore
+*.iml
+.DS_Store
+
+# ARB에서 Flutter가 생성하는 localization 파일
+lib/l10n/app_localizations*.dart

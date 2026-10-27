@@ -1,0 +1,18 @@
+{
+  "@@locale": "en",
+  "tagline": "Move Smart. Find Your Way.",
+  "level": "Level {number}",
+  "@level": {"placeholders": {"number": {"type": "int"}}},
+  "moves": "Moves: {count}",
+  "@moves": {"placeholders": {"count": {"type": "int"}}},
+  "instruction": "Drag a block one square. Then draw from green to the star.",
+  "undo": "Undo",
+  "restart": "Restart",
+  "levels": "Levels",
+  "complete": "Path complete!",
+  "completeDetail": "You escaped! Moves: {count}.",
+  "@completeDetail": {"placeholders": {"count": {"type": "int"}}},
+  "next": "Next level",
+  "close": "Close",
+  "loadError": "Could not load the levels."
+}

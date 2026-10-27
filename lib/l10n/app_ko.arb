@@ -1,0 +1,15 @@
+{
+  "@@locale": "ko",
+  "tagline": "블록을 움직여, 탈출의 길을 열어라.",
+  "level": "스테이지 {number}",
+  "moves": "이동 횟수: {count}",
+  "instruction": "블록을 한 칸 움직이고 초록색에서 별까지 선을 그으세요.",
+  "undo": "되돌리기",
+  "restart": "다시 시작",
+  "levels": "스테이지",
+  "complete": "탈출 성공!",
+  "completeDetail": "블록을 {count}번 움직여 탈출했어요.",
+  "next": "다음 스테이지",
+  "close": "닫기",
+  "loadError": "스테이지를 불러오지 못했습니다."
+}
