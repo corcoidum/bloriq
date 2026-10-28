@@ -85,5 +85,16 @@
   "eraserRule": "Crossed tiles erase the echo when a block leaves.",
   "holdRule": "Pause tiles keep the previous echo when a block leaves.",
   "oneWayRule": "A block on an arrow tile can leave only in the arrow’s direction.",
-  "goalOnlyRule": "Triangle tiles admit only the green block."
+  "goalOnlyRule": "Triangle tiles admit only the green block.",
+  "settings": "Settings",
+  "appearance": "Appearance",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "reduceMotion": "Reduce motion",
+  "reduceMotionDescription": "Use quiet, instant transitions. System reduced motion is always respected.",
+  "soundEffects": "Sound effects",
+  "backgroundMusic": "Background music",
+  "settingsSaveError": "Settings could not be saved. Your choice still applies for this session.",
+  "skipCelebration": "Skip celebration"
 }

@@ -75,6 +75,8 @@ void main() {
         );
       }
       expect(controller.state.isComplete, isTrue);
+      await tester.pump(const Duration(milliseconds: 1600));
+      await tester.pump();
       expect(
         find.text('You escaped!'),
         findsOneWidget,

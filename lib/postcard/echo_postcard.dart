@@ -5,6 +5,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../design/game_theme.dart';
+
 /// 카드에는 게임 결과만 전달한다. 퍼즐 좌표나 이동 이력은 받지 않는다.
 class EchoPostcardData {
   const EchoPostcardData({
@@ -31,29 +33,30 @@ class EchoPostcardData {
 
 /// 동일한 결과에 동일한 이미지를 만든다. 실제 이동 좌표는 사용하지 않는다.
 class EchoPostcardPainter extends CustomPainter {
-  const EchoPostcardPainter(this.data);
+  const EchoPostcardPainter(this.data, {this.colors = GameColors.light});
 
   final EchoPostcardData data;
+  final GameColors colors;
 
   @override
   void paint(Canvas canvas, Size size) {
     canvas.save();
     canvas.scale(size.width / 1080, size.height / 1080);
     final bounds = const Rect.fromLTWH(0, 0, 1080, 1080);
-    canvas.drawRect(bounds, Paint()..color = const Color(0xFFF5F7FF));
+    canvas.drawRect(bounds, Paint()..color = colors.background);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         const Rect.fromLTWH(45, 45, 990, 990),
         const Radius.circular(60),
       ),
-      Paint()..color = Colors.white,
+      Paint()..color = colors.surface,
     );
     _text(
       canvas,
       'BLORIQ',
       const Offset(105, 100),
       54,
-      const Color(0xFF34416D),
+      colors.text,
       FontWeight.w900,
       3,
     );
@@ -62,7 +65,7 @@ class EchoPostcardPainter extends CustomPainter {
       data.levelText,
       const Offset(107, 175),
       34,
-      const Color(0xFF7882A2),
+      colors.secondaryText,
       FontWeight.w600,
       0,
     );
@@ -73,22 +76,22 @@ class EchoPostcardPainter extends CustomPainter {
           (data.moves * 19349663) ^
           (data.stars * 83492791),
     );
-    const colors = [
-      Color(0xFF8CCFB5),
-      Color(0xFF91A9ED),
-      Color(0xFFF5CA80),
-      Color(0xFFD0A9E6),
-      Color(0xFFED9FAF),
+    final artColors = [
+      colors.goal,
+      colors.primary,
+      colors.reward,
+      colors.echo,
+      colors.cyan,
     ];
     final art = const Rect.fromLTWH(105, 252, 870, 420);
     canvas.save();
     canvas.clipRRect(RRect.fromRectAndRadius(art, const Radius.circular(48)));
-    canvas.drawRect(art, Paint()..color = const Color(0xFFF0F3FF));
+    canvas.drawRect(art, Paint()..color = colors.tileBottom);
     for (var i = 0; i < 17; i++) {
       final x = art.left + random.nextDouble() * art.width;
       final y = art.top + random.nextDouble() * art.height;
       final r = 40 + random.nextDouble() * 95;
-      final color = colors[random.nextInt(colors.length)];
+      final color = artColors[random.nextInt(artColors.length)];
       if (i.isEven) {
         canvas.drawCircle(
           Offset(x, y),
@@ -121,7 +124,7 @@ class EchoPostcardPainter extends CustomPainter {
         canvas,
         Offset(133 + i * 65, 742),
         26,
-        i < data.stars ? const Color(0xFFF1BC58) : const Color(0xFFE3E7F2),
+        i < data.stars ? colors.reward : colors.outline.withValues(alpha: .3),
       );
     }
     _text(
@@ -129,7 +132,7 @@ class EchoPostcardPainter extends CustomPainter {
       data.movesText,
       const Offset(105, 790),
       38,
-      const Color(0xFF34416D),
+      colors.text,
       FontWeight.w800,
       0,
     );
@@ -138,7 +141,7 @@ class EchoPostcardPainter extends CustomPainter {
       data.bestText,
       const Offset(105, 844),
       30,
-      const Color(0xFF7882A2),
+      colors.secondaryText,
       FontWeight.w600,
       0,
     );
@@ -147,7 +150,7 @@ class EchoPostcardPainter extends CustomPainter {
       'Every Move Leaves an Echo.',
       const Offset(105, 934),
       29,
-      const Color(0xFF5E6D9E),
+      colors.primaryInk,
       FontWeight.w700,
       0,
     );
@@ -156,7 +159,7 @@ class EchoPostcardPainter extends CustomPainter {
       'CORCOIDUM',
       const Offset(755, 941),
       21,
-      const Color(0xFF9BA5BE),
+      colors.secondaryText,
       FontWeight.w800,
       2,
     );
@@ -176,6 +179,7 @@ class EchoPostcardPainter extends CustomPainter {
       text: TextSpan(
         text: text,
         style: TextStyle(
+          fontFamily: GameTypography.canvasFontFamily,
           color: color,
           fontSize: fontSize,
           fontWeight: weight,
@@ -208,14 +212,20 @@ class EchoPostcardPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant EchoPostcardPainter oldDelegate) =>
-      oldDelegate.data != data;
+      oldDelegate.data != data || oldDelegate.colors != colors;
 }
 
 /// 미리보기와 같은 painter를 사용해 정확히 1080×1080 PNG를 만든다.
-Future<Uint8List> renderEchoPostcardPng(EchoPostcardData data) async {
+Future<Uint8List> renderEchoPostcardPng(
+  EchoPostcardData data, {
+  GameColors colors = GameColors.light,
+}) async {
   final recorder = ui.PictureRecorder();
   final canvas = Canvas(recorder);
-  EchoPostcardPainter(data).paint(canvas, const Size(1080, 1080));
+  EchoPostcardPainter(
+    data,
+    colors: colors,
+  ).paint(canvas, const Size(1080, 1080));
   final picture = recorder.endRecording();
   try {
     final image = await picture.toImage(1080, 1080);
@@ -279,7 +289,10 @@ class _EchoPostcardDialogState extends State<EchoPostcardDialog> {
       _failed = false;
     });
     try {
-      final png = await renderEchoPostcardPng(widget.data);
+      final png = await renderEchoPostcardPng(
+        widget.data,
+        colors: GameTheme.colorsOf(context),
+      );
       await widget.share(png, origin: origin);
     } catch (_) {
       if (mounted) setState(() => _failed = true);
@@ -302,7 +315,12 @@ class _EchoPostcardDialogState extends State<EchoPostcardDialog> {
                 '${widget.data.bestText}, ${widget.data.stars}/3',
             child: AspectRatio(
               aspectRatio: 1,
-              child: CustomPaint(painter: EchoPostcardPainter(widget.data)),
+              child: CustomPaint(
+                painter: EchoPostcardPainter(
+                  widget.data,
+                  colors: GameTheme.colorsOf(context),
+                ),
+              ),
             ),
           ),
           if (_failed)

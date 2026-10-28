@@ -43,5 +43,16 @@
   "eraserRule": "× 칸에서 떠나면 잔상이 지워져요.",
   "holdRule": "Ⅱ 칸에서 떠나면 이전 잔상이 유지돼요.",
   "oneWayRule": "화살표 칸에서는 화살표 방향으로만 나갈 수 있어요.",
-  "goalOnlyRule": "▶ 칸에는 초록 블록만 들어갈 수 있어요."
+  "goalOnlyRule": "▶ 칸에는 초록 블록만 들어갈 수 있어요.",
+  "settings": "설정",
+  "appearance": "화면 테마",
+  "themeSystem": "시스템 설정",
+  "themeLight": "라이트",
+  "themeDark": "다크",
+  "reduceMotion": "모션 줄이기",
+  "reduceMotionDescription": "움직임 없이 바로 표시해요. 기기의 모션 줄이기 설정도 항상 적용해요.",
+  "soundEffects": "효과음",
+  "backgroundMusic": "배경 음악",
+  "settingsSaveError": "설정을 저장하지 못했어요. 이번 실행에는 선택한 설정이 적용돼요.",
+  "skipCelebration": "축하 연출 건너뛰기"
 }

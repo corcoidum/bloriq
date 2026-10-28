@@ -88,6 +88,8 @@ void main() {
     expect(find.text('Moves: 0'), findsOneWidget);
     await move(0, 1, 1, 0);
     await move(1, 1, 1, 0);
+    await tester.pump(const Duration(milliseconds: 1600));
+    await tester.pump();
     expect(find.text('You escaped!'), findsOneWidget);
     expect(find.text('Solved in the fewest moves!'), findsOneWidget);
     await tester.ensureVisible(find.text('Next level'));
@@ -103,6 +105,8 @@ void main() {
     await move(1, 0, 1, 0);
     await move(0, 1, 1, 0);
     await move(1, 1, 1, 0);
+    await tester.pump(const Duration(milliseconds: 1600));
+    await tester.pump();
     expect(find.text('You escaped!'), findsOneWidget);
   });
 
@@ -133,6 +137,8 @@ void main() {
     await move(0, 0, 1, 0);
     await move(1, 0, 0, 1);
     await move(1, 1, 1, 0);
+    await tester.pump(const Duration(milliseconds: 1600));
+    await tester.pump();
     expect(find.text('Can you escape in 2 moves?'), findsOneWidget);
     await tester.ensureVisible(find.text('Restart'));
     await tester.pump();
@@ -187,6 +193,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       expect(controller.move(move.blockId, move.target), isTrue);
     }
+    await tester.pump(const Duration(milliseconds: 1600));
+    await tester.pump();
     expect(find.text('First level'), findsOneWidget);
     await tester.ensureVisible(find.text('First level'));
     await tester.pump();
@@ -339,6 +347,8 @@ void main() {
     }
     expect(observedOpen, isTrue);
     expect(observedOccupied, isTrue);
+    await tester.pump(const Duration(milliseconds: 1600));
+    await tester.pump();
     expect(find.text('You escaped!'), findsOneWidget);
     await tester.ensureVisible(find.text('Undo'));
     await tester.pump();

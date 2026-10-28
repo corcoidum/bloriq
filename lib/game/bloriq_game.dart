@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
+import '../design/game_theme.dart';
 import '../domain/puzzle.dart';
 
 /// 드래그 중 표시할 가상 이동. 실제 게임 상태에는 적용하지 않는다.
@@ -29,12 +30,34 @@ class BloriqGame extends FlameGame {
   String? _dragId;
   Offset _dragOffset = Offset.zero;
   double _hintTime = 0;
-  double _celebrationTime = 0;
+  GameColors _colors = GameColors.light;
+  bool _reduceMotion = false;
+  double _celebrationProgress = 1;
+  bool _isNewBest = false;
   List<MoveRecord>? _replay;
   double _replayTime = 0;
   VoidCallback? _onReplayFinished;
 
   bool get isReplaying => _replay != null;
+  GameColors get gameColors => _colors;
+  bool get reduceMotion => _reduceMotion;
+  double get celebrationProgress => _celebrationProgress;
+
+  /// 테마와 접근성만 바꾸며 게임 상태와 진행 중인 드래그는 유지한다.
+  void configureAppearance({
+    required GameColors colors,
+    required bool reduceMotion,
+  }) {
+    _colors = colors;
+    _reduceMotion = reduceMotion;
+    if (reduceMotion) _motion = 1;
+  }
+
+  /// Flutter의 단일 타임라인을 사용한다. 기록 저장이나 규칙을 실행하지 않는다.
+  void setCelebrationProgress(double progress, {bool isNewBest = false}) {
+    _celebrationProgress = progress.isFinite ? progress.clamp(0.0, 1.0) : 1;
+    _isNewBest = isNewBest;
+  }
 
   DragPreview? get currentPreview {
     if (isReplaying || _dragId == null) return null;
@@ -103,7 +126,7 @@ class BloriqGame extends FlameGame {
     _movingId = id;
     _from = from;
     _oldEcho = oldEcho;
-    _motion = 0;
+    _motion = _reduceMotion ? 1 : 0;
   }
 
   void flashBlocked(Position position) {
@@ -117,7 +140,8 @@ class BloriqGame extends FlameGame {
     _dragId = null;
     _motion = 1;
     _blockedTime = 0;
-    _celebrationTime = 0;
+    _celebrationProgress = 1;
+    _isNewBest = false;
   }
 
   @override
@@ -129,17 +153,19 @@ class BloriqGame extends FlameGame {
         skipReplay();
       }
     } else {
-      _motion = math.min(1.0, _motion + dt / .22);
+      _motion = _reduceMotion
+          ? 1
+          : math.min(
+              1.0,
+              _motion + dt * 1000 / GameEffects.moveDuration.inMilliseconds,
+            );
     }
     _blockedTime = math.max(0.0, _blockedTime - dt);
-    _hintTime += dt;
-    if (controller.state.isComplete) {
-      _celebrationTime += dt;
-    }
+    if (!_reduceMotion) _hintTime += dt;
   }
 
   @override
-  Color backgroundColor() => const Color(0xFFF6F8FF);
+  Color backgroundColor() => _colors.background;
 
   @override
   void render(Canvas canvas) {
@@ -157,7 +183,7 @@ class BloriqGame extends FlameGame {
       _movingId = move.blockId;
       _from = move.from;
       _oldEcho = move.previousEcho;
-      _motion = (progress - index).clamp(0.0, 1.0);
+      _motion = _reduceMotion ? 1 : (progress - index).clamp(0.0, 1.0);
     } else {
       state = controller.state;
     }
@@ -185,7 +211,7 @@ class BloriqGame extends FlameGame {
       (origin & boardSize).deflate(cell * .015),
       Radius.circular(cell * .22),
     );
-    canvas.drawRRect(board, paint..color = const Color(0xFFD7E2F7));
+    canvas.drawRRect(board, paint..color = _colors.boardSurface);
 
     for (var y = 0; y < state.level.boardHeight; y++) {
       for (var x = 0; x < state.level.boardWidth; x++) {
@@ -199,18 +225,18 @@ class BloriqGame extends FlameGame {
         canvas.drawRRect(
           tile,
           paint
-            ..color = Colors.white
-            ..shader = const LinearGradient(
+            ..color = _colors.highlight
+            ..shader = LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xFFF4F7FF), Color(0xFFE3EBFC)],
+              colors: [_colors.tileTop, _colors.tileBottom],
             ).createShader(rect),
         );
         paint.shader = null;
         canvas.drawRRect(
           tile.deflate(1),
           paint
-            ..color = Colors.white.withValues(alpha: .72)
+            ..color = _colors.outline.withValues(alpha: .30)
             ..style = PaintingStyle.stroke
             ..strokeWidth = 1.2,
         );
@@ -227,13 +253,11 @@ class BloriqGame extends FlameGame {
     }
 
     final mechanicTiles = <(Position, String, Color)>[
-      for (final p in state.level.echoErasers)
-        (p, '×', const Color(0xFFD17B75)),
-      for (final p in state.level.echoHolds) (p, 'Ⅱ', const Color(0xFF9077BE)),
+      for (final p in state.level.echoErasers) (p, '×', _colors.echo),
+      for (final p in state.level.echoHolds) (p, 'Ⅱ', _colors.echo),
       for (final entry in state.level.oneWays.entries)
-        (entry.key, directionSymbol(entry.value), const Color(0xFF5277B9)),
-      for (final p in state.level.goalOnlyTiles)
-        (p, '▶', const Color(0xFF298F76)),
+        (entry.key, directionSymbol(entry.value), _colors.primary),
+      for (final p in state.level.goalOnlyTiles) (p, '▶', _colors.goal),
     ];
     for (final (position, symbol, color) in mechanicTiles) {
       final rect = Rect.fromCenter(
@@ -245,7 +269,15 @@ class BloriqGame extends FlameGame {
         RRect.fromRectAndRadius(rect, Radius.circular(cell * .15)),
         paint..color = color.withValues(alpha: .15),
       );
-      _label(canvas, symbol, center(position), cell * .28, color);
+      _label(
+        canvas,
+        symbol,
+        center(position),
+        cell * .28,
+        color == _colors.echo
+            ? _colors.echoInk
+            : Color.lerp(color, _colors.text, .26)!,
+      );
     }
 
     // Matching cyan outlines connect the echo plate and its gate even while
@@ -265,13 +297,13 @@ class BloriqGame extends FlameGame {
       canvas.drawRRect(
         plate,
         paint
-          ..color = const Color(0xFF4FADD3).withValues(alpha: .18)
+          ..color = _colors.cyan.withValues(alpha: .18)
           ..style = PaintingStyle.fill,
       );
       canvas.drawRRect(
         plate.deflate(cell * .015),
         paint
-          ..color = const Color(0xFF277FAD)
+          ..color = _colors.cyan
           ..style = PaintingStyle.stroke
           ..strokeWidth = math.max(2.0, cell * .025),
       );
@@ -283,7 +315,7 @@ class BloriqGame extends FlameGame {
         ..lineTo(switchCenter.dx, switchCenter.dy + cell * .14)
         ..lineTo(switchCenter.dx - cell * .14, switchCenter.dy)
         ..close();
-      canvas.drawPath(diamond, paint..color = const Color(0xFF277FAD));
+      canvas.drawPath(diamond, paint..color = _colors.cyan);
     }
 
     final gatePosition = state.level.echoGate;
@@ -298,9 +330,7 @@ class BloriqGame extends FlameGame {
         gateRect,
         Radius.circular(cell * .14),
       );
-      final gateColor = state.isGateOpen
-          ? const Color(0xFF16A891)
-          : const Color(0xFF287FAF);
+      final gateColor = _colors.cyan;
       canvas.drawRRect(
         gate,
         paint
@@ -341,9 +371,7 @@ class BloriqGame extends FlameGame {
       canvas.drawRRect(
         RRect.fromRectAndRadius(rect, Radius.circular(cell * .18)),
         paint
-          ..color = previewState.isGateOpen
-              ? const Color(0xFF39BA91)
-              : const Color(0xFFE58383)
+          ..color = previewState.isGateOpen ? _colors.cyan : _colors.error
           ..style = PaintingStyle.stroke
           ..strokeWidth = math.max(3.0, cell * .045),
       );
@@ -353,9 +381,7 @@ class BloriqGame extends FlameGame {
         previewState.isGateOpen ? '↗' : '×',
         center(gatePosition) + Offset(cell * .34, -cell * .34),
         cell * .25,
-        previewState.isGateOpen
-            ? const Color(0xFF16866C)
-            : const Color(0xFFC45050),
+        previewState.isGateOpen ? _colors.cyan : _colors.error,
       );
     }
     for (final p in state.level.obstacles) {
@@ -367,23 +393,26 @@ class BloriqGame extends FlameGame {
       final wall = RRect.fromRectAndRadius(rect, Radius.circular(cell * .15));
       canvas.drawRRect(
         wall.shift(Offset(0, cell * .025)),
-        paint..color = const Color(0xFF566A89).withValues(alpha: .25),
+        paint..color = _colors.slate.withValues(alpha: .25),
       );
       canvas.drawRRect(
         wall,
         paint
-          ..color = Colors.white
-          ..shader = const LinearGradient(
+          ..color = _colors.highlight
+          ..shader = LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF9AAFC6), Color(0xFF7488A6)],
+            colors: [
+              Color.lerp(_colors.slate, _colors.highlight, .12)!,
+              _colors.slate,
+            ],
           ).createShader(rect),
       );
       paint.shader = null;
       canvas.drawRRect(
         wall.deflate(cell * .035),
         paint
-          ..color = Colors.white.withValues(alpha: .23)
+          ..color = _colors.highlight.withValues(alpha: .23)
           ..style = PaintingStyle.stroke
           ..strokeWidth = math.max(1, cell * .012),
       );
@@ -391,25 +420,28 @@ class BloriqGame extends FlameGame {
     }
 
     final exit = center(state.level.exitPosition);
-    final glow = .5 + .5 * math.sin(_hintTime * 1.8);
+    final glow = _reduceMotion ? .5 : .5 + .5 * math.sin(_hintTime * 1.8);
     canvas.drawCircle(
       exit,
       cell * (.39 + glow * .015),
-      paint
-        ..color = const Color(0xFFF9C958).withValues(alpha: .12 + glow * .05),
+      paint..color = _colors.reward.withValues(alpha: .12 + glow * .05),
     );
-    canvas.drawCircle(exit, cell * .33, paint..color = const Color(0xFFFFD768));
-    canvas.drawCircle(exit, cell * .27, paint..color = const Color(0xFFFFF4C9));
+    canvas.drawCircle(exit, cell * .33, paint..color = _colors.reward);
+    canvas.drawCircle(
+      exit,
+      cell * .27,
+      paint..color = Color.lerp(_colors.reward, _colors.surface, .65)!,
+    );
     canvas.drawCircle(
       exit,
       cell * .27,
       paint
-        ..color = Colors.white.withValues(alpha: .75)
+        ..color = _colors.highlight.withValues(alpha: .75)
         ..style = PaintingStyle.stroke
         ..strokeWidth = math.max(1, cell * .015),
     );
     paint.style = PaintingStyle.fill;
-    _label(canvas, '★', exit, cell * .33, const Color(0xFFBB7C0B));
+    _label(canvas, '★', exit, cell * .33, _colors.rewardInk);
 
     void drawEcho(Position p, double alpha) {
       if (alpha <= 0) return;
@@ -424,21 +456,21 @@ class BloriqGame extends FlameGame {
       );
       canvas.drawRRect(
         rounded,
-        paint..color = const Color(0xFF8B79C6).withValues(alpha: .18 * alpha),
+        paint..color = _colors.echo.withValues(alpha: .18 * alpha),
       );
       canvas.drawRRect(
         rounded,
         paint
-          ..color = const Color(0xFF7866AD).withValues(alpha: .76 * alpha)
+          ..color = _colors.echoInk.withValues(alpha: .95 * alpha)
           ..style = PaintingStyle.stroke
           ..strokeWidth = math.max(2.0, cell * .025),
       );
       paint.style = PaintingStyle.fill;
       canvas.drawCircle(
         center(p),
-        cell * (.19 + .008 * math.sin(_hintTime * 2.4)),
+        cell * (.19 + (_reduceMotion ? 0 : .008 * math.sin(_hintTime * 2.4))),
         paint
-          ..color = const Color(0xFF8B79C6).withValues(alpha: .16 * alpha)
+          ..color = _colors.echoInk.withValues(alpha: .16 * alpha)
           ..style = PaintingStyle.stroke
           ..strokeWidth = math.max(1, cell * .015),
       );
@@ -448,7 +480,7 @@ class BloriqGame extends FlameGame {
         '◌',
         center(p),
         cell * .30,
-        const Color(0xFF7866AD).withValues(alpha: alpha),
+        _colors.echoInk.withValues(alpha: alpha),
       );
     }
 
@@ -470,9 +502,7 @@ class BloriqGame extends FlameGame {
       canvas.drawRRect(
         RRect.fromRectAndRadius(rect, Radius.circular(cell * .18)),
         paint
-          ..color = previewState != null
-              ? const Color(0xFF58BC97)
-              : const Color(0xFFE78383)
+          ..color = previewState != null ? _colors.goal : _colors.error
           ..style = PaintingStyle.stroke
           ..strokeWidth = math.max(3.0, cell * .045),
       );
@@ -493,20 +523,45 @@ class BloriqGame extends FlameGame {
           _dragOffset.dy.clamp(-maxDrag, maxDrag).toDouble(),
         );
       }
-      if (state.isComplete && isGoal && _motion >= 1) continue;
-      final scale = state.isComplete && isGoal ? 1 - .45 * _motion : 1.0;
+      final escaping = state.isComplete && isGoal;
+      final celebrating = escaping && !isReplaying && !_reduceMotion;
+      if (escaping &&
+          ((!celebrating && _motion >= 1) ||
+              (celebrating && _celebrationProgress >= .34))) {
+        continue;
+      }
+      final escapeTime = ((_celebrationProgress - .12) / .22).clamp(0.0, 1.0);
+      final scale = celebrating
+          ? 1 + .14 * math.sin(escapeTime * math.pi)
+          : 1.0;
+      final opacity = celebrating
+          ? 1 - ((_celebrationProgress - .24) / .10).clamp(0.0, 1.0)
+          : 1.0;
+      if (celebrating && escapeTime > 0) {
+        // 겹친 반투명 원으로 부드러운 빛을 표현하며 실시간 blur는 사용하지 않는다.
+        for (var layer = 0; layer < 3; layer++) {
+          canvas.drawCircle(
+            at,
+            cell * (.44 + layer * .08) * scale,
+            paint
+              ..color = _colors.goal.withValues(
+                alpha: (.09 - layer * .02) * math.sin(escapeTime * math.pi),
+              ),
+          );
+        }
+      }
       final rect = Rect.fromCenter(
         center: at,
         width: cell * .76 * scale,
         height: cell * .76 * scale,
       );
-      final color = isGoal ? const Color(0xFF259A7D) : const Color(0xFF5274CB);
+      final color = isGoal ? _colors.goal : _colors.primary;
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           rect.shift(Offset(0, cell * .05)),
           Radius.circular(cell * .18),
         ),
-        paint..color = color.withValues(alpha: .25),
+        paint..color = color.withValues(alpha: .25 * opacity),
       );
       final rounded = RRect.fromRectAndRadius(
         rect,
@@ -515,20 +570,25 @@ class BloriqGame extends FlameGame {
       canvas.drawRRect(
         rounded,
         paint
-          ..color = Colors.white
+          ..color = _colors.highlight
           ..shader = LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: isGoal
-                ? const [Color(0xFF5BD8AF), Color(0xFF25A585)]
-                : const [Color(0xFF91AEFA), Color(0xFF6281DC)],
+            colors: [
+              Color.lerp(
+                color,
+                _colors.highlight,
+                .20,
+              )!.withValues(alpha: opacity),
+              color.withValues(alpha: opacity),
+            ],
           ).createShader(rect),
       );
       paint.shader = null;
       canvas.drawRRect(
         rounded.deflate(cell * .022),
         paint
-          ..color = Colors.white.withValues(alpha: .45)
+          ..color = _colors.highlight.withValues(alpha: .45 * opacity)
           ..style = PaintingStyle.stroke
           ..strokeWidth = math.max(1, cell * .014),
       );
@@ -543,62 +603,43 @@ class BloriqGame extends FlameGame {
           ),
           Radius.circular(cell * .04),
         ),
-        paint..color = Colors.white.withValues(alpha: .36),
+        paint..color = _colors.highlight.withValues(alpha: .36 * opacity),
       );
       _label(
         canvas,
         isGoal ? '▶' : '•',
         at,
         cell * (isGoal ? .31 : .4) * scale,
-        Colors.white,
+        _colors.blockSymbol.withValues(alpha: opacity),
       );
     }
     for (final (position, symbol, color) in mechanicTiles) {
       final marker = center(position) + Offset(cell * .34, -cell * .34);
       canvas.drawCircle(marker, cell * .12, paint..color = color);
-      _label(canvas, symbol, marker, cell * .17, Colors.white);
+      _label(canvas, symbol, marker, cell * .17, _colors.blockSymbol);
     }
     if (switchPosition != null) {
       // The corner marker remains visible when a block covers the plate.
       final marker = center(switchPosition) + Offset(-cell * .34, -cell * .34);
-      canvas.drawCircle(
-        marker,
-        cell * .095,
-        paint..color = const Color(0xFF277FAD),
-      );
+      canvas.drawCircle(marker, cell * .095, paint..color = _colors.cyan);
       final mark = Path()
         ..moveTo(marker.dx, marker.dy - cell * .05)
         ..lineTo(marker.dx + cell * .05, marker.dy)
         ..lineTo(marker.dx, marker.dy + cell * .05)
         ..lineTo(marker.dx - cell * .05, marker.dy)
         ..close();
-      canvas.drawPath(mark, paint..color = Colors.white);
+      canvas.drawPath(mark, paint..color = _colors.surface);
     }
-    if (state.isComplete && _celebrationTime < 1.1) {
-      // A small, deterministic burst communicates success without new assets.
-      final t = (_celebrationTime / 1.1).clamp(0.0, 1.0);
-      final distance = cell * (.18 + .52 * Curves.easeOut.transform(t));
-      for (var i = 0; i < 8; i++) {
-        final angle = i * math.pi / 4;
-        final particle =
-            exit + Offset(math.cos(angle), math.sin(angle)) * distance;
-        canvas.drawCircle(
-          particle,
-          cell * (i.isEven ? .035 : .023) * (1 - t * .45),
-          paint
-            ..color =
-                (i.isEven ? const Color(0xFFFFC751) : const Color(0xFF5DCFB2))
-                    .withValues(alpha: 1 - t),
-        );
-      }
+    if (state.isComplete && !isReplaying && !_reduceMotion) {
+      _drawCelebration(canvas, exit, cell);
     }
     if (state.level.id == 1 && state.moves == 0 && _dragId == null) {
       final goal = center(state.level.startPosition);
-      final shift = math.sin(_hintTime * 3) * cell * .05;
+      final shift = _reduceMotion ? 0.0 : math.sin(_hintTime * 3) * cell * .05;
       final start = goal + Offset(cell * .10 + shift, -cell * .48);
       final end = goal + Offset(cell * .63 + shift, -cell * .48);
       paint
-        ..color = const Color(0xFF5271C7)
+        ..color = _colors.primaryInk
         ..style = PaintingStyle.stroke
         ..strokeWidth = math.max(3.0, cell * .035)
         ..strokeCap = StrokeCap.round;
@@ -618,12 +659,61 @@ class BloriqGame extends FlameGame {
       canvas.drawRRect(
         RRect.fromRectAndRadius(rect, Radius.circular(cell * .18)),
         paint
-          ..color = const Color(0xFFE56767)
-              .withValues(alpha: _blockedTime / .42)
+          ..color = _colors.error.withValues(alpha: _blockedTime / .42)
           ..style = PaintingStyle.stroke
           ..strokeWidth = math.max(3.0, cell * .04),
       );
       paint.style = PaintingStyle.fill;
+    }
+  }
+
+  void _drawCelebration(Canvas canvas, Offset exit, double cell) {
+    final paint = Paint();
+    final progress = _celebrationProgress;
+    if (progress >= .23 && progress < .72) {
+      final t = ((progress - .23) / .49).clamp(0.0, 1.0);
+      final eased = Curves.easeOutCubic.transform(t);
+      final fade = 1 - t;
+      // 결정적인 위치, 최대 12개 입자와 원형 파동 하나만 그린다.
+      final count = math.min(GameEffects.particleCount, 12);
+      for (var i = 0; i < count; i++) {
+        final angle = i * math.pi * 2 / count + .15;
+        final distance = cell * (.20 + (i.isEven ? .60 : .48) * eased);
+        final at = exit + Offset(math.cos(angle), math.sin(angle)) * distance;
+        canvas.drawCircle(
+          at,
+          cell * (i.isEven ? .040 : .026) * (1 - t * .45),
+          paint
+            ..color = (i.isEven ? _colors.echo : _colors.goal).withValues(
+              alpha: .85 * fade,
+            ),
+        );
+      }
+      canvas.drawCircle(
+        exit,
+        cell * (.35 + .48 * eased),
+        paint
+          ..color = _colors.echo.withValues(alpha: .38 * fade)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = math.max(1.5, cell * .025 * fade),
+      );
+      paint.style = PaintingStyle.fill;
+    }
+    if (_isNewBest && progress >= .65 && progress < 1) {
+      final t = ((progress - .65) / .35).clamp(0.0, 1.0);
+      final strength = math.sin(t * math.pi);
+      paint
+        ..color = _colors.reward.withValues(alpha: .80 * strength)
+        ..strokeWidth = math.max(1.2, cell * .018)
+        ..strokeCap = StrokeCap.round;
+      // 최고 기록만 금색 반짝임 4개를 추가해 기본 축하와 구별한다.
+      for (var i = 0; i < 4; i++) {
+        final angle = i * math.pi / 2 + math.pi / 4;
+        final at = exit + Offset(math.cos(angle), math.sin(angle)) * cell * .59;
+        final radius = cell * .065 * strength;
+        canvas.drawLine(at - Offset(radius, 0), at + Offset(radius, 0), paint);
+        canvas.drawLine(at - Offset(0, radius), at + Offset(0, radius), paint);
+      }
     }
   }
 
@@ -638,6 +728,8 @@ class BloriqGame extends FlameGame {
       text: TextSpan(
         text: value,
         style: TextStyle(
+          // Flutter UI와 같은 서체를 명시해 Canvas 기호도 일관되게 표시한다.
+          fontFamily: GameTypography.canvasFontFamily,
           fontSize: fontSize,
           color: color,
           fontWeight: FontWeight.bold,
@@ -646,5 +738,6 @@ class BloriqGame extends FlameGame {
       textDirection: TextDirection.ltr,
     )..layout();
     text.paint(canvas, center - Offset(text.width / 2, text.height / 2));
+    text.dispose();
   }
 }

@@ -36,6 +36,15 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pump(const Duration(milliseconds: 300));
+      if (tester
+          .widget<GameWidget<BloriqGame>>(boardFinder)
+          .game!
+          .controller
+          .state
+          .isComplete) {
+        await tester.pump(const Duration(milliseconds: 1600));
+        await tester.pump();
+      }
     }
 
     Future<void> tapVisible(String label) async {
