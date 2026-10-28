@@ -6,6 +6,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'audio/game_audio.dart';
 import 'domain/puzzle.dart';
 import 'game/bloriq_game.dart';
 import 'l10n/app_localizations.dart';
@@ -50,7 +51,7 @@ class _GameScreenState extends State<GameScreen> {
   String? _dragBlock;
   Offset? _dragStart;
   Offset? _dragEnd;
-  bool _soundEnabled = true;
+  GameAudio? _audio;
   bool _gateBlocked = false;
   ProgressRepository? _progress;
   CompletionResult? _completion;
@@ -58,6 +59,13 @@ class _GameScreenState extends State<GameScreen> {
 
   Future<List<Level>> _loadLevels() async {
     _progress = await ProgressRepository.load();
+    final audio = await GameAudio.load();
+    if (mounted) {
+      _audio = audio;
+      WidgetsBinding.instance.addObserver(audio);
+    } else {
+      audio.dispose();
+    }
     final json = jsonDecode(
       await rootBundle.loadString('assets/levels/levels.json'),
     ) as List<dynamic>;
@@ -89,6 +97,7 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void dispose() {
     _stopReplay();
+    _audio?.dispose();
     super.dispose();
   }
 
@@ -207,6 +216,7 @@ class _GameScreenState extends State<GameScreen> {
         );
         final from = block.position;
         final previousEcho = controller.state.echo;
+        final gateWasOpen = controller.state.isGateOpen;
         final dx = delta.dx.abs() >= delta.dy.abs() ? delta.dx.sign.toInt() : 0;
         final dy = dx == 0 ? delta.dy.sign.toInt() : 0;
         final target = Position(from.x + dx, from.y + dy);
@@ -214,15 +224,17 @@ class _GameScreenState extends State<GameScreen> {
           _gateBlocked = false;
           _game!.animateMove(block.id, from, previousEcho);
           if (controller.state.isComplete) _recordCompletion(controller);
-          if (_soundEnabled) {
-            SystemSound.play(
-              controller.state.isComplete
-                  ? SystemSoundType.alert
-                  : SystemSoundType.click,
-            );
-          }
+          final effect = controller.state.isComplete
+              ? SoundEffect.complete
+              : !gateWasOpen && controller.state.isGateOpen
+              ? SoundEffect.gate
+              : previousEcho != null
+              ? SoundEffect.echo
+              : SoundEffect.move;
+          _audio?.play(effect);
           HapticFeedback.selectionClick();
         } else {
+          _audio?.play(SoundEffect.blocked);
           _gateBlocked =
               target == controller.state.level.echoGate &&
               !controller.state.isGateOpen;
@@ -355,14 +367,34 @@ class _GameScreenState extends State<GameScreen> {
                                 icon: const Icon(Icons.help_outline),
                               ),
                               IconButton(
-                                tooltip: _soundEnabled ? t.soundOn : t.soundOff,
-                                onPressed: () => setState(
-                                  () => _soundEnabled = !_soundEnabled,
-                                ),
+                                tooltip: _audio!.effectsEnabled
+                                    ? t.soundOn
+                                    : t.soundOff,
+                                onPressed: () => setState(() {
+                                  _audio!.onUserInteraction();
+                                  _audio!.setEffectsEnabled(
+                                    !_audio!.effectsEnabled,
+                                  );
+                                }),
                                 icon: Icon(
-                                  _soundEnabled
+                                  _audio!.effectsEnabled
                                       ? Icons.volume_up_outlined
                                       : Icons.volume_off_outlined,
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: _audio!.musicEnabled
+                                    ? t.musicOn
+                                    : t.musicOff,
+                                onPressed: () => setState(
+                                  () => _audio!.setMusicEnabled(
+                                    !_audio!.musicEnabled,
+                                  ),
+                                ),
+                                icon: Icon(
+                                  _audio!.musicEnabled
+                                      ? Icons.music_note
+                                      : Icons.music_off,
                                 ),
                               ),
                             ],
@@ -394,6 +426,8 @@ class _GameScreenState extends State<GameScreen> {
                                 onPanCancel: _cancelDrag,
                                 // Pointer 취소가 pan 종료로 전달되더라도 이동을 확정하지 않는다.
                                 child: Listener(
+                                  onPointerDown: (_) =>
+                                      _audio?.onUserInteraction(),
                                   onPointerCancel: (_) => _cancelDrag(),
                                   child: GameWidget(game: _game!),
                                 ),

@@ -7,17 +7,17 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('스무 스테이지는 모두 탈출 가능하고 최소 이동 수가 정확하다', () async {
+  test('모든 스테이지는 탈출 가능하고 최소 이동 수가 정확하다', () async {
     final data = jsonDecode(
       await rootBundle.loadString('assets/levels/levels.json'),
     ) as List<dynamic>;
     final levels = data
         .map((item) => Level.fromJson(item as Map<String, dynamic>))
         .toList();
-    expect(levels, hasLength(20));
+    expect(levels, hasLength(25));
     expect(
       levels.map((level) => level.id).toList(),
-      List.generate(20, (i) => i + 1),
+      List.generate(25, (i) => i + 1),
     );
 
     for (final level in levels) {

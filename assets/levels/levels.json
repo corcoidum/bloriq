@@ -1066,5 +1066,331 @@
     ],
     "minimumMoves": 13,
     "difficulty": "challenge"
+  },
+  {
+    "id": 21,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 2,
+      "y": 1
+    },
+    "exitPosition": {
+      "x": 1,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 2,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 2,
+        "y": 3
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 1
+      }
+    ],
+    "specialRules": [],
+    "minimumMoves": 11,
+    "difficulty": "challenge"
+  },
+  {
+    "id": 22,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 1,
+      "y": 1
+    },
+    "exitPosition": {
+      "x": 3,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 3,
+        "y": 1
+      },
+      {
+        "id": "b2",
+        "x": 3,
+        "y": 2
+      },
+      {
+        "id": "b3",
+        "x": 1,
+        "y": 2
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 3
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 2,
+          "y": 3
+        },
+        "gate": {
+          "x": 0,
+          "y": 1
+        }
+      }
+    ],
+    "minimumMoves": 12,
+    "difficulty": "challenge"
+  },
+  {
+    "id": 23,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 1,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 1,
+        "y": 1
+      },
+      {
+        "id": "b2",
+        "x": 1,
+        "y": 0
+      },
+      {
+        "id": "b3",
+        "x": 2,
+        "y": 0
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 1
+      }
+    ],
+    "specialRules": [],
+    "minimumMoves": 12,
+    "difficulty": "challenge"
+  },
+  {
+    "id": 24,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 3,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 1,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 3,
+        "y": 1
+      },
+      {
+        "id": "b2",
+        "x": 2,
+        "y": 1
+      },
+      {
+        "id": "b3",
+        "x": 2,
+        "y": 2
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 2,
+          "y": 2
+        },
+        "gate": {
+          "x": 1,
+          "y": 2
+        }
+      }
+    ],
+    "minimumMoves": 12,
+    "difficulty": "challenge"
+  },
+  {
+    "id": 25,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 2,
+      "y": 2
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 1,
+        "y": 1
+      },
+      {
+        "id": "b2",
+        "x": 3,
+        "y": 2
+      },
+      {
+        "id": "b3",
+        "x": 1,
+        "y": 3
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 1
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 2,
+          "y": 3
+        },
+        "gate": {
+          "x": 3,
+          "y": 3
+        }
+      }
+    ],
+    "minimumMoves": 17,
+    "difficulty": "challenge"
   }
 ]

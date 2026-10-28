@@ -25,8 +25,8 @@
   "gateOccupied": "A block on a closed gate can still leave.",
   "noMoves": "No moves left. Undo and try another way.",
   "boardLabel": "Drag blocks one square at a time to move the green block to the star.",
-  "soundOn": "Turn sound off",
-  "soundOff": "Turn sound on",
+  "soundOn": "Turn sound effects off",
+  "soundOff": "Turn sound effects on",
   "help": "How to play",
   "helpBody": "Slide one block one square at a time. Move the green block to the star.\n\nThe square a block leaves behind becomes an echo. It blocks movement until another valid move finishes.\n\nOn diamond stages, an echo on the diamond opens the gate for the next move. A block on a closed gate can still leave.\n\nUse Undo to try a different move.",
   "undo": "Undo",
@@ -79,5 +79,7 @@
         "type": "int"
       }
     }
-  }
+  },
+  "musicOn": "Turn music off",
+  "musicOff": "Turn music on"
 }
