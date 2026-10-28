@@ -1,5 +1,5 @@
 name: bloriq
-description: BLORIQ block route puzzle prototype.
+description: BLORIQ one-turn echo puzzle prototype.
 publish_to: 'none'
 version: 0.1.0+1
 

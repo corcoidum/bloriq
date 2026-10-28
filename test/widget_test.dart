@@ -1,13 +1,17 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:bloriq/domain/puzzle.dart';
 import 'package:bloriq/main.dart';
 import 'package:bloriq/game/bloriq_game.dart';
 import 'package:flame/game.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('레벨 1에서 블록 이동, undo, restart, 경로 그리기와 클리어', (tester) async {
+  setUp(() => rootBundle.clear());
+  testWidgets('drag, undo, restart, escape and echo blocking', (tester) async {
     await tester.pumpWidget(const BloriqApp());
-    // Flame 렌더링 루프가 계속 실행되므로 pumpAndSettle 대신 로딩을 기다린다.
     for (
       var i = 0;
       i < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;
@@ -18,45 +22,322 @@ void main() {
     expect(find.byType(GameWidget<BloriqGame>), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 100));
 
-    final board = tester.getRect(find.byType(GameWidget<BloriqGame>));
-    Offset cell(int x, int y) =>
-        board.topLeft +
-        Offset(board.width * (x + .5) / 5, board.height * (y + .5) / 5);
-    Future<void> moveBlock() async {
-      final gesture = await tester.startGesture(cell(0, 1));
-      await gesture.moveTo(cell(1, 1));
-      await tester.pump();
-      await gesture.up();
-      await tester.pump();
+    Future<void> move(int x, int y, int dx, int dy) async {
+      final board = tester.getRect(find.byType(GameWidget<BloriqGame>));
+      final cellWidth = board.width / 3;
+      final cellHeight = board.height / 3;
+      final start =
+          board.topLeft + Offset(cellWidth * (x + .5), cellHeight * (y + .5));
+      await tester.dragFrom(start, Offset(cellWidth * dx, cellHeight * dy));
+      await tester.pump(const Duration(milliseconds: 300));
     }
 
     expect(find.text('Moves: 0'), findsOneWidget);
-    await moveBlock();
+    await move(0, 1, 1, 0);
     expect(find.text('Moves: 1'), findsOneWidget);
+    expect(
+      find.text('An echo disappears after your next move.'),
+      findsOneWidget,
+    );
     await tester.tap(find.text('Undo'));
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Moves: 0'), findsOneWidget);
-    await moveBlock();
-    expect(find.text('Moves: 1'), findsOneWidget);
+    await move(0, 1, 1, 0);
     await tester.tap(find.text('Restart'));
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Moves: 0'), findsOneWidget);
-    await moveBlock();
-    expect(find.text('Moves: 1'), findsOneWidget);
-
-    final line = await tester.startGesture(cell(0, 0));
-    await line.moveTo(cell(0, 4));
-    await tester.pump();
-    await line.moveTo(cell(4, 4));
-    await tester.pump();
-    await line.up();
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('Path complete!'), findsOneWidget);
-    expect(find.text('You escaped! Moves: 1.'), findsOneWidget);
-    expect(find.byType(AlertDialog), findsOneWidget);
+    await move(0, 1, 1, 0);
+    await move(1, 1, 1, 0);
+    expect(find.text('You escaped!'), findsOneWidget);
+    expect(find.text('Solved in the fewest moves!'), findsOneWidget);
     await tester.tap(find.text('Next level'));
-    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Level 2'), findsOneWidget);
+    await move(1, 1, 0, -1);
+    expect(find.text('Moves: 1'), findsOneWidget);
+    await move(0, 1, 1, 0);
+    expect(find.text('Moves: 1'), findsOneWidget);
+    await move(1, 0, 1, 0);
+    await move(0, 1, 1, 0);
+    await move(1, 1, 1, 0);
+    expect(find.text('You escaped!'), findsOneWidget);
+  });
+
+  testWidgets('nonoptimal completion suggests a retry', (tester) async {
+    await tester.pumpWidget(const BloriqApp());
+    for (
+      var i = 0;
+      i < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;
+      i++
+    ) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    expect(find.text('Could not load the levels.'), findsNothing);
+    expect(find.byType(GameWidget<BloriqGame>), findsOneWidget);
+    Future<void> move(int x, int y, int dx, int dy) async {
+      final board = tester.getRect(find.byType(GameWidget<BloriqGame>));
+      final start =
+          board.topLeft +
+          Offset(board.width * (x + .5) / 3, board.height * (y + .5) / 3);
+      await tester.dragFrom(
+        start,
+        Offset(board.width * dx / 3, board.height * dy / 3),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+
+    await move(0, 1, 0, -1);
+    await move(0, 0, 1, 0);
+    await move(1, 0, 0, 1);
+    await move(1, 1, 1, 0);
+    expect(find.text('Can you escape in 2 moves?'), findsOneWidget);
+    await tester.tap(find.text('Restart'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Moves: 0'), findsOneWidget);
+  });
+
+  testWidgets('last stage offers a return to the first stage', (tester) async {
+    await tester.pumpWidget(const BloriqApp());
+    for (
+      var i = 0;
+      i < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;
+      i++
+    ) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    final json = jsonDecode(
+      File('assets/levels/levels.json').readAsStringSync(),
+    ) as List<dynamic>;
+    final level = Level.fromJson(json.last as Map<String, dynamic>);
+    final solution = const PuzzleSolver().solve(level)!;
+    final controller = PuzzleController(level);
+    await tester.tap(find.text('Levels'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.ensureVisible(find.text('Level ${level.id}').last);
+    await tester.tap(find.text('Level ${level.id}').last);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    for (final move in solution) {
+      final block = controller.state.blocks.firstWhere(
+        (item) => item.id == move.blockId,
+      );
+      final board = tester.getRect(find.byType(GameWidget<BloriqGame>));
+      final cellWidth = board.width / level.boardWidth;
+      final cellHeight = board.height / level.boardHeight;
+      final start =
+          board.topLeft +
+          Offset(
+            cellWidth * (block.position.x + .5),
+            cellHeight * (block.position.y + .5),
+          );
+      await tester.dragFrom(
+        start,
+        Offset(
+          cellWidth * (move.target.x - block.position.x),
+          cellHeight * (move.target.y - block.position.y),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(controller.move(move.blockId, move.target), isTrue);
+    }
+    expect(find.text('First level'), findsOneWidget);
+    await tester.tap(find.text('First level'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Level 1'), findsOneWidget);
+  });
+
+  testWidgets('drag uses both dimensions on a rectangular board', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const BloriqApp());
+    for (
+      var i = 0;
+      i < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;
+      i++
+    ) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    final json = jsonDecode(
+      File('assets/levels/levels.json').readAsStringSync(),
+    ) as List<dynamic>;
+    final levels = json.map(
+      (item) => Level.fromJson(item as Map<String, dynamic>),
+    );
+    final level = levels.firstWhere(
+      (item) => item.boardWidth != item.boardHeight,
+    );
+    final firstMove = const PuzzleSolver().solve(level)!.first;
+    final controller = PuzzleController(level);
+    final block = controller.state.blocks.firstWhere(
+      (item) => item.id == firstMove.blockId,
+    );
+    await tester.tap(find.text('Levels'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.ensureVisible(find.text('Level ${level.id}').last);
+    await tester.tap(find.text('Level ${level.id}').last);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final board = tester.getRect(find.byType(GameWidget<BloriqGame>));
+    final cellWidth = board.width / level.boardWidth;
+    final cellHeight = board.height / level.boardHeight;
+    final start =
+        board.topLeft +
+        Offset(
+          cellWidth * (block.position.x + .5),
+          cellHeight * (block.position.y + .5),
+        );
+    await tester.dragFrom(
+      start,
+      Offset(
+        cellWidth * (firstMove.target.x - block.position.x),
+        cellHeight * (firstMove.target.y - block.position.y),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Moves: 1'), findsOneWidget);
+    expect(
+      find.text('An echo disappears after your next move.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('echo switch opens gate for one move and undo restores it', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const BloriqApp());
+    for (
+      var i = 0;
+      i < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;
+      i++
+    ) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    final json = jsonDecode(
+      File('assets/levels/levels.json').readAsStringSync(),
+    ) as List<dynamic>;
+    final level = json
+        .map((item) => Level.fromJson(item as Map<String, dynamic>))
+        .firstWhere((item) => item.echoGate != null);
+    final controller = PuzzleController(level);
+    final solution = const PuzzleSolver().solve(level)!;
+
+    await tester.tap(find.text('Levels'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.ensureVisible(find.text('Level ${level.id}').last);
+    await tester.tap(find.text('Level ${level.id}').last);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(
+      find.text('Leave an echo on the diamond to open the gate.'),
+      findsOneWidget,
+    );
+
+    Future<void> move(Position from, Position target) async {
+      final board = tester.getRect(find.byType(GameWidget<BloriqGame>));
+      final cellWidth = board.width / level.boardWidth;
+      final cellHeight = board.height / level.boardHeight;
+      final start =
+          board.topLeft +
+          Offset(cellWidth * (from.x + .5), cellHeight * (from.y + .5));
+      await tester.dragFrom(
+        start,
+        Offset(
+          cellWidth * (target.x - from.x),
+          cellHeight * (target.y - from.y),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+
+    expect(level.startPosition.isAdjacentTo(level.echoGate!), isTrue);
+    await move(level.startPosition, level.echoGate!);
+    expect(find.text('Moves: 0'), findsOneWidget);
+    expect(
+      find.text('The gate is closed. Leave an echo on the diamond.'),
+      findsOneWidget,
+    );
+
+    var observedOpen = false;
+    var observedOccupied = false;
+    for (final step in solution) {
+      final block = controller.state.blocks.firstWhere(
+        (item) => item.id == step.blockId,
+      );
+      await move(block.position, step.target);
+      expect(controller.move(step.blockId, step.target), isTrue);
+      if (controller.state.isGateOpen) {
+        observedOpen = true;
+        expect(
+          find.text('Gate open! Move through on this turn.'),
+          findsOneWidget,
+        );
+      }
+      if (!controller.state.isComplete &&
+          !controller.state.isGateOpen &&
+          controller.state.blocks.any(
+            (item) => item.position == level.echoGate,
+          )) {
+        observedOccupied = true;
+        expect(
+          find.text('A block on a closed gate can still leave.'),
+          findsOneWidget,
+        );
+      }
+    }
+    expect(observedOpen, isTrue);
+    expect(observedOccupied, isTrue);
+    expect(find.text('You escaped!'), findsOneWidget);
+    await tester.tap(find.text('Undo'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(
+      find.text('A block on a closed gate can still leave.'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Undo'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Gate open! Move through on this turn.'), findsOneWidget);
+  });
+
+  testWidgets('a position with no legal move suggests undo', (tester) async {
+    await tester.pumpWidget(const BloriqApp());
+    for (
+      var i = 0;
+      i < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;
+      i++
+    ) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    await tester.tap(find.text('Levels'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.ensureVisible(find.text('Level 11').last);
+    await tester.tap(find.text('Level 11').last);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final board = tester.getRect(find.byType(GameWidget<BloriqGame>));
+    final block =
+        board.topLeft + Offset(board.width * 1.5 / 4, board.height * 1.5 / 4);
+    await tester.dragFrom(block, Offset(0, -board.height / 4));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(
+      find.text('No moves left. Undo and try another way.'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Undo'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('No moves left. Undo and try another way.'), findsNothing);
     expect(find.text('Moves: 0'), findsOneWidget);
   });
 }

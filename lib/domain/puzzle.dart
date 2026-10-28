@@ -43,7 +43,7 @@ class Block {
   Block at(Position position) => Block(id: id, position: position);
 }
 
-/// Phase 1에서 지원하지 않는 규칙은 명시적으로 거부한다.
+/// startPosition은 목표 블록의 초기 위치, blocks는 일반 블록이다.
 class Level {
   Level({
     required this.id,
@@ -55,6 +55,8 @@ class Level {
     required List<Position> obstacles,
     required this.minimumMoves,
     required this.difficulty,
+    this.echoSwitch,
+    this.echoGate,
   }) : blocks = List.unmodifiable(blocks),
        obstacles = List.unmodifiable(obstacles) {
     if (id < 1 || boardWidth < 1 || boardHeight < 1 || minimumMoves < 0) {
@@ -66,7 +68,7 @@ class Level {
       throw const FormatException('Invalid start or exit');
     }
     final occupied = <Position>{startPosition, exitPosition};
-    final ids = <String>{};
+    final ids = <String>{goalBlockId};
     for (final obstacle in this.obstacles) {
       if (!contains(obstacle) || !occupied.add(obstacle)) {
         throw const FormatException('Invalid or overlapping obstacle');
@@ -80,8 +82,28 @@ class Level {
         throw const FormatException('Invalid or overlapping block');
       }
     }
+    // A switch can start under a block; a gate starts empty and closed.
+    if ((echoSwitch == null) != (echoGate == null)) {
+      throw const FormatException(
+        'A switch and gate must be provided together',
+      );
+    }
+    if (echoSwitch != null && echoGate != null) {
+      if (!contains(echoSwitch!) ||
+          !contains(echoGate!) ||
+          echoSwitch == echoGate ||
+          echoSwitch == exitPosition ||
+          echoGate == exitPosition ||
+          this.obstacles.contains(echoSwitch) ||
+          this.obstacles.contains(echoGate) ||
+          echoGate == startPosition ||
+          this.blocks.any((block) => block.position == echoGate)) {
+        throw const FormatException('Invalid switch or gate position');
+      }
+    }
   }
 
+  static const goalBlockId = 'goal';
   final int id;
   final int boardWidth;
   final int boardHeight;
@@ -91,11 +113,31 @@ class Level {
   final List<Position> obstacles;
   final int minimumMoves;
   final String difficulty;
+  final Position? echoSwitch;
+  final Position? echoGate;
 
   factory Level.fromJson(Map<String, dynamic> json) {
     final rules = json['specialRules'] as List<dynamic>;
+    Position? echoSwitch;
+    Position? echoGate;
+    if (rules.length > 1) {
+      throw const FormatException('Only one echo gate is supported');
+    }
     if (rules.isNotEmpty) {
-      throw const FormatException('Special rules are not supported yet');
+      final rule = rules.single;
+      if (rule is! Map<String, dynamic> || rule['type'] != 'echoGate') {
+        throw const FormatException('Unsupported special rule');
+      }
+      final switchData = rule['switch'];
+      final gateData = rule['gate'];
+      if (switchData is! Map<String, dynamic> ||
+          gateData is! Map<String, dynamic>) {
+        throw const FormatException(
+          'Echo gate requires switch and gate positions',
+        );
+      }
+      echoSwitch = Position.fromJson(switchData);
+      echoGate = Position.fromJson(gateData);
     }
     return Level(
       id: json['id'] as int,
@@ -115,6 +157,8 @@ class Level {
           .toList(),
       minimumMoves: json['minimumMoves'] as int,
       difficulty: json['difficulty'] as String,
+      echoSwitch: echoSwitch,
+      echoGate: echoGate,
     );
   }
 
@@ -125,27 +169,36 @@ class Level {
       position.y < boardHeight;
 }
 
+/// 잔상은 다음 유효한 이동의 판정이 끝날 때까지 남는다.
 class PuzzleState {
   PuzzleState({
     required this.level,
     required List<Block> blocks,
     this.moves = 0,
-    List<Position> path = const [],
-  }) : blocks = List.unmodifiable(blocks),
-       path = List.unmodifiable(path);
+    this.echo,
+  }) : blocks = List.unmodifiable(blocks);
 
-  factory PuzzleState.initial(Level level) =>
-      PuzzleState(level: level, blocks: level.blocks);
+  factory PuzzleState.initial(Level level) => PuzzleState(
+    level: level,
+    blocks: [
+      Block(id: Level.goalBlockId, position: level.startPosition),
+      ...level.blocks,
+    ],
+  );
 
   final Level level;
   final List<Block> blocks;
   final int moves;
-  final List<Position> path;
+  final Position? echo;
 
-  bool get isComplete => path.isNotEmpty && path.last == level.exitPosition;
+  Block get goal => blocks.firstWhere((block) => block.id == Level.goalBlockId);
+  bool get isComplete => goal.position == level.exitPosition;
+  bool get isGateOpen => level.echoSwitch != null && echo == level.echoSwitch;
 
   bool isBlocked(Position position) =>
       level.obstacles.contains(position) ||
+      (level.echoGate == position && !isGateOpen) ||
+      echo == position ||
       blocks.any((block) => block.position == position);
 }
 
@@ -153,8 +206,7 @@ class MoveValidator {
   static bool canMove(PuzzleState state, String blockId, Position target) {
     if (state.isComplete ||
         !state.level.contains(target) ||
-        target == state.level.startPosition ||
-        target == state.level.exitPosition ||
+        (target == state.level.exitPosition && blockId != Level.goalBlockId) ||
         state.isBlocked(target)) {
       return false;
     }
@@ -165,38 +217,20 @@ class MoveValidator {
   }
 }
 
-class PathValidator {
-  static bool canAppend(PuzzleState state, Position position) {
-    if (state.isComplete ||
-        !state.level.contains(position) ||
-        state.isBlocked(position) ||
-        state.path.contains(position)) {
-      return false;
-    }
-    if (state.path.isEmpty) return position == state.level.startPosition;
-    return state.path.last.isAdjacentTo(position);
-  }
-
-  /// 현재 블록 배치에서 실제로 연결 가능한 경로가 있는지 확인한다.
-  static bool hasEscapePath(PuzzleState state) {
-    final queue = Queue<Position>()..add(state.level.startPosition);
-    final visited = <Position>{state.level.startPosition};
-    while (queue.isNotEmpty) {
-      final current = queue.removeFirst();
-      if (current == state.level.exitPosition) return true;
-      for (final next in current.neighbors) {
-        if (state.level.contains(next) &&
-            !state.isBlocked(next) &&
-            visited.add(next)) {
-          queue.add(next);
-        }
-      }
-    }
-    return false;
-  }
+/// Controller와 solver가 같은 상태 전이를 사용한다.
+PuzzleState _move(PuzzleState state, String blockId, Position target) {
+  final moving = state.blocks.firstWhere((block) => block.id == blockId);
+  return PuzzleState(
+    level: state.level,
+    blocks: state.blocks
+        .map((block) => block.id == blockId ? block.at(target) : block)
+        .toList(),
+    moves: state.moves + 1,
+    echo: moving.position,
+  );
 }
 
-/// UI와 독립적인 게임 상태 전이. 잘못된 입력은 상태를 바꾸지 않는다.
+/// 잘못된 입력은 턴을 소비하지 않고 Undo는 잔상을 함께 되돌린다.
 class PuzzleController {
   PuzzleController(Level level) : _state = PuzzleState.initial(level);
 
@@ -208,35 +242,8 @@ class PuzzleController {
   bool move(String blockId, Position target) {
     if (!MoveValidator.canMove(_state, blockId, target)) return false;
     _history.add(_state);
-    _state = PuzzleState(
-      level: _state.level,
-      blocks: _state.blocks
-          .map((block) => block.id == blockId ? block.at(target) : block)
-          .toList(),
-      moves: _state.moves + 1,
-    );
+    _state = _move(_state, blockId, target);
     return true;
-  }
-
-  bool appendPath(Position position) {
-    if (!PathValidator.canAppend(_state, position)) return false;
-    _state = PuzzleState(
-      level: _state.level,
-      blocks: _state.blocks,
-      moves: _state.moves,
-      path: [..._state.path, position],
-    );
-    return true;
-  }
-
-  /// 새 선을 그릴 때 기존 선을 지운다. 블록 이동 횟수는 유지한다.
-  void clearPath() {
-    if (_state.isComplete || _state.path.isEmpty) return;
-    _state = PuzzleState(
-      level: _state.level,
-      blocks: _state.blocks,
-      moves: _state.moves,
-    );
   }
 
   bool undo() {
@@ -263,7 +270,7 @@ class _SearchNode {
   final List<PuzzleMove> moves;
 }
 
-/// 블록 이동 횟수를 기준으로 최단 해를 찾는다. null은 해결 불가능을 뜻한다.
+/// 블록 위치와 잔상을 함께 탐색하여 최소 이동 해를 찾는다.
 class PuzzleSolver {
   const PuzzleSolver({this.maxStates = 200000});
   final int maxStates;
@@ -271,25 +278,20 @@ class PuzzleSolver {
   List<PuzzleMove>? solve(Level level) {
     final initial = PuzzleState.initial(level);
     final queue = Queue<_SearchNode>()..add(_SearchNode(initial, const []));
-    final visited = <String>{_key(initial.blocks)};
+    final visited = <String>{_key(initial)};
     while (queue.isNotEmpty) {
       final node = queue.removeFirst();
-      if (PathValidator.hasEscapePath(node.state)) return node.moves;
+      if (node.state.isComplete) return node.moves;
       for (final block in node.state.blocks) {
         for (final target in block.position.neighbors) {
           if (!MoveValidator.canMove(node.state, block.id, target)) continue;
-          final blocks = node.state.blocks
-              .map((item) => item.id == block.id ? item.at(target) : item)
-              .toList();
-          if (!visited.add(_key(blocks))) continue;
+          final next = _move(node.state, block.id, target);
+          if (!visited.add(_key(next))) continue;
           if (visited.length > maxStates) {
             throw StateError('Solver state limit exceeded: $maxStates');
           }
           queue.add(
-            _SearchNode(PuzzleState(level: level, blocks: blocks), [
-              ...node.moves,
-              PuzzleMove(block.id, target),
-            ]),
+            _SearchNode(next, [...node.moves, PuzzleMove(block.id, target)]),
           );
         }
       }
@@ -297,7 +299,7 @@ class PuzzleSolver {
     return null;
   }
 
-  String _key(List<Block> blocks) => blocks
-      .map((block) => '${block.position.x},${block.position.y}')
-      .join(';');
+  String _key(PuzzleState state) =>
+      '${state.blocks.map((block) => '${block.position.x},${block.position.y}').join(';')}'
+      '|${state.echo?.x},${state.echo?.y}';
 }

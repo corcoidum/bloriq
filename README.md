@@ -1,57 +1,59 @@
-# BLORIQ (블로릭)
+# BLORIQ
 
-**Move Smart. Find Your Way.**
+초록색 목표 블록을 한 칸씩 밀어 별 모양 출구로 보내는 오프라인 퍼즐입니다. 블록이 비운 칸에 한 턴 동안 잔상이 남아 다음 이동을 막습니다. 현재는 핵심 재미와 학습 흐름을 검증하기 위한 **15개 스테이지 프로토타입**입니다.
 
-블록을 움직여, 탈출의 길을 열어라.
-
-BLORIQ는 Flutter와 Flame으로 만드는 오프라인 블록 경로 퍼즐입니다. 이 저장소는 Android 출시를 위한 **Phase 1 프로토타입**으로, 5×5 보드와 첫 10개 스테이지를 중심으로 개발합니다. 앱 이름과 Android package ID는 상표 및 스토어 검토 전까지 후보입니다.
+현재 규칙을 기준으로 정리한 후속 제작 지시와 완료 기준은 [개발 마스터 프롬프트 v3](docs/ECHO_BLOCK_MASTER_PROMPT_V3.md)를 참고하세요.
 
 ## 게임 방법
 
-1. 블록을 상하좌우로 한 칸씩 드래그해 길을 만듭니다. 다른 블록이나 장애물과 겹치거나 보드 밖으로 이동할 수 없습니다.
-2. 시작점에서 출발해 빈 칸을 상하좌우로 연결하고 도착점까지 경로를 그립니다. 같은 칸을 두 번 지나거나 블록을 통과할 수 없습니다.
-3. 실수했으면 Undo로 직전 이동을 취소하거나 Restart로 스테이지를 처음부터 다시 시작합니다.
+- 블록을 상하좌우로 드래그하면 한 번에 한 칸 이동합니다. 초록 블록을 별까지 보내면 클리어합니다.
+- 성공적으로 이동하면 출발 칸에 잔상이 생깁니다. 이전 잔상은 다음 이동을 판정할 때까지 장애물로 남고, 그 이동이 끝나면 새 잔상으로 교체됩니다.
+- 스위치가 있는 스테이지에서는 스위치 위의 잔상이 문을 엽니다. 잔상이 남아 있는 동안 문으로 들어갈 수 있고, 다음 이동을 마치면 이전 잔상이 사라지며 문이 닫힙니다. 블록이 문 위에 있을 때 문이 닫혀도 블록을 문 밖으로 이동할 수 있습니다.
+- 막힌 칸으로 드래그하거나 가만히 기다리는 것은 턴을 소비하지 않습니다.
+- Undo는 블록 위치와 잔상을 함께 복원하고 Restart는 현재 스테이지를 처음부터 시작합니다. 우측 상단에서 시스템 효과음을 켜거나 끌 수 있습니다.
 
-## 개발 환경
+첫 스테이지는 조작을, 두 번째는 잔상을, 세 번째 이후에는 블록을 교대로 움직이거나 우회하는 방법을 연습하도록 구성했습니다. 11~13단계는 선택과 순서를 고민하는 도전 퍼즐이며, 14~15단계에서 잔상 스위치와 문을 체험합니다. 클리어 후 최단 이동 횟수를 확인하고 다시 도전할 수 있습니다. 재미와 난이도는 실제 사용자 테스트로 확인해야 합니다.
 
-- Flutter stable SDK와 Flutter에 포함된 Dart SDK. 개발 시 확인한 stable 버전: Flutter 3.47.8 / Dart 3.13.7.
-- Android 실행 및 빌드에는 Android SDK, Android SDK Command-line Tools, Android 기기 또는 에뮬레이터, 호환 JDK가 필요합니다.
-- Flutter 및 Android 설치와 라이선스 안내는 [Flutter 공식 설치 문서](https://docs.flutter.dev/get-started/install)와 [Android 설정 문서](https://docs.flutter.dev/platform-integration/android/setup)를 참고하세요.
-- Flame은 `pubspec.yaml`의 의존성으로 설치합니다. 패키지 버전은 프로젝트 설정을 기준으로 합니다.
+## 실행 방법
 
-SDK 설치와 Android 기기 연결 후 프로젝트 폴더에서 실행합니다.
+Flutter stable SDK가 필요합니다. 이 프로젝트의 개발 기준은 Flutter 3.47.8 / Dart 3.13.7입니다. 설치는 [Flutter 공식 문서](https://docs.flutter.dev/get-started/install)를 참고하세요. Chrome으로 실행할 때는 Android SDK가 필요하지 않습니다.
 
-```bash
+다른 컴퓨터에서 처음 시작한다면 `git clone https://github.com/corcoidum/bloriq.git`으로 저장소를 내려받고 `cd bloriq`으로 이동합니다. 이미 저장소가 있다면 본인 작업을 확인한 후 `git pull --ff-only`로 최신 변경을 가져옵니다.
+
+프로젝트 폴더에서 PowerShell 또는 터미널을 열고:
+
+```powershell
 flutter --version
 flutter doctor -v
 flutter pub get
 flutter gen-l10n
 flutter devices
-flutter run
+flutter run -d chrome
 ```
 
-여러 기기가 표시된다면 `flutter run -d <기기_ID>`로 선택합니다. Android 라이선스 관련 문제가 `flutter doctor`에 표시되면 안내에 따라 `flutter doctor --android-licenses`를 실행하고 내용을 확인하세요.
+Chrome 창이 열리면 마우스로 블록을 드래그해 플레이합니다. 종료하려면 실행 중인 터미널에서 `q`를 누릅니다. 최초 실행은 의존성과 웹 빌드 도구 다운로드로 시간이 걸릴 수 있습니다.
 
-## 정적 검사와 테스트
+Android 실행에는 Android SDK, 호환 JDK, USB 디버깅을 켠 기기 또는 에뮬레이터가 필요합니다. [Android 환경 설정](https://docs.flutter.dev/platform-integration/android/setup) 후 `flutter devices`에서 기기 ID를 확인하고 `flutter run -d <기기_ID>`를 실행합니다. `flutter doctor`가 Android 라이선스 동의를 요청하면 `flutter doctor --android-licenses`를 실행합니다.
 
-```bash
+Android debug APK가 필요하면 `flutter build apk --debug`를 실행합니다. 결과는 `build/app/outputs/flutter-apk/app-debug.apk`에 생성됩니다. 이 파일은 테스트용이며 스토어 배포용이 아닙니다.
+
+Android SDK 설치, 휴대폰 연결, APK 설치 및 확인할 항목은 [Android 휴대폰 테스트 안내](docs/ANDROID_PHONE_TEST.md)를 참고하세요. 이번 작업 환경에서는 Android SDK와 기기가 없어 APK 빌드와 실기기 실행을 확인하지 못했습니다.
+
+## 검증
+
+```powershell
 flutter gen-l10n
 flutter analyze
 flutter test
+python tools/validate_levels.py
 ```
 
-자동 테스트 성공만으로 Android 실기기에서의 터치, 성능, 다양한 화면 크기가 검증되는 것은 아닙니다. 실기기 테스트 결과는 별도로 기록해야 합니다.
+독립 Python 검증기는 각 스테이지의 해결 가능성과 최단 이동 횟수를 BFS로 확인하고, 잔상을 무시한 경우의 최단 이동과 비교합니다. Flutter 테스트는 이동 판정, 잔상, Undo/Restart, solver와 화면 조작 흐름을 검증합니다. 자동 테스트만으로 터치 감도, 사운드 출력, 실기기 성능이나 첫 사용자 이해도를 보장하지는 않습니다.
 
-## 스테이지 데이터
+## 데이터와 범위
 
-스테이지는 [`assets/levels/levels.json`](assets/levels/levels.json)에 배열로 저장합니다. 각 스테이지는 `id`, 보드 크기, 시작점과 도착점, 블록, 장애물, 특수 규칙, `minimumMoves`, 난이도를 포함합니다. 좌표의 원점 `(0, 0)`은 왼쪽 위입니다. `minimumMoves`는 임의로 추정하지 않고 solver의 최소 이동 결과와 일치하도록 검증합니다.
+`assets/levels/levels.json`에서 `startPosition`은 목표 블록 시작 위치, `exitPosition`은 출구, `blocks`는 일반 블록, `obstacles`는 고정 장애물입니다. 잔상 스위치 스테이지는 `specialRules`에 `echoGate`와 스위치·문 좌표를 지정합니다. 좌표 `(0, 0)`은 왼쪽 위입니다. `minimumMoves`는 잔상까지 포함해 검증한 최단 이동 횟수입니다. 새로운 스테이지를 추가하면 위 테스트와 검증기를 다시 실행하세요.
 
-스테이지를 추가하거나 수정한 후에는 `flutter test`와 `python3 tools/validate_levels.py`를 실행해 데이터 유효성과 해결 가능성을 확인하세요. Phase 1에서 지원하지 않는 특수 규칙은 빈 배열로 두어야 하며, 방향 제한·스위치·게이트는 후속 단계에서 구현합니다.
+앱은 로컬에서 동작하며 계정, 서버, 광고, 결제, 진행 저장과 배포 기능은 없습니다. 효과음은 운영체제의 시스템 사운드 및 기기 설정에 따라 다를 수 있습니다. Android 아이콘과 서명은 출시용이 아닙니다. 실기기 사용자 테스트, 접근성 검토 및 정식 출시 준비는 후속 작업입니다.
 
-## 현재 범위와 제한
-
-Phase 1은 핵심 퍼즐의 플레이 가능성과 정확성을 검증하는 단계입니다. 광고, 실제 결제, 계정, 서버, 정식 출시를 위한 개인정보 동의 및 Google Play 제출은 이 단계의 범위가 아닙니다. 사운드, 별 보상, 진행 상황 저장, 힌트, 수동 언어 선택은 후속 단계에서 다룹니다. 현재 한국어 및 영어 문구는 기기 언어에 따라 적용하고, 그 밖의 언어는 영어로 표시합니다. 기기별 사용성, 재미, 난이도는 별도의 실제 사용자 테스트가 필요합니다. Android 앱 아이콘은 Flutter 기본 임시 아이콘이며, 출시 전 BLORIQ 전용 아이콘과 release 서명을 준비해야 합니다. 현 템플릿의 release 빌드는 임시 debug 서명 설정이므로 스토어 제출용이 아닙니다.
-
-## 공개 저장소와 개인정보
-
-이 프로젝트의 GitHub 저장소는 공개되어 있습니다. API 키, 광고 계정 ID, 서명 키, 비밀번호, 개인정보, 실제 환자 데이터는 파일이나 Git 이력에 넣지 마세요. 샘플 데이터는 가상 데이터만 사용합니다. 공개 배포와 스토어 제출은 개발자의 별도 승인 후 진행합니다.
+이 저장소는 공개 저장소입니다. 키, 비밀번호, 개인정보 및 실제 환자 정보를 Git 이력에 넣지 마세요.

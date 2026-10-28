@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flame/game.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'domain/puzzle.dart';
@@ -14,12 +14,13 @@ void main() => runApp(const BloriqApp());
 
 class BloriqApp extends StatelessWidget {
   const BloriqApp({super.key});
+
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'BLORIQ',
     debugShowCheckedModeBanner: false,
     theme: ThemeData(
-      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF60A5FA)),
+      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF5D78D6)),
       scaffoldBackgroundColor: const Color(0xFFF6F8FF),
       useMaterial3: true,
     ),
@@ -33,6 +34,7 @@ class BloriqApp extends StatelessWidget {
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
+
   @override
   State<GameScreen> createState() => _GameScreenState();
 }
@@ -46,9 +48,8 @@ class _GameScreenState extends State<GameScreen> {
   String? _dragBlock;
   Offset? _dragStart;
   Offset? _dragEnd;
-  Offset? _pathPointer;
-  bool _drawing = false;
-  bool _showingComplete = false;
+  bool _soundEnabled = true;
+  bool _gateBlocked = false;
 
   Future<List<Level>> _loadLevels() async {
     final json = jsonDecode(
@@ -67,118 +68,111 @@ class _GameScreenState extends State<GameScreen> {
       _controller = PuzzleController(_loaded[index]);
       _game = BloriqGame(_controller!);
       _dragBlock = null;
-      _drawing = false;
-      _showingComplete = false;
+      _dragStart = null;
+      _gateBlocked = false;
     });
   }
 
-  Position? _cell(Offset offset, double width) {
+  Position? _cell(Offset offset, double width, double height) {
     final level = _controller!.state.level;
     if (offset.dx < 0 ||
         offset.dy < 0 ||
         offset.dx >= width ||
-        offset.dy >= width) {
+        offset.dy >= height) {
       return null;
     }
     return Position(
       (offset.dx / width * level.boardWidth).floor(),
-      (offset.dy / width * level.boardHeight).floor(),
+      (offset.dy / height * level.boardHeight).floor(),
     );
   }
 
-  void _start(DragStartDetails details, double width) {
+  void _start(DragStartDetails details, double width, double height) {
     final controller = _controller!;
     if (controller.state.isComplete) return;
-    final cell = _cell(details.localPosition, width);
-    if (cell == null) return;
+    final cell = _cell(details.localPosition, width, height);
     _dragStart = details.localPosition;
+    _dragEnd = details.localPosition;
     _dragBlock = null;
-    _drawing = cell == controller.state.level.startPosition;
-    _pathPointer = details.localPosition;
-    if (_drawing) {
-      controller.clearPath();
-      controller.appendPath(cell);
-      setState(() {});
-      return;
-    }
     for (final block in controller.state.blocks) {
-      if (block.position == cell) _dragBlock = block.id;
+      if (block.position == cell) {
+        _dragBlock = block.id;
+        _game!.setDrag(block.id);
+        break;
+      }
     }
   }
 
-  void _update(DragUpdateDetails details, double width) {
-    if (!_drawing) return;
-    final controller = _controller!;
-    final previous = _pathPointer ?? details.localPosition;
-    final distance = (details.localPosition - previous).distance;
-    final cellSize = width / controller.state.level.boardWidth;
-    final samples = math.max(1, (distance / (cellSize / 5)).ceil());
-    // 포인터 이벤트 사이를 보간해 빠른 드래그의 누락을 줄인다.
-    for (var i = 1; i <= samples; i++) {
-      final point = Offset.lerp(previous, details.localPosition, i / samples)!;
-      final target = _cell(point, width);
-      if (target == null || controller.state.path.isEmpty) break;
-      final last = controller.state.path.last;
-      if (last == target) continue;
-      if (!controller.appendPath(target)) break;
-      if (controller.state.isComplete) break;
-    }
-    _pathPointer = details.localPosition;
-    setState(() {});
-    if (controller.state.isComplete && !_showingComplete) {
-      _showingComplete = true;
-      _drawing = false;
-      _complete();
+  void _update(DragUpdateDetails details) {
+    _dragEnd = details.localPosition;
+    if (_dragBlock != null && _dragStart != null) {
+      final delta = details.localPosition - _dragStart!;
+      // A block can move along only one axis per gesture.
+      final aligned = delta.dx.abs() >= delta.dy.abs()
+          ? Offset(delta.dx, 0)
+          : Offset(0, delta.dy);
+      _game!.setDrag(_dragBlock, aligned);
     }
   }
 
-  void _end(DragEndDetails details, double width, Offset? end) {
+  void _end(double width) {
     final controller = _controller!;
-    if (_dragBlock != null && _dragStart != null && end != null) {
-      final delta = end - _dragStart!;
-      final threshold = width / controller.state.level.boardWidth * .25;
+    if (_dragBlock != null && _dragStart != null && _dragEnd != null) {
+      final delta = _dragEnd! - _dragStart!;
+      final threshold = width / controller.state.level.boardWidth * .24;
       if (delta.distance >= threshold) {
         final block = controller.state.blocks.firstWhere(
           (item) => item.id == _dragBlock,
         );
-        final dx = delta.dx.abs() > delta.dy.abs() ? delta.dx.sign.toInt() : 0;
+        final from = block.position;
+        final previousEcho = controller.state.echo;
+        final dx = delta.dx.abs() >= delta.dy.abs() ? delta.dx.sign.toInt() : 0;
         final dy = dx == 0 ? delta.dy.sign.toInt() : 0;
-        controller.move(
-          block.id,
-          Position(block.position.x + dx, block.position.y + dy),
-        );
+        final target = Position(from.x + dx, from.y + dy);
+        if (controller.move(block.id, target)) {
+          _gateBlocked = false;
+          _game!.animateMove(block.id, from, previousEcho);
+          if (_soundEnabled) {
+            SystemSound.play(
+              controller.state.isComplete
+                  ? SystemSoundType.alert
+                  : SystemSoundType.click,
+            );
+          }
+          HapticFeedback.selectionClick();
+        } else {
+          _gateBlocked =
+              target == controller.state.level.echoGate &&
+              !controller.state.isGateOpen;
+          _game!.flashBlocked(target);
+        }
       }
     }
+    _game!.setDrag(null);
     _dragBlock = null;
-    _drawing = false;
     _dragStart = null;
+    _dragEnd = null;
     setState(() {});
   }
 
-  Future<void> _complete() async {
-    final t = AppLocalizations.of(context)!;
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(t.complete),
-        content: Text(t.completeDetail(_controller!.state.moves)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(t.close),
-          ),
-          if (_index + 1 < _loaded.length)
-            FilledButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-                _select(_index + 1);
-              },
-              child: Text(t.next),
-            ),
-        ],
+  String _hint(AppLocalizations t, PuzzleController controller) {
+    final state = controller.state;
+    final hasMove = state.blocks.any(
+      (block) => block.position.neighbors.any(
+        (target) => MoveValidator.canMove(state, block.id, target),
       ),
     );
+    // This detects only states with no legal move, not every unsolvable state.
+    if (!state.isComplete && !hasMove && controller.canUndo) return t.noMoves;
+    if (state.level.echoGate == null) {
+      return state.echo == null ? t.instruction : t.echoInstruction;
+    }
+    if (_gateBlocked) return t.gateClosed;
+    if (state.isGateOpen) return t.gateOpen;
+    if (state.blocks.any((block) => block.position == state.level.echoGate)) {
+      return t.gateOccupied;
+    }
+    return t.gateInstruction;
   }
 
   @override
@@ -199,65 +193,163 @@ class _GameScreenState extends State<GameScreen> {
               _game = BloriqGame(_controller!);
             }
             final controller = _controller!;
+            final hint = _hint(t, controller);
             return LayoutBuilder(
               builder: (context, constraints) {
-                final width = math.min(
-                  constraints.maxWidth - 32,
-                  math.min(480.0, constraints.maxHeight * .54),
+                final width = math.max(
+                  1.0,
+                  math.min(
+                    constraints.maxWidth - 32,
+                    math.min(
+                      460.0,
+                      constraints.maxHeight *
+                          .46 *
+                          controller.state.level.boardWidth /
+                          controller.state.level.boardHeight,
+                    ),
+                  ),
                 );
+                final height =
+                    width *
+                    controller.state.level.boardHeight /
+                    controller.state.level.boardWidth;
                 return Center(
                   child: SingleChildScrollView(
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text(
-                            'BLORIQ',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 3,
-                              fontSize: 30,
-                              color: Color(0xFF334155),
-                            ),
+                          Row(
+                            children: [
+                              const Expanded(
+                                child: Text(
+                                  'BLORIQ',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 2,
+                                    fontSize: 23,
+                                    color: Color(0xFF334155),
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: _soundEnabled ? t.soundOn : t.soundOff,
+                                onPressed: () => setState(
+                                  () => _soundEnabled = !_soundEnabled,
+                                ),
+                                icon: Icon(
+                                  _soundEnabled
+                                      ? Icons.volume_up_outlined
+                                      : Icons.volume_off_outlined,
+                                ),
+                              ),
+                            ],
                           ),
-                          Text(t.tagline, textAlign: TextAlign.center),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 8),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
                                 t.level(_index + 1),
-                                style: Theme.of(context).textTheme.titleLarge,
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(fontWeight: FontWeight.bold),
                               ),
                               Text(t.moves(controller.state.moves)),
                             ],
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 12),
                           SizedBox(
                             width: width,
-                            height: width,
-                            child: GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              dragStartBehavior: DragStartBehavior.down,
-                              onPanStart: (d) {
-                                _dragEnd = d.localPosition;
-                                _start(d, width);
-                              },
-                              onPanUpdate: (d) {
-                                _dragEnd = d.localPosition;
-                                _update(d, width);
-                              },
-                              onPanEnd: (d) => _end(d, width, _dragEnd),
-                              onPanCancel: () {
-                                _dragBlock = null;
-                                _drawing = false;
-                              },
-                              child: GameWidget(game: _game!),
+                            height: height,
+                            child: Semantics(
+                              label: t.boardLabel,
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                dragStartBehavior: DragStartBehavior.down,
+                                onPanStart: (d) => _start(d, width, height),
+                                onPanUpdate: _update,
+                                onPanEnd: (_) => _end(width),
+                                onPanCancel: () {
+                                  _game!.setDrag(null);
+                                  _dragBlock = null;
+                                  _dragStart = null;
+                                  _dragEnd = null;
+                                },
+                                child: GameWidget(game: _game!),
+                              ),
                             ),
                           ),
                           const SizedBox(height: 14),
-                          Text(t.instruction, textAlign: TextAlign.center),
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 250),
+                            child: controller.state.isComplete
+                                ? Column(
+                                    key: const ValueKey('complete'),
+                                    children: [
+                                      Text(
+                                        t.complete,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleLarge
+                                            ?.copyWith(
+                                              color: const Color(0xFF15845F),
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                      Text(
+                                        t.completeDetail(
+                                          controller.state.moves,
+                                        ),
+                                      ),
+                                      Text(
+                                        controller.state.moves ==
+                                                controller
+                                                    .state
+                                                    .level
+                                                    .minimumMoves
+                                            ? t.optimalComplete
+                                            : t.improveComplete(
+                                                controller
+                                                    .state
+                                                    .level
+                                                    .minimumMoves,
+                                              ),
+                                        textAlign: TextAlign.center,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              color: const Color(0xFF5271A4),
+                                            ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      if (_index + 1 < _loaded.length)
+                                        FilledButton.icon(
+                                          onPressed: () => _select(_index + 1),
+                                          icon: const Icon(Icons.arrow_forward),
+                                          label: Text(t.next),
+                                        )
+                                      else
+                                        FilledButton.icon(
+                                          onPressed: () => _select(0),
+                                          icon: const Icon(Icons.replay),
+                                          label: Text(t.firstLevel),
+                                        ),
+                                    ],
+                                  )
+                                : Text(
+                                    hint,
+                                    key: ValueKey(hint),
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyLarge,
+                                  ),
+                          ),
                           const SizedBox(height: 12),
                           Wrap(
                             alignment: WrapAlignment.center,
@@ -267,7 +359,8 @@ class _GameScreenState extends State<GameScreen> {
                                 onPressed: controller.canUndo
                                     ? () => setState(() {
                                         controller.undo();
-                                        _showingComplete = false;
+                                        _game!.clearEffects();
+                                        _gateBlocked = false;
                                       })
                                     : null,
                                 icon: const Icon(Icons.undo),
@@ -276,7 +369,8 @@ class _GameScreenState extends State<GameScreen> {
                               OutlinedButton.icon(
                                 onPressed: () => setState(() {
                                   controller.restart();
-                                  _showingComplete = false;
+                                  _game!.clearEffects();
+                                  _gateBlocked = false;
                                 }),
                                 icon: const Icon(Icons.refresh),
                                 label: Text(t.restart),

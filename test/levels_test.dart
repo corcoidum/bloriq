@@ -7,15 +7,18 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('10개 스테이지는 모두 해결 가능하고 최소 이동 수가 정확하다', () async {
+  test('열다섯 스테이지는 모두 탈출 가능하고 최소 이동 수가 정확하다', () async {
     final data = jsonDecode(
       await rootBundle.loadString('assets/levels/levels.json'),
     ) as List<dynamic>;
     final levels = data
         .map((item) => Level.fromJson(item as Map<String, dynamic>))
         .toList();
-    expect(levels, hasLength(10));
-    expect(levels.map((level) => level.id).toSet(), hasLength(10));
+    expect(levels, hasLength(15));
+    expect(
+      levels.map((level) => level.id).toList(),
+      List.generate(15, (i) => i + 1),
+    );
 
     for (final level in levels) {
       final solution = const PuzzleSolver().solve(level);
@@ -34,10 +37,66 @@ void main() {
         );
       }
       expect(
-        PathValidator.hasEscapePath(controller.state),
+        controller.state.isComplete,
         isTrue,
-        reason: 'Level ${level.id} solution must open a path',
+        reason: 'Level ${level.id} solution must reach the exit',
       );
     }
+  });
+
+  test('두 번째 레벨은 잔상을 한 번 없앤 뒤 탈출한다', () async {
+    final data = jsonDecode(
+      await rootBundle.loadString('assets/levels/levels.json'),
+    ) as List<dynamic>;
+    final level = Level.fromJson(data[1] as Map<String, dynamic>);
+    final controller = PuzzleController(level);
+
+    expect(controller.move('b1', const Position(1, 0)), isTrue);
+    expect(controller.state.echo, const Position(1, 1));
+    expect(controller.move('goal', const Position(1, 1)), isFalse);
+    expect(controller.state.moves, 1);
+    expect(controller.move('b1', const Position(2, 0)), isTrue);
+    expect(controller.state.echo, const Position(1, 0));
+    expect(controller.move('goal', const Position(1, 1)), isTrue);
+    expect(controller.move('goal', const Position(2, 1)), isTrue);
+    expect(controller.state.isComplete, isTrue);
+  });
+
+  test('11단계의 막다른 선택은 Undo로 복구할 수 있다', () async {
+    final data = jsonDecode(
+      await rootBundle.loadString('assets/levels/levels.json'),
+    ) as List<dynamic>;
+    final controller = PuzzleController(
+      Level.fromJson(data[10] as Map<String, dynamic>),
+    );
+    expect(controller.move('b1', const Position(1, 0)), isTrue);
+    for (final block in controller.state.blocks) {
+      for (final target in block.position.neighbors) {
+        expect(
+          MoveValidator.canMove(controller.state, block.id, target),
+          isFalse,
+        );
+      }
+    }
+    expect(controller.undo(), isTrue);
+    expect(controller.move('b1', const Position(2, 1)), isTrue);
+  });
+
+  test('14단계 스위치 잔상으로 열린 문에 들어가고 닫힌 문에서 나간다', () async {
+    final data = jsonDecode(
+      await rootBundle.loadString('assets/levels/levels.json'),
+    ) as List<dynamic>;
+    final controller = PuzzleController(
+      Level.fromJson(data[13] as Map<String, dynamic>),
+    );
+    expect(controller.state.isGateOpen, isFalse);
+    expect(controller.move('goal', const Position(1, 1)), isFalse);
+    expect(controller.move('b1', const Position(2, 0)), isTrue);
+    expect(controller.state.isGateOpen, isTrue);
+    expect(controller.move('goal', const Position(1, 1)), isTrue);
+    expect(controller.state.isGateOpen, isFalse);
+    expect(controller.state.goal.position, const Position(1, 1));
+    expect(controller.move('goal', const Position(2, 1)), isTrue);
+    expect(controller.state.isComplete, isTrue);
   });
 }
