@@ -1,3 +1,5 @@
+import 'support/legacy_levels.dart';
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -19,7 +21,7 @@ void main() {
     tester,
   ) async {
     final data = jsonDecode(
-      File('assets/levels/levels.json').readAsStringSync(),
+      File('assets/levels/legacy_levels.json').readAsStringSync(),
     ) as List<dynamic>;
     final levels = data
         .map((value) => Level.fromJson(value as Map<String, dynamic>))
@@ -27,7 +29,7 @@ void main() {
         .toList();
     expect(levels, hasLength(10));
 
-    await tester.pumpWidget(const BloriqApp());
+    await tester.pumpWidget(BloriqApp(loadLevels: loadLegacyLevels));
     for (
       var frame = 0;
       frame < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;

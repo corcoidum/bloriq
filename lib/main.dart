@@ -16,7 +16,10 @@ import 'progress/progress_repository.dart';
 void main() => runApp(const BloriqApp());
 
 class BloriqApp extends StatelessWidget {
-  const BloriqApp({super.key});
+  const BloriqApp({super.key, this.loadLevels});
+
+  /// 테스트에서 이전 스테이지 구성을 주입할 수 있다.
+  final Future<List<Level>> Function()? loadLevels;
 
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -31,12 +34,14 @@ class BloriqApp extends StatelessWidget {
     supportedLocales: AppLocalizations.supportedLocales,
     localeResolutionCallback: (locale, supported) =>
         locale?.languageCode == 'ko' ? const Locale('ko') : const Locale('en'),
-    home: const GameScreen(),
+    home: GameScreen(loadLevels: loadLevels),
   );
 }
 
 class GameScreen extends StatefulWidget {
-  const GameScreen({super.key});
+  const GameScreen({super.key, this.loadLevels});
+
+  final Future<List<Level>> Function()? loadLevels;
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -65,6 +70,12 @@ class _GameScreenState extends State<GameScreen> {
       WidgetsBinding.instance.addObserver(audio);
     } else {
       audio.dispose();
+    }
+    final injected = widget.loadLevels;
+    if (injected != null) {
+      final levels = await injected();
+      if (levels.isEmpty) throw const FormatException('No levels');
+      return levels;
     }
     final json = jsonDecode(
       await rootBundle.loadString('assets/levels/levels.json'),
@@ -289,6 +300,28 @@ class _GameScreenState extends State<GameScreen> {
     final state = controller.state;
     // This detects only states with no legal move, not every unsolvable state.
     if (_hasNoMoves(controller)) return t.noMoves;
+    final mechanics = <String>[
+      if (state.level.echoErasers.isNotEmpty) t.eraserRule,
+      if (state.level.echoHolds.isNotEmpty) t.holdRule,
+      if (state.level.oneWays.isNotEmpty) t.oneWayRule,
+      if (state.level.goalOnlyTiles.isNotEmpty) t.goalOnlyRule,
+    ];
+    if (mechanics.isNotEmpty) {
+      // 팝업 없이 현재 스테이지의 규칙을 보드 아래에 계속 표시한다.
+      if (state.level.echoGate != null) {
+        final gateHint = _gateBlocked
+            ? t.gateClosed
+            : state.isGateOpen
+            ? t.gateOpen
+            : state.blocks.any(
+                (block) => block.position == state.level.echoGate,
+              )
+            ? t.gateOccupied
+            : t.gateInstruction;
+        mechanics.add(gateHint);
+      }
+      return mechanics.join('\n');
+    }
     if (state.level.echoGate == null) {
       return state.echo == null ? t.instruction : t.echoInstruction;
     }

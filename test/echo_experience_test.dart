@@ -1,3 +1,5 @@
+import 'support/legacy_levels.dart';
+
 import 'package:bloriq/domain/puzzle.dart';
 import 'package:bloriq/game/bloriq_game.dart';
 import 'package:bloriq/main.dart';
@@ -26,7 +28,7 @@ void main() {
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
-    await tester.pumpWidget(const BloriqApp());
+    await tester.pumpWidget(BloriqApp(loadLevels: loadLegacyLevels));
     final boardFinder = find.byType(GameWidget<BloriqGame>);
     for (var i = 0; i < 100 && boardFinder.evaluate().isEmpty; i++) {
       await tester.pump(const Duration(milliseconds: 20));

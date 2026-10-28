@@ -22,12 +22,12 @@
     "boardWidth": 3,
     "boardHeight": 3,
     "startPosition": {
-      "x": 0,
-      "y": 1
+      "x": 1,
+      "y": 2
     },
     "exitPosition": {
       "x": 2,
-      "y": 1
+      "y": 0
     },
     "blocks": [
       {
@@ -38,245 +38,262 @@
     ],
     "obstacles": [
       {
-        "x": 0,
-        "y": 0
-      },
-      {
-        "x": 0,
-        "y": 2
+        "x": 2,
+        "y": 1
       }
     ],
-    "specialRules": [],
+    "specialRules": [
+      {
+        "type": "echoEraser",
+        "positions": [
+          {
+            "x": 1,
+            "y": 1
+          }
+        ]
+      }
+    ],
     "minimumMoves": 4,
     "difficulty": "beginner"
   },
   {
     "id": 3,
-    "boardWidth": 4,
-    "boardHeight": 4,
+    "boardWidth": 3,
+    "boardHeight": 3,
     "startPosition": {
-      "x": 0,
+      "x": 1,
       "y": 1
     },
     "exitPosition": {
-      "x": 3,
-      "y": 1
+      "x": 0,
+      "y": 2
     },
     "blocks": [
       {
         "id": "b1",
-        "x": 1,
-        "y": 2
+        "x": 0,
+        "y": 1
       },
       {
         "id": "b2",
         "x": 1,
-        "y": 1
+        "y": 2
       }
     ],
     "obstacles": [
       {
-        "x": 0,
-        "y": 2
-      },
-      {
-        "x": 1,
-        "y": 0
-      },
-      {
         "x": 2,
         "y": 0
       },
       {
         "x": 2,
-        "y": 2
+        "y": 1
       },
       {
         "x": 2,
-        "y": 3
-      },
-      {
-        "x": 3,
-        "y": 3
+        "y": 2
       }
     ],
-    "specialRules": [],
-    "minimumMoves": 7,
+    "specialRules": [
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 1,
+            "y": 0
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 5,
     "difficulty": "beginner"
   },
   {
     "id": 4,
-    "boardWidth": 4,
-    "boardHeight": 4,
+    "boardWidth": 3,
+    "boardHeight": 3,
     "startPosition": {
-      "x": 0,
-      "y": 1
+      "x": 2,
+      "y": 2
     },
     "exitPosition": {
-      "x": 3,
-      "y": 1
+      "x": 1,
+      "y": 0
     },
     "blocks": [
       {
         "id": "b1",
-        "x": 1,
-        "y": 1
+        "x": 2,
+        "y": 0
       },
       {
         "id": "b2",
         "x": 2,
-        "y": 0
+        "y": 1
       }
     ],
     "obstacles": [
       {
-        "x": 0,
+        "x": 1,
         "y": 2
-      },
-      {
-        "x": 2,
-        "y": 1
-      },
-      {
-        "x": 0,
-        "y": 0
       }
     ],
-    "specialRules": [],
-    "minimumMoves": 7,
+    "specialRules": [
+      {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 2,
+            "y": 2
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 6,
     "difficulty": "beginner"
   },
   {
     "id": 5,
-    "boardWidth": 4,
-    "boardHeight": 4,
+    "boardWidth": 3,
+    "boardHeight": 3,
     "startPosition": {
       "x": 1,
-      "y": 0
+      "y": 2
     },
     "exitPosition": {
-      "x": 1,
-      "y": 3
+      "x": 0,
+      "y": 1
     },
     "blocks": [
       {
         "id": "b1",
-        "x": 0,
-        "y": 2
-      },
-      {
-        "id": "b2",
-        "x": 1,
+        "x": 2,
         "y": 2
       }
     ],
     "obstacles": [
       {
-        "x": 3,
+        "x": 0,
         "y": 2
-      },
-      {
-        "x": 2,
-        "y": 2
-      },
-      {
-        "x": 3,
-        "y": 3
       }
     ],
-    "specialRules": [],
+    "specialRules": [
+      {
+        "type": "oneWay",
+        "tiles": [
+          {
+            "x": 1,
+            "y": 2,
+            "dx": 1,
+            "dy": 0
+          }
+        ]
+      }
+    ],
     "minimumMoves": 6,
     "difficulty": "beginner"
   },
   {
     "id": 6,
-    "boardWidth": 4,
-    "boardHeight": 4,
+    "boardWidth": 3,
+    "boardHeight": 3,
     "startPosition": {
       "x": 0,
-      "y": 1
+      "y": 2
     },
     "exitPosition": {
-      "x": 3,
-      "y": 1
+      "x": 2,
+      "y": 2
     },
     "blocks": [
       {
         "id": "b1",
-        "x": 0,
-        "y": 2
+        "x": 1,
+        "y": 1
       }
     ],
     "obstacles": [
       {
-        "x": 3,
-        "y": 0
-      },
-      {
         "x": 1,
-        "y": 0
-      },
-      {
-        "x": 1,
-        "y": 1
+        "y": 2
       },
       {
         "x": 2,
         "y": 0
-      },
-      {
-        "x": 1,
-        "y": 3
       }
     ],
-    "specialRules": [],
-    "minimumMoves": 8,
-    "difficulty": "intermediate"
+    "specialRules": [
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 1,
+          "y": 0
+        },
+        "gate": {
+          "x": 0,
+          "y": 1
+        }
+      }
+    ],
+    "minimumMoves": 6,
+    "difficulty": "beginner"
   },
   {
     "id": 7,
     "boardWidth": 4,
     "boardHeight": 4,
     "startPosition": {
-      "x": 0,
-      "y": 0
+      "x": 2,
+      "y": 3
     },
     "exitPosition": {
-      "x": 3,
-      "y": 3
+      "x": 0,
+      "y": 2
     },
     "blocks": [
       {
         "id": "b1",
         "x": 3,
         "y": 1
-      },
-      {
-        "id": "b2",
-        "x": 0,
-        "y": 1
       }
     ],
     "obstacles": [
       {
         "x": 0,
-        "y": 3
-      },
-      {
-        "x": 2,
-        "y": 3
+        "y": 0
       },
       {
         "x": 2,
         "y": 0
       },
       {
-        "x": 1,
-        "y": 0
+        "x": 2,
+        "y": 2
       }
     ],
-    "specialRules": [],
-    "minimumMoves": 8,
+    "specialRules": [
+      {
+        "type": "echoEraser",
+        "positions": [
+          {
+            "x": 1,
+            "y": 1
+          }
+        ]
+      },
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 1,
+          "y": 2
+        },
+        "gate": {
+          "x": 1,
+          "y": 3
+        }
+      }
+    ],
+    "minimumMoves": 7,
     "difficulty": "intermediate"
   },
   {
@@ -284,108 +301,153 @@
     "boardWidth": 4,
     "boardHeight": 4,
     "startPosition": {
-      "x": 0,
+      "x": 2,
       "y": 1
     },
     "exitPosition": {
-      "x": 3,
-      "y": 1
+      "x": 1,
+      "y": 0
     },
     "blocks": [
       {
         "id": "b1",
         "x": 1,
-        "y": 0
-      },
-      {
-        "id": "b2",
-        "x": 1,
         "y": 1
       },
       {
-        "id": "b3",
-        "x": 1,
-        "y": 3
+        "id": "b2",
+        "x": 0,
+        "y": 2
       }
     ],
     "obstacles": [
       {
-        "x": 1,
-        "y": 2
-      },
-      {
-        "x": 3,
-        "y": 3
-      },
-      {
-        "x": 2,
-        "y": 2
-      },
-      {
-        "x": 3,
-        "y": 2
-      },
-      {
         "x": 0,
-        "y": 3
+        "y": 1
       },
       {
         "x": 2,
-        "y": 1
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 3
       }
     ],
-    "specialRules": [],
-    "minimumMoves": 10,
+    "specialRules": [
+      {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 2,
+            "y": 2
+          }
+        ]
+      },
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 1,
+            "y": 2
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 7,
     "difficulty": "intermediate"
   },
   {
     "id": 9,
     "boardWidth": 4,
-    "boardHeight": 5,
+    "boardHeight": 4,
     "startPosition": {
-      "x": 1,
-      "y": 0
+      "x": 0,
+      "y": 3
     },
     "exitPosition": {
-      "x": 2,
-      "y": 4
+      "x": 0,
+      "y": 0
     },
     "blocks": [
       {
         "id": "b1",
-        "x": 2,
+        "x": 0,
         "y": 1
       },
       {
         "id": "b2",
+        "x": 1,
+        "y": 0
+      },
+      {
+        "id": "b3",
         "x": 1,
         "y": 1
       }
     ],
     "obstacles": [
       {
-        "x": 2,
-        "y": 3
-      },
-      {
         "x": 1,
         "y": 2
       },
       {
-        "x": 0,
-        "y": 0
+        "x": 1,
+        "y": 3
       },
       {
-        "x": 0,
-        "y": 4
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 3
       },
       {
         "x": 3,
-        "y": 4
+        "y": 1
       }
     ],
-    "specialRules": [],
-    "minimumMoves": 11,
+    "specialRules": [
+      {
+        "type": "echoEraser",
+        "positions": [
+          {
+            "x": 1,
+            "y": 0
+          }
+        ]
+      },
+      {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 1,
+            "y": 1
+          }
+        ]
+      },
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 2,
+          "y": 0
+        },
+        "gate": {
+          "x": 0,
+          "y": 2
+        }
+      }
+    ],
+    "minimumMoves": 7,
     "difficulty": "intermediate"
   },
   {
@@ -393,41 +455,40 @@
     "boardWidth": 4,
     "boardHeight": 4,
     "startPosition": {
-      "x": 0,
-      "y": 0
+      "x": 2,
+      "y": 2
     },
     "exitPosition": {
-      "x": 3,
-      "y": 3
+      "x": 1,
+      "y": 0
     },
     "blocks": [
       {
         "id": "b1",
-        "x": 1,
+        "x": 3,
         "y": 0
       },
       {
         "id": "b2",
-        "x": 1,
-        "y": 2
-      },
-      {
-        "id": "b3",
-        "x": 3,
-        "y": 2
+        "x": 2,
+        "y": 1
       }
     ],
     "obstacles": [
       {
-        "x": 1,
-        "y": 3
+        "x": 0,
+        "y": 0
       },
       {
         "x": 0,
         "y": 1
       },
       {
-        "x": 2,
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 0,
         "y": 3
       },
       {
@@ -435,12 +496,40 @@
         "y": 1
       },
       {
-        "x": 3,
-        "y": 0
+        "x": 1,
+        "y": 2
       }
     ],
-    "specialRules": [],
-    "minimumMoves": 12,
+    "specialRules": [
+      {
+        "type": "echoEraser",
+        "positions": [
+          {
+            "x": 2,
+            "y": 2
+          }
+        ]
+      },
+      {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 3,
+            "y": 2
+          }
+        ]
+      },
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 3,
+            "y": 1
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 7,
     "difficulty": "intermediate"
   },
   {
@@ -448,18 +537,23 @@
     "boardWidth": 4,
     "boardHeight": 4,
     "startPosition": {
-      "x": 1,
-      "y": 2
+      "x": 3,
+      "y": 3
     },
     "exitPosition": {
-      "x": 3,
-      "y": 2
+      "x": 1,
+      "y": 3
     },
     "blocks": [
       {
         "id": "b1",
-        "x": 1,
-        "y": 1
+        "x": 2,
+        "y": 3
+      },
+      {
+        "id": "b2",
+        "x": 3,
+        "y": 2
       }
     ],
     "obstacles": [
@@ -468,144 +562,160 @@
         "y": 0
       },
       {
-        "x": 2,
-        "y": 0
-      },
-      {
         "x": 0,
         "y": 1
       },
       {
-        "x": 0,
-        "y": 2
+        "x": 2,
+        "y": 0
       },
       {
         "x": 2,
-        "y": 2
-      },
-      {
-        "x": 0,
-        "y": 3
-      },
-      {
-        "x": 1,
-        "y": 3
-      },
-      {
-        "x": 2,
-        "y": 3
+        "y": 1
       },
       {
         "x": 3,
-        "y": 3
+        "y": 0
       }
     ],
-    "specialRules": [],
+    "specialRules": [
+      {
+        "type": "echoEraser",
+        "positions": [
+          {
+            "x": 3,
+            "y": 2
+          }
+        ]
+      },
+      {
+        "type": "oneWay",
+        "tiles": [
+          {
+            "x": 1,
+            "y": 2,
+            "dx": -1,
+            "dy": 0
+          }
+        ]
+      },
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 2,
+            "y": 2
+          }
+        ]
+      }
+    ],
     "minimumMoves": 7,
-    "difficulty": "challenge"
+    "difficulty": "intermediate"
   },
   {
     "id": 12,
     "boardWidth": 4,
     "boardHeight": 4,
     "startPosition": {
-      "x": 0,
-      "y": 3
+      "x": 1,
+      "y": 2
     },
     "exitPosition": {
-      "x": 3,
+      "x": 2,
       "y": 0
     },
     "blocks": [
       {
         "id": "b1",
-        "x": 2,
-        "y": 2
+        "x": 3,
+        "y": 0
       },
       {
         "id": "b2",
-        "x": 2,
-        "y": 0
+        "x": 3,
+        "y": 2
+      },
+      {
+        "id": "b3",
+        "x": 0,
+        "y": 2
       }
     ],
     "obstacles": [
       {
-        "x": 0,
-        "y": 2
-      },
-      {
-        "x": 3,
-        "y": 1
-      },
-      {
-        "x": 1,
-        "y": 0
-      },
-      {
         "x": 2,
-        "y": 3
-      },
-      {
-        "x": 3,
-        "y": 2
-      },
-      {
-        "x": 0,
         "y": 1
       },
       {
-        "x": 0,
-        "y": 0
+        "x": 3,
+        "y": 3
       }
     ],
-    "specialRules": [],
-    "minimumMoves": 11,
-    "difficulty": "challenge"
+    "specialRules": [
+      {
+        "type": "echoEraser",
+        "positions": [
+          {
+            "x": 0,
+            "y": 2
+          }
+        ]
+      },
+      {
+        "type": "oneWay",
+        "tiles": [
+          {
+            "x": 1,
+            "y": 2,
+            "dx": 0,
+            "dy": 1
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 8,
+    "difficulty": "intermediate"
   },
   {
     "id": 13,
     "boardWidth": 4,
     "boardHeight": 4,
     "startPosition": {
-      "x": 1,
-      "y": 3
+      "x": 0,
+      "y": 0
     },
     "exitPosition": {
-      "x": 1,
-      "y": 0
+      "x": 2,
+      "y": 3
     },
     "blocks": [
       {
         "id": "b1",
-        "x": 0,
-        "y": 1
+        "x": 2,
+        "y": 0
       },
       {
         "id": "b2",
-        "x": 3,
-        "y": 0
+        "x": 0,
+        "y": 2
       },
       {
         "id": "b3",
         "x": 1,
-        "y": 2
+        "y": 1
       }
     ],
     "obstacles": [
       {
-        "x": 2,
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 1,
         "y": 2
       },
       {
         "x": 1,
-        "y": 1
-      },
-      {
-        "x": 2,
-        "y": 3
-      },
-      {
-        "x": 3,
         "y": 3
       },
       {
@@ -613,31 +723,66 @@
         "y": 2
       },
       {
-        "x": 2,
-        "y": 1
+        "x": 3,
+        "y": 3
       }
     ],
-    "specialRules": [],
-    "minimumMoves": 10,
-    "difficulty": "challenge"
+    "specialRules": [
+      {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 1,
+            "y": 0
+          }
+        ]
+      },
+      {
+        "type": "oneWay",
+        "tiles": [
+          {
+            "x": 2,
+            "y": 0,
+            "dx": 1,
+            "dy": 0
+          }
+        ]
+      },
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 2,
+            "y": 1
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 8,
+    "difficulty": "intermediate"
   },
   {
     "id": 14,
     "boardWidth": 4,
-    "boardHeight": 3,
+    "boardHeight": 4,
     "startPosition": {
-      "x": 0,
-      "y": 1
+      "x": 2,
+      "y": 3
     },
     "exitPosition": {
-      "x": 2,
+      "x": 3,
       "y": 1
     },
     "blocks": [
       {
         "id": "b1",
+        "x": 3,
+        "y": 3
+      },
+      {
+        "id": "b2",
         "x": 1,
-        "y": 0
+        "y": 1
       }
     ],
     "obstacles": [
@@ -646,24 +791,16 @@
         "y": 0
       },
       {
-        "x": 3,
-        "y": 0
-      },
-      {
-        "x": 3,
-        "y": 1
-      },
-      {
         "x": 0,
         "y": 2
       },
       {
         "x": 1,
-        "y": 2
+        "y": 3
       },
       {
-        "x": 2,
-        "y": 2
+        "x": 3,
+        "y": 0
       },
       {
         "x": 3,
@@ -672,19 +809,39 @@
     ],
     "specialRules": [
       {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 2,
+            "y": 3
+          }
+        ]
+      },
+      {
+        "type": "oneWay",
+        "tiles": [
+          {
+            "x": 1,
+            "y": 1,
+            "dx": 0,
+            "dy": -1
+          }
+        ]
+      },
+      {
         "type": "echoGate",
         "switch": {
-          "x": 1,
-          "y": 0
+          "x": 2,
+          "y": 1
         },
         "gate": {
-          "x": 1,
-          "y": 1
+          "x": 2,
+          "y": 2
         }
       }
     ],
-    "minimumMoves": 3,
-    "difficulty": "challenge"
+    "minimumMoves": 8,
+    "difficulty": "intermediate"
   },
   {
     "id": 15,
@@ -692,47 +849,60 @@
     "boardHeight": 4,
     "startPosition": {
       "x": 3,
-      "y": 0
+      "y": 1
     },
     "exitPosition": {
       "x": 1,
-      "y": 3
+      "y": 0
     },
     "blocks": [
       {
         "id": "b1",
-        "x": 1,
-        "y": 1
+        "x": 2,
+        "y": 0
       },
       {
         "id": "b2",
-        "x": 0,
-        "y": 0
+        "x": 1,
+        "y": 1
       }
     ],
     "obstacles": [
       {
-        "x": 1,
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 0,
         "y": 2
       },
       {
+        "x": 0,
+        "y": 3
+      },
+      {
         "x": 1,
-        "y": 0
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 1
       },
       {
         "x": 2,
         "y": 3
-      },
-      {
-        "x": 3,
-        "y": 2
-      },
-      {
-        "x": 3,
-        "y": 1
       }
     ],
     "specialRules": [
+      {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 3,
+            "y": 2
+          }
+        ]
+      },
       {
         "type": "echoGate",
         "switch": {
@@ -740,8 +910,90 @@
           "y": 2
         },
         "gate": {
+          "x": 3,
+          "y": 3
+        }
+      }
+    ],
+    "minimumMoves": 9,
+    "difficulty": "intermediate"
+  },
+  {
+    "id": 16,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 2,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 2,
+      "y": 2
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 0,
+        "y": 1
+      },
+      {
+        "id": "b2",
+        "x": 1,
+        "y": 2
+      },
+      {
+        "id": "b3",
+        "x": 0,
+        "y": 2
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 2
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "oneWay",
+        "tiles": [
+          {
+            "x": 1,
+            "y": 1,
+            "dx": -1,
+            "dy": 0
+          }
+        ]
+      },
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 1,
+          "y": 0
+        },
+        "gate": {
           "x": 0,
-          "y": 2
+          "y": 3
         }
       }
     ],
@@ -749,146 +1001,16 @@
     "difficulty": "challenge"
   },
   {
-    "id": 16,
-    "boardWidth": 5,
-    "boardHeight": 5,
-    "startPosition": {
-      "x": 4,
-      "y": 2
-    },
-    "exitPosition": {
-      "x": 3,
-      "y": 4
-    },
-    "blocks": [
-      {
-        "id": "b1",
-        "x": 4,
-        "y": 4
-      },
-      {
-        "id": "b2",
-        "x": 2,
-        "y": 1
-      },
-      {
-        "id": "b3",
-        "x": 0,
-        "y": 2
-      }
-    ],
-    "obstacles": [
-      {
-        "x": 3,
-        "y": 0
-      },
-      {
-        "x": 0,
-        "y": 1
-      },
-      {
-        "x": 1,
-        "y": 1
-      },
-      {
-        "x": 1,
-        "y": 2
-      },
-      {
-        "x": 3,
-        "y": 2
-      },
-      {
-        "x": 1,
-        "y": 3
-      },
-      {
-        "x": 2,
-        "y": 3
-      },
-      {
-        "x": 3,
-        "y": 3
-      },
-      {
-        "x": 1,
-        "y": 4
-      }
-    ],
-    "specialRules": [],
-    "minimumMoves": 12,
-    "difficulty": "challenge"
-  },
-  {
     "id": 17,
     "boardWidth": 4,
     "boardHeight": 4,
     "startPosition": {
-      "x": 2,
+      "x": 3,
       "y": 0
     },
     "exitPosition": {
       "x": 0,
-      "y": 3
-    },
-    "blocks": [
-      {
-        "id": "b1",
-        "x": 0,
-        "y": 2
-      },
-      {
-        "id": "b2",
-        "x": 1,
-        "y": 2
-      },
-      {
-        "id": "b3",
-        "x": 2,
-        "y": 1
-      }
-    ],
-    "obstacles": [
-      {
-        "x": 1,
-        "y": 0
-      },
-      {
-        "x": 3,
-        "y": 0
-      },
-      {
-        "x": 0,
-        "y": 1
-      },
-      {
-        "x": 3,
-        "y": 2
-      },
-      {
-        "x": 1,
-        "y": 3
-      },
-      {
-        "x": 2,
-        "y": 3
-      }
-    ],
-    "specialRules": [],
-    "minimumMoves": 12,
-    "difficulty": "challenge"
-  },
-  {
-    "id": 18,
-    "boardWidth": 4,
-    "boardHeight": 4,
-    "startPosition": {
-      "x": 1,
-      "y": 1
-    },
-    "exitPosition": {
-      "x": 3,
-      "y": 1
+      "y": 0
     },
     "blocks": [
       {
@@ -898,165 +1020,31 @@
       },
       {
         "id": "b2",
-        "x": 3,
-        "y": 0
-      },
-      {
-        "id": "b3",
-        "x": 0,
-        "y": 0
+        "x": 1,
+        "y": 3
       }
     ],
     "obstacles": [
       {
         "x": 0,
         "y": 1
-      },
-      {
-        "x": 2,
-        "y": 1
-      },
-      {
-        "x": 0,
-        "y": 2
-      },
-      {
-        "x": 2,
-        "y": 2
-      },
-      {
-        "x": 0,
-        "y": 3
-      },
-      {
-        "x": 3,
-        "y": 3
-      }
-    ],
-    "specialRules": [],
-    "minimumMoves": 16,
-    "difficulty": "challenge"
-  },
-  {
-    "id": 19,
-    "boardWidth": 4,
-    "boardHeight": 4,
-    "startPosition": {
-      "x": 3,
-      "y": 2
-    },
-    "exitPosition": {
-      "x": 0,
-      "y": 1
-    },
-    "blocks": [
-      {
-        "id": "b1",
-        "x": 2,
-        "y": 1
-      },
-      {
-        "id": "b2",
-        "x": 1,
-        "y": 1
-      },
-      {
-        "id": "b3",
-        "x": 2,
-        "y": 0
-      }
-    ],
-    "obstacles": [
-      {
-        "x": 0,
-        "y": 0
-      },
-      {
-        "x": 1,
-        "y": 0
-      },
-      {
-        "x": 3,
-        "y": 0
-      },
-      {
-        "x": 1,
-        "y": 2
-      },
-      {
-        "x": 0,
-        "y": 3
       }
     ],
     "specialRules": [
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 2,
+            "y": 1
+          }
+        ]
+      },
       {
         "type": "echoGate",
         "switch": {
           "x": 2,
           "y": 0
-        },
-        "gate": {
-          "x": 2,
-          "y": 2
-        }
-      }
-    ],
-    "minimumMoves": 13,
-    "difficulty": "challenge"
-  },
-  {
-    "id": 20,
-    "boardWidth": 4,
-    "boardHeight": 4,
-    "startPosition": {
-      "x": 3,
-      "y": 3
-    },
-    "exitPosition": {
-      "x": 0,
-      "y": 0
-    },
-    "blocks": [
-      {
-        "id": "b1",
-        "x": 3,
-        "y": 1
-      },
-      {
-        "id": "b2",
-        "x": 2,
-        "y": 3
-      },
-      {
-        "id": "b3",
-        "x": 2,
-        "y": 2
-      }
-    ],
-    "obstacles": [
-      {
-        "x": 2,
-        "y": 1
-      },
-      {
-        "x": 0,
-        "y": 2
-      },
-      {
-        "x": 1,
-        "y": 2
-      },
-      {
-        "x": 0,
-        "y": 3
-      }
-    ],
-    "specialRules": [
-      {
-        "type": "echoGate",
-        "switch": {
-          "x": 2,
-          "y": 2
         },
         "gate": {
           "x": 1,
@@ -1064,7 +1052,246 @@
         }
       }
     ],
-    "minimumMoves": 13,
+    "minimumMoves": 10,
+    "difficulty": "challenge"
+  },
+  {
+    "id": 18,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 0,
+      "y": 2
+    },
+    "exitPosition": {
+      "x": 3,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 2,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 1,
+        "y": 1
+      },
+      {
+        "id": "b3",
+        "x": 0,
+        "y": 1
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 3
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoEraser",
+        "positions": [
+          {
+            "x": 2,
+            "y": 0
+          }
+        ]
+      },
+      {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 1,
+            "y": 0
+          }
+        ]
+      },
+      {
+        "type": "oneWay",
+        "tiles": [
+          {
+            "x": 2,
+            "y": 1,
+            "dx": 0,
+            "dy": -1
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 10,
+    "difficulty": "challenge"
+  },
+  {
+    "id": 19,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 2,
+      "y": 2
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 1
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 0,
+        "y": 2
+      },
+      {
+        "id": "b2",
+        "x": 2,
+        "y": 1
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 3
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoEraser",
+        "positions": [
+          {
+            "x": 0,
+            "y": 2
+          }
+        ]
+      },
+      {
+        "type": "oneWay",
+        "tiles": [
+          {
+            "x": 1,
+            "y": 2,
+            "dx": 0,
+            "dy": 1
+          }
+        ]
+      },
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 3,
+          "y": 3
+        },
+        "gate": {
+          "x": 1,
+          "y": 3
+        }
+      }
+    ],
+    "minimumMoves": 10,
+    "difficulty": "challenge"
+  },
+  {
+    "id": 20,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 1,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 2,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 3,
+        "y": 3
+      },
+      {
+        "id": "b2",
+        "x": 0,
+        "y": 2
+      },
+      {
+        "id": "b3",
+        "x": 2,
+        "y": 0
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 0
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 3,
+            "y": 2
+          }
+        ]
+      },
+      {
+        "type": "oneWay",
+        "tiles": [
+          {
+            "x": 2,
+            "y": 2,
+            "dx": 0,
+            "dy": -1
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 12,
     "difficulty": "challenge"
   },
   {
@@ -1072,127 +1299,62 @@
     "boardWidth": 4,
     "boardHeight": 4,
     "startPosition": {
+      "x": 1,
+      "y": 3
+    },
+    "exitPosition": {
       "x": 2,
-      "y": 1
-    },
-    "exitPosition": {
-      "x": 1,
-      "y": 3
-    },
-    "blocks": [
-      {
-        "id": "b1",
-        "x": 2,
-        "y": 0
-      },
-      {
-        "id": "b2",
-        "x": 2,
-        "y": 3
-      }
-    ],
-    "obstacles": [
-      {
-        "x": 0,
-        "y": 2
-      },
-      {
-        "x": 0,
-        "y": 3
-      },
-      {
-        "x": 3,
-        "y": 2
-      },
-      {
-        "x": 3,
-        "y": 3
-      },
-      {
-        "x": 1,
-        "y": 2
-      },
-      {
-        "x": 1,
-        "y": 0
-      },
-      {
-        "x": 3,
-        "y": 1
-      }
-    ],
-    "specialRules": [],
-    "minimumMoves": 11,
-    "difficulty": "challenge"
-  },
-  {
-    "id": 22,
-    "boardWidth": 4,
-    "boardHeight": 4,
-    "startPosition": {
-      "x": 1,
-      "y": 1
-    },
-    "exitPosition": {
-      "x": 3,
-      "y": 3
+      "y": 0
     },
     "blocks": [
       {
         "id": "b1",
         "x": 3,
-        "y": 1
+        "y": 0
       },
       {
         "id": "b2",
-        "x": 3,
-        "y": 2
-      },
-      {
-        "id": "b3",
-        "x": 1,
-        "y": 2
+        "x": 0,
+        "y": 3
       }
     ],
     "obstacles": [
       {
-        "x": 0,
+        "x": 1,
         "y": 0
-      },
-      {
-        "x": 3,
-        "y": 0
-      },
-      {
-        "x": 2,
-        "y": 0
-      },
-      {
-        "x": 0,
-        "y": 2
-      },
-      {
-        "x": 0,
-        "y": 3
       },
       {
         "x": 2,
         "y": 1
-      },
-      {
-        "x": 1,
-        "y": 3
       }
     ],
     "specialRules": [
       {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 3,
+            "y": 2
+          }
+        ]
+      },
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 2,
+            "y": 2
+          }
+        ]
+      },
+      {
         "type": "echoGate",
         "switch": {
-          "x": 2,
+          "x": 3,
           "y": 3
         },
         "gate": {
-          "x": 0,
+          "x": 3,
           "y": 1
         }
       }
@@ -1201,54 +1363,146 @@
     "difficulty": "challenge"
   },
   {
-    "id": 23,
+    "id": 22,
     "boardWidth": 4,
     "boardHeight": 4,
     "startPosition": {
-      "x": 1,
+      "x": 3,
       "y": 3
     },
     "exitPosition": {
       "x": 0,
-      "y": 0
+      "y": 1
     },
     "blocks": [
       {
         "id": "b1",
-        "x": 1,
-        "y": 1
+        "x": 2,
+        "y": 2
       },
       {
         "id": "b2",
-        "x": 1,
-        "y": 0
+        "x": 3,
+        "y": 2
       },
       {
         "id": "b3",
-        "x": 2,
+        "x": 3,
         "y": 0
       }
     ],
     "obstacles": [
       {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
         "x": 1,
         "y": 2
+      },
+      {
+        "x": 2,
+        "y": 3
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoEraser",
+        "positions": [
+          {
+            "x": 2,
+            "y": 0
+          }
+        ]
+      },
+      {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 3,
+            "y": 0
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 13,
+    "difficulty": "challenge"
+  },
+  {
+    "id": 23,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 0,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 3,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 3,
+        "y": 2
+      },
+      {
+        "id": "b2",
+        "x": 2,
+        "y": 3
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 0,
+        "y": 0
       },
       {
         "x": 0,
         "y": 1
       },
       {
-        "x": 3,
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 1,
         "y": 2
       },
       {
+        "x": 2,
+        "y": 0
+      },
+      {
         "x": 3,
-        "y": 1
+        "y": 3
       }
     ],
-    "specialRules": [],
-    "minimumMoves": 12,
+    "specialRules": [
+      {
+        "type": "echoEraser",
+        "positions": [
+          {
+            "x": 3,
+            "y": 2
+          }
+        ]
+      },
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 1,
+            "y": 1
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 13,
     "difficulty": "challenge"
   },
   {
@@ -1257,69 +1511,78 @@
     "boardHeight": 4,
     "startPosition": {
       "x": 3,
-      "y": 3
+      "y": 1
     },
     "exitPosition": {
       "x": 1,
-      "y": 0
+      "y": 3
     },
     "blocks": [
       {
         "id": "b1",
-        "x": 3,
+        "x": 2,
         "y": 1
       },
       {
         "id": "b2",
-        "x": 2,
-        "y": 1
-      },
-      {
-        "id": "b3",
-        "x": 2,
-        "y": 2
+        "x": 0,
+        "y": 3
       }
     ],
     "obstacles": [
       {
         "x": 1,
-        "y": 3
+        "y": 0
       },
       {
-        "x": 0,
-        "y": 0
+        "x": 1,
+        "y": 2
       },
       {
         "x": 2,
         "y": 0
       },
       {
-        "x": 3,
-        "y": 2
+        "x": 2,
+        "y": 3
       },
       {
         "x": 3,
         "y": 0
-      },
-      {
-        "x": 0,
-        "y": 1
       }
     ],
     "specialRules": [
       {
+        "type": "echoEraser",
+        "positions": [
+          {
+            "x": 0,
+            "y": 1
+          }
+        ]
+      },
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 0,
+            "y": 0
+          }
+        ]
+      },
+      {
         "type": "echoGate",
         "switch": {
-          "x": 2,
+          "x": 0,
           "y": 2
         },
         "gate": {
-          "x": 1,
+          "x": 2,
           "y": 2
         }
       }
     ],
-    "minimumMoves": 12,
+    "minimumMoves": 14,
     "difficulty": "challenge"
   },
   {
@@ -1327,33 +1590,36 @@
     "boardWidth": 4,
     "boardHeight": 4,
     "startPosition": {
-      "x": 2,
-      "y": 2
+      "x": 0,
+      "y": 1
     },
     "exitPosition": {
-      "x": 0,
-      "y": 3
+      "x": 2,
+      "y": 2
     },
     "blocks": [
       {
         "id": "b1",
-        "x": 1,
-        "y": 1
+        "x": 0,
+        "y": 3
       },
       {
         "id": "b2",
-        "x": 3,
-        "y": 2
-      },
-      {
-        "id": "b3",
         "x": 1,
-        "y": 3
+        "y": 1
       }
     ],
     "obstacles": [
       {
+        "x": 1,
+        "y": 2
+      },
+      {
         "x": 2,
+        "y": 1
+      },
+      {
+        "x": 3,
         "y": 0
       },
       {
@@ -1361,36 +1627,33 @@
         "y": 1
       },
       {
-        "x": 1,
+        "x": 3,
         "y": 2
-      },
-      {
-        "x": 0,
-        "y": 2
-      },
-      {
-        "x": 1,
-        "y": 0
-      },
-      {
-        "x": 2,
-        "y": 1
       }
     ],
     "specialRules": [
       {
-        "type": "echoGate",
-        "switch": {
-          "x": 2,
-          "y": 3
-        },
-        "gate": {
-          "x": 3,
-          "y": 3
-        }
+        "type": "oneWay",
+        "tiles": [
+          {
+            "x": 1,
+            "y": 1,
+            "dx": -1,
+            "dy": 0
+          }
+        ]
+      },
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 1,
+            "y": 3
+          }
+        ]
       }
     ],
-    "minimumMoves": 17,
+    "minimumMoves": 16,
     "difficulty": "challenge"
   }
 ]

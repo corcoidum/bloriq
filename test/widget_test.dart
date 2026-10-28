@@ -1,3 +1,5 @@
+import 'support/legacy_levels.dart';
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -17,7 +19,7 @@ void main() {
   testWidgets('optional help explains the rules without changing the board', (
     tester,
   ) async {
-    await tester.pumpWidget(const BloriqApp());
+    await tester.pumpWidget(BloriqApp(loadLevels: loadLegacyLevels));
     for (
       var i = 0;
       i < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;
@@ -45,7 +47,7 @@ void main() {
     expect(find.text('Moves: 0'), findsOneWidget);
   });
   testWidgets('drag, undo, restart, escape and echo blocking', (tester) async {
-    await tester.pumpWidget(const BloriqApp());
+    await tester.pumpWidget(BloriqApp(loadLevels: loadLegacyLevels));
     for (
       var i = 0;
       i < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;
@@ -105,7 +107,7 @@ void main() {
   });
 
   testWidgets('nonoptimal completion suggests a retry', (tester) async {
-    await tester.pumpWidget(const BloriqApp());
+    await tester.pumpWidget(BloriqApp(loadLevels: loadLegacyLevels));
     for (
       var i = 0;
       i < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;
@@ -140,7 +142,7 @@ void main() {
   });
 
   testWidgets('last stage offers a return to the first stage', (tester) async {
-    await tester.pumpWidget(const BloriqApp());
+    await tester.pumpWidget(BloriqApp(loadLevels: loadLegacyLevels));
     for (
       var i = 0;
       i < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;
@@ -149,7 +151,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 20));
     }
     final json = jsonDecode(
-      File('assets/levels/levels.json').readAsStringSync(),
+      File('assets/levels/legacy_levels.json').readAsStringSync(),
     ) as List<dynamic>;
     final level = Level.fromJson(json.last as Map<String, dynamic>);
     final solution = const PuzzleSolver().solve(level)!;
@@ -196,7 +198,7 @@ void main() {
   testWidgets('drag uses both dimensions on a rectangular board', (
     tester,
   ) async {
-    await tester.pumpWidget(const BloriqApp());
+    await tester.pumpWidget(BloriqApp(loadLevels: loadLegacyLevels));
     for (
       var i = 0;
       i < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;
@@ -205,7 +207,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 20));
     }
     final json = jsonDecode(
-      File('assets/levels/levels.json').readAsStringSync(),
+      File('assets/levels/legacy_levels.json').readAsStringSync(),
     ) as List<dynamic>;
     final levels = json.map(
       (item) => Level.fromJson(item as Map<String, dynamic>),
@@ -253,7 +255,7 @@ void main() {
   testWidgets('echo switch opens gate for one move and undo restores it', (
     tester,
   ) async {
-    await tester.pumpWidget(const BloriqApp());
+    await tester.pumpWidget(BloriqApp(loadLevels: loadLegacyLevels));
     for (
       var i = 0;
       i < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;
@@ -262,7 +264,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 20));
     }
     final json = jsonDecode(
-      File('assets/levels/levels.json').readAsStringSync(),
+      File('assets/levels/legacy_levels.json').readAsStringSync(),
     ) as List<dynamic>;
     final level = json
         .map((item) => Level.fromJson(item as Map<String, dynamic>))
@@ -356,7 +358,7 @@ void main() {
   });
 
   testWidgets('a position with no legal move suggests undo', (tester) async {
-    await tester.pumpWidget(const BloriqApp());
+    await tester.pumpWidget(BloriqApp(loadLevels: loadLegacyLevels));
     for (
       var i = 0;
       i < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;

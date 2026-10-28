@@ -119,4 +119,26 @@ void main() {
     expect(restored.bestMoves, 2);
     expect(restored.completionCount, 2);
   });
+
+  test('새 코스 기록은 이전 코스 기록을 덮어쓰거나 혼동하지 않는다', () async {
+    final legacy = jsonEncode({
+      'version': 1,
+      'levels': [
+        {'levelId': 1, 'bestMoves': 2, 'bestStars': 3, 'completionCount': 4},
+      ],
+    });
+    SharedPreferences.setMockInitialValues({
+      ProgressRepository.legacyStorageKey: legacy,
+    });
+    final repo = await ProgressRepository.load();
+    expect(repo.forLevel(1), isNull);
+    await repo.recordCompletion(levelId: 1, moves: 3, minimumMoves: 3);
+    expect((await ProgressRepository.load()).forLevel(1)!.bestMoves, 3);
+    expect(
+      (await SharedPreferences.getInstance()).getString(
+        ProgressRepository.legacyStorageKey,
+      ),
+      legacy,
+    );
+  });
 }

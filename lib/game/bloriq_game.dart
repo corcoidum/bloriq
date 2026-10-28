@@ -178,7 +178,6 @@ class BloriqGame extends FlameGame {
     final paint = Paint();
     final preview = currentPreview;
     final previewTarget = preview?.target;
-    final previewFrom = preview?.from;
     final previewState = preview?.nextState;
 
     // A quiet border makes the grid read as one tactile game board.
@@ -217,6 +216,36 @@ class BloriqGame extends FlameGame {
         );
         paint.style = PaintingStyle.fill;
       }
+    }
+
+    // 기믹은 색과 모양을 함께 사용하고, 블록이 덮어도 아래 모서리 표시를 남긴다.
+    String directionSymbol(Position direction) {
+      if (direction.x == 1) return '→';
+      if (direction.x == -1) return '←';
+      if (direction.y == 1) return '↓';
+      return '↑';
+    }
+
+    final mechanicTiles = <(Position, String, Color)>[
+      for (final p in state.level.echoErasers)
+        (p, '×', const Color(0xFFD17B75)),
+      for (final p in state.level.echoHolds) (p, 'Ⅱ', const Color(0xFF9077BE)),
+      for (final entry in state.level.oneWays.entries)
+        (entry.key, directionSymbol(entry.value), const Color(0xFF5277B9)),
+      for (final p in state.level.goalOnlyTiles)
+        (p, '▶', const Color(0xFF298F76)),
+    ];
+    for (final (position, symbol, color) in mechanicTiles) {
+      final rect = Rect.fromCenter(
+        center: center(position),
+        width: cell * .88,
+        height: cell * .88,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect, Radius.circular(cell * .15)),
+        paint..color = color.withValues(alpha: .15),
+      );
+      _label(canvas, symbol, center(position), cell * .28, color);
     }
 
     // Matching cyan outlines connect the echo plate and its gate even while
@@ -429,8 +458,8 @@ class BloriqGame extends FlameGame {
     if (state.echo != null) {
       drawEcho(state.echo!, _motion < 1 ? .5 + .5 * _motion : 1);
     }
-    if (previewState != null && previewFrom != null) {
-      drawEcho(previewFrom, .5);
+    if (previewState?.echo != null && previewState!.echo != state.echo) {
+      drawEcho(previewState.echo!, .5);
     }
     if (previewTarget != null && state.level.contains(previewTarget)) {
       final rect = Rect.fromCenter(
@@ -523,6 +552,11 @@ class BloriqGame extends FlameGame {
         cell * (isGoal ? .31 : .4) * scale,
         Colors.white,
       );
+    }
+    for (final (position, symbol, color) in mechanicTiles) {
+      final marker = center(position) + Offset(cell * .34, -cell * .34);
+      canvas.drawCircle(marker, cell * .12, paint..color = color);
+      _label(canvas, symbol, marker, cell * .17, Colors.white);
     }
     if (switchPosition != null) {
       // The corner marker remains visible when a block covers the plate.

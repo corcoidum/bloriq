@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:bloriq/domain/puzzle.dart';
 import 'package:flutter/services.dart';
@@ -44,9 +45,37 @@ void main() {
     }
   });
 
-  test('두 번째 레벨은 잔상을 한 번 없앤 뒤 탈출한다', () async {
+  test('새 코스는 기믹 조합이 반복되지 않고 최단 이동이 점차 증가한다', () async {
     final data = jsonDecode(
       await rootBundle.loadString('assets/levels/levels.json'),
+    ) as List<dynamic>;
+    final signatures = <String>{};
+    var previousMinimum = 0;
+    for (final item in data) {
+      final level = item as Map<String, dynamic>;
+      final types =
+          (level['specialRules'] as List<dynamic>)
+              .map((rule) => (rule as Map<String, dynamic>)['type'] as String)
+              .toList()
+            ..sort();
+      expect(
+        signatures.add(types.join(',')),
+        isTrue,
+        reason: 'Stage ${level['id']}',
+      );
+      final minimum = level['minimumMoves'] as int;
+      expect(
+        minimum,
+        greaterThanOrEqualTo(previousMinimum),
+        reason: 'Stage ${level['id']}',
+      );
+      previousMinimum = minimum;
+    }
+  });
+
+  test('두 번째 레벨은 잔상을 한 번 없앤 뒤 탈출한다', () async {
+    final data = jsonDecode(
+      File('assets/levels/legacy_levels.json').readAsStringSync(),
     ) as List<dynamic>;
     final level = Level.fromJson(data[1] as Map<String, dynamic>);
     final controller = PuzzleController(level);
@@ -64,7 +93,7 @@ void main() {
 
   test('11단계의 막다른 선택은 Undo로 복구할 수 있다', () async {
     final data = jsonDecode(
-      await rootBundle.loadString('assets/levels/levels.json'),
+      File('assets/levels/legacy_levels.json').readAsStringSync(),
     ) as List<dynamic>;
     final controller = PuzzleController(
       Level.fromJson(data[10] as Map<String, dynamic>),
@@ -84,7 +113,7 @@ void main() {
 
   test('14단계 스위치 잔상으로 열린 문에 들어가고 닫힌 문에서 나간다', () async {
     final data = jsonDecode(
-      await rootBundle.loadString('assets/levels/levels.json'),
+      File('assets/levels/legacy_levels.json').readAsStringSync(),
     ) as List<dynamic>;
     final controller = PuzzleController(
       Level.fromJson(data[13] as Map<String, dynamic>),
@@ -102,7 +131,7 @@ void main() {
 
   test('19단계의 성급한 전진은 막히고 Undo로 회복된다', () async {
     final data = jsonDecode(
-      await rootBundle.loadString('assets/levels/levels.json'),
+      File('assets/levels/legacy_levels.json').readAsStringSync(),
     ) as List<dynamic>;
     final controller = PuzzleController(
       Level.fromJson(data[18] as Map<String, dynamic>),
@@ -111,7 +140,10 @@ void main() {
     expect(controller.move('goal', const Position(3, 1)), isTrue);
     for (final block in controller.state.blocks) {
       for (final target in block.position.neighbors) {
-        expect(MoveValidator.canMove(controller.state, block.id, target), isFalse);
+        expect(
+          MoveValidator.canMove(controller.state, block.id, target),
+          isFalse,
+        );
       }
     }
     expect(controller.undo(), isTrue);

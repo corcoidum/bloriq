@@ -57,8 +57,16 @@ class Level {
     required this.difficulty,
     this.echoSwitch,
     this.echoGate,
+    Set<Position> echoErasers = const {},
+    Set<Position> echoHolds = const {},
+    Map<Position, Position> oneWays = const {},
+    Set<Position> goalOnlyTiles = const {},
   }) : blocks = List.unmodifiable(blocks),
-       obstacles = List.unmodifiable(obstacles) {
+       obstacles = List.unmodifiable(obstacles),
+       echoErasers = Set.unmodifiable(echoErasers),
+       echoHolds = Set.unmodifiable(echoHolds),
+       oneWays = Map.unmodifiable(oneWays),
+       goalOnlyTiles = Set.unmodifiable(goalOnlyTiles) {
     if (id < 1 || boardWidth < 1 || boardHeight < 1 || minimumMoves < 0) {
       throw const FormatException('Invalid level dimensions or metadata');
     }
@@ -101,6 +109,27 @@ class Level {
         throw const FormatException('Invalid switch or gate position');
       }
     }
+    // 서로 다른 기믹은 서로 겹치지 않게 하여 판정과 표시를 명확히 한다.
+    final mechanismPositions = <Position>{};
+    for (final tile in [
+      ...this.echoErasers,
+      ...this.echoHolds,
+      ...this.oneWays.keys,
+      ...this.goalOnlyTiles,
+    ]) {
+      if (!contains(tile) ||
+          this.obstacles.contains(tile) ||
+          tile == echoSwitch ||
+          tile == echoGate ||
+          !mechanismPositions.add(tile)) {
+        throw const FormatException('Invalid or overlapping mechanism tile');
+      }
+    }
+    for (final direction in this.oneWays.values) {
+      if (direction.x.abs() + direction.y.abs() != 1) {
+        throw const FormatException('One-way direction must be cardinal');
+      }
+    }
   }
 
   static const goalBlockId = 'goal';
@@ -115,29 +144,79 @@ class Level {
   final String difficulty;
   final Position? echoSwitch;
   final Position? echoGate;
+  final Set<Position> echoErasers;
+  final Set<Position> echoHolds;
+
+  /// 칸과 해당 칸에서 나갈 수 있는 상대 방향 (dx, dy).
+  final Map<Position, Position> oneWays;
+  final Set<Position> goalOnlyTiles;
 
   factory Level.fromJson(Map<String, dynamic> json) {
     final rules = json['specialRules'] as List<dynamic>;
     Position? echoSwitch;
     Position? echoGate;
-    if (rules.length > 1) {
-      throw const FormatException('Only one echo gate is supported');
-    }
-    if (rules.isNotEmpty) {
-      final rule = rules.single;
-      if (rule is! Map<String, dynamic> || rule['type'] != 'echoGate') {
+    final erasers = <Position>{};
+    final holds = <Position>{};
+    final oneWays = <Position, Position>{};
+    final goalOnly = <Position>{};
+    final seenTypes = <String>{};
+    for (final rule in rules) {
+      if (rule is! Map<String, dynamic> || rule['type'] is! String) {
         throw const FormatException('Unsupported special rule');
       }
-      final switchData = rule['switch'];
-      final gateData = rule['gate'];
-      if (switchData is! Map<String, dynamic> ||
-          gateData is! Map<String, dynamic>) {
-        throw const FormatException(
-          'Echo gate requires switch and gate positions',
-        );
+      final type = rule['type'] as String;
+      if (!seenTypes.add(type)) {
+        throw const FormatException('Duplicate special rule');
       }
-      echoSwitch = Position.fromJson(switchData);
-      echoGate = Position.fromJson(gateData);
+      if (type == 'echoGate') {
+        final switchData = rule['switch'];
+        final gateData = rule['gate'];
+        if (switchData is! Map<String, dynamic> ||
+            gateData is! Map<String, dynamic>) {
+          throw const FormatException(
+            'Echo gate requires switch and gate positions',
+          );
+        }
+        echoSwitch = Position.fromJson(switchData);
+        echoGate = Position.fromJson(gateData);
+      } else if (type == 'oneWay') {
+        final tiles = rule['tiles'];
+        if (tiles is! List || tiles.isEmpty) {
+          throw const FormatException('One-way rule requires tiles');
+        }
+        for (final item in tiles) {
+          if (item is! Map<String, dynamic> ||
+              item['dx'] is! int ||
+              item['dy'] is! int) {
+            throw const FormatException('Invalid one-way tile');
+          }
+          final position = Position.fromJson(item);
+          if (oneWays.containsKey(position)) {
+            throw const FormatException('Duplicate one-way tile');
+          }
+          oneWays[position] = Position(item['dx'] as int, item['dy'] as int);
+        }
+      } else if (type == 'echoEraser' ||
+          type == 'echoHold' ||
+          type == 'goalOnly') {
+        final positions = rule['positions'];
+        if (positions is! List || positions.isEmpty) {
+          throw const FormatException('Mechanism rule requires positions');
+        }
+        final output = type == 'echoEraser'
+            ? erasers
+            : type == 'echoHold'
+            ? holds
+            : goalOnly;
+        for (final item in positions) {
+          if (item is! Map<String, dynamic> ||
+              !output.add(Position.fromJson(item))) {
+            throw const FormatException('Invalid or duplicate mechanism tile');
+          }
+        }
+      } else {
+        throw const FormatException('Unsupported special rule');
+      }
     }
     return Level(
       id: json['id'] as int,
@@ -159,6 +238,10 @@ class Level {
       difficulty: json['difficulty'] as String,
       echoSwitch: echoSwitch,
       echoGate: echoGate,
+      echoErasers: erasers,
+      echoHolds: holds,
+      oneWays: oneWays,
+      goalOnlyTiles: goalOnly,
     );
   }
 
@@ -207,11 +290,22 @@ class MoveValidator {
     if (state.isComplete ||
         !state.level.contains(target) ||
         (target == state.level.exitPosition && blockId != Level.goalBlockId) ||
+        (state.level.goalOnlyTiles.contains(target) &&
+            blockId != Level.goalBlockId) ||
         state.isBlocked(target)) {
       return false;
     }
     for (final block in state.blocks) {
-      if (block.id == blockId) return block.position.isAdjacentTo(target);
+      if (block.id == blockId) {
+        final direction = state.level.oneWays[block.position];
+        return block.position.isAdjacentTo(target) &&
+            (direction == null ||
+                target ==
+                    Position(
+                      block.position.x + direction.x,
+                      block.position.y + direction.y,
+                    ));
+      }
     }
     return false;
   }
@@ -251,7 +345,12 @@ PuzzleState _move(PuzzleState state, String blockId, Position target) {
         .map((block) => block.id == blockId ? block.at(target) : block)
         .toList(),
     moves: state.moves + 1,
-    echo: moving.position,
+    // 보존 칸은 이전 Echo를 유지하며, 지우개 칸은 이전 Echo를 제거한다.
+    echo: state.level.echoHolds.contains(moving.position)
+        ? state.echo
+        : state.level.echoErasers.contains(moving.position)
+        ? null
+        : moving.position,
   );
 }
 

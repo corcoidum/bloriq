@@ -79,7 +79,10 @@ class CompletionResult {
 class ProgressRepository {
   ProgressRepository._(this._preferences, this._levels, this._writable);
 
-  static const storageKey = 'bloriq.progress.v1';
+  // 같은 단계 번호라도 리디자인된 퍼즐은 이전 코스의 기록과 섞지 않는다.
+  // 기존 키는 삭제하지 않아 과거 기록을 보존한다.
+  static const legacyStorageKey = 'bloriq.progress.v1';
+  static const storageKey = 'bloriq.progress.course2.v1';
   static const schemaVersion = 1;
   final SharedPreferences? _preferences;
   final Map<int, LevelProgress> _levels;

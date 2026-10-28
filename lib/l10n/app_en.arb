@@ -28,7 +28,7 @@
   "soundOn": "Turn sound effects off",
   "soundOff": "Turn sound effects on",
   "help": "How to play",
-  "helpBody": "Slide one block one square at a time. Move the green block to the star.\n\nThe square a block leaves behind becomes an echo. It blocks movement until another valid move finishes.\n\nOn diamond stages, an echo on the diamond opens the gate for the next move. A block on a closed gate can still leave.\n\nUse Undo to try a different move.",
+  "helpBody": "Slide one block one square at a time. Move the green block to the star.\n\nThe square a block leaves behind becomes an echo. It blocks movement until another valid move finishes.\n\nOn diamond stages, an echo on the diamond opens the gate for the next move. A block on a closed gate can still leave.\n\nUse Undo to try a different move.\n\nSpecial tiles have rules shown beneath the board: × erases the echo, Ⅱ keeps it, arrows restrict the exit direction, and ▶ admits only the green block.",
   "undo": "Undo",
   "undoLastMove": "Undo last move",
   "restart": "Restart",
@@ -81,5 +81,9 @@
     }
   },
   "musicOn": "Turn music off",
-  "musicOff": "Turn music on"
+  "musicOff": "Turn music on",
+  "eraserRule": "Crossed tiles erase the echo when a block leaves.",
+  "holdRule": "Pause tiles keep the previous echo when a block leaves.",
+  "oneWayRule": "A block on an arrow tile can leave only in the arrow’s direction.",
+  "goalOnlyRule": "Triangle tiles admit only the green block."
 }
