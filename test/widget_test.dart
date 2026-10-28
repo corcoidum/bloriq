@@ -10,6 +10,36 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   setUp(() => rootBundle.clear());
+  testWidgets('optional help explains the rules without changing the board', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const BloriqApp());
+    for (
+      var i = 0;
+      i < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;
+      i++
+    ) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    expect(find.text('Moves: 0'), findsOneWidget);
+    await tester.tap(find.byTooltip('How to play'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('How to play'), findsOneWidget);
+    expect(
+      find.textContaining('The square a block leaves behind'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('an echo on the diamond opens the gate'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Close'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('How to play'), findsNothing);
+    expect(find.text('Moves: 0'), findsOneWidget);
+  });
   testWidgets('drag, undo, restart, escape and echo blocking', (tester) async {
     await tester.pumpWidget(const BloriqApp());
     for (
@@ -334,7 +364,8 @@ void main() {
       find.text('No moves left. Undo and try another way.'),
       findsOneWidget,
     );
-    await tester.tap(find.text('Undo'));
+    expect(find.text('Undo last move'), findsOneWidget);
+    await tester.tap(find.text('Undo last move'));
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('No moves left. Undo and try another way.'), findsNothing);

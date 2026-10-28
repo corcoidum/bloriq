@@ -7,17 +7,17 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('열다섯 스테이지는 모두 탈출 가능하고 최소 이동 수가 정확하다', () async {
+  test('스무 스테이지는 모두 탈출 가능하고 최소 이동 수가 정확하다', () async {
     final data = jsonDecode(
       await rootBundle.loadString('assets/levels/levels.json'),
     ) as List<dynamic>;
     final levels = data
         .map((item) => Level.fromJson(item as Map<String, dynamic>))
         .toList();
-    expect(levels, hasLength(15));
+    expect(levels, hasLength(20));
     expect(
       levels.map((level) => level.id).toList(),
-      List.generate(15, (i) => i + 1),
+      List.generate(20, (i) => i + 1),
     );
 
     for (final level in levels) {
@@ -98,5 +98,23 @@ void main() {
     expect(controller.state.goal.position, const Position(1, 1));
     expect(controller.move('goal', const Position(2, 1)), isTrue);
     expect(controller.state.isComplete, isTrue);
+  });
+
+  test('19단계의 성급한 전진은 막히고 Undo로 회복된다', () async {
+    final data = jsonDecode(
+      await rootBundle.loadString('assets/levels/levels.json'),
+    ) as List<dynamic>;
+    final controller = PuzzleController(
+      Level.fromJson(data[18] as Map<String, dynamic>),
+    );
+
+    expect(controller.move('goal', const Position(3, 1)), isTrue);
+    for (final block in controller.state.blocks) {
+      for (final target in block.position.neighbors) {
+        expect(MoveValidator.canMove(controller.state, block.id, target), isFalse);
+      }
+    }
+    expect(controller.undo(), isTrue);
+    expect(controller.move('goal', const Position(3, 3)), isTrue);
   });
 }

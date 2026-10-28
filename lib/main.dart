@@ -155,15 +155,45 @@ class _GameScreenState extends State<GameScreen> {
     setState(() {});
   }
 
-  String _hint(AppLocalizations t, PuzzleController controller) {
+  bool _hasNoMoves(PuzzleController controller) {
     final state = controller.state;
-    final hasMove = state.blocks.any(
-      (block) => block.position.neighbors.any(
-        (target) => MoveValidator.canMove(state, block.id, target),
+    return !state.isComplete &&
+        controller.canUndo &&
+        !state.blocks.any(
+          (block) => block.position.neighbors.any(
+            (target) => MoveValidator.canMove(state, block.id, target),
+          ),
+        );
+  }
+
+  void _undo(PuzzleController controller) {
+    setState(() {
+      controller.undo();
+      _game!.clearEffects();
+      _gateBlocked = false;
+    });
+  }
+
+  void _showHelp(AppLocalizations t) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(t.help),
+        content: SingleChildScrollView(child: Text(t.helpBody)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(t.close),
+          ),
+        ],
       ),
     );
+  }
+
+  String _hint(AppLocalizations t, PuzzleController controller) {
+    final state = controller.state;
     // This detects only states with no legal move, not every unsolvable state.
-    if (!state.isComplete && !hasMove && controller.canUndo) return t.noMoves;
+    if (_hasNoMoves(controller)) return t.noMoves;
     if (state.level.echoGate == null) {
       return state.echo == null ? t.instruction : t.echoInstruction;
     }
@@ -235,6 +265,11 @@ class _GameScreenState extends State<GameScreen> {
                                     color: Color(0xFF334155),
                                   ),
                                 ),
+                              ),
+                              IconButton(
+                                tooltip: t.help,
+                                onPressed: () => _showHelp(t),
+                                icon: const Icon(Icons.help_outline),
                               ),
                               IconButton(
                                 tooltip: _soundEnabled ? t.soundOn : t.soundOff,
@@ -341,13 +376,25 @@ class _GameScreenState extends State<GameScreen> {
                                         ),
                                     ],
                                   )
-                                : Text(
-                                    hint,
+                                : Column(
                                     key: ValueKey(hint),
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyLarge,
+                                    children: [
+                                      Text(
+                                        hint,
+                                        textAlign: TextAlign.center,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge,
+                                      ),
+                                      if (_hasNoMoves(controller)) ...[
+                                        const SizedBox(height: 8),
+                                        FilledButton.icon(
+                                          onPressed: () => _undo(controller),
+                                          icon: const Icon(Icons.undo),
+                                          label: Text(t.undoLastMove),
+                                        ),
+                                      ],
+                                    ],
                                   ),
                           ),
                           const SizedBox(height: 12),
@@ -357,11 +404,7 @@ class _GameScreenState extends State<GameScreen> {
                             children: [
                               OutlinedButton.icon(
                                 onPressed: controller.canUndo
-                                    ? () => setState(() {
-                                        controller.undo();
-                                        _game!.clearEffects();
-                                        _gateBlocked = false;
-                                      })
+                                    ? () => _undo(controller)
                                     : null,
                                 icon: const Icon(Icons.undo),
                                 label: Text(t.undo),
