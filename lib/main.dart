@@ -9,6 +9,8 @@ import 'package:flutter/services.dart';
 import 'domain/puzzle.dart';
 import 'game/bloriq_game.dart';
 import 'l10n/app_localizations.dart';
+import 'postcard/echo_postcard.dart';
+import 'progress/progress_repository.dart';
 
 void main() => runApp(const BloriqApp());
 
@@ -50,8 +52,12 @@ class _GameScreenState extends State<GameScreen> {
   Offset? _dragEnd;
   bool _soundEnabled = true;
   bool _gateBlocked = false;
+  ProgressRepository? _progress;
+  CompletionResult? _completion;
+  bool _replaying = false;
 
   Future<List<Level>> _loadLevels() async {
+    _progress = await ProgressRepository.load();
     final json = jsonDecode(
       await rootBundle.loadString('assets/levels/levels.json'),
     ) as List<dynamic>;
@@ -63,6 +69,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _select(int index) {
+    _stopReplay();
     setState(() {
       _index = index;
       _controller = PuzzleController(_loaded[index]);
@@ -70,7 +77,74 @@ class _GameScreenState extends State<GameScreen> {
       _dragBlock = null;
       _dragStart = null;
       _gateBlocked = false;
+      _completion = null;
     });
+  }
+
+  void _stopReplay() {
+    _replaying = false;
+    _game?.skipReplay();
+  }
+
+  @override
+  void dispose() {
+    _stopReplay();
+    super.dispose();
+  }
+
+  void _watchReplay() {
+    if (_replaying) return;
+    final game = _game!;
+    setState(() => _replaying = true);
+    final started = game.startReplay(
+      onFinished: () {
+        if (mounted && _replaying && identical(_game, game)) {
+          setState(() => _replaying = false);
+        }
+      },
+    );
+    if (!started && mounted) setState(() => _replaying = false);
+  }
+
+  Future<void> _recordCompletion(PuzzleController controller) async {
+    final state = controller.state;
+    final result = await _progress!.recordCompletion(
+      levelId: state.level.id,
+      moves: state.moves,
+      minimumMoves: state.level.minimumMoves,
+    );
+    if (!mounted ||
+        !identical(_controller, controller) ||
+        !identical(controller.state, state)) {
+      return;
+    }
+    setState(() => _completion = result);
+  }
+
+  void _showPostcard(AppLocalizations t, PuzzleController controller) {
+    final state = controller.state;
+    final best = _progress!.forLevel(state.level.id)?.bestMoves ?? state.moves;
+    showDialog<void>(
+      context: context,
+      builder: (_) => EchoPostcardDialog(
+        data: EchoPostcardData(
+          levelId: state.level.id,
+          moves: state.moves,
+          bestMoves: best,
+          stars: starRating(
+            moves: state.moves,
+            minimumMoves: state.level.minimumMoves,
+          ),
+          levelText: t.level(state.level.id),
+          movesText: t.moves(state.moves),
+          bestText: t.bestMoves(best),
+        ),
+        title: t.postcard,
+        shareLabel: t.shareImage,
+        closeLabel: t.close,
+        errorLabel: t.shareError,
+      ),
+    );
   }
 
   Position? _cell(Offset offset, double width, double height) {
@@ -89,7 +163,7 @@ class _GameScreenState extends State<GameScreen> {
 
   void _start(DragStartDetails details, double width, double height) {
     final controller = _controller!;
-    if (controller.state.isComplete) return;
+    if (controller.state.isComplete || _replaying) return;
     final cell = _cell(details.localPosition, width, height);
     _dragStart = details.localPosition;
     _dragEnd = details.localPosition;
@@ -115,12 +189,19 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
+  void _cancelDrag() {
+    _game?.setDrag(null);
+    _dragBlock = null;
+    _dragStart = null;
+    _dragEnd = null;
+  }
+
   void _end(double width) {
     final controller = _controller!;
     if (_dragBlock != null && _dragStart != null && _dragEnd != null) {
       final delta = _dragEnd! - _dragStart!;
       final threshold = width / controller.state.level.boardWidth * .24;
-      if (delta.distance >= threshold) {
+      if (math.max(delta.dx.abs(), delta.dy.abs()) >= threshold) {
         final block = controller.state.blocks.firstWhere(
           (item) => item.id == _dragBlock,
         );
@@ -132,6 +213,7 @@ class _GameScreenState extends State<GameScreen> {
         if (controller.move(block.id, target)) {
           _gateBlocked = false;
           _game!.animateMove(block.id, from, previousEcho);
+          if (controller.state.isComplete) _recordCompletion(controller);
           if (_soundEnabled) {
             SystemSound.play(
               controller.state.isComplete
@@ -171,6 +253,7 @@ class _GameScreenState extends State<GameScreen> {
       controller.undo();
       _game!.clearEffects();
       _gateBlocked = false;
+      _completion = null;
     });
   }
 
@@ -308,13 +391,12 @@ class _GameScreenState extends State<GameScreen> {
                                 onPanStart: (d) => _start(d, width, height),
                                 onPanUpdate: _update,
                                 onPanEnd: (_) => _end(width),
-                                onPanCancel: () {
-                                  _game!.setDrag(null);
-                                  _dragBlock = null;
-                                  _dragStart = null;
-                                  _dragEnd = null;
-                                },
-                                child: GameWidget(game: _game!),
+                                onPanCancel: _cancelDrag,
+                                // Pointer 취소가 pan 종료로 전달되더라도 이동을 확정하지 않는다.
+                                child: Listener(
+                                  onPointerCancel: (_) => _cancelDrag(),
+                                  child: GameWidget(game: _game!),
+                                ),
                               ),
                             ),
                           ),
@@ -340,6 +422,39 @@ class _GameScreenState extends State<GameScreen> {
                                           controller.state.moves,
                                         ),
                                       ),
+                                      Semantics(
+                                        label: t.starsLabel(
+                                          starRating(
+                                            moves: controller.state.moves,
+                                            minimumMoves: controller
+                                                .state
+                                                .level
+                                                .minimumMoves,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '${'★' * starRating(moves: controller.state.moves, minimumMoves: controller.state.level.minimumMoves)}${'☆' * (3 - starRating(moves: controller.state.moves, minimumMoves: controller.state.level.minimumMoves))}',
+                                          style: const TextStyle(
+                                            fontSize: 28,
+                                            color: Color(0xFFF2AC47),
+                                          ),
+                                        ),
+                                      ),
+                                      if (_progress!.forLevel(
+                                            controller.state.level.id,
+                                          )
+                                          case final best?)
+                                        Text(t.bestMoves(best.bestMoves)),
+                                      if (_completion?.isNewBest == true)
+                                        Text(
+                                          t.newBest,
+                                          style: const TextStyle(
+                                            color: Color(0xFF15845F),
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      if (_completion?.saved == false)
+                                        Text(t.saveError),
                                       Text(
                                         controller.state.moves ==
                                                 controller
@@ -362,6 +477,49 @@ class _GameScreenState extends State<GameScreen> {
                                             ),
                                       ),
                                       const SizedBox(height: 8),
+                                      Wrap(
+                                        alignment: WrapAlignment.center,
+                                        spacing: 8,
+                                        children: [
+                                          OutlinedButton.icon(
+                                            onPressed: _replaying
+                                                ? () {
+                                                    _stopReplay();
+                                                    setState(() {});
+                                                  }
+                                                : _watchReplay,
+                                            icon: Icon(
+                                              _replaying
+                                                  ? Icons.skip_next
+                                                  : Icons.play_arrow,
+                                            ),
+                                            label: Text(
+                                              _replaying
+                                                  ? t.skipReplay
+                                                  : t.watchReplay,
+                                            ),
+                                          ),
+                                          OutlinedButton.icon(
+                                            onPressed: _replaying
+                                                ? null
+                                                : () => _select(_index),
+                                            icon: const Icon(Icons.replay),
+                                            label: Text(t.tryAgain),
+                                          ),
+                                          OutlinedButton.icon(
+                                            onPressed: _replaying
+                                                ? null
+                                                : () => _showPostcard(
+                                                    t,
+                                                    controller,
+                                                  ),
+                                            icon: const Icon(
+                                              Icons.image_outlined,
+                                            ),
+                                            label: Text(t.postcard),
+                                          ),
+                                        ],
+                                      ),
                                       if (_index + 1 < _loaded.length)
                                         FilledButton.icon(
                                           onPressed: () => _select(_index + 1),
@@ -403,18 +561,21 @@ class _GameScreenState extends State<GameScreen> {
                             spacing: 8,
                             children: [
                               OutlinedButton.icon(
-                                onPressed: controller.canUndo
+                                onPressed: controller.canUndo && !_replaying
                                     ? () => _undo(controller)
                                     : null,
                                 icon: const Icon(Icons.undo),
                                 label: Text(t.undo),
                               ),
                               OutlinedButton.icon(
-                                onPressed: () => setState(() {
-                                  controller.restart();
-                                  _game!.clearEffects();
-                                  _gateBlocked = false;
-                                }),
+                                onPressed: _replaying
+                                    ? null
+                                    : () => setState(() {
+                                        controller.restart();
+                                        _game!.clearEffects();
+                                        _gateBlocked = false;
+                                        _completion = null;
+                                      }),
                                 icon: const Icon(Icons.refresh),
                                 label: Text(t.restart),
                               ),
@@ -425,7 +586,21 @@ class _GameScreenState extends State<GameScreen> {
                                   for (var i = 0; i < _loaded.length; i++)
                                     PopupMenuItem(
                                       value: i,
-                                      child: Text(t.level(i + 1)),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(t.level(i + 1)),
+                                          if (_progress!.forLevel(_loaded[i].id)
+                                              case final best?)
+                                            Text(
+                                              '★' * best.bestStars,
+                                              style: const TextStyle(
+                                                color: Color(0xFFF2AC47),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
                                     ),
                                 ],
                                 child: Padding(

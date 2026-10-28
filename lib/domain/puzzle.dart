@@ -217,6 +217,31 @@ class MoveValidator {
   }
 }
 
+/// 미리보기와 재생 모두 실제 controller 상태를 변경하지 않는다.
+PuzzleState? previewMove(PuzzleState state, String blockId, Position target) {
+  if (!MoveValidator.canMove(state, blockId, target)) return null;
+  return _move(state, blockId, target);
+}
+
+/// 유효한 한 이동의 전후 스냅샷. Undo한 이동은 목록에서 제거한다.
+class MoveRecord {
+  const MoveRecord({
+    required this.blockId,
+    required this.from,
+    required this.to,
+    required this.before,
+    required this.after,
+  });
+
+  final String blockId;
+  final Position from;
+  final Position to;
+  final PuzzleState before;
+  final PuzzleState after;
+  Position? get previousEcho => before.echo;
+  Position? get nextEcho => after.echo;
+}
+
 /// Controller와 solver가 같은 상태 전이를 사용한다.
 PuzzleState _move(PuzzleState state, String blockId, Position target) {
   final moving = state.blocks.firstWhere((block) => block.id == blockId);
@@ -236,24 +261,41 @@ class PuzzleController {
 
   PuzzleState _state;
   final List<PuzzleState> _history = [];
+  final List<MoveRecord> _moves = [];
   PuzzleState get state => _state;
   bool get canUndo => _history.isNotEmpty;
+  List<MoveRecord> get moveHistory => List.unmodifiable(_moves);
 
   bool move(String blockId, Position target) {
     if (!MoveValidator.canMove(_state, blockId, target)) return false;
+    final before = _state;
+    final from = before.blocks
+        .firstWhere((block) => block.id == blockId)
+        .position;
     _history.add(_state);
     _state = _move(_state, blockId, target);
+    _moves.add(
+      MoveRecord(
+        blockId: blockId,
+        from: from,
+        to: target,
+        before: before,
+        after: _state,
+      ),
+    );
     return true;
   }
 
   bool undo() {
     if (_history.isEmpty) return false;
     _state = _history.removeLast();
+    _moves.removeLast();
     return true;
   }
 
   void restart() {
     _history.clear();
+    _moves.clear();
     _state = PuzzleState.initial(_state.level);
   }
 }

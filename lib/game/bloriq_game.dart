@@ -5,6 +5,16 @@ import 'package:flutter/material.dart';
 
 import '../domain/puzzle.dart';
 
+/// 드래그 중 표시할 가상 이동. 실제 게임 상태에는 적용하지 않는다.
+class DragPreview {
+  const DragPreview({required this.from, required this.target, this.nextState});
+
+  final Position from;
+  final Position target;
+  final PuzzleState? nextState;
+  bool get isValid => nextState != null;
+}
+
 /// The domain owns the rules; this renderer only animates their results.
 class BloriqGame extends FlameGame {
   BloriqGame(this.controller);
@@ -20,8 +30,70 @@ class BloriqGame extends FlameGame {
   Offset _dragOffset = Offset.zero;
   double _hintTime = 0;
   double _celebrationTime = 0;
+  List<MoveRecord>? _replay;
+  double _replayTime = 0;
+  VoidCallback? _onReplayFinished;
+
+  bool get isReplaying => _replay != null;
+
+  DragPreview? get currentPreview {
+    if (isReplaying || _dragId == null) return null;
+    final state = controller.state;
+    final cell = math.min(
+      size.x / state.level.boardWidth,
+      size.y / state.level.boardHeight,
+    );
+    if (cell <= 0 || _dragOffset.distance < cell * .24) return null;
+    final block = state.blocks
+        .where((block) => block.id == _dragId)
+        .firstOrNull;
+    if (block == null) return null;
+    final dx = _dragOffset.dx.abs() >= _dragOffset.dy.abs()
+        ? _dragOffset.dx.sign.toInt()
+        : 0;
+    final dy = dx == 0 ? _dragOffset.dy.sign.toInt() : 0;
+    final target = Position(block.position.x + dx, block.position.y + dy);
+    return DragPreview(
+      from: block.position,
+      target: target,
+      nextState: previewMove(state, block.id, target),
+    );
+  }
+
+  /// 완료한 실제 상태를 그대로 두고 기록된 스냅샷만 렌더링한다.
+  bool startReplay({required VoidCallback onFinished}) {
+    if (isReplaying || !controller.state.isComplete) return false;
+    final moves = controller.moveHistory;
+    if (moves.isEmpty) return false;
+    clearEffects();
+    _replay = moves;
+    _replayTime = 0;
+    _onReplayFinished = onFinished;
+    return true;
+  }
+
+  void skipReplay() {
+    if (!isReplaying) return;
+    _replay = null;
+    _motion = 1;
+    _movingId = null;
+    _from = null;
+    _oldEcho = null;
+    final callback = _onReplayFinished;
+    _onReplayFinished = null;
+    callback?.call();
+  }
+
+  @override
+  void onRemove() {
+    // 위젯이 해제된 뒤 이전 화면의 콜백이 실행되지 않도록 정리한다.
+    _replay = null;
+    _onReplayFinished = null;
+    super.onRemove();
+  }
 
   void setDrag(String? id, [Offset offset = Offset.zero]) {
+    if (isReplaying) return;
     _dragId = id;
     _dragOffset = offset;
   }
@@ -51,7 +123,14 @@ class BloriqGame extends FlameGame {
   @override
   void update(double dt) {
     super.update(dt);
-    _motion = math.min(1.0, _motion + dt / .22);
+    if (isReplaying) {
+      _replayTime += dt;
+      if (_replayTime >= 2.5) {
+        skipReplay();
+      }
+    } else {
+      _motion = math.min(1.0, _motion + dt / .22);
+    }
     _blockedTime = math.max(0.0, _blockedTime - dt);
     _hintTime += dt;
     if (controller.state.isComplete) {
@@ -65,7 +144,23 @@ class BloriqGame extends FlameGame {
   @override
   void render(Canvas canvas) {
     super.render(canvas);
-    final state = controller.state;
+    final replay = _replay;
+    PuzzleState state;
+    if (replay != null) {
+      final progress = (_replayTime / 2.5 * replay.length).clamp(
+        0.0,
+        replay.length.toDouble(),
+      );
+      final index = math.min(progress.floor(), replay.length - 1);
+      final move = replay[index];
+      state = move.after;
+      _movingId = move.blockId;
+      _from = move.from;
+      _oldEcho = move.previousEcho;
+      _motion = (progress - index).clamp(0.0, 1.0);
+    } else {
+      state = controller.state;
+    }
     final cell = math.min(
       size.x / state.level.boardWidth,
       size.y / state.level.boardHeight,
@@ -81,6 +176,10 @@ class BloriqGame extends FlameGame {
     Offset center(Position p) =>
         origin + Offset((p.x + .5) * cell, (p.y + .5) * cell);
     final paint = Paint();
+    final preview = currentPreview;
+    final previewTarget = preview?.target;
+    final previewFrom = preview?.from;
+    final previewState = preview?.nextState;
 
     // A quiet border makes the grid read as one tactile game board.
     final board = RRect.fromRectAndRadius(
@@ -201,6 +300,35 @@ class BloriqGame extends FlameGame {
       }
       paint.style = PaintingStyle.fill;
     }
+    // 실제 문의 상태는 유지하고, 이동 후 바뀔 상태만 바깥 테두리에 표시한다.
+    if (gatePosition != null &&
+        previewState != null &&
+        previewState.isGateOpen != state.isGateOpen) {
+      final rect = Rect.fromCenter(
+        center: center(gatePosition),
+        width: cell * .98,
+        height: cell * .98,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect, Radius.circular(cell * .18)),
+        paint
+          ..color = previewState.isGateOpen
+              ? const Color(0xFF39BA91)
+              : const Color(0xFFE58383)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = math.max(3.0, cell * .045),
+      );
+      paint.style = PaintingStyle.fill;
+      _label(
+        canvas,
+        previewState.isGateOpen ? '↗' : '×',
+        center(gatePosition) + Offset(cell * .34, -cell * .34),
+        cell * .25,
+        previewState.isGateOpen
+            ? const Color(0xFF16866C)
+            : const Color(0xFFC45050),
+      );
+    }
     for (final p in state.level.obstacles) {
       final rect = Rect.fromCenter(
         center: center(p),
@@ -300,6 +428,26 @@ class BloriqGame extends FlameGame {
     }
     if (state.echo != null) {
       drawEcho(state.echo!, _motion < 1 ? .5 + .5 * _motion : 1);
+    }
+    if (previewState != null && previewFrom != null) {
+      drawEcho(previewFrom, .5);
+    }
+    if (previewTarget != null && state.level.contains(previewTarget)) {
+      final rect = Rect.fromCenter(
+        center: center(previewTarget),
+        width: cell * .91,
+        height: cell * .91,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect, Radius.circular(cell * .18)),
+        paint
+          ..color = previewState != null
+              ? const Color(0xFF58BC97)
+              : const Color(0xFFE78383)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = math.max(3.0, cell * .045),
+      );
+      paint.style = PaintingStyle.fill;
     }
 
     for (final block in state.blocks) {

@@ -7,9 +7,13 @@ import 'package:bloriq/main.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  setUp(() => rootBundle.clear());
+  setUp(() {
+    rootBundle.clear();
+    SharedPreferences.setMockInitialValues({});
+  });
 
   testWidgets('first ten stages can be played consecutively by dragging', (
     tester,
@@ -75,6 +79,8 @@ void main() {
         reason: 'Level ${level.id}: completion must be shown',
       );
       expect(find.text('Next level'), findsOneWidget);
+      await tester.ensureVisible(find.text('Next level'));
+      await tester.pump();
       await tester.tap(find.text('Next level'));
       // AnimatedSwitcher needs one frame to begin and another to finish.
       await tester.pump(const Duration(milliseconds: 300));

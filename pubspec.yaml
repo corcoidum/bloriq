@@ -13,6 +13,8 @@ dependencies:
     sdk: flutter
   flame: 1.38.2
   intl: ^0.20.3
+  shared_preferences: ^2.5.3
+  share_plus: ^12.0.2
 
 dev_dependencies:
   flutter_test:

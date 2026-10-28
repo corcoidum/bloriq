@@ -2,9 +2,21 @@
   "@@locale": "en",
   "tagline": "Move Smart. Find Your Way.",
   "level": "Level {number}",
-  "@level": {"placeholders": {"number": {"type": "int"}}},
+  "@level": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "moves": "Moves: {count}",
-  "@moves": {"placeholders": {"count": {"type": "int"}}},
+  "@moves": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "instruction": "Slide the green block to the star.",
   "echoInstruction": "An echo disappears after your next move.",
   "gateInstruction": "Leave an echo on the diamond to open the gate.",
@@ -23,12 +35,49 @@
   "levels": "Levels",
   "complete": "You escaped!",
   "completeDetail": "Moves: {count}.",
-  "@completeDetail": {"placeholders": {"count": {"type": "int"}}},
+  "@completeDetail": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "optimalComplete": "Solved in the fewest moves!",
   "improveComplete": "Can you escape in {count} moves?",
-  "@improveComplete": {"placeholders": {"count": {"type": "int"}}},
+  "@improveComplete": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "firstLevel": "First level",
   "next": "Next level",
   "close": "Close",
-  "loadError": "Could not load the levels."
+  "loadError": "Could not load the levels.",
+  "watchReplay": "Watch Echo Replay",
+  "skipReplay": "Skip replay",
+  "tryAgain": "Try again",
+  "postcard": "Echo Postcard",
+  "shareImage": "Share image",
+  "shareError": "Could not create or share the postcard. Please try again.",
+  "bestMoves": "Personal best: {count} moves",
+  "newBest": "New personal best!",
+  "noBest": "No personal best yet",
+  "starsLabel": "Stars: {count} of 3",
+  "saveError": "Progress could not be saved on this device.",
+  "@bestMoves": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@starsLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -7,9 +7,13 @@ import 'package:bloriq/game/bloriq_game.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  setUp(() => rootBundle.clear());
+  setUp(() {
+    rootBundle.clear();
+    SharedPreferences.setMockInitialValues({});
+  });
   testWidgets('optional help explains the rules without changing the board', (
     tester,
   ) async {
@@ -69,10 +73,14 @@ void main() {
       find.text('An echo disappears after your next move.'),
       findsOneWidget,
     );
+    await tester.ensureVisible(find.text('Undo'));
+    await tester.pump();
     await tester.tap(find.text('Undo'));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Moves: 0'), findsOneWidget);
     await move(0, 1, 1, 0);
+    await tester.ensureVisible(find.text('Restart'));
+    await tester.pump();
     await tester.tap(find.text('Restart'));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Moves: 0'), findsOneWidget);
@@ -80,6 +88,8 @@ void main() {
     await move(1, 1, 1, 0);
     expect(find.text('You escaped!'), findsOneWidget);
     expect(find.text('Solved in the fewest moves!'), findsOneWidget);
+    await tester.ensureVisible(find.text('Next level'));
+    await tester.pump();
     await tester.tap(find.text('Next level'));
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump(const Duration(milliseconds: 300));
@@ -122,6 +132,8 @@ void main() {
     await move(1, 0, 0, 1);
     await move(1, 1, 1, 0);
     expect(find.text('Can you escape in 2 moves?'), findsOneWidget);
+    await tester.ensureVisible(find.text('Restart'));
+    await tester.pump();
     await tester.tap(find.text('Restart'));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Moves: 0'), findsOneWidget);
@@ -174,6 +186,8 @@ void main() {
       expect(controller.move(move.blockId, move.target), isTrue);
     }
     expect(find.text('First level'), findsOneWidget);
+    await tester.ensureVisible(find.text('First level'));
+    await tester.pump();
     await tester.tap(find.text('First level'));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Level 1'), findsOneWidget);
@@ -324,6 +338,8 @@ void main() {
     expect(observedOpen, isTrue);
     expect(observedOccupied, isTrue);
     expect(find.text('You escaped!'), findsOneWidget);
+    await tester.ensureVisible(find.text('Undo'));
+    await tester.pump();
     await tester.tap(find.text('Undo'));
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump(const Duration(milliseconds: 300));
@@ -331,6 +347,8 @@ void main() {
       find.text('A block on a closed gate can still leave.'),
       findsOneWidget,
     );
+    await tester.ensureVisible(find.text('Undo'));
+    await tester.pump();
     await tester.tap(find.text('Undo'));
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump(const Duration(milliseconds: 300));

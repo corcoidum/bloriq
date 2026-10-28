@@ -26,5 +26,16 @@
   "firstLevel": "첫 스테이지로",
   "next": "다음 스테이지",
   "close": "닫기",
-  "loadError": "스테이지를 불러오지 못했습니다."
+  "loadError": "스테이지를 불러오지 못했습니다.",
+  "watchReplay": "에코 리플레이 보기",
+  "skipReplay": "리플레이 건너뛰기",
+  "tryAgain": "다시 도전",
+  "postcard": "에코 포스트카드",
+  "shareImage": "이미지 공유",
+  "shareError": "포스트카드를 만들거나 공유하지 못했어요. 다시 시도해 주세요.",
+  "bestMoves": "개인 최고 기록: {count}회",
+  "newBest": "개인 최고 기록 갱신!",
+  "noBest": "아직 최고 기록이 없어요",
+  "starsLabel": "별 {count}개 / 3개",
+  "saveError": "이 기기에 기록을 저장하지 못했어요."
 }
