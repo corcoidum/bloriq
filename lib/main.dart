@@ -8,9 +8,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'audio/game_audio.dart';
+import 'art/game_art_assets.dart';
+import 'art/moonlit_scene.dart';
+import 'intro/opening_film.dart';
+import 'companions/season.dart';
+import 'companions/spirit_art.dart';
+import 'companions/collection_dialog.dart';
+import 'companions/spirit_postcard.dart';
 import 'domain/puzzle.dart';
 import 'design/game_theme.dart';
 import 'game/bloriq_game.dart';
+import 'game/board_geometry.dart';
 import 'game/victory_panel.dart';
 import 'l10n/app_localizations.dart';
 import 'postcard/echo_postcard.dart';
@@ -18,14 +26,24 @@ import 'progress/progress_repository.dart';
 import 'settings/game_settings.dart';
 import 'settings/settings_dialog.dart';
 
-void main() => runApp(const BloriqApp());
+void main() => runApp(const BloriqApp(showOpening: true));
 
 class BloriqApp extends StatefulWidget {
-  const BloriqApp({super.key, this.loadLevels, this.settings});
+  const BloriqApp({
+    super.key,
+    this.loadLevels,
+    this.settings,
+    this.artAssets,
+    this.showOpening = false,
+  });
+
+  /// 임베드/테스트는 보드에 바로 진입하고 실제 앱 진입점은 영상을 표시한다.
+  final bool showOpening;
 
   /// 테스트에서 이전 스테이지 구성과 기기 설정을 주입할 수 있다.
   final Future<List<Level>> Function()? loadLevels;
   final GameSettings? settings;
+  final GameArtAssets? artAssets;
 
   @override
   State<BloriqApp> createState() => _BloriqAppState();
@@ -63,29 +81,49 @@ class _BloriqAppState extends State<BloriqApp> {
   }
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
-    title: 'BLORIQ',
-    debugShowCheckedModeBanner: false,
-    theme: GameTheme.light,
-    darkTheme: GameTheme.dark,
-    themeMode: _settings?.themeMode ?? ThemeMode.system,
-    // Flutter 위젯과 Flame 보드가 같은 프레임에 같은 팔레트로 바뀐다.
-    themeAnimationDuration: Duration.zero,
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
-    supportedLocales: AppLocalizations.supportedLocales,
-    localeResolutionCallback: (locale, supported) =>
-        locale?.languageCode == 'ko' ? const Locale('ko') : const Locale('en'),
-    home: _settings == null
-        ? const Scaffold(body: Center(child: CircularProgressIndicator()))
-        : GameScreen(loadLevels: widget.loadLevels, settings: _settings!),
+  Widget build(BuildContext context) => GameArtScope(
+    assets: widget.artAssets ?? GameArtAssets.shared,
+    child: MaterialApp(
+      title: 'BLORIQ',
+      debugShowCheckedModeBanner: false,
+      theme: GameTheme.light,
+      darkTheme: GameTheme.dark,
+      themeMode: _settings?.themeMode ?? ThemeMode.system,
+      // Flutter 위젯과 Flame 보드가 같은 프레임에 같은 팔레트로 바뀐다.
+      themeAnimationDuration: Duration.zero,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      localeResolutionCallback: (locale, supported) =>
+          locale?.languageCode == 'ko'
+          ? const Locale('ko')
+          : const Locale('en'),
+      home: _settings == null
+          ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+          : OpeningGate(
+              enabled: widget.showOpening,
+              settings: _settings!,
+              assets: widget.artAssets ?? GameArtAssets.shared,
+              child: GameScreen(
+                loadLevels: widget.loadLevels,
+                settings: _settings!,
+                artAssets: widget.artAssets ?? GameArtAssets.shared,
+              ),
+            ),
+    ),
   );
 }
 
 class GameScreen extends StatefulWidget {
-  const GameScreen({super.key, this.loadLevels, required this.settings});
+  const GameScreen({
+    super.key,
+    this.loadLevels,
+    required this.settings,
+    required this.artAssets,
+  });
 
   final Future<List<Level>> Function()? loadLevels;
   final GameSettings settings;
+  final GameArtAssets artAssets;
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -93,7 +131,10 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  late final Future<List<Level>> _levels = _loadLevels();
+  late Future<List<Level>> _levels = _loadLevels();
+  GameArtAssets get _art => widget.artAssets;
+  String? _artError;
+  static const _sceneText = Color(0xfffff3d9);
   List<Level> _loaded = [];
   PuzzleController? _controller;
   BloriqGame? _game;
@@ -105,6 +146,10 @@ class _GameScreenState extends State<GameScreen>
   bool _gateBlocked = false;
   ProgressRepository? _progress;
   CompletionResult? _completion;
+  late Season _season;
+  String _reaction = 'idle';
+  bool _replayIntro = false;
+  bool get _showIntro => _index == 0 && (!_progress!.introSeen || _replayIntro);
   bool _replaying = false;
   bool _reduceMotion = false;
   bool _isNewBest = false;
@@ -144,6 +189,11 @@ class _GameScreenState extends State<GameScreen>
 
   void _beginCompletion(PuzzleController controller) {
     final state = controller.state;
+    _reaction = 'clear';
+    if (_index == 0) {
+      _progress!.introSeen = true;
+      _replayIntro = false;
+    }
     final previous = _progress!.forLevel(state.level.id);
     _isNewBest = previous == null || state.moves < previous.bestMoves;
     // 저장과 별 평가는 애니메이션 타이머/Canvas 성공 여부에 의존하지 않는다.
@@ -167,6 +217,9 @@ class _GameScreenState extends State<GameScreen>
 
   Future<List<Level>> _loadLevels() async {
     _progress = await ProgressRepository.load();
+    _season = await Season.load();
+    await _art.loadCore();
+    await _art.prepareChapter(0);
     final audio = await GameAudio.load();
     if (mounted) {
       _audio = audio;
@@ -178,6 +231,7 @@ class _GameScreenState extends State<GameScreen>
     if (injected != null) {
       final levels = await injected();
       if (levels.isEmpty) throw const FormatException('No levels');
+      if (mounted) setState(() {});
       return levels;
     }
     final json = jsonDecode(
@@ -187,6 +241,7 @@ class _GameScreenState extends State<GameScreen>
         .map((item) => Level.fromJson(item as Map<String, dynamic>))
         .toList();
     if (levels.isEmpty) throw const FormatException('No levels');
+    if (mounted) setState(() {});
     return levels;
   }
 
@@ -195,13 +250,28 @@ class _GameScreenState extends State<GameScreen>
     _stopReplay();
     setState(() {
       _index = index;
+      _reaction = 'idle';
       _controller = PuzzleController(_loaded[index]);
-      _game = BloriqGame(_controller!);
+      _game = BloriqGame(_controller!, artAssets: _art);
       _dragBlock = null;
       _dragStart = null;
       _gateBlocked = false;
       _completion = null;
+      _artError = null;
     });
+    unawaited(_prepareScene());
+  }
+
+  Future<void> _prepareScene() async {
+    final chapter = _index ~/ 5;
+    try {
+      await _art.prepareChapter(chapter);
+      if (mounted && chapter == _index ~/ 5) setState(() => _artError = null);
+    } catch (_) {
+      if (mounted && chapter == _index ~/ 5) {
+        setState(() => _artError = AppLocalizations.of(context)!.artLoadError);
+      }
+    }
   }
 
   void _stopReplay() {
@@ -246,7 +316,10 @@ class _GameScreenState extends State<GameScreen>
         !identical(controller.state, state)) {
       return;
     }
-    setState(() => _completion = result);
+    setState(() {
+      _completion = result;
+      if (result.isFirstClear) _reaction = 'welcome';
+    });
   }
 
   void _showPostcard(AppLocalizations t, PuzzleController controller) {
@@ -256,6 +329,7 @@ class _GameScreenState extends State<GameScreen>
       context: context,
       animationStyle: _reduceMotion ? AnimationStyle.noAnimation : null,
       builder: (_) => EchoPostcardDialog(
+        artAssets: _art,
         data: EchoPostcardData(
           levelId: state.level.id,
           moves: state.moves,
@@ -277,18 +351,15 @@ class _GameScreenState extends State<GameScreen>
   }
 
   Position? _cell(Offset offset, double width, double height) {
-    final level = _controller!.state.level;
-    if (offset.dx < 0 ||
-        offset.dy < 0 ||
-        offset.dx >= width ||
-        offset.dy >= height) {
-      return null;
-    }
-    return Position(
-      (offset.dx / width * level.boardWidth).floor(),
-      (offset.dy / height * level.boardHeight).floor(),
-    );
+    return _geometry(width, height).cellAt(offset);
   }
+
+  BoardGeometry _geometry(double width, double height) => BoardGeometry(
+    columns: _controller!.state.level.boardWidth,
+    rows: _controller!.state.level.boardHeight,
+    available: Size(width, height),
+    devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+  );
 
   void _start(DragStartDetails details, double width, double height) {
     final controller = _controller!;
@@ -315,6 +386,8 @@ class _GameScreenState extends State<GameScreen>
           ? Offset(delta.dx, 0)
           : Offset(0, delta.dy);
       _game!.setDrag(_dragBlock, aligned);
+      final gaze = delta.dx < 0 ? 'lookLeft' : 'lookRight';
+      if (_reaction != gaze) setState(() => _reaction = gaze);
     }
   }
 
@@ -325,11 +398,11 @@ class _GameScreenState extends State<GameScreen>
     _dragEnd = null;
   }
 
-  void _end(double width) {
+  void _end() {
     final controller = _controller!;
     if (_dragBlock != null && _dragStart != null && _dragEnd != null) {
       final delta = _dragEnd! - _dragStart!;
-      final threshold = width / controller.state.level.boardWidth * .24;
+      final threshold = _game!.geometry.dragThreshold;
       if (math.max(delta.dx.abs(), delta.dy.abs()) >= threshold) {
         final block = controller.state.blocks.firstWhere(
           (item) => item.id == _dragBlock,
@@ -342,10 +415,19 @@ class _GameScreenState extends State<GameScreen>
         final target = Position(from.x + dx, from.y + dy);
         if (controller.move(block.id, target)) {
           _gateBlocked = false;
+          _reaction = !gateWasOpen && controller.state.isGateOpen
+              ? 'gate'
+              : controller.state.echo != null
+              ? 'echo'
+              : 'move';
           _game!.animateMove(block.id, from, previousEcho);
+          final newGuardian =
+              controller.state.isComplete &&
+              controller.state.level.id % 5 == 0 &&
+              !_progress!.rewardStages.contains(controller.state.level.id);
           if (controller.state.isComplete) _beginCompletion(controller);
           final effect = controller.state.isComplete
-              ? SoundEffect.complete
+              ? (newGuardian ? SoundEffect.guardian : SoundEffect.complete)
               : !gateWasOpen && controller.state.isGateOpen
               ? SoundEffect.gate
               : previousEcho != null
@@ -354,6 +436,7 @@ class _GameScreenState extends State<GameScreen>
           _audio?.play(effect);
           HapticFeedback.selectionClick();
         } else {
+          _reaction = 'blocked';
           _audio?.play(SoundEffect.blocked);
           _gateBlocked =
               target == controller.state.level.echoGate &&
@@ -406,7 +489,58 @@ class _GameScreenState extends State<GameScreen>
       animationStyle: _reduceMotion ? AnimationStyle.noAnimation : null,
       builder: (context) => AlertDialog(
         title: Text(t.help),
-        content: SingleChildScrollView(child: Text(t.helpBody)),
+        scrollable: true,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(t.helpBody),
+            TextButton(
+              onPressed: () => showSpiritPostcard(
+                context,
+                spirits: const [],
+                heading: t.puzzleChallenge,
+                subtitle: t.level(_controller!.state.level.id),
+                reduceMotion: _reduceMotion,
+                level: _controller!.state.level,
+              ),
+              child: Text(t.puzzleChallenge),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                _select(0);
+                setState(() => _replayIntro = true);
+                _audio?.didChangeAppLifecycleState(AppLifecycleState.paused);
+                await Navigator.of(this.context).push<void>(
+                  MaterialPageRoute(
+                    builder: (_) => OpeningFilm(
+                      assets: _art,
+                      settings: widget.settings,
+                      onDone: () => Navigator.of(this.context).pop(),
+                    ),
+                  ),
+                );
+                if (mounted) {
+                  _audio?.didChangeAppLifecycleState(AppLifecycleState.resumed);
+                }
+              },
+              child: Text(t.replayIntro),
+            ),
+            if (_progress!.spiritIds.isNotEmpty)
+              TextButton(
+                onPressed: () => showSpiritPostcard(
+                  context,
+                  spirits: _season.spirits
+                      .where((s) => _progress!.spiritIds.contains(s.id))
+                      .toList(),
+                  heading: t.collection,
+                  subtitle: '${_progress!.spiritIds.length} / 25',
+                  reduceMotion: _reduceMotion,
+                ),
+                child: Text(t.shareCollection),
+              ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -436,6 +570,31 @@ class _GameScreenState extends State<GameScreen>
         result: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (_completion?.isFirstClear == true && state.level.id <= 25) ...[
+              SpiritAwakening(
+                spirit: _season.forStage(state.level.id),
+                progress: _victory.value,
+                reduceMotion: _reduceMotion,
+              ),
+              Text(
+                _season.forStage(state.level.id).guardian
+                    ? t.guardianAwakened
+                    : t.spiritAwakened,
+                textAlign: TextAlign.center,
+              ),
+              Text(
+                _season.forStage(state.level.id).text('name', _ko),
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              if (state.level.id == 1)
+                Text(t.riqWelcome, textAlign: TextAlign.center),
+              Text(
+                _season.forStage(state.level.id).text('memory', _ko),
+                textAlign: TextAlign.center,
+              ),
+              if (state.level.id == 25) Text(t.seasonEnding),
+              TextButton(onPressed: _showCollection, child: Text(t.collection)),
+            ],
             Text(t.completeDetail(state.moves)),
             if (_progress!.forLevel(state.level.id) case final best?)
               Text(t.bestMoves(best.bestMoves)),
@@ -489,6 +648,100 @@ class _GameScreenState extends State<GameScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  bool get _ko => Localizations.localeOf(context).languageCode == 'ko';
+
+  Future<void> _showCollection() async {
+    _cancelDrag();
+    await showDialog<void>(
+      context: context,
+      animationStyle: _reduceMotion ? AnimationStyle.noAnimation : null,
+      builder: (_) => CollectionDialog(
+        season: _season,
+        progress: _progress!,
+        reduceMotion: _reduceMotion,
+        onStage: (stage) => _select(stage - 1),
+      ),
+    );
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _skipIntro() async {
+    final saved = await _progress!.markIntroSeen();
+    if (!mounted) return;
+    setState(() => _replayIntro = false);
+    if (!saved) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.saveError)),
+      );
+    }
+  }
+
+  Widget _buildCompanions(AppLocalizations t) {
+    final selected = _season.spirits
+        .where((s) => s.id == _progress!.companionId)
+        .firstOrNull;
+    final line = _showIntro
+        ? (_controller!.state.echo == null ? t.riqFirst : t.riqEcho)
+        : _reaction == 'blocked'
+        ? t.riqBlocked
+        : _reaction == 'gate'
+        ? t.riqGate
+        : t.riqIdle;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              SpiritArt(
+                reaction: _reaction,
+                reduceMotion: _reduceMotion,
+                animateIdle: true,
+                size: 72,
+              ),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xc4282949),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    line,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: _sceneText,
+                      shadows: const [
+                        Shadow(color: Color(0xff111329), blurRadius: 6),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              if (_showIntro)
+                IconButton(
+                  tooltip: t.skipIntro,
+                  onPressed: _skipIntro,
+                  icon: const Icon(Icons.close, size: 18, color: _sceneText),
+                ),
+              if (selected != null)
+                SpiritArt(
+                  spirit: selected,
+                  reaction: _reaction,
+                  reduceMotion: _reduceMotion,
+                  animateIdle: true,
+                  size: 72,
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -549,269 +802,380 @@ class _GameScreenState extends State<GameScreen>
       });
     }
     return Scaffold(
-      body: SafeArea(
-        child: FutureBuilder<List<Level>>(
-          future: _levels,
-          builder: (context, snapshot) {
-            if (snapshot.hasError) return Center(child: Text(t.loadError));
-            if (!snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (_controller == null) {
-              _loaded = snapshot.data!;
-              _controller = PuzzleController(_loaded[_index]);
-              _game = BloriqGame(_controller!);
-            }
-            _game!.configureAppearance(
-              colors: colors,
-              reduceMotion: _reduceMotion,
-            );
-            final controller = _controller!;
-            final hint = _hint(t, controller);
-            return LayoutBuilder(
-              builder: (context, constraints) {
-                final width = math.max(
-                  1.0,
-                  math.min(
-                    constraints.maxWidth - GameSpacing.page * 2,
-                    math.min(
-                      GameSpacing.maxBoardWidth,
-                      constraints.maxHeight *
-                          .46 *
-                          controller.state.level.boardWidth /
-                          controller.state.level.boardHeight,
-                    ),
+      backgroundColor: const Color(0xff282844),
+      body: MoonlitScene(
+        assets: _art,
+        chapter: _index ~/ 5,
+        stage: _index + 1,
+        restored:
+            _progress?.rewardStages
+                .where((id) => (id - 1) ~/ 5 == _index ~/ 5)
+                .length ??
+            0,
+        dark: Theme.of(context).brightness == Brightness.dark,
+        reduceMotion: _reduceMotion,
+        intro:
+            _progress != null &&
+            _index == 0 &&
+            (!_progress!.introSeen || _replayIntro),
+        child: SafeArea(
+          child: FutureBuilder<List<Level>>(
+            future: _levels,
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        t.loadError,
+                        style: const TextStyle(color: _sceneText),
+                      ),
+                      FilledButton.icon(
+                        onPressed: () =>
+                            setState(() => _levels = _loadLevels()),
+                        icon: const Icon(Icons.refresh),
+                        label: Text(t.retryArt),
+                      ),
+                    ],
                   ),
                 );
-                final height =
-                    width *
-                    controller.state.level.boardHeight /
-                    controller.state.level.boardWidth;
-                return Center(
-                  child: SingleChildScrollView(
-                    child: Container(
-                      constraints: const BoxConstraints(maxWidth: 560),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: GameSpacing.page,
-                        vertical: GameSpacing.medium,
+              }
+              if (!snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (_controller == null) {
+                _loaded = snapshot.data!;
+                _controller = PuzzleController(_loaded[_index]);
+                _game = BloriqGame(_controller!, artAssets: _art);
+              }
+              _game!.devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
+              _game!.configureAppearance(
+                colors: colors,
+                reduceMotion: _reduceMotion,
+              );
+              final controller = _controller!;
+              final hint = _hint(t, controller);
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  final width = math.max(
+                    1.0,
+                    math.min(
+                      math.min(560, constraints.maxWidth) -
+                          GameSpacing.page * 2 -
+                          MoonlitBoardFrame.inset * 2,
+                      math.min(
+                        GameSpacing.maxBoardWidth,
+                        constraints.maxHeight *
+                            (constraints.maxHeight < 650 ? .38 : .48) *
+                            controller.state.level.boardWidth /
+                            controller.state.level.boardHeight,
                       ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Wrap(
-                            alignment: WrapAlignment.spaceBetween,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            spacing: GameSpacing.small,
+                    ),
+                  );
+                  final height =
+                      width *
+                      controller.state.level.boardHeight /
+                      controller.state.level.boardWidth;
+                  final boardLayout = _geometry(width, height);
+                  return Center(
+                    child: SingleChildScrollView(
+                      child: Container(
+                        constraints: const BoxConstraints(maxWidth: 560),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: GameSpacing.page,
+                          vertical: GameSpacing.medium,
+                        ),
+                        child: DefaultTextStyle.merge(
+                          style: const TextStyle(color: _sceneText),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
-                                'BLORIQ',
-                                style: GameTypography.brand.copyWith(
-                                  color: colors.text,
-                                ),
-                              ),
                               Wrap(
+                                alignment: WrapAlignment.spaceBetween,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                spacing: GameSpacing.small,
                                 children: [
-                                  IconButton(
-                                    tooltip: t.settings,
-                                    onPressed: _showSettings,
-                                    icon: const Icon(Icons.tune_rounded),
-                                  ),
-                                  IconButton(
-                                    tooltip: t.help,
-                                    onPressed: () => _showHelp(t),
-                                    icon: const Icon(Icons.help_outline),
-                                  ),
-                                  IconButton(
-                                    tooltip: _audio!.effectsEnabled
-                                        ? t.soundOn
-                                        : t.soundOff,
-                                    onPressed: () => setState(() {
-                                      _audio!.onUserInteraction();
-                                      _audio!.setEffectsEnabled(
-                                        !_audio!.effectsEnabled,
-                                      );
-                                    }),
-                                    icon: Icon(
-                                      _audio!.effectsEnabled
-                                          ? Icons.volume_up_outlined
-                                          : Icons.volume_off_outlined,
-                                    ),
-                                  ),
-                                  IconButton(
-                                    tooltip: _audio!.musicEnabled
-                                        ? t.musicOn
-                                        : t.musicOff,
-                                    onPressed: () => setState(
-                                      () => _audio!.setMusicEnabled(
-                                        !_audio!.musicEnabled,
-                                      ),
-                                    ),
-                                    icon: Icon(
-                                      _audio!.musicEnabled
-                                          ? Icons.music_note
-                                          : Icons.music_off,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Wrap(
-                            alignment: WrapAlignment.spaceBetween,
-                            spacing: GameSpacing.large,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              Text(
-                                t.level(_index + 1),
-                                style: Theme.of(context).textTheme.titleLarge
-                                    ?.copyWith(fontWeight: FontWeight.bold),
-                              ),
-                              Text(t.moves(controller.state.moves)),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            width: width,
-                            height: height,
-                            child: Semantics(
-                              label: t.boardLabel,
-                              child: GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                dragStartBehavior: DragStartBehavior.down,
-                                // 축별 recognizer가 바깥 스크롤보다 보드 드래그를 우선한다.
-                                // 작은 화면에서도 위/아래 이동이 페이지 스크롤로 바뀌지 않는다.
-                                onHorizontalDragStart: (d) =>
-                                    _start(d, width, height),
-                                onHorizontalDragUpdate: _update,
-                                onHorizontalDragEnd: (_) => _end(width),
-                                onHorizontalDragCancel: _cancelDrag,
-                                onVerticalDragStart: (d) =>
-                                    _start(d, width, height),
-                                onVerticalDragUpdate: _update,
-                                onVerticalDragEnd: (_) => _end(width),
-                                onVerticalDragCancel: _cancelDrag,
-                                // Pointer 취소가 pan 종료로 전달되더라도 이동을 확정하지 않는다.
-                                child: Listener(
-                                  onPointerDown: (_) =>
-                                      _audio?.onUserInteraction(),
-                                  onPointerCancel: (_) => _cancelDrag(),
-                                  child: GameWidget(game: _game!),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          AnimatedSwitcher(
-                            duration: _reduceMotion
-                                ? Duration.zero
-                                : GameEffects.panelDuration,
-                            // 사라지는 결과 패널의 버튼이 연속 터치를 받지 않게 한다.
-                            layoutBuilder: (current, previous) => Stack(
-                              alignment: Alignment.topCenter,
-                              children: [
-                                for (final child in previous)
-                                  IgnorePointer(
-                                    child: ExcludeSemantics(child: child),
-                                  ),
-                                ?current,
-                              ],
-                            ),
-                            child: controller.state.isComplete
-                                ? _buildVictory(t, controller)
-                                : Column(
-                                    key: ValueKey(hint),
-                                    children: [
-                                      Text(
-                                        hint,
-                                        textAlign: TextAlign.center,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyLarge,
-                                      ),
-                                      if (_hasNoMoves(controller)) ...[
-                                        const SizedBox(height: 8),
-                                        FilledButton.icon(
-                                          onPressed: () => _undo(controller),
-                                          icon: const Icon(Icons.undo),
-                                          label: Text(t.undoLastMove),
+                                  Text(
+                                    'BLORIQ',
+                                    style: GameTypography.brand.copyWith(
+                                      fontFamily: 'CormorantGaramond',
+                                      fontSize: 34,
+                                      fontWeight: FontWeight.w600,
+                                      color: _sceneText,
+                                      shadows: const [
+                                        Shadow(
+                                          color: Color(0xff15162c),
+                                          blurRadius: 10,
                                         ),
                                       ],
-                                    ],
+                                    ),
                                   ),
-                          ),
-                          const SizedBox(height: 12),
-                          Wrap(
-                            alignment: WrapAlignment.center,
-                            spacing: 8,
-                            children: [
-                              OutlinedButton.icon(
-                                onPressed:
-                                    controller.canUndo &&
-                                        !_replaying &&
-                                        !_celebrating
-                                    ? () => _undo(controller)
-                                    : null,
-                                icon: const Icon(Icons.undo),
-                                label: Text(t.undo),
-                              ),
-                              OutlinedButton.icon(
-                                onPressed: _replaying || _celebrating
-                                    ? null
-                                    : () => setState(() {
-                                        _skipCelebration();
-                                        controller.restart();
-                                        _game!.clearEffects();
-                                        _gateBlocked = false;
-                                        _completion = null;
-                                      }),
-                                icon: const Icon(Icons.refresh),
-                                label: Text(t.restart),
-                              ),
-                              PopupMenuButton<int>(
-                                popUpAnimationStyle: _reduceMotion
-                                    ? AnimationStyle.noAnimation
-                                    : null,
-                                tooltip: t.levels,
-                                onSelected: _select,
-                                itemBuilder: (_) => [
-                                  for (var i = 0; i < _loaded.length; i++)
-                                    PopupMenuItem(
-                                      value: i,
+                                  IconTheme(
+                                    data: const IconThemeData(
+                                      color: _sceneText,
+                                    ),
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        color: const Color(0x771d2038),
+                                        borderRadius: BorderRadius.circular(24),
+                                      ),
                                       child: Wrap(
-                                        alignment: WrapAlignment.spaceBetween,
-                                        crossAxisAlignment:
-                                            WrapCrossAlignment.center,
-                                        spacing: GameSpacing.small,
                                         children: [
-                                          Text(t.level(i + 1)),
-                                          if (_progress!.forLevel(_loaded[i].id)
-                                              case final best?)
-                                            Text(
-                                              '★' * best.bestStars,
-                                              style: TextStyle(
-                                                color: colors.rewardInk,
-                                              ),
+                                          IconButton(
+                                            style: IconButton.styleFrom(
+                                              foregroundColor: _sceneText,
                                             ),
+                                            tooltip: t.collection,
+                                            onPressed: _showCollection,
+                                            icon: const Icon(
+                                              Icons.auto_awesome,
+                                            ),
+                                          ),
+                                          IconButton(
+                                            style: IconButton.styleFrom(
+                                              foregroundColor: _sceneText,
+                                            ),
+                                            tooltip: t.settings,
+                                            onPressed: _showSettings,
+                                            icon: const Icon(
+                                              Icons.tune_rounded,
+                                            ),
+                                          ),
+                                          IconButton(
+                                            style: IconButton.styleFrom(
+                                              foregroundColor: _sceneText,
+                                            ),
+                                            tooltip: t.help,
+                                            onPressed: () => _showHelp(t),
+                                            icon: const Icon(
+                                              Icons.help_outline,
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     ),
+                                  ),
                                 ],
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Text(t.levels),
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                alignment: WrapAlignment.spaceBetween,
+                                spacing: GameSpacing.large,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  Text(
+                                    t.level(_index + 1),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleLarge
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: _sceneText,
+                                        ),
+                                  ),
+                                  Text(t.moves(controller.state.moves)),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                '${_season.chapterName(_index ~/ 5, _ko)} · ${_season.forStage(_index + 1).text('title', _ko)}',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(color: _sceneText),
+                              ),
+                              if (_artError != null)
+                                TextButton.icon(
+                                  onPressed: _prepareScene,
+                                  icon: const Icon(Icons.refresh),
+                                  label: Text(_artError!),
                                 ),
+                              const SizedBox(height: 8),
+                              MoonlitBoardFrame(
+                                assets: _art,
+                                child: SizedBox(
+                                  width: boardLayout.boardSize.width,
+                                  height: boardLayout.boardSize.height,
+                                  child: Semantics(
+                                    label: t.boardLabel,
+                                    child: GestureDetector(
+                                      behavior: HitTestBehavior.opaque,
+                                      dragStartBehavior: DragStartBehavior.down,
+                                      // 축별 recognizer가 바깥 스크롤보다 보드 드래그를 우선한다.
+                                      // 작은 화면에서도 위/아래 이동이 페이지 스크롤로 바뀌지 않는다.
+                                      onHorizontalDragStart: (d) => _start(
+                                        d,
+                                        boardLayout.boardSize.width,
+                                        boardLayout.boardSize.height,
+                                      ),
+                                      onHorizontalDragUpdate: _update,
+                                      onHorizontalDragEnd: (_) => _end(),
+                                      onHorizontalDragCancel: _cancelDrag,
+                                      onVerticalDragStart: (d) => _start(
+                                        d,
+                                        boardLayout.boardSize.width,
+                                        boardLayout.boardSize.height,
+                                      ),
+                                      onVerticalDragUpdate: _update,
+                                      onVerticalDragEnd: (_) => _end(),
+                                      onVerticalDragCancel: _cancelDrag,
+                                      // Pointer 취소가 pan 종료로 전달되더라도 이동을 확정하지 않는다.
+                                      child: Listener(
+                                        onPointerDown: (_) =>
+                                            _audio?.onUserInteraction(),
+                                        onPointerCancel: (_) => _cancelDrag(),
+                                        child: GameWidget(game: _game!),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              _buildCompanions(t),
+                              AnimatedSwitcher(
+                                duration: _reduceMotion
+                                    ? Duration.zero
+                                    : GameEffects.panelDuration,
+                                // 사라지는 결과 패널의 버튼이 연속 터치를 받지 않게 한다.
+                                layoutBuilder: (current, previous) => Stack(
+                                  alignment: Alignment.topCenter,
+                                  children: [
+                                    for (final child in previous)
+                                      IgnorePointer(
+                                        child: ExcludeSemantics(child: child),
+                                      ),
+                                    ?current,
+                                  ],
+                                ),
+                                child: controller.state.isComplete
+                                    ? _buildVictory(t, controller)
+                                    : Column(
+                                        key: ValueKey(hint),
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 8,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xeef9f0df),
+                                              borderRadius:
+                                                  BorderRadius.circular(14),
+                                            ),
+                                            child: Text(
+                                              hint,
+                                              textAlign: TextAlign.center,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyMedium
+                                                  ?.copyWith(
+                                                    color: const Color(
+                                                      0xff34334a,
+                                                    ),
+                                                  ),
+                                            ),
+                                          ),
+                                          if (_hasNoMoves(controller)) ...[
+                                            const SizedBox(height: 8),
+                                            FilledButton.icon(
+                                              onPressed: () =>
+                                                  _undo(controller),
+                                              icon: const Icon(Icons.undo),
+                                              label: Text(t.undoLastMove),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                              ),
+                              const SizedBox(height: 12),
+                              Wrap(
+                                alignment: WrapAlignment.center,
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  MoonlitControlPlate(
+                                    child: OutlinedButton.icon(
+                                      style: OutlinedButton.styleFrom(
+                                        side: BorderSide.none,
+                                      ),
+                                      onPressed:
+                                          controller.canUndo &&
+                                              !_replaying &&
+                                              !_celebrating
+                                          ? () => _undo(controller)
+                                          : null,
+                                      icon: const Icon(Icons.undo),
+                                      label: Text(t.undo),
+                                    ),
+                                  ),
+                                  MoonlitControlPlate(
+                                    child: OutlinedButton.icon(
+                                      style: OutlinedButton.styleFrom(
+                                        side: BorderSide.none,
+                                      ),
+                                      onPressed: _replaying || _celebrating
+                                          ? null
+                                          : () => setState(() {
+                                              _skipCelebration();
+                                              controller.restart();
+                                              _game!.clearEffects();
+                                              _gateBlocked = false;
+                                              _completion = null;
+                                            }),
+                                      icon: const Icon(Icons.refresh),
+                                      label: Text(t.restart),
+                                    ),
+                                  ),
+                                  MoonlitControlPlate(
+                                    child: PopupMenuButton<int>(
+                                      popUpAnimationStyle: _reduceMotion
+                                          ? AnimationStyle.noAnimation
+                                          : null,
+                                      tooltip: t.levels,
+                                      onSelected: _select,
+                                      itemBuilder: (_) => [
+                                        for (var i = 0; i < _loaded.length; i++)
+                                          PopupMenuItem(
+                                            value: i,
+                                            child: Wrap(
+                                              alignment:
+                                                  WrapAlignment.spaceBetween,
+                                              crossAxisAlignment:
+                                                  WrapCrossAlignment.center,
+                                              spacing: GameSpacing.small,
+                                              children: [
+                                                Text(t.level(i + 1)),
+                                                if (_progress!.forLevel(
+                                                      _loaded[i].id,
+                                                    )
+                                                    case final best?)
+                                                  Text(
+                                                    '★' * best.bestStars,
+                                                    style: TextStyle(
+                                                      color: colors.rewardInk,
+                                                    ),
+                                                  ),
+                                              ],
+                                            ),
+                                          ),
+                                      ],
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(12),
+                                        child: Text(t.levels),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
-            );
-          },
+                  );
+                },
+              );
+            },
+          ),
         ),
       ),
     );

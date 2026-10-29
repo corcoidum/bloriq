@@ -1,3 +1,4 @@
+import 'support/art_test_assets.dart';
 import 'support/legacy_levels.dart';
 
 import 'package:bloriq/domain/puzzle.dart';
@@ -22,6 +23,8 @@ Level gateLevel() => Level(
 );
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUp(prepareMoonlitArt);
   TestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('drag preview is removed on cancel and invalid drop', (

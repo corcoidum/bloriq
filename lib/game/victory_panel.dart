@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../design/game_theme.dart';
+import '../art/game_art_assets.dart';
+import '../art/moonlit_scene.dart';
 import '../l10n/app_localizations.dart';
 
 /// 연출은 표시만 담당한다. 별 계산과 기록 저장은 호출자가 즉시 완료한다.
@@ -36,8 +38,12 @@ class VictoryPanel extends StatelessWidget {
           liveRegion: true,
           child: Text(
             t.complete,
-            style: Theme.of(context).textTheme.titleLarge
-                ?.copyWith(color: colors.goalInk, fontWeight: FontWeight.w800),
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: GameArtScope.maybeOf(context) != null
+                  ? const Color(0xfffff3d9)
+                  : colors.goalInk,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
         const SizedBox(height: GameSpacing.small),
@@ -51,7 +57,9 @@ class VictoryPanel extends StatelessWidget {
                     child: Text(
                       '${'★' * stars}${'☆' * (3 - stars)}',
                       style: GameTypography.reward.copyWith(
-                        color: colors.rewardInk,
+                        color: GameArtScope.maybeOf(context) == null
+                            ? colors.rewardInk
+                            : colors.reward,
                       ),
                     ),
                   )
@@ -94,59 +102,66 @@ class VictoryPanel extends StatelessWidget {
             opacity: panel,
             child: Transform.translate(
               offset: Offset(0, reduceMotion ? 0 : 8 * (1 - panel)),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(GameSpacing.page),
-                decoration: BoxDecoration(
-                  color: colors.surface,
-                  borderRadius: BorderRadius.circular(GameSpacing.radius),
-                  border: Border.all(
-                    color: isNewBest
-                        ? colors.reward.withValues(alpha: .7)
-                        : colors.outline.withValues(alpha: .3),
+              child: MoonlitPaper(
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(GameSpacing.page),
+                  decoration: BoxDecoration(
+                    color: GameArtScope.maybeOf(context) == null
+                        ? colors.surface
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(GameSpacing.radius),
+                    border: Border.all(
+                      color: isNewBest
+                          ? colors.reward.withValues(alpha: .7)
+                          : colors.outline.withValues(alpha: .3),
+                    ),
                   ),
-                ),
-                child: Column(
-                  children: [
-                    if (isNewBest) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colors.reward.withValues(alpha: .14),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Transform.scale(
-                              scale: reduceMotion
-                                  ? 1
-                                  : 1 + .12 * math.sin(panel * math.pi),
-                              child: Icon(
-                                Icons.auto_awesome,
-                                color: colors.rewardInk,
-                                size: 20,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                t.newBest,
-                                style: GameTypography.label.copyWith(
+                  child: Column(
+                    children: [
+                      if (isNewBest) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colors.reward.withValues(alpha: .14),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Transform.scale(
+                                scale: reduceMotion
+                                    ? 1
+                                    : 1 + .12 * math.sin(panel * math.pi),
+                                child: Icon(
+                                  Icons.auto_awesome,
                                   color: colors.rewardInk,
+                                  size: 20,
                                 ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  t.newBest,
+                                  style: GameTypography.label.copyWith(
+                                    color: colors.rewardInk,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
+                        const SizedBox(height: GameSpacing.small),
+                      ],
+                      DefaultTextStyle.merge(
+                        style: TextStyle(color: colors.text),
+                        child: result,
                       ),
-                      const SizedBox(height: GameSpacing.small),
                     ],
-                    result,
-                  ],
+                  ),
                 ),
               ),
             ),

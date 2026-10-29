@@ -96,5 +96,36 @@
   "soundEffects": "Sound effects",
   "backgroundMusic": "Background music",
   "settingsSaveError": "Settings could not be saved. Your choice still applies for this session.",
-  "skipCelebration": "Skip celebration"
+  "skipCelebration": "Skip celebration",
+  "collection": "Spirit collection",
+  "worldMap": "World map",
+  "seasonTitle": "Footsteps of the Forgotten Stars",
+  "companion": "Companion",
+  "travelTogether": "Travel together",
+  "discoverSpirit": "Meet a friend at the star gate.",
+  "memoryRestored": "Memory restored",
+  "spiritAwakened": "A memory spirit has awakened!",
+  "guardianAwakened": "A guardian has awakened!",
+  "riqFirst": "Shall we reach that star? Drag the mint block one cell at a time!",
+  "riqEcho": "Wow! A light remains where you moved! It blocks that cell until the next valid move ends.",
+  "riqWelcome": "A new friend is awake! What are we looking for?",
+  "skipIntro": "Skip intro",
+  "replayIntro": "Replay intro",
+  "riqBlocked": "Is there another way?",
+  "riqGate": "The gate is shining!",
+  "riqIdle": "Every Move Leaves an Echo.",
+  "shareCollection": "Collection card",
+  "seasonEnding": "Season 1 · Light of the Promise",
+  "familyLabel": "{family, select, star{Starlight} forest{Forest} cloud{Cloud} letter{Letter} memory{Memory} other{Riq}}",
+  "@familyLabel": {
+    "placeholders": {
+      "family": {
+        "type": "String"
+      }
+    }
+  },
+  "portraitCard": "Portrait · 1080 × 1920",
+  "puzzleChallenge": "Can you reach the star?",
+  "artLoadError": "Could not load the artwork. Please retry.",
+  "retryArt": "Retry loading"
 }

@@ -1,0 +1,57 @@
+{
+  "artDirection": "Moonlit Storybook Garden",
+  "created": "2026-10-29",
+  "transparent": true,
+  "assets": [
+    {
+      "id": "spirit_11",
+      "file": "assets/art/moonlit/spirits/spirit_11.png",
+      "source": "/Users/corcoidum/.codex/generated_images/01a1875b-b79b-7842-bd84-335afc157c12/exec-a70a333d-0847-4d25-900d-2da3888c4ce9.png"
+    },
+    {
+      "id": "spirit_12",
+      "file": "assets/art/moonlit/spirits/spirit_12.png",
+      "source": "/Users/corcoidum/.codex/generated_images/01a1875b-b79b-7842-bd84-335afc157c12/exec-610c7582-6c3f-4b3f-b569-5e0ab78e8732.png"
+    },
+    {
+      "id": "spirit_13",
+      "file": "assets/art/moonlit/spirits/spirit_13.png",
+      "source": "/Users/corcoidum/.codex/generated_images/01a1875b-b79b-7842-bd84-335afc157c12/exec-769d1a6d-806b-4137-8962-e0b773bbbef8.png"
+    },
+    {
+      "id": "spirit_14",
+      "file": "assets/art/moonlit/spirits/spirit_14.png",
+      "source": "/Users/corcoidum/.codex/generated_images/01a1875b-b79b-7842-bd84-335afc157c12/exec-248e342a-7779-431d-9bd6-3fbda72d0770.png"
+    },
+    {
+      "id": "spirit_15",
+      "file": "assets/art/moonlit/spirits/spirit_15.png",
+      "source": "/Users/corcoidum/.codex/generated_images/01a1875b-b79b-7842-bd84-335afc157c12/exec-2ba704d5-b679-4a86-9e3f-19c578a95818.png"
+    },
+    {
+      "id": "spirit_16",
+      "file": "assets/art/moonlit/spirits/spirit_16.png",
+      "source": "/Users/corcoidum/.codex/generated_images/01a1875b-b79b-7842-bd84-335afc157c12/exec-d5aa11d8-563b-4c8b-901b-471cf2a8f53e.png"
+    },
+    {
+      "id": "spirit_17",
+      "file": "assets/art/moonlit/spirits/spirit_17.png",
+      "source": "/Users/corcoidum/.codex/generated_images/01a1875b-b79b-7842-bd84-335afc157c12/exec-38c84328-fe91-4eef-bd17-44b3afe92187.png"
+    },
+    {
+      "id": "spirit_18",
+      "file": "assets/art/moonlit/spirits/spirit_18.png",
+      "source": "/Users/corcoidum/.codex/generated_images/01a1875b-b79b-7842-bd84-335afc157c12/exec-e8dddf28-b084-4c56-8ce0-a1dfe6b766a3.png"
+    },
+    {
+      "id": "spirit_19",
+      "file": "assets/art/moonlit/spirits/spirit_19.png",
+      "source": "/Users/corcoidum/.codex/generated_images/01a1875b-b79b-7842-bd84-335afc157c12/exec-7d9c2aec-a33a-4674-8eaa-c26df8f9f41b.png"
+    },
+    {
+      "id": "spirit_20",
+      "file": "assets/art/moonlit/spirits/spirit_20.png",
+      "source": "/Users/corcoidum/.codex/generated_images/01a1875b-b79b-7842-bd84-335afc157c12/exec-45dcfa1c-a7da-4e04-a8c4-ad050994d592.png"
+    }
+  ]
+}

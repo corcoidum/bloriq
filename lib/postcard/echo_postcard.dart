@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../design/game_theme.dart';
+import '../art/game_art_assets.dart';
 
 /// 카드에는 게임 결과만 전달한다. 퍼즐 좌표나 이동 이력은 받지 않는다.
 class EchoPostcardData {
@@ -33,10 +34,15 @@ class EchoPostcardData {
 
 /// 동일한 결과에 동일한 이미지를 만든다. 실제 이동 좌표는 사용하지 않는다.
 class EchoPostcardPainter extends CustomPainter {
-  const EchoPostcardPainter(this.data, {this.colors = GameColors.light});
+  const EchoPostcardPainter(
+    this.data, {
+    this.colors = GameColors.light,
+    this.artAssets,
+  });
 
   final EchoPostcardData data;
   final GameColors colors;
+  final GameArtAssets? artAssets;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -51,6 +57,14 @@ class EchoPostcardPainter extends CustomPainter {
       ),
       Paint()..color = colors.surface,
     );
+    if (artAssets?.tile('empty') case final paper?) {
+      paintStoneSurface(
+        canvas,
+        paper,
+        const Rect.fromLTWH(45, 45, 990, 990),
+        dark: colors == GameColors.dark,
+      );
+    }
     _text(
       canvas,
       'BLORIQ',
@@ -87,34 +101,45 @@ class EchoPostcardPainter extends CustomPainter {
     canvas.save();
     canvas.clipRRect(RRect.fromRectAndRadius(art, const Radius.circular(48)));
     canvas.drawRect(art, Paint()..color = colors.tileBottom);
-    for (var i = 0; i < 17; i++) {
-      final x = art.left + random.nextDouble() * art.width;
-      final y = art.top + random.nextDouble() * art.height;
-      final r = 40 + random.nextDouble() * 95;
-      final color = artColors[random.nextInt(artColors.length)];
-      if (i.isEven) {
-        canvas.drawCircle(
-          Offset(x, y),
-          r,
-          Paint()..color = color.withValues(alpha: .46),
-        );
-        canvas.drawCircle(
-          Offset(x, y),
-          r * .63,
-          Paint()..color = color.withValues(alpha: .30),
-        );
-      } else {
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            Rect.fromCenter(
-              center: Offset(x, y),
-              width: r * 2,
-              height: r * 1.65,
+    final background = artAssets?.background(
+      ((data.levelId - 1) ~/ 5).clamp(0, 4),
+    );
+    if (background != null) {
+      // 실제 지역 원화와 리크를 사용하며 이동 경로나 정답은 전달하지 않는다.
+      paintArt(canvas, background, Rect.fromLTWH(105, 100, 870, 1550));
+      if (artAssets?.spirit(null) case final riq?) {
+        paintArt(canvas, riq, const Rect.fromLTWH(355, 275, 380, 380));
+      }
+    } else {
+      for (var i = 0; i < 17; i++) {
+        final x = art.left + random.nextDouble() * art.width;
+        final y = art.top + random.nextDouble() * art.height;
+        final r = 40 + random.nextDouble() * 95;
+        final color = artColors[random.nextInt(artColors.length)];
+        if (i.isEven) {
+          canvas.drawCircle(
+            Offset(x, y),
+            r,
+            Paint()..color = color.withValues(alpha: .46),
+          );
+          canvas.drawCircle(
+            Offset(x, y),
+            r * .63,
+            Paint()..color = color.withValues(alpha: .30),
+          );
+        } else {
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromCenter(
+                center: Offset(x, y),
+                width: r * 2,
+                height: r * 1.65,
+              ),
+              Radius.circular(r * .35),
             ),
-            Radius.circular(r * .35),
-          ),
-          Paint()..color = color.withValues(alpha: .53),
-        );
+            Paint()..color = color.withValues(alpha: .53),
+          );
+        }
       }
     }
     canvas.restore();
@@ -212,19 +237,23 @@ class EchoPostcardPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant EchoPostcardPainter oldDelegate) =>
-      oldDelegate.data != data || oldDelegate.colors != colors;
+      oldDelegate.data != data ||
+      oldDelegate.colors != colors ||
+      oldDelegate.artAssets != artAssets;
 }
 
 /// 미리보기와 같은 painter를 사용해 정확히 1080×1080 PNG를 만든다.
 Future<Uint8List> renderEchoPostcardPng(
   EchoPostcardData data, {
   GameColors colors = GameColors.light,
+  GameArtAssets? artAssets,
 }) async {
   final recorder = ui.PictureRecorder();
   final canvas = Canvas(recorder);
   EchoPostcardPainter(
     data,
     colors: colors,
+    artAssets: artAssets,
   ).paint(canvas, const Size(1080, 1080));
   final picture = recorder.endRecording();
   try {
@@ -261,9 +290,11 @@ class EchoPostcardDialog extends StatefulWidget {
     required this.closeLabel,
     required this.errorLabel,
     this.share = shareEchoPostcard,
+    this.artAssets,
   });
 
   final EchoPostcardData data;
+  final GameArtAssets? artAssets;
   final String title;
   final String shareLabel;
   final String closeLabel;
@@ -292,6 +323,7 @@ class _EchoPostcardDialogState extends State<EchoPostcardDialog> {
       final png = await renderEchoPostcardPng(
         widget.data,
         colors: GameTheme.colorsOf(context),
+        artAssets: widget.artAssets,
       );
       await widget.share(png, origin: origin);
     } catch (_) {
@@ -319,6 +351,7 @@ class _EchoPostcardDialogState extends State<EchoPostcardDialog> {
                 painter: EchoPostcardPainter(
                   widget.data,
                   colors: GameTheme.colorsOf(context),
+                  artAssets: widget.artAssets,
                 ),
               ),
             ),

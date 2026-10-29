@@ -1,0 +1,126 @@
+{
+  "reference": "exec-87a9f7eb-bfd7-43bf-8fcc-cb6e4135061d.png",
+  "assets": [
+    {
+      "id": "riq",
+      "path": "assets/art/moonlit/spirits/riq.png",
+      "source": "exec-c849fda9-e18b-48f0-8ad6-55a8380d60a2.png",
+      "width": 1254,
+      "height": 1254,
+      "colorType": 6,
+      "alpha": true,
+      "generator": "built-in image_gen",
+      "style": "moonlit-storybook-garden"
+    },
+    {
+      "id": "spirit_01",
+      "path": "assets/art/moonlit/spirits/spirit_01.png",
+      "source": "exec-eeab0f70-0486-4b3b-8c0f-45c95277d48c.png",
+      "width": 1254,
+      "height": 1254,
+      "colorType": 6,
+      "alpha": true,
+      "generator": "built-in image_gen",
+      "style": "moonlit-storybook-garden"
+    },
+    {
+      "id": "spirit_02",
+      "path": "assets/art/moonlit/spirits/spirit_02.png",
+      "source": "exec-5b9a74b4-7c0f-4e0a-bfac-99f00504e30e.png",
+      "width": 1254,
+      "height": 1254,
+      "colorType": 6,
+      "alpha": true,
+      "generator": "built-in image_gen",
+      "style": "moonlit-storybook-garden"
+    },
+    {
+      "id": "spirit_03",
+      "path": "assets/art/moonlit/spirits/spirit_03.png",
+      "source": "exec-bc5383d0-4c59-4620-ac85-c8cbe0bb70b7.png",
+      "width": 1246,
+      "height": 1262,
+      "colorType": 6,
+      "alpha": true,
+      "generator": "built-in image_gen",
+      "style": "moonlit-storybook-garden"
+    },
+    {
+      "id": "spirit_04",
+      "path": "assets/art/moonlit/spirits/spirit_04.png",
+      "source": "exec-5ddd377f-a13f-4c6c-8880-a2a082fb99cd.png",
+      "width": 1254,
+      "height": 1254,
+      "colorType": 6,
+      "alpha": true,
+      "generator": "built-in image_gen",
+      "style": "moonlit-storybook-garden"
+    },
+    {
+      "id": "spirit_05",
+      "path": "assets/art/moonlit/spirits/spirit_05.png",
+      "source": "exec-d029e35f-e107-466b-920a-b518e5ad15a8.png",
+      "width": 1254,
+      "height": 1254,
+      "colorType": 6,
+      "alpha": true,
+      "generator": "built-in image_gen",
+      "style": "moonlit-storybook-garden"
+    },
+    {
+      "id": "spirit_06",
+      "path": "assets/art/moonlit/spirits/spirit_06.png",
+      "source": "exec-b0eddf2e-08ea-4caa-8d20-b9a8987a4867.png",
+      "width": 1254,
+      "height": 1254,
+      "colorType": 6,
+      "alpha": true,
+      "generator": "built-in image_gen",
+      "style": "moonlit-storybook-garden"
+    },
+    {
+      "id": "spirit_07",
+      "path": "assets/art/moonlit/spirits/spirit_07.png",
+      "source": "exec-6f5b37bf-1a44-426f-bd8d-399028f3f8bf.png",
+      "width": 1254,
+      "height": 1254,
+      "colorType": 6,
+      "alpha": true,
+      "generator": "built-in image_gen",
+      "style": "moonlit-storybook-garden"
+    },
+    {
+      "id": "spirit_08",
+      "path": "assets/art/moonlit/spirits/spirit_08.png",
+      "source": "exec-9e20179d-7357-4f65-b763-bfd53a719fc6.png",
+      "width": 1254,
+      "height": 1254,
+      "colorType": 6,
+      "alpha": true,
+      "generator": "built-in image_gen",
+      "style": "moonlit-storybook-garden"
+    },
+    {
+      "id": "spirit_09",
+      "path": "assets/art/moonlit/spirits/spirit_09.png",
+      "source": "exec-39097555-eb98-45ed-99de-3c1ee733eee8.png",
+      "width": 1254,
+      "height": 1254,
+      "colorType": 6,
+      "alpha": true,
+      "generator": "built-in image_gen",
+      "style": "moonlit-storybook-garden"
+    },
+    {
+      "id": "spirit_10",
+      "path": "assets/art/moonlit/spirits/spirit_10.png",
+      "source": "exec-31875e5c-c2cd-4daf-b3b0-1b0dfa3b31ca.png",
+      "width": 1312,
+      "height": 1199,
+      "colorType": 6,
+      "alpha": true,
+      "generator": "built-in image_gen",
+      "style": "moonlit-storybook-garden"
+    }
+  ]
+}

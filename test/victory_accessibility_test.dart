@@ -1,3 +1,5 @@
+import 'support/art_test_assets.dart';
+
 import 'dart:convert';
 
 import 'package:bloriq/domain/puzzle.dart';
@@ -65,6 +67,8 @@ Future<void> _tapNext(WidgetTester tester) async {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUp(prepareMoonlitArt);
   setUp(() {
     rootBundle.clear();
     SharedPreferences.setMockInitialValues({});
