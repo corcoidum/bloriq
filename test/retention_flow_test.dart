@@ -58,7 +58,7 @@ void main() {
 
     await move(0, 1, 1, 0);
     await move(1, 1, 1, 0);
-    expect(find.text('You escaped!'), findsOneWidget);
+    expect(find.text('Our star, at last!'), findsOneWidget);
     expect(find.text('Personal best: 2 moves'), findsOneWidget);
     expect(find.text('New personal best!'), findsOneWidget);
     expect(find.text('★★★'), findsOneWidget);
@@ -72,7 +72,7 @@ void main() {
     expect(find.text('Skip replay'), findsOneWidget);
     expect(
       tester
-          .widget<OutlinedButton>(find.widgetWithText(OutlinedButton, 'Undo'))
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Undo'))
           .onPressed,
       isNull,
     );

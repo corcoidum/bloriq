@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../design/game_theme.dart';
+import '../design/star_art.dart';
 
 /// 게임판과 시작 연출이 같은 블록의 소재감과 기호를 사용한다.
 abstract final class BlockArt {
@@ -15,6 +16,28 @@ abstract final class BlockArt {
     double scale = 1,
     double opacity = 1,
   }) {
+    if (StarArt.courierImage case final image?) {
+      StarArt.draw(
+        canvas,
+        image,
+        Rect.fromCenter(
+          center: at,
+          width: cell * .98 * scale,
+          height: cell * .98 * scale,
+        ),
+        opacity: opacity,
+        tint: goal ? null : colors.primary.withValues(alpha: .70),
+      );
+      if (!goal) {
+        // 일반 친구는 푸른 몸체와 원형 배지로 목표 정령과 구분한다.
+        canvas.drawCircle(
+          at + Offset(cell * .23, cell * .24),
+          cell * .065,
+          Paint()..color = colors.primaryInk,
+        );
+      }
+      return;
+    }
     final paint = Paint();
     final rect = Rect.fromCenter(
       center: at,
@@ -86,6 +109,18 @@ abstract final class BlockArt {
     GameColors colors, {
     double opacity = 1,
   }) {
+    if (StarArt.echoImage case final image?) {
+      StarArt.draw(
+        canvas,
+        image,
+        Rect.fromCenter(center: at, width: cell * .98, height: cell * .98),
+        opacity: opacity,
+        tint: colors == GameColors.light
+            ? colors.echoInk.withValues(alpha: .85)
+            : null,
+      );
+      return;
+    }
     final rect = Rect.fromCenter(
       center: at,
       width: cell * .78,
@@ -117,6 +152,17 @@ abstract final class BlockArt {
   }
 
   static void exit(Canvas canvas, Offset at, double cell, GameColors colors) {
+    if (StarArt.portalImage case final image?) {
+      StarArt.draw(
+        canvas,
+        image,
+        Rect.fromCenter(center: at, width: cell, height: cell),
+        tint: colors == GameColors.light
+            ? colors.rewardInk.withValues(alpha: .65)
+            : null,
+      );
+      return;
+    }
     final paint = Paint()..color = colors.reward.withValues(alpha: .15);
     canvas.drawCircle(at, cell * .43, paint);
     canvas.drawCircle(
@@ -154,6 +200,7 @@ abstract final class BlockArt {
         text: value,
         style: TextStyle(
           fontFamily: GameTypography.canvasFontFamily,
+          fontFamilyFallback: const ['NanumGothic'],
           fontSize: size,
           color: color,
           fontWeight: FontWeight.bold,

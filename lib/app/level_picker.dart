@@ -87,6 +87,7 @@ class LevelPicker extends StatelessWidget {
     final t = AppLocalizations.of(context)!;
     final colors = GameTheme.colorsOf(context);
     return AlertDialog(
+      icon: Icon(Icons.route_rounded, color: colors.rewardInk),
       title: Text(t.levels),
       content: SizedBox(
         width: 460,

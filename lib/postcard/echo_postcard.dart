@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../design/game_theme.dart';
+import '../design/star_art.dart';
+import '../game/block_art.dart';
 
 /// 카드에는 게임 결과만 전달한다. 퍼즐 좌표나 이동 이력은 받지 않는다.
 class EchoPostcardData {
@@ -70,53 +72,16 @@ class EchoPostcardPainter extends CustomPainter {
       0,
     );
 
-    // 난수 seed는 결과 요약에만 의존한다. 경로나 블록 좌표는 재현되지 않는다.
-    final random = math.Random(
-      (data.levelId * 73856093) ^
-          (data.moves * 19349663) ^
-          (data.stars * 83492791),
-    );
-    final artColors = [
-      colors.goal,
-      colors.primary,
-      colors.reward,
-      colors.echo,
-      colors.cyan,
-    ];
     final art = const Rect.fromLTWH(105, 252, 870, 420);
     canvas.save();
     canvas.clipRRect(RRect.fromRectAndRadius(art, const Radius.circular(48)));
     canvas.drawRect(art, Paint()..color = colors.tileBottom);
-    for (var i = 0; i < 17; i++) {
-      final x = art.left + random.nextDouble() * art.width;
-      final y = art.top + random.nextDouble() * art.height;
-      final r = 40 + random.nextDouble() * 95;
-      final color = artColors[random.nextInt(artColors.length)];
-      if (i.isEven) {
-        canvas.drawCircle(
-          Offset(x, y),
-          r,
-          Paint()..color = color.withValues(alpha: .46),
-        );
-        canvas.drawCircle(
-          Offset(x, y),
-          r * .63,
-          Paint()..color = color.withValues(alpha: .30),
-        );
-      } else {
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            Rect.fromCenter(
-              center: Offset(x, y),
-              width: r * 2,
-              height: r * 1.65,
-            ),
-            Radius.circular(r * .35),
-          ),
-          Paint()..color = color.withValues(alpha: .53),
-        );
-      }
+    if (StarArt.forestImage case final image?) {
+      paintImage(canvas: canvas, rect: art, image: image, fit: BoxFit.cover);
     }
+    BlockArt.echo(canvas, const Offset(255, 470), 220, colors);
+    BlockArt.block(canvas, const Offset(520, 470), 330, colors);
+    BlockArt.exit(canvas, const Offset(790, 470), 230, colors);
     canvas.restore();
 
     for (var i = 0; i < 3; i++) {

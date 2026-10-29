@@ -79,7 +79,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 1600));
       await tester.pump();
       expect(
-        find.text('You escaped!'),
+        find.text('Our star, at last!'),
         findsOneWidget,
         reason: 'Level ${level.id}: completion must be shown',
       );

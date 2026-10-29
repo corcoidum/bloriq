@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../design/arcade_components.dart';
 import '../design/game_theme.dart';
+import '../design/star_art.dart';
 import '../domain/puzzle.dart';
 import '../l10n/app_localizations.dart';
 import '../settings/game_settings.dart';
@@ -300,109 +301,114 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                         ),
                       ],
                     ),
-                    const SizedBox(height: GameSpacing.large),
-                    const IntroScene(),
+                    const SizedBox(height: 12),
                     Text(
-                      t.homeTagline,
+                      t.storyTitle,
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.w800, height: 1.35),
-                    ),
-                    const SizedBox(height: GameSpacing.large),
-                    ArcadeSurface(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            t.homeProgress,
-                            style: Theme.of(context).textTheme.labelLarge
-                                ?.copyWith(color: colors.secondaryText),
-                          ),
-                          const SizedBox(height: 12),
-                          if (session != null) ...[
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: [
-                                StatPill(
-                                  icon: Icons.check_circle_outline_rounded,
-                                  label: t.completedLevels(
-                                    session.completedCount,
-                                    session.levels.length,
-                                  ),
-                                  color: colors.goalInk,
-                                ),
-                                StatPill(
-                                  icon: Icons.star_rounded,
-                                  label: t.collectedStars(session.totalStars),
-                                  color: colors.rewardInk,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 14),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: LinearProgressIndicator(
-                                value:
-                                    session.completedCount /
-                                    session.levels.length,
-                                minHeight: 5,
-                                color: colors.goal,
-                                backgroundColor: colors.goal.withValues(
-                                  alpha: .12,
-                                ),
-                              ),
-                            ),
-                          ] else if (_failed) ...[
-                            Text(t.loadError),
-                            TextButton.icon(
-                              key: const ValueKey('retry-load'),
-                              onPressed: _retry,
-                              icon: const Icon(Icons.refresh_rounded),
-                              label: Text(t.retry),
-                            ),
-                          ] else ...[
-                            Text(t.preparingGame),
-                            const SizedBox(height: 12),
-                            const LinearProgressIndicator(),
-                          ],
-                        ],
+                      style: TextStyle(
+                        fontSize: 38,
+                        fontFamily: GameTypography.canvasFontFamily,
+                        height: 1.15,
+                        color: colors.rewardInk,
                       ),
                     ),
-                    const SizedBox(height: GameSpacing.large),
+                    const SizedBox(height: 8),
+                    Text(
+                      t.homeSubtitle,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: colors.secondaryText,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Center(
+                      child: CourierPortrait(
+                        height: 184,
+                        label: t.courierName,
+                        resting: true,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
                     FilledButton.icon(
                       key: const ValueKey('home-play'),
                       style: FilledButton.styleFrom(
+                        minimumSize: const Size(48, 62),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 20,
-                          vertical: 20,
+                          vertical: 16,
                         ),
                       ),
                       onPressed: session == null || _opening
                           ? null
                           : () => _open(session.nextLevelId),
-                      icon: const Icon(Icons.play_arrow_rounded, size: 26),
+                      icon: const Icon(Icons.play_arrow_rounded, size: 27),
                       label: Text(
                         session == null
                             ? t.preparingGame
                             : t.playLevel(session.nextLevelId),
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style: const TextStyle(fontSize: 21),
                       ),
                     ),
+                    const SizedBox(height: 14),
+                    if (session != null)
+                      Semantics(
+                        label: t.homeProgress,
+                        child: Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 16,
+                          runSpacing: 8,
+                          children: [
+                            Text(
+                              t.completedLevels(
+                                session.completedCount,
+                                session.levels.length,
+                              ),
+                              style: TextStyle(color: colors.secondaryText),
+                            ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.star_rounded,
+                                  size: 18,
+                                  color: colors.rewardInk,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  t.collectedStars(session.totalStars),
+                                  style: TextStyle(color: colors.rewardInk),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      )
+                    else if (_failed)
+                      Column(
+                        children: [
+                          Text(t.loadError),
+                          TextButton.icon(
+                            key: const ValueKey('retry-load'),
+                            onPressed: _retry,
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: Text(t.retry),
+                          ),
+                        ],
+                      )
+                    else
+                      const LinearProgressIndicator(),
                     const SizedBox(height: 12),
-                    OutlinedButton.icon(
+                    TextButton.icon(
                       key: const ValueKey('home-levels'),
                       onPressed: session == null || _opening
                           ? null
                           : _chooseLevel,
-                      icon: const Icon(Icons.grid_view_rounded),
+                      icon: const Icon(Icons.route_rounded),
                       label: Text(t.levels),
                     ),
-                    const SizedBox(height: GameSpacing.large),
+                    const SizedBox(height: 18),
                     if (session != null &&
                         (session.progress.saveFailed ||
                             session.onboarding.saveFailed))

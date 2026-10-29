@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../audio/game_audio.dart';
 import '../design/arcade_components.dart';
+import '../design/star_art.dart';
 import '../l10n/app_localizations.dart';
 import '../settings/game_settings.dart';
 import '../settings/settings_dialog.dart';
@@ -55,7 +56,7 @@ Future<bool?> showGameHelp(BuildContext context, GameSettings settings) {
         ? AnimationStyle.noAnimation
         : null,
     builder: (_) => AlertDialog(
-      icon: const Icon(Icons.touch_app_rounded),
+      icon: const Center(child: CourierPortrait(height: 70)),
       title: Text(t.help),
       content: SingleChildScrollView(child: Text(t.helpBody)),
       actions: [

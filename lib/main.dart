@@ -20,6 +20,7 @@ import 'app/game_session.dart';
 import 'app/experience_dialogs.dart';
 import 'app/level_picker.dart';
 import 'design/arcade_components.dart';
+import 'design/star_art.dart';
 import 'app/play_context.dart';
 import 'tutorial/echo_tutorial.dart';
 import 'analytics/local_analytics.dart';
@@ -51,6 +52,7 @@ class _BloriqAppState extends State<BloriqApp> {
   @override
   void initState() {
     super.initState();
+    unawaited(StarArt.load());
     if (widget.settings case final settings?) {
       _settings = settings..addListener(_settingsChanged);
     } else {
@@ -132,6 +134,7 @@ class _GameScreenState extends State<GameScreen>
   EchoTutorial? _tutorial;
   AttemptRecorder? _attempt;
   bool _modalOpen = false;
+  final ScrollController _pageScroll = ScrollController();
   PuzzleController? _controller;
   BloriqGame? _game;
   int _index = 0;
@@ -284,6 +287,7 @@ class _GameScreenState extends State<GameScreen>
   }
 
   void _select(int index) {
+    if (_pageScroll.hasClients) _pageScroll.jumpTo(0);
     _attempt?.finish(
       'level_end',
       _controller!.state.moves,
@@ -313,6 +317,7 @@ class _GameScreenState extends State<GameScreen>
   @override
   void dispose() {
     _attempt?.finish('level_end', _controller!.state.moves, reason: 'leave');
+    _pageScroll.dispose();
     widget.session.analytics.removeListener(_analyticsChanged);
     _victoryFallback?.cancel();
     WidgetsBinding.instance.removeObserver(this);
@@ -805,33 +810,41 @@ class _GameScreenState extends State<GameScreen>
           child: SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final width = math.max(
+                final compact = constraints.maxHeight < 700;
+                final boardRoom = math.max(
+                  controller.state.level.boardHeight * 48.0,
+                  constraints.maxHeight - (compact ? 310 : 350),
+                );
+                final availableWidth = math.max(
                   1.0,
                   math.min(
-                    constraints.maxWidth - GameSpacing.page * 2,
+                    constraints.maxWidth - GameSpacing.page * 2 - 20,
                     math.min(
                       GameSpacing.maxBoardWidth,
-                      math.max(
-                        controller.state.level.boardWidth * 48.0,
-                        constraints.maxHeight *
-                            .46 *
-                            controller.state.level.boardWidth /
-                            controller.state.level.boardHeight,
-                      ),
+                      boardRoom *
+                          controller.state.level.boardWidth /
+                          controller.state.level.boardHeight,
                     ),
                   ),
                 );
+                final width = controller.state.isComplete && !_replaying
+                    ? math.min(availableWidth, compact ? 170.0 : 210.0)
+                    : availableWidth;
                 final height =
                     width *
                     controller.state.level.boardHeight /
                     controller.state.level.boardWidth;
-                return Center(
+                return Align(
+                  alignment: Alignment.topCenter,
                   child: SingleChildScrollView(
+                    controller: _pageScroll,
                     child: Container(
                       constraints: const BoxConstraints(maxWidth: 560),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: GameSpacing.page,
-                        vertical: GameSpacing.medium,
+                      padding: EdgeInsets.fromLTRB(
+                        GameSpacing.page,
+                        compact ? 12 : 28,
+                        GameSpacing.page,
+                        12,
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -844,12 +857,55 @@ class _GameScreenState extends State<GameScreen>
                                 onPressed: _leaveGame,
                                 icon: const Icon(Icons.home_outlined),
                               ),
-                              const Expanded(
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: BrandMark(),
+                              Expanded(
+                                child: Semantics(
+                                  label: t.levels,
+                                  button: true,
+                                  child: InkWell(
+                                    key: const ValueKey('game-levels'),
+                                    borderRadius: BorderRadius.circular(12),
+                                    onTap:
+                                        widget.play.mode == PlayMode.campaign &&
+                                            _tutorial == null
+                                        ? _pickLevel
+                                        : null,
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        minHeight: 48,
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Text(
+                                            t.storyTitle,
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              fontSize: 25,
+                                              fontFamily: GameTypography
+                                                  .canvasFontFamily,
+                                              height: 1.15,
+                                              color: colors.rewardInk,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            widget.play.mode == PlayMode.daily
+                                                ? t.dailyEcho
+                                                : t.level(_loaded[_index].id),
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              color: colors.echoInk,
+                                              fontSize: 15,
+                                              decoration:
+                                                  widget.play.mode ==
+                                                          PlayMode.campaign &&
+                                                      _tutorial == null
+                                                  ? TextDecoration.underline
+                                                  : null,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -865,69 +921,77 @@ class _GameScreenState extends State<GameScreen>
                               ),
                             ],
                           ),
-                          if (_tutorial != null)
-                            TextButton(
-                              key: const ValueKey('skip-tutorial'),
-                              onPressed: _skipTutorial,
-                              child: Text(t.skipTutorial),
+                          const SizedBox(height: 8),
+                          if (!compact && !controller.state.isComplete) ...[
+                            const CourierPortrait(height: 124, resting: true),
+                            Text(
+                              t.storyInvite,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 21,
+                                fontFamily: GameTypography.canvasFontFamily,
+                                color: colors.rewardInk,
+                              ),
                             ),
-                          const SizedBox(height: GameSpacing.medium),
+                          ],
+                          const SizedBox(height: 10),
                           Wrap(
                             alignment: WrapAlignment.center,
-                            spacing: 12,
-                            runSpacing: 8,
+                            spacing: 8,
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
-                              StatPill(
-                                icon: Icons.layers_outlined,
-                                label: widget.play.mode == PlayMode.daily
-                                    ? t.dailyEcho
-                                    : t.level(_loaded[_index].id),
-                                color: colors.primaryInk,
-                              ),
                               StatPill(
                                 icon: Icons.swipe_rounded,
                                 label: t.moves(controller.state.moves),
                                 color: colors.echoInk,
                               ),
+                              if (_tutorial != null)
+                                TextButton(
+                                  key: const ValueKey('skip-tutorial'),
+                                  onPressed: _skipTutorial,
+                                  child: Text(t.skipTutorial),
+                                ),
                             ],
                           ),
-                          const SizedBox(height: GameSpacing.large),
+                          const SizedBox(height: 14),
                           ArcadeSurface(
                             padding: EdgeInsets.zero,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(
-                                GameSpacing.radius,
-                              ),
-                              child: SizedBox(
-                                width: width,
-                                height: height,
-                                child: Semantics(
-                                  label: t.boardLabel,
-                                  child: GestureDetector(
-                                    behavior: HitTestBehavior.opaque,
-                                    dragStartBehavior: DragStartBehavior.down,
-                                    onHorizontalDragStart: (d) =>
-                                        _start(d, width, height),
-                                    onHorizontalDragUpdate: _update,
-                                    onHorizontalDragEnd: (_) => _end(width),
-                                    onHorizontalDragCancel: _cancelDrag,
-                                    onVerticalDragStart: (d) =>
-                                        _start(d, width, height),
-                                    onVerticalDragUpdate: _update,
-                                    onVerticalDragEnd: (_) => _end(width),
-                                    onVerticalDragCancel: _cancelDrag,
-                                    child: Listener(
-                                      onPointerDown: (_) =>
-                                          _audio?.onUserInteraction(),
-                                      onPointerCancel: (_) => _cancelDrag(),
-                                      child: GameWidget(game: _game!),
+                            child: StarBoardFrame(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(
+                                  GameSpacing.radius,
+                                ),
+                                child: SizedBox(
+                                  width: width,
+                                  height: height,
+                                  child: Semantics(
+                                    label: t.boardLabel,
+                                    child: GestureDetector(
+                                      behavior: HitTestBehavior.opaque,
+                                      dragStartBehavior: DragStartBehavior.down,
+                                      onHorizontalDragStart: (d) =>
+                                          _start(d, width, height),
+                                      onHorizontalDragUpdate: _update,
+                                      onHorizontalDragEnd: (_) => _end(width),
+                                      onHorizontalDragCancel: _cancelDrag,
+                                      onVerticalDragStart: (d) =>
+                                          _start(d, width, height),
+                                      onVerticalDragUpdate: _update,
+                                      onVerticalDragEnd: (_) => _end(width),
+                                      onVerticalDragCancel: _cancelDrag,
+                                      child: Listener(
+                                        onPointerDown: (_) =>
+                                            _audio?.onUserInteraction(),
+                                        onPointerCancel: (_) => _cancelDrag(),
+                                        child: GameWidget(game: _game!),
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                          const SizedBox(height: GameSpacing.large),
+                          const SizedBox(height: 16),
                           AnimatedSwitcher(
                             duration: _reduceMotion || _tutorial != null
                                 ? Duration.zero
@@ -973,7 +1037,13 @@ class _GameScreenState extends State<GameScreen>
                               spacing: 8,
                               runSpacing: 8,
                               children: [
-                                OutlinedButton.icon(
+                                FilledButton.icon(
+                                  style: FilledButton.styleFrom(
+                                    minimumSize: Size(
+                                      compact ? 48 : width * .55,
+                                      48,
+                                    ),
+                                  ),
                                   onPressed:
                                       controller.canUndo &&
                                           !_replaying &&
@@ -984,6 +1054,12 @@ class _GameScreenState extends State<GameScreen>
                                   label: Text(t.undo),
                                 ),
                                 OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    minimumSize: Size(
+                                      compact ? 48 : width * .42,
+                                      48,
+                                    ),
+                                  ),
                                   onPressed: _replaying || _celebrating
                                       ? null
                                       : () => setState(() {
@@ -1004,16 +1080,26 @@ class _GameScreenState extends State<GameScreen>
                                   icon: const Icon(Icons.refresh_rounded),
                                   label: Text(t.restart),
                                 ),
-                                TextButton.icon(
-                                  onPressed:
-                                      widget.play.mode == PlayMode.campaign
-                                      ? _pickLevel
-                                      : null,
-                                  icon: const Icon(Icons.grid_view_rounded),
-                                  label: Text(t.levels),
-                                ),
+                                if (compact)
+                                  TextButton.icon(
+                                    onPressed:
+                                        widget.play.mode == PlayMode.campaign
+                                        ? _pickLevel
+                                        : null,
+                                    icon: const Icon(Icons.grid_view_rounded),
+                                    label: Text(t.levels),
+                                  ),
                               ],
                             ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'BLORIQ',
+                            style: TextStyle(
+                              fontSize: 11,
+                              letterSpacing: 4,
+                              color: colors.secondaryText,
+                            ),
+                          ),
                         ],
                       ),
                     ),

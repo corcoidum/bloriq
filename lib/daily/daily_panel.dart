@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../design/arcade_components.dart';
 import '../design/game_theme.dart';
+import '../design/star_art.dart';
 import '../l10n/app_localizations.dart';
 import 'daily_repository.dart';
 
@@ -21,10 +22,23 @@ class DailyPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            t.dailyEcho,
-            style: Theme.of(context).textTheme.titleLarge
-                ?.copyWith(fontWeight: FontWeight.w800),
+          Row(
+            children: [
+              Image.asset(
+                StarArt.portal,
+                height: 46,
+                width: 46,
+                excludeFromSemantics: true,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  t.dailyEcho,
+                  style: Theme.of(context).textTheme.titleLarge
+                      ?.copyWith(color: colors.rewardInk),
+                ),
+              ),
+            ],
           ),
           Text(
             DateFormat.yMMMd(t.localeName).format(daily.clock()),

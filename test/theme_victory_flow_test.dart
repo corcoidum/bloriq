@@ -250,7 +250,7 @@ void main() {
       await tester.pump(const Duration(seconds: 2));
       expect(_game(tester).controller.state.level.id, 2);
       expect(_game(tester).controller.state.moves, 0);
-      expect(find.text('You escaped!'), findsNothing);
+      expect(find.text('Our star, at last!'), findsNothing);
       await settings.setReduceMotion(true);
       await tester.pump();
       expect(_game(tester).reduceMotion, isTrue);

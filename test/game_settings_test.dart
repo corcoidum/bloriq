@@ -7,13 +7,16 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  test('first launch follows the system and allows normal motion', () async {
-    final settings = await GameSettings.load();
-    expect(settings.themeMode, ThemeMode.system);
-    expect(settings.reduceMotion, isFalse);
-    expect(settings.saveFailed, isFalse);
-    settings.dispose();
-  });
+  test(
+    'first launch opens the night forest and allows normal motion',
+    () async {
+      final settings = await GameSettings.load();
+      expect(settings.themeMode, ThemeMode.dark);
+      expect(settings.reduceMotion, isFalse);
+      expect(settings.saveFailed, isFalse);
+      settings.dispose();
+    },
+  );
 
   test('theme and reduced motion survive a new settings instance', () async {
     for (final mode in ThemeMode.values) {
@@ -54,7 +57,7 @@ void main() {
         GameSettings.reduceMotionKey: true,
       });
       final unknown = await GameSettings.load();
-      expect(unknown.themeMode, ThemeMode.system);
+      expect(unknown.themeMode, ThemeMode.dark);
       expect(unknown.reduceMotion, isTrue);
       unknown.dispose();
 
@@ -63,7 +66,7 @@ void main() {
         GameSettings.reduceMotionKey: 'invalid',
       });
       final malformed = await GameSettings.load();
-      expect(malformed.themeMode, ThemeMode.system);
+      expect(malformed.themeMode, ThemeMode.dark);
       expect(malformed.reduceMotion, isFalse);
       malformed.dispose();
     },

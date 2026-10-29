@@ -17,23 +17,23 @@
       }
     }
   },
-  "instruction": "Slide the green block to the star.",
+  "instruction": "Slide the mint courier to the star.",
   "echoInstruction": "An echo disappears after your next move.",
   "gateInstruction": "Leave an echo on the diamond to open the gate.",
   "gateOpen": "Gate open! Move through on this turn.",
   "gateClosed": "The gate is closed. Leave an echo on the diamond.",
   "gateOccupied": "A block on a closed gate can still leave.",
   "noMoves": "No moves left. Undo and try another way.",
-  "boardLabel": "Drag blocks one square at a time to move the green block to the star.",
+  "boardLabel": "Slide a friend one square at a time. Guide the mint courier to the star.",
   "soundOn": "Turn sound effects off",
   "soundOff": "Turn sound effects on",
   "help": "How to play",
-  "helpBody": "Slide one block one square at a time. Move the green block to the star.\n\nThe square a block leaves behind becomes an echo. It blocks movement until another valid move finishes.\n\nOn diamond stages, an echo on the diamond opens the gate for the next move. A block on a closed gate can still leave.\n\nUse Undo to try a different move.\n\nSpecial tiles have rules shown beneath the board: × erases the echo, Ⅱ keeps it, arrows restrict the exit direction, and ▶ admits only the green block.",
+  "helpBody": "Slide one block one square at a time. Move the mint courier to the star.\n\nThe square a block leaves behind becomes an echo. It blocks movement until another valid move finishes.\n\nOn diamond stages, an echo on the diamond opens the gate for the next move. A block on a closed gate can still leave.\n\nUse Undo to try a different move.\n\nSpecial tiles have rules shown beneath the board: × erases the echo, Ⅱ keeps it, arrows restrict the exit direction, and ▶ admits only the mint courier.",
   "undo": "Undo",
   "undoLastMove": "Undo last move",
   "restart": "Restart",
   "levels": "Levels",
-  "complete": "You escaped!",
+  "complete": "Our star, at last!",
   "completeDetail": "Moves: {count}.",
   "@completeDetail": {
     "placeholders": {
@@ -85,7 +85,7 @@
   "eraserRule": "Crossed tiles erase the echo when a block leaves.",
   "holdRule": "Pause tiles keep the previous echo when a block leaves.",
   "oneWayRule": "A block on an arrow tile can leave only in the arrow’s direction.",
-  "goalOnlyRule": "Triangle tiles admit only the green block.",
+  "goalOnlyRule": "Triangle tiles admit only the mint courier.",
   "settings": "Settings",
   "appearance": "Appearance",
   "themeSystem": "System",
@@ -98,13 +98,13 @@
   "settingsSaveError": "Settings could not be saved. Your choice still applies for this session.",
   "skipCelebration": "Skip celebration",
   "home": "Home",
-  "homeTagline": "One move. An echo that changes the next.",
+  "homeTagline": "Every little step leaves an Echo.",
   "playLevel": "Play · Level {number}",
   "completedLevels": "{count} / {total} completed",
   "collectedStars": "{count} stars",
   "skipIntro": "Skip intro",
   "replayIntro": "Watch intro again",
-  "introLabel": "A green block leaves a purple echo and reaches the star.",
+  "introLabel": "The mint courier leaves a purple Echo and reaches the star.",
   "preparingGame": "Getting your puzzles ready…",
   "retry": "Try loading again",
   "motionSection": "Motion",
@@ -201,5 +201,10 @@
         "type": "int"
       }
     }
-  }
+  },
+  "storyTitle": "A Little Star Home",
+  "storyInvite": "Time to find our star!",
+  "courierName": "The little star courier",
+  "homeSubtitle": "Every little step leaves an Echo.",
+  "credits": "Fonts & open source"
 }

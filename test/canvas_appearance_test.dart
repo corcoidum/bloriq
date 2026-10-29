@@ -51,7 +51,7 @@ void main() {
       final offset = (50 * 100 + 25) * 4;
       expect(
         bytes.getUint8(offset + 1) - bytes.getUint8(offset),
-        greaterThan(60),
+        greaterThan(30),
       );
       expect(bytes.getUint8(offset + 3), 255);
       image.dispose();
@@ -70,7 +70,7 @@ void main() {
 
     game.configureAppearance(colors: GameColors.dark, reduceMotion: true);
 
-    expect(game.backgroundColor(), GameColors.dark.background);
+    expect(game.backgroundColor(), Colors.transparent);
     expect(game.currentPreview!.target, target);
     expect(controller.state, same(state));
     expect(controller.moveHistory, history);

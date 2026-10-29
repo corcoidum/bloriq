@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../audio/game_audio.dart';
 import '../design/game_theme.dart';
+import '../design/star_art.dart';
 import '../l10n/app_localizations.dart';
 import 'game_settings.dart';
 import '../analytics/local_analytics.dart';
@@ -33,6 +34,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
     return ListenableBuilder(
       listenable: widget.settings,
       builder: (context, _) => AlertDialog(
+        icon: const Center(child: CourierPortrait(height: 64)),
         title: Text(t.settings),
         scrollable: true,
         content: SizedBox(
@@ -103,6 +105,16 @@ class _SettingsDialogState extends State<SettingsDialog> {
               ],
               if (widget.analytics case final analytics?)
                 PlaytestControls(analytics: analytics),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.info_outline_rounded),
+                contentPadding: EdgeInsets.zero,
+                title: Text(t.credits),
+                onTap: () => showLicensePage(
+                  context: context,
+                  applicationName: 'BLORIQ',
+                ),
+              ),
               if (widget.settings.saveFailed)
                 Text(
                   t.settingsSaveError,

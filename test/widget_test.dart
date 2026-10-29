@@ -91,7 +91,7 @@ void main() {
     await move(1, 1, 1, 0);
     await tester.pump(const Duration(milliseconds: 1600));
     await tester.pump();
-    expect(find.text('You escaped!'), findsOneWidget);
+    expect(find.text('Our star, at last!'), findsOneWidget);
     expect(find.text('Solved in the fewest moves!'), findsOneWidget);
     await tester.ensureVisible(find.text('Next level'));
     await tester.pump();
@@ -108,7 +108,7 @@ void main() {
     await move(1, 1, 1, 0);
     await tester.pump(const Duration(milliseconds: 1600));
     await tester.pump();
-    expect(find.text('You escaped!'), findsOneWidget);
+    expect(find.text('Our star, at last!'), findsOneWidget);
   });
 
   testWidgets('nonoptimal completion suggests a retry', (tester) async {
@@ -347,7 +347,7 @@ void main() {
     expect(observedOccupied, isTrue);
     await tester.pump(const Duration(milliseconds: 1600));
     await tester.pump();
-    expect(find.text('You escaped!'), findsOneWidget);
+    expect(find.text('Our star, at last!'), findsOneWidget);
     await tester.ensureVisible(find.text('Undo'));
     await tester.pump();
     await tester.tap(find.text('Undo'));

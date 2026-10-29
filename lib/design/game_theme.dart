@@ -52,70 +52,72 @@ class GameColors {
   final Color blockSymbol;
 
   static const light = GameColors(
-    background: Color(0xFFF7F9FE),
-    surface: Color(0xFFFFFFFF),
-    boardSurface: Color(0xFFD8E2F3),
-    tileTop: Color(0xFFF7F9FE),
-    tileBottom: Color(0xFFE9EFFB),
-    primary: Color(0xFF6B8DFF),
-    echo: Color(0xFFA78BFA),
-    goal: Color(0xFF27BCA0),
-    reward: Color(0xFFF7C86C),
-    text: Color(0xFF25334A),
-    secondaryText: Color(0xFF586982),
-    slate: Color(0xFF71839D),
-    cyan: Color(0xFF147C9B),
-    error: Color(0xFFBE444F),
-    primaryInk: Color(0xFF3E57BC),
-    echoInk: Color(0xFF7054B8),
-    goalInk: Color(0xFF11745F),
-    rewardInk: Color(0xFF825A12),
-    outline: Color(0xFF8391AA),
-    highlight: Color(0xFFFFFFFF),
+    background: Color(0xFFF6F2E9),
+    surface: Color(0xFFFFFAF2),
+    boardSurface: Color(0xFFB6BCD1),
+    tileTop: Color(0xFFF6F2E9),
+    tileBottom: Color(0xFFE5E6EE),
+    primary: Color(0xFF6C83BE),
+    echo: Color(0xFF9472CC),
+    goal: Color(0xFF8BDBB9),
+    reward: Color(0xFFF0C97E),
+    text: Color(0xFF25314B),
+    secondaryText: Color(0xFF515C75),
+    slate: Color(0xFF687891),
+    cyan: Color(0xFF236A79),
+    error: Color(0xFFB43E52),
+    primaryInk: Color(0xFF3F5590),
+    echoInk: Color(0xFF68429B),
+    goalInk: Color(0xFF22654F),
+    rewardInk: Color(0xFF75500D),
+    outline: Color(0xFF707B9C),
+    highlight: Color(0xFFFFFAF2),
     blockSymbol: Color(0xFF101827),
   );
 
   static const dark = GameColors(
-    background: Color(0xFF101827),
-    surface: Color(0xFF1A2638),
-    boardSurface: Color(0xFF243249),
-    tileTop: Color(0xFF2D3D56),
-    tileBottom: Color(0xFF27364E),
-    primary: Color(0xFF85A4FF),
-    echo: Color(0xFFB6A0FF),
-    goal: Color(0xFF45D7B4),
-    reward: Color(0xFFFFD47B),
-    text: Color(0xFFF0F4FF),
-    secondaryText: Color(0xFFA8B7CD),
-    slate: Color(0xFF6E819E),
-    cyan: Color(0xFF65CBE5),
-    error: Color(0xFFFF9BA4),
-    primaryInk: Color(0xFF85A4FF),
-    echoInk: Color(0xFFB6A0FF),
-    goalInk: Color(0xFF45D7B4),
-    rewardInk: Color(0xFFFFD47B),
-    outline: Color(0xFF7D8DA7),
-    highlight: Color(0xFFF0F4FF),
-    blockSymbol: Color(0xFF101827),
+    background: Color(0xFF101C38),
+    surface: Color(0xFF1B2947),
+    boardSurface: Color(0xFF141F3B),
+    tileTop: Color(0xFF223254),
+    tileBottom: Color(0xFF1D2B4B),
+    primary: Color(0xFFA9B6EF),
+    echo: Color(0xFFC2AAFF),
+    goal: Color(0xFF99E0BF),
+    reward: Color(0xFFF3D18B),
+    text: Color(0xFFFFF1D3),
+    secondaryText: Color(0xFFBDC4E6),
+    slate: Color(0xFF536886),
+    cyan: Color(0xFF91D7E2),
+    error: Color(0xFFFFADB8),
+    primaryInk: Color(0xFFA9B6EF),
+    echoInk: Color(0xFFC2AAFF),
+    goalInk: Color(0xFF99E0BF),
+    rewardInk: Color(0xFFF3D18B),
+    outline: Color(0xFF6B79BB),
+    highlight: Color(0xFFFFF1D3),
+    blockSymbol: Color(0xFF101C38),
   );
 }
 
 abstract final class GameTypography {
-  static const canvasFontFamily = 'Roboto';
+  static const canvasFontFamily = 'Jua';
   static const brand = TextStyle(
     fontFamily: canvasFontFamily,
+    fontFamilyFallback: ['NanumGothic'],
     fontSize: 23,
-    fontWeight: FontWeight.w900,
+    fontWeight: FontWeight.w400,
     letterSpacing: 2,
   );
   static const reward = TextStyle(
     fontFamily: canvasFontFamily,
     fontSize: 28,
-    fontWeight: FontWeight.w800,
+    fontWeight: FontWeight.w400,
   );
   static const label = TextStyle(
-    fontFamily: canvasFontFamily,
-    fontWeight: FontWeight.w700,
+    fontFamily: 'NanumGothic',
+    fontSize: 15,
+    fontWeight: FontWeight.w600,
   );
 }
 
@@ -149,7 +151,7 @@ abstract final class GameTheme {
 
   static BoxDecoration surfaceDecoration(GameColors colors, {Color? accent}) =>
       BoxDecoration(
-        color: colors.surface,
+        color: colors.surface.withValues(alpha: .96),
         borderRadius: BorderRadius.circular(GameSpacing.radius),
         border: Border.all(
           color: (accent ?? colors.outline).withValues(
@@ -171,7 +173,9 @@ abstract final class GameTheme {
           seedColor: colors.primary,
           brightness: brightness,
         ).copyWith(
-          primary: colors.primaryInk,
+          primary: brightness == Brightness.dark
+              ? colors.reward
+              : colors.primaryInk,
           onPrimary: brightness == Brightness.dark
               ? colors.blockSymbol
               : colors.surface,
@@ -190,6 +194,7 @@ abstract final class GameTheme {
         );
     final base = ThemeData(
       useMaterial3: true,
+      fontFamily: 'NanumGothic',
       brightness: brightness,
       colorScheme: scheme,
       scaffoldBackgroundColor: colors.background,
@@ -200,17 +205,18 @@ abstract final class GameTheme {
         bodyColor: colors.text,
         displayColor: colors.text,
       ),
-      iconTheme: IconThemeData(color: colors.secondaryText),
+      iconTheme: IconThemeData(color: colors.rewardInk),
       iconButtonTheme: IconButtonThemeData(
         style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
       ),
       dividerColor: colors.outline.withValues(alpha: .3),
       dialogTheme: DialogThemeData(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         backgroundColor: colors.surface,
         surfaceTintColor: Colors.transparent,
         titleTextStyle: base.textTheme.titleLarge?.copyWith(
           color: colors.text,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w400,
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(GameSpacing.radius),
@@ -236,6 +242,7 @@ abstract final class GameTheme {
           minimumSize: const Size(48, 48),
           foregroundColor: colors.primaryInk,
           side: BorderSide(color: colors.outline),
+          backgroundColor: colors.surface.withValues(alpha: .72),
           textStyle: GameTypography.label,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),

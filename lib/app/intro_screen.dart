@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../design/arcade_components.dart';
 import '../design/game_theme.dart';
+import '../design/star_art.dart';
 import '../game/block_art.dart';
 import '../l10n/app_localizations.dart';
 import '../settings/game_settings.dart';
@@ -85,43 +86,59 @@ class _IntroScreenState extends State<IntroScreen>
       key: const ValueKey('intro-screen'),
       body: ArcadeBackdrop(
         child: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 560),
-              child: Padding(
-                padding: const EdgeInsets.all(GameSpacing.page),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: FadeTransition(
-                            opacity: _timeline.drive(
-                              CurveTween(curve: const Interval(.825, 1)),
-                            ),
-                            child: const Align(
-                              alignment: Alignment.centerLeft,
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: BrandMark(),
+          child: LayoutBuilder(
+            builder: (context, constraints) => Align(
+              alignment: Alignment.topCenter,
+              child: SingleChildScrollView(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 560),
+                  padding: const EdgeInsets.all(GameSpacing.page),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: FadeTransition(
+                              opacity: _timeline.drive(
+                                CurveTween(curve: const Interval(.825, 1)),
+                              ),
+                              child: const Align(
+                                alignment: Alignment.centerLeft,
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: BrandMark(),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        Flexible(
-                          child: TextButton(
-                            key: const ValueKey('skip-intro'),
-                            onPressed: _finish,
-                            child: Text(t.skipIntro),
+                          Flexible(
+                            child: TextButton(
+                              key: const ValueKey('skip-intro'),
+                              onPressed: _finish,
+                              child: Text(t.skipIntro),
+                            ),
                           ),
+                        ],
+                      ),
+                      SizedBox(
+                        height: (constraints.maxHeight * .50).clamp(160, 480),
+                        child: Center(child: IntroScene(progress: _timeline)),
+                      ),
+                      Text(
+                        t.storyTitle,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 30,
+                          fontFamily: GameTypography.canvasFontFamily,
+                          color: GameTheme.colorsOf(context).rewardInk,
                         ),
-                      ],
-                    ),
-                    Expanded(
-                      child: Center(child: IntroScene(progress: _timeline)),
-                    ),
-                  ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(t.homeSubtitle, textAlign: TextAlign.center),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -146,10 +163,13 @@ class IntroScene extends StatelessWidget {
     child: RepaintBoundary(
       child: AspectRatio(
         aspectRatio: 1.15,
-        child: CustomPaint(
-          painter: IntroBoardPainter(
-            progress: progress,
-            colors: GameTheme.colorsOf(context),
+        child: ValueListenableBuilder<int>(
+          valueListenable: StarArt.revision,
+          builder: (context, _, child) => CustomPaint(
+            painter: IntroBoardPainter(
+              progress: progress,
+              colors: GameTheme.colorsOf(context),
+            ),
           ),
         ),
       ),

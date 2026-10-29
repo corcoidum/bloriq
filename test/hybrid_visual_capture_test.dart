@@ -4,6 +4,8 @@ import 'dart:ui' as ui;
 
 import 'package:bloriq/game/bloriq_game.dart';
 import 'package:bloriq/main.dart';
+import 'package:bloriq/design/star_art.dart';
+import 'package:bloriq/l10n/app_localizations.dart';
 import 'package:bloriq/settings/game_settings.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +20,8 @@ void main() {
   testWidgets('capture P0 tutorial and P1 Daily chapters consent controls', (
     tester,
   ) async {
-    if (!const bool.fromEnvironment('CAPTURE_HYBRID')) return;
+    const star = bool.fromEnvironment('CAPTURE_STAR');
+    if (!const bool.fromEnvironment('CAPTURE_HYBRID') && !star) return;
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -38,8 +41,16 @@ void main() {
     await (FontLoader(
       'MaterialIcons',
     )..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'))).load();
-    final output = Directory('docs/screenshots/hybrid')
-      ..createSync(recursive: true);
+    await (FontLoader(
+      'Jua',
+    )..addFont(rootBundle.load('assets/fonts/Jua-Regular.ttf'))).load();
+    await (FontLoader(
+      'NanumGothic',
+    )..addFont(rootBundle.load('assets/fonts/NanumGothic-Regular.ttf'))).load();
+    await tester.runAsync(StarArt.load);
+    final output = Directory(
+      star ? 'docs/screenshots/star-courier' : 'docs/screenshots/hybrid',
+    )..createSync(recursive: true);
     final boundary = GlobalKey();
     final board = find.byType(GameWidget<BloriqGame>);
     Future<void> capture(String name) async {
@@ -91,14 +102,47 @@ void main() {
           await tester.pump(const Duration(milliseconds: 20));
         }
         await tester.pump(const Duration(milliseconds: 100));
+        await tester.runAsync(() async {
+          final context = tester.element(find.byType(MaterialApp));
+          for (final provider in <ImageProvider>[
+            const ResizeImage(AssetImage(StarArt.forest), width: 1080),
+            const ResizeImage(AssetImage(StarArt.courier), width: 512),
+            const AssetImage(StarArt.portal),
+            const ExactAssetImage(StarArt.boardFrame, scale: 4),
+          ]) {
+            if (context.mounted) {
+              await precacheImage(provider, context);
+            }
+          }
+        });
+        await tester.runAsync(
+          () => precacheImage(
+            const ResizeImage(AssetImage(StarArt.restingCourier), width: 768),
+            tester.element(find.byType(MaterialApp)),
+          ),
+        );
+        await tester.pump();
         final prefix = '${mode.name}-$locale';
         await capture('$prefix-tutorial-move');
         await move(0, 1);
         await capture('$prefix-tutorial-echo');
         await move(1, -1);
         await capture('$prefix-tutorial-next');
+        if (star) {
+          await tapVisible(tester, find.byKey(const ValueKey('skip-tutorial')));
+          await capture('$prefix-play');
+        }
         await move(1, 1);
         await tester.pump(const Duration(milliseconds: 1700));
+        if (star) {
+          await capture('$prefix-victory');
+          final t = AppLocalizations.of(
+            tester.element(find.byType(GameScreen)),
+          )!;
+          await tapVisible(tester, find.text(t.postcard));
+          await capture('$prefix-postcard');
+          await tapVisible(tester, find.text(locale == 'ko' ? '닫기' : 'Close'));
+        }
         await tapVisible(tester, find.byKey(const ValueKey('game-home')));
         await tester.pump(const Duration(milliseconds: 350));
         await capture('$prefix-home');
@@ -112,11 +156,30 @@ void main() {
           tester,
           find.byTooltip(locale == 'ko' ? '설정' : 'Settings'),
         );
+        if (star) await capture('$prefix-settings');
         await tester.ensureVisible(
           find.byKey(const ValueKey('analytics-consent')),
         );
         await tester.pump();
         await capture('$prefix-privacy');
+        if (star) {
+          final ko = locale == 'ko';
+          await tapVisible(tester, find.text(ko ? '닫기' : 'Close'));
+          await tapVisible(
+            tester,
+            find.byTooltip(ko ? '게임 방법' : 'How to play'),
+          );
+          await capture('$prefix-help');
+          await tapVisible(tester, find.text(ko ? '닫기' : 'Close'));
+          await tapVisible(tester, find.byTooltip(ko ? '설정' : 'Settings'));
+          await tapVisible(tester, find.byKey(const ValueKey('replay-intro')));
+          await capture('$prefix-intro-first');
+          await tester.pump(const Duration(milliseconds: 900));
+          await capture('$prefix-intro-echo');
+          await tester.pump(const Duration(milliseconds: 1600));
+          await capture('$prefix-intro-burst');
+          await tapVisible(tester, find.byKey(const ValueKey('skip-intro')));
+        }
         await tester.pumpWidget(const SizedBox());
         settings.dispose();
       }

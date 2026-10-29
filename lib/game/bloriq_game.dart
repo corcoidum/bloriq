@@ -170,7 +170,7 @@ class BloriqGame extends FlameGame {
   }
 
   @override
-  Color backgroundColor() => _colors.background;
+  Color backgroundColor() => Colors.transparent;
 
   @override
   void render(Canvas canvas) {
@@ -216,7 +216,10 @@ class BloriqGame extends FlameGame {
       (origin & boardSize).deflate(cell * .015),
       Radius.circular(cell * .22),
     );
-    canvas.drawRRect(board, paint..color = _colors.boardSurface);
+    canvas.drawRRect(
+      board,
+      paint..color = _colors.boardSurface.withValues(alpha: .92),
+    );
 
     for (var y = 0; y < state.level.boardHeight; y++) {
       for (var x = 0; x < state.level.boardWidth; x++) {
@@ -229,21 +232,14 @@ class BloriqGame extends FlameGame {
         final tile = RRect.fromRectAndRadius(rect, Radius.circular(cell * .16));
         canvas.drawRRect(
           tile,
-          paint
-            ..color = _colors.highlight
-            ..shader = LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [_colors.tileTop, _colors.tileBottom],
-            ).createShader(rect),
+          paint..color = _colors.tileBottom.withValues(alpha: .82),
         );
-        paint.shader = null;
         canvas.drawRRect(
           tile.deflate(1),
           paint
-            ..color = _colors.outline.withValues(alpha: .30)
+            ..color = _colors.outline.withValues(alpha: .72)
             ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.2,
+            ..strokeWidth = 1.4,
         );
         paint.style = PaintingStyle.fill;
       }
@@ -496,15 +492,26 @@ class BloriqGame extends FlameGame {
           );
         }
       }
+      final tilt =
+          !_reduceMotion &&
+              block.id == _movingId &&
+              _from != null &&
+              _motion < 1
+          ? (block.position.x - _from!.x) * .07 * math.sin(_motion * math.pi)
+          : 0.0;
+      canvas.save();
+      canvas.translate(at.dx, at.dy);
+      canvas.rotate(tilt);
       BlockArt.block(
         canvas,
-        at,
+        Offset.zero,
         cell,
         _colors,
         goal: isGoal,
         scale: scale,
         opacity: opacity,
       );
+      canvas.restore();
     }
     for (final (position, symbol, color) in mechanicTiles) {
       final marker = center(position) + Offset(cell * .34, -cell * .34);

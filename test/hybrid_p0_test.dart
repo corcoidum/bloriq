@@ -166,6 +166,10 @@ void main() {
       await tester.pumpWidget(const BloriqApp());
       await ready(tester);
       expect(find.byKey(const ValueKey('intro-screen')), findsNothing);
+      expect(
+        tester.widget<InkWell>(find.byKey(const ValueKey('game-levels'))).onTap,
+        isNull,
+      );
       await swipe(tester, 0, 1);
       expect(find.textContaining('Try sliding back left'), findsOneWidget);
       expect(game(tester).controller.state.moves, 1);
@@ -199,6 +203,10 @@ void main() {
       final state = game(tester).controller.state;
       await tapVisible(tester, find.byKey(const ValueKey('skip-tutorial')));
       expect(game(tester).controller.state, same(state));
+      expect(
+        tester.widget<InkWell>(find.byKey(const ValueKey('game-levels'))).onTap,
+        isNotNull,
+      );
       await tapVisible(tester, find.byTooltip('How to play'));
       await tapVisible(tester, find.byKey(const ValueKey('replay-tutorial')));
       await ready(tester);

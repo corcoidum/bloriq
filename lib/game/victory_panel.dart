@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../design/game_theme.dart';
+import '../design/star_art.dart';
 import '../l10n/app_localizations.dart';
 
 /// 연출은 표시만 담당한다. 별 계산과 기록 저장은 호출자가 즉시 완료한다.
@@ -32,6 +33,7 @@ class VictoryPanel extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        const Center(child: CourierPortrait(height: 64)),
         Semantics(
           liveRegion: true,
           child: Text(

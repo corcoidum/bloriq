@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../settings/game_settings.dart';
 import 'game_theme.dart';
+import 'star_art.dart';
 
 bool prefersReducedMotion(BuildContext context, GameSettings settings) =>
     settings.reduceMotion ||
@@ -21,7 +22,7 @@ class BrandMark extends StatelessWidget {
     final colors = GameTheme.colorsOf(context);
     return Text(
       'BLORIQ',
-      style: GameTypography.brand.copyWith(color: colors.text),
+      style: GameTypography.brand.copyWith(color: colors.rewardInk),
     );
   }
 }
@@ -33,19 +34,30 @@ class ArcadeBackdrop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = GameTheme.colorsOf(context);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color.lerp(colors.background, colors.echo, .065)!,
-            colors.background,
-            Color.lerp(colors.background, colors.goal, .035)!,
-          ],
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        ColoredBox(color: colors.background),
+        Positioned.fill(
+          child: ExcludeSemantics(
+            child: Image.asset(
+              StarArt.forest,
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+              cacheWidth: 1080,
+              color: dark
+                  ? Colors.white
+                  : colors.background.withValues(alpha: .92),
+              colorBlendMode: dark ? BlendMode.modulate : BlendMode.srcOver,
+            ),
+          ),
         ),
-      ),
-      child: child,
+        Positioned.fill(
+          child: ColoredBox(color: colors.background.withValues(alpha: .08)),
+        ),
+        child,
+      ],
     );
   }
 }
