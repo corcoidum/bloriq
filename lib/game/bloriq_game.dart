@@ -22,6 +22,7 @@ class BloriqGame extends FlameGame {
   BloriqGame(this.controller);
   final PuzzleController controller;
 
+  Position? tutorialTarget;
   String? _movingId;
   Position? _from;
   Position? _oldEcho;
@@ -521,6 +522,22 @@ class BloriqGame extends FlameGame {
     }
     if (state.isComplete && !isReplaying && !_reduceMotion) {
       _drawCelebration(canvas, exit, cell);
+    }
+    if (tutorialTarget case final target?) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: center(target),
+            width: cell * .9,
+            height: cell * .9,
+          ),
+          Radius.circular(cell * .16),
+        ),
+        Paint()
+          ..color = (state.echo == target ? _colors.echoInk : _colors.goalInk)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3,
+      );
     }
     if (state.level.id == 1 && state.moves == 0 && _dragId == null) {
       final goal = center(state.level.startPosition);

@@ -52,6 +52,7 @@ void main() {
   setUp(() {
     rootBundle.clear();
     SharedPreferences.setMockInitialValues({
+      'bloriq.onboarding.v1': 'skipped',
       GameAudio.musicKey: false,
       GameAudio.effectsKey: false,
     });
@@ -260,7 +261,7 @@ void main() {
     (tester) async {
       final settings = GameSettings();
       await tester.pumpWidget(BloriqApp(settings: settings));
-      expect(find.byType(IntroScreen), findsOneWidget);
+      await _waitIntro(tester);
       await settings.setReduceMotion(true);
       await tester.pump();
       await tester.pump();
@@ -275,6 +276,7 @@ void main() {
     await tester.pumpWidget(
       TickerMode(enabled: false, child: BloriqApp(settings: settings)),
     );
+    await _waitIntro(tester);
     await tester.pump(const Duration(milliseconds: 4300));
     await tester.pump();
     expect(find.byKey(const ValueKey('home-screen')), findsOneWidget);

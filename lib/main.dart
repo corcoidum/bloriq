@@ -20,6 +20,8 @@ import 'app/game_session.dart';
 import 'app/experience_dialogs.dart';
 import 'app/level_picker.dart';
 import 'design/arcade_components.dart';
+import 'app/play_context.dart';
+import 'tutorial/echo_tutorial.dart';
 
 void main() => runApp(const BloriqApp());
 
@@ -83,8 +85,9 @@ class _BloriqAppState extends State<BloriqApp> {
         : AppEntry(
             loadLevels: widget.loadLevels,
             settings: _settings!,
-            gameBuilder: (session, levelId) => GameScreen(
+            gameBuilder: (session, levelId, play) => GameScreen(
               session: session,
+              play: play,
               initialLevelId: levelId,
               settings: _settings!,
             ),
@@ -97,10 +100,12 @@ class GameScreen extends StatefulWidget {
     super.key,
     required this.session,
     required this.initialLevelId,
+    this.play = const PlayContext.campaign(),
     required this.settings,
   });
 
   final GameSession session;
+  final PlayContext play;
   final int initialLevelId;
   final GameSettings settings;
 
@@ -113,6 +118,7 @@ class _GameScreenState extends State<GameScreen>
   late final List<Level> _loaded;
   bool _allowPop = false;
   bool _leaving = false;
+  EchoTutorial? _tutorial;
   PuzzleController? _controller;
   BloriqGame? _game;
   int _index = 0;
@@ -140,7 +146,15 @@ class _GameScreenState extends State<GameScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _loaded = widget.session.levels;
+    _loaded = widget.play.level == null
+        ? widget.session.levels
+        : [widget.play.level!];
+    if (widget.play.guided) {
+      _tutorial = EchoTutorial();
+      if (widget.play.mode == PlayMode.campaign) {
+        unawaited(widget.session.onboarding.mark('inProgress'));
+      }
+    }
     _index = _loaded.indexWhere((level) => level.id == widget.initialLevelId);
     if (_index < 0) _index = 0;
     _audio = widget.session.audio;
@@ -169,7 +183,9 @@ class _GameScreenState extends State<GameScreen>
 
   void _beginCompletion(PuzzleController controller) {
     final state = controller.state;
-    final previous = _progress!.forLevel(state.level.id);
+    final previous = widget.play.mode == PlayMode.campaign
+        ? _progress!.forLevel(state.level.id, revision: state.level.revision)
+        : null;
     _isNewBest = previous == null || state.moves < previous.bestMoves;
     // 저장과 별 평가는 애니메이션 타이머/Canvas 성공 여부에 의존하지 않는다.
     unawaited(_recordCompletion(controller));
@@ -235,8 +251,16 @@ class _GameScreenState extends State<GameScreen>
 
   Future<void> _recordCompletion(PuzzleController controller) async {
     final state = controller.state;
+    if (_tutorial?.complete == true) {
+      _tutorial = null;
+      if (widget.play.mode == PlayMode.campaign) {
+        unawaited(widget.session.onboarding.mark('complete'));
+      }
+    }
+    if (widget.play.mode != PlayMode.campaign) return;
     final result = await _progress!.recordCompletion(
       levelId: state.level.id,
+      revision: state.level.revision,
       moves: state.moves,
       minimumMoves: state.level.minimumMoves,
     );
@@ -250,7 +274,11 @@ class _GameScreenState extends State<GameScreen>
 
   void _showPostcard(AppLocalizations t, PuzzleController controller) {
     final state = controller.state;
-    final best = _progress!.forLevel(state.level.id)?.bestMoves ?? state.moves;
+    final best =
+        _progress!
+            .forLevel(state.level.id, revision: state.level.revision)
+            ?.bestMoves ??
+        state.moves;
     showDialog<void>(
       context: context,
       animationStyle: _reduceMotion ? AnimationStyle.noAnimation : null,
@@ -339,7 +367,15 @@ class _GameScreenState extends State<GameScreen>
         final dx = delta.dx.abs() >= delta.dy.abs() ? delta.dx.sign.toInt() : 0;
         final dy = dx == 0 ? delta.dy.sign.toInt() : 0;
         final target = Position(from.x + dx, from.y + dy);
-        if (controller.move(block.id, target)) {
+        if (_tutorial != null && !_tutorial!.accepts(block.id, target)) {
+          _cancelDrag();
+          setState(() {});
+          return;
+        }
+        final before = controller.state;
+        final moved = controller.move(block.id, target);
+        _tutorial?.observe(before, target, moved);
+        if (moved) {
           _gateBlocked = false;
           _game!.animateMove(block.id, from, previousEcho);
           if (controller.state.isComplete) _beginCompletion(controller);
@@ -400,7 +436,31 @@ class _GameScreenState extends State<GameScreen>
     if (mounted) setState(() {});
   }
 
-  void _showHelp(AppLocalizations t) => showGameHelp(context, widget.settings);
+  Future<void> _showHelp(AppLocalizations t) async {
+    _cancelDrag();
+    final replay = await showGameHelp(context, widget.settings);
+    if (replay == true && mounted) {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) => GameScreen(
+            session: widget.session,
+            initialLevelId: 1,
+            settings: widget.settings,
+            play: PlayContext.tutorialReplay(
+              widget.session.levels.firstWhere((level) => level.id == 1),
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
+  void _skipTutorial() {
+    if (widget.play.mode == PlayMode.campaign) {
+      unawaited(widget.session.onboarding.mark('skipped'));
+    }
+    setState(() => _tutorial = null);
+  }
 
   Future<void> _pickLevel() async {
     _cancelDrag();
@@ -477,7 +537,11 @@ class _GameScreenState extends State<GameScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(t.completeDetail(state.moves)),
-            if (_progress!.forLevel(state.level.id) case final best?)
+            if (_progress!.forLevel(
+                  state.level.id,
+                  revision: state.level.revision,
+                )
+                case final best?)
               Text(t.bestMoves(best.bestMoves)),
             if (_completion?.saved == false) Text(t.saveError),
             const SizedBox(height: GameSpacing.small),
@@ -490,10 +554,17 @@ class _GameScreenState extends State<GameScreen>
             ),
             const SizedBox(height: GameSpacing.medium),
             FilledButton.icon(
-              onPressed: () =>
-                  _select(_index + 1 < _loaded.length ? _index + 1 : 0),
+              onPressed: () => widget.play.mode != PlayMode.campaign
+                  ? Navigator.pop(context)
+                  : _select(_index + 1 < _loaded.length ? _index + 1 : 0),
               icon: const Icon(Icons.arrow_forward),
-              label: Text(_index + 1 < _loaded.length ? t.next : t.firstLevel),
+              label: Text(
+                widget.play.mode != PlayMode.campaign
+                    ? t.close
+                    : _index + 1 < _loaded.length
+                    ? t.next
+                    : t.firstLevel,
+              ),
             ),
             const SizedBox(height: GameSpacing.small),
             Wrap(
@@ -536,6 +607,13 @@ class _GameScreenState extends State<GameScreen>
   String _hint(AppLocalizations t, PuzzleController controller) {
     final state = controller.state;
     // This detects only states with no legal move, not every unsolvable state.
+    if (_tutorial case final tutorial?) {
+      return switch (tutorial.step) {
+        0 => t.tutorialMove,
+        1 => t.tutorialBlock,
+        _ => t.tutorialFinish,
+      };
+    }
     if (_hasNoMoves(controller)) return t.noMoves;
     final mechanics = <String>[
       if (state.level.echoErasers.isNotEmpty) t.eraserRule,
@@ -583,6 +661,7 @@ class _GameScreenState extends State<GameScreen>
     _game!.configureAppearance(colors: colors, reduceMotion: _reduceMotion);
     final controller = _controller!;
     final hint = _hint(t, controller);
+    _game!.tutorialTarget = _tutorial?.target;
     return PopScope<void>(
       canPop: _allowPop || !_dirty,
       onPopInvokedWithResult: (didPop, result) {
@@ -599,10 +678,13 @@ class _GameScreenState extends State<GameScreen>
                     constraints.maxWidth - GameSpacing.page * 2,
                     math.min(
                       GameSpacing.maxBoardWidth,
-                      constraints.maxHeight *
-                          .46 *
-                          controller.state.level.boardWidth /
-                          controller.state.level.boardHeight,
+                      math.max(
+                        controller.state.level.boardWidth * 48.0,
+                        constraints.maxHeight *
+                            .46 *
+                            controller.state.level.boardWidth /
+                            controller.state.level.boardHeight,
+                      ),
                     ),
                   ),
                 );
@@ -650,6 +732,12 @@ class _GameScreenState extends State<GameScreen>
                               ),
                             ],
                           ),
+                          if (_tutorial != null)
+                            TextButton(
+                              key: const ValueKey('skip-tutorial'),
+                              onPressed: _skipTutorial,
+                              child: Text(t.skipTutorial),
+                            ),
                           const SizedBox(height: GameSpacing.medium),
                           Wrap(
                             alignment: WrapAlignment.center,

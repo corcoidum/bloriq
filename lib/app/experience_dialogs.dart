@@ -44,9 +44,9 @@ Future<void> showExperienceSettings(
   }
 }
 
-void showGameHelp(BuildContext context, GameSettings settings) {
+Future<bool?> showGameHelp(BuildContext context, GameSettings settings) {
   final t = AppLocalizations.of(context)!;
-  showDialog<void>(
+  return showDialog<bool>(
     context: context,
     animationStyle: prefersReducedMotion(context, settings)
         ? AnimationStyle.noAnimation
@@ -56,6 +56,11 @@ void showGameHelp(BuildContext context, GameSettings settings) {
       title: Text(t.help),
       content: SingleChildScrollView(child: Text(t.helpBody)),
       actions: [
+        TextButton(
+          key: const ValueKey('replay-tutorial'),
+          onPressed: () => Navigator.pop(context, true),
+          child: Text(t.replayTutorial),
+        ),
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(t.close),

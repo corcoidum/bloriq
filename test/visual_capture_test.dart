@@ -110,6 +110,7 @@ void main() {
 
     for (final mode in [ThemeMode.light, ThemeMode.dark]) {
       SharedPreferences.setMockInitialValues({
+        'bloriq.onboarding.v1': 'skipped',
         GameAudio.musicKey: false,
         GameAudio.effectsKey: false,
       });

@@ -11,6 +11,7 @@ import 'experience_dialogs.dart';
 import 'game_session.dart';
 import 'intro_screen.dart';
 import 'level_picker.dart';
+import 'play_context.dart';
 
 class AppEntry extends StatefulWidget {
   const AppEntry({
@@ -21,14 +22,16 @@ class AppEntry extends StatefulWidget {
   });
   final GameSettings settings;
   final Future<List<Level>> Function()? loadLevels;
-  final Widget Function(GameSession session, int levelId) gameBuilder;
+  final Widget Function(GameSession session, int levelId, PlayContext play)
+  gameBuilder;
 
   @override
   State<AppEntry> createState() => _AppEntryState();
 }
 
 class _AppEntryState extends State<AppEntry> {
-  bool _intro = true;
+  bool _intro = false;
+  bool _entryResolved = false;
   bool _failed = false;
   bool _opening = false;
   bool _loading = false;
@@ -45,7 +48,17 @@ class _AppEntryState extends State<AppEntry> {
     if (_loading) return;
     _loading = true;
     try {
-      final session = await GameSession.load(loadLevels: widget.loadLevels);
+      final session = await GameSession.load(
+        loadLevels: widget.loadLevels,
+        onOnboardingReady: (onboarding) {
+          if (mounted) {
+            setState(() {
+              _entryResolved = true;
+              _intro = !onboarding.pending;
+            });
+          }
+        },
+      );
       if (!mounted) {
         unawaited(session.dispose());
         return;
@@ -54,6 +67,18 @@ class _AppEntryState extends State<AppEntry> {
         _session = session;
         _loading = false;
       });
+      if (session.onboarding.pending &&
+          session.levels.any((level) => level.id == 1)) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _open(
+              1,
+              play: const PlayContext.campaign(guided: true),
+              userInitiated: false,
+            );
+          }
+        });
+      }
     } catch (_) {
       if (mounted) {
         setState(() {
@@ -70,12 +95,16 @@ class _AppEntryState extends State<AppEntry> {
     _load();
   }
 
-  Future<void> _open(int levelId) async {
+  Future<void> _open(
+    int levelId, {
+    PlayContext play = const PlayContext.campaign(),
+    bool userInitiated = true,
+  }) async {
     final session = _session;
     if (_opening || session == null) return;
-    _opening = true;
+    setState(() => _opening = true);
     session.audio.setGameVisible(true);
-    session.audio.onUserInteraction();
+    if (userInitiated) session.audio.onUserInteraction();
     final transition = prefersReducedMotion(context, widget.settings)
         ? Duration.zero
         : GameEffects.panelDuration;
@@ -85,7 +114,7 @@ class _AppEntryState extends State<AppEntry> {
           transitionDuration: transition,
           reverseTransitionDuration: transition,
           pageBuilder: (_, animation, secondaryAnimation) =>
-              widget.gameBuilder(session, levelId),
+              widget.gameBuilder(session, levelId, play),
           transitionsBuilder: (_, animation, secondaryAnimation, child) =>
               FadeTransition(opacity: animation, child: child),
         ),
@@ -113,6 +142,19 @@ class _AppEntryState extends State<AppEntry> {
     }
   }
 
+  Future<void> _help() async {
+    final replay = await showGameHelp(context, widget.settings);
+    final session = _session;
+    if (replay == true && mounted && session != null) {
+      await _open(
+        1,
+        play: PlayContext.tutorialReplay(
+          session.levels.firstWhere((level) => level.id == 1),
+        ),
+      );
+    }
+  }
+
   @override
   void dispose() {
     unawaited(_session?.dispose());
@@ -121,6 +163,9 @@ class _AppEntryState extends State<AppEntry> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_entryResolved) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
     if (_intro) {
       return IntroScreen(
         settings: widget.settings,
@@ -158,8 +203,7 @@ class _AppEntryState extends State<AppEntry> {
                         ),
                         IconButton(
                           tooltip: t.help,
-                          onPressed: () =>
-                              showGameHelp(context, widget.settings),
+                          onPressed: _help,
                           icon: const Icon(Icons.help_outline_rounded),
                         ),
                         IconButton(

@@ -261,7 +261,7 @@ void main() {
       }
       expect(find.text('Skip celebration'), findsNothing);
       expect(find.text('Next level'), findsOneWidget);
-      expect((await ProgressRepository.load()).forLevel(2)!.completionCount, 1);
+      expect((await ProgressRepository.load()).forLevel(2, revision: 2)!.completionCount, 1);
       await tester.pumpWidget(const SizedBox());
       settings.dispose();
     },

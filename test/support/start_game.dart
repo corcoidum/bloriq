@@ -1,3 +1,4 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bloriq/game/bloriq_game.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,11 @@ Future<void> tapVisible(WidgetTester tester, Finder finder) async {
 Future<void> waitForHome(WidgetTester tester) async {
   for (var i = 0; i < 200; i++) {
     await tester.pump(const Duration(milliseconds: 20));
+    if (find.byKey(const ValueKey('skip-tutorial')).evaluate().isNotEmpty) {
+      await tapVisible(tester, find.byKey(const ValueKey('skip-tutorial')));
+      await tapVisible(tester, find.byKey(const ValueKey('game-home')));
+      await tester.pump(const Duration(milliseconds: 350));
+    }
     final skip = find.byKey(const ValueKey('skip-intro'));
     if (skip.evaluate().isNotEmpty) {
       await tester.tap(skip);
@@ -46,6 +52,8 @@ Future<void> pumpGame(
   Widget widget, {
   int levelId = 1,
 }) async {
+  final preferences = await SharedPreferences.getInstance();
+  await preferences.setString('bloriq.onboarding.v1', 'skipped');
   await tester.pumpWidget(widget);
   await waitForHome(tester);
   await tapVisible(tester, find.byKey(const ValueKey('home-levels')));

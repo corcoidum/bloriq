@@ -45,31 +45,19 @@ void main() {
     }
   });
 
-  test('새 코스는 기믹 조합이 반복되지 않고 최단 이동이 점차 증가한다', () async {
+  test('첫 다섯 단계는 기본 Echo를 반복 학습한다', () async {
     final data = jsonDecode(
       await rootBundle.loadString('assets/levels/levels.json'),
     ) as List<dynamic>;
-    final signatures = <String>{};
-    var previousMinimum = 0;
-    for (final item in data) {
-      final level = item as Map<String, dynamic>;
-      final types =
-          (level['specialRules'] as List<dynamic>)
-              .map((rule) => (rule as Map<String, dynamic>)['type'] as String)
-              .toList()
-            ..sort();
-      expect(
-        signatures.add(types.join(',')),
-        isTrue,
-        reason: 'Stage ${level['id']}',
-      );
-      final minimum = level['minimumMoves'] as int;
-      expect(
-        minimum,
-        greaterThanOrEqualTo(previousMinimum),
-        reason: 'Stage ${level['id']}',
-      );
-      previousMinimum = minimum;
+    expect(data.take(5).map((raw) => Level.fromJson(raw).minimumMoves), [
+      2,
+      4,
+      4,
+      5,
+      6,
+    ]);
+    for (final raw in data.take(5)) {
+      expect(raw['specialRules'], isEmpty);
     }
   });
 

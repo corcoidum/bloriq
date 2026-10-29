@@ -74,5 +74,10 @@
   "chooseLevel": "다음 도전을 골라보세요",
   "currentLevel": "현재 스테이지",
   "homeProgress": "나의 진행 기록",
-  "introSection": "시작 연출"
+  "introSection": "시작 연출",
+  "tutorialMove": "오른쪽으로 밀어보세요. 움직이면 잔상이 남아요.",
+  "tutorialBlock": "방금 떠난 왼쪽 칸으로 밀어보세요. 잔상이 다음 길을 막아요.",
+  "tutorialFinish": "오른쪽 별로 이동하세요. 다음 이동 뒤 잔상이 바뀌어요.",
+  "skipTutorial": "튜토리얼 건너뛰기",
+  "replayTutorial": "Echo 다시 연습하기"
 }

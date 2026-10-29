@@ -50,7 +50,10 @@ class LevelPicker extends StatelessWidget {
               itemCount: session.levels.length,
               itemBuilder: (context, index) {
                 final level = session.levels[index];
-                final best = session.progress.forLevel(level.id);
+                final best = session.progress.forLevel(
+                  level.id,
+                  revision: level.revision,
+                );
                 final current = level.id == currentLevelId;
                 return Semantics(
                   selected: current,

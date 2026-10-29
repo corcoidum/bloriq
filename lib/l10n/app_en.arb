@@ -140,5 +140,10 @@
         "type": "int"
       }
     }
-  }
+  },
+  "tutorialMove": "Slide right. Move a block. Leave an Echo.",
+  "tutorialBlock": "Try sliding back left. Your last move becomes your next obstacle.",
+  "tutorialFinish": "Slide right to the star. The old Echo changes after your next move.",
+  "skipTutorial": "Skip tutorial",
+  "replayTutorial": "Practice Echo again"
 }

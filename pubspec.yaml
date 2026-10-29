@@ -27,4 +27,5 @@ flutter:
   generate: true
   assets:
     - assets/levels/levels.json
+    - assets/levels/daily_pool_v1.json
     - assets/audio/
