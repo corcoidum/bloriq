@@ -68,7 +68,10 @@ class BloriqGame extends FlameGame {
       size.x / state.level.boardWidth,
       size.y / state.level.boardHeight,
     );
-    if (cell <= 0 || _dragOffset.distance < cell * .24) return null;
+    if (cell <= 0 ||
+        _dragOffset.distance < cell * GameEffects.dragThresholdFraction) {
+      return null;
+    }
     final block = state.blocks
         .where((block) => block.id == _dragId)
         .firstOrNull;

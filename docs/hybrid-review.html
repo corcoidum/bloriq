@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BLORIQ · Echo Learning & Daily</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101827;color:#f0f4ff;font:16px/1.65 system-ui,sans-serif}main{max-width:1240px;margin:auto;padding:40px 24px 64px}h1{letter-spacing:.12em;margin:0}h2{margin-top:40px}p{color:#a8b7cd;max-width:800px}a{color:#85a4ff}nav{display:flex;gap:12px;flex-wrap:wrap;margin:24px 0}button{font:inherit;min-height:48px;padding:8px 20px;background:#1a2638;border:1px solid #6e819e;border-radius:14px;color:#f0f4ff;cursor:pointer}button[aria-pressed=true]{background:#85a4ff;color:#101827}.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:24px}figure{margin:0;padding:12px;border:1px solid #33465f;border-radius:24px;background:#1a2638}img{display:block;width:100%;max-width:390px;margin:auto;border-radius:16px}figcaption{text-align:center;color:#a8b7cd;padding:10px}.tag{color:#45d7b4}footer{margin-top:40px}
+</style>
+</head>
+<body><main>
+<span class="tag">BLORIQ · Every Move Leaves an Echo.</span><h1>ECHO / DAILY</h1>
+<p>첫 실행은 실제 퍼즐로 시작합니다. 잔상을 남기고, 막힘을 경험하고, 다음 길을 찾는 세 번의 조작. 기록은 보존하고 Daily와 챕터로 다음 도전을 연결했습니다.</p>
+<nav aria-label="화면 테마와 언어"><button data-mode="dark" aria-pressed="true">Dark</button><button data-mode="light" aria-pressed="false">Light</button><button data-locale="ko" aria-pressed="true">한국어</button><button data-locale="en" aria-pressed="false">English</button></nav>
+<h2>실제로 배우는 Echo</h2><div class="gallery">
+<figure><img data-shot="tutorial-move" alt="첫 이동 안내"><figcaption>1 · 블록을 움직이면 잔상이 남는다</figcaption></figure>
+<figure><img data-shot="tutorial-echo" alt="Echo에 막히는 이동 안내"><figcaption>2 · 방금 떠난 칸으로 돌아가려다 막힌다</figcaption></figure>
+<figure><img data-shot="tutorial-next" alt="출구로 이동하는 마지막 안내"><figcaption>3 · 다음 이동으로 잔상이 바뀐다</figcaption></figure>
+</div>
+<h2>오늘의 도전과 진행 기록</h2><div class="gallery">
+<figure><img data-shot="home" alt="홈과 캠페인 추천"><figcaption>현재 revision의 진행과 추천 단계</figcaption></figure>
+<figure><img data-shot="daily" alt="Daily Echo와 최근 7일 달력"><figcaption>날짜별 고정 퍼즐 · 최근 7일 참여</figcaption></figure>
+<figure><img data-shot="chapters" alt="챕터별 완료와 획득 별"><figcaption>5개 단위 챕터 · 잠금 없이 선택</figcaption></figure>
+</div>
+<h2>선택형 로컬 테스트 기록</h2><div class="gallery">
+<figure><img data-shot="privacy" alt="선택형 테스트 기록과 내보내기 설정"><figcaption>동의 이후에만 기록 · 사용자 선택으로 내보내기</figcaption></figure>
+</div>
+<footer><p>위 이미지는 Flutter 위젯 렌더러의 390×844 캡처입니다. Android 실기기·브라우저 성능과 사용자 이해도 검증 자료는 아닙니다. 공개 콘텐츠는 25개이며 후보 26~40은 수동 검토 전 비공개입니다.</p><a href="HYBRID_EXECUTION.md">단계별 실행·검증 기록</a> · <a href="PLAYTEST_OBSERVATION.md">5명 관찰표</a> · <a href="LEVEL_REVIEW.md">레벨 감사</a> · <a href="ANDROID_SOFT_LAUNCH.md">출시 체크리스트</a></footer>
+</main><script>
+let mode='dark',locale='ko';function render(){document.querySelectorAll('[data-shot]').forEach(img=>img.src=`screenshots/hybrid/${mode}-${locale}-${img.dataset.shot}.png`);document.querySelectorAll('[data-mode]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.mode===mode)));document.querySelectorAll('[data-locale]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.locale===locale)))}document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>{mode=button.dataset.mode;render()}));document.querySelectorAll('[data-locale]').forEach(button=>button.addEventListener('click',()=>{locale=button.dataset.locale;render()}));render();
+</script></body></html>

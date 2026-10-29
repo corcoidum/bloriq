@@ -1,0 +1,977 @@
+[
+  {
+    "id": 26,
+    "boardWidth": 3,
+    "boardHeight": 3,
+    "startPosition": {
+      "x": 1,
+      "y": 1
+    },
+    "exitPosition": {
+      "x": 2,
+      "y": 2
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 1,
+        "y": 2
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 2
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 1,
+          "y": 0
+        },
+        "gate": {
+          "x": 0,
+          "y": 1
+        }
+      }
+    ],
+    "minimumMoves": 9,
+    "difficulty": "candidate",
+    "revision": 1,
+    "reviewStatus": "awaiting_manual_play",
+    "learningIntent": "Gate가 열린 한 턴 사용"
+  },
+  {
+    "id": 27,
+    "boardWidth": 3,
+    "boardHeight": 3,
+    "startPosition": {
+      "x": 1,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 1,
+      "y": 2
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 1,
+        "y": 1
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 2,
+        "y": 0
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoEraser",
+        "positions": [
+          {
+            "x": 1,
+            "y": 1
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 3,
+    "difficulty": "candidate",
+    "revision": 1,
+    "reviewStatus": "awaiting_manual_play",
+    "learningIntent": "Eraser 출발 칸의 Echo 삭제"
+  },
+  {
+    "id": 28,
+    "boardWidth": 3,
+    "boardHeight": 3,
+    "startPosition": {
+      "x": 0,
+      "y": 1
+    },
+    "exitPosition": {
+      "x": 1,
+      "y": 2
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 1,
+        "y": 1
+      },
+      {
+        "id": "b2",
+        "x": 0,
+        "y": 2
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 2
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 1,
+            "y": 0
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 6,
+    "difficulty": "candidate",
+    "revision": 1,
+    "reviewStatus": "awaiting_manual_play",
+    "learningIntent": "목표 블록 전용 칸으로 길 정리"
+  },
+  {
+    "id": 29,
+    "boardWidth": 3,
+    "boardHeight": 3,
+    "startPosition": {
+      "x": 1,
+      "y": 1
+    },
+    "exitPosition": {
+      "x": 2,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 2,
+        "y": 1
+      },
+      {
+        "id": "b2",
+        "x": 1,
+        "y": 0
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 2,
+            "y": 2
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 5,
+    "difficulty": "candidate",
+    "revision": 1,
+    "reviewStatus": "awaiting_manual_play",
+    "learningIntent": "Hold 위에서 이전 Echo 유지"
+  },
+  {
+    "id": 30,
+    "boardWidth": 3,
+    "boardHeight": 3,
+    "startPosition": {
+      "x": 2,
+      "y": 1
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 2
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 1,
+        "y": 1
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "oneWay",
+        "tiles": [
+          {
+            "x": 1,
+            "y": 2,
+            "dx": 1,
+            "dy": 0
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 5,
+    "difficulty": "candidate",
+    "revision": 1,
+    "reviewStatus": "awaiting_manual_play",
+    "learningIntent": "One-way 출구 방향 확인"
+  },
+  {
+    "id": 31,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 2,
+      "y": 1
+    },
+    "exitPosition": {
+      "x": 2,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 1,
+        "y": 1
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 2
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoEraser",
+        "positions": [
+          {
+            "x": 1,
+            "y": 1
+          }
+        ]
+      },
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 1,
+          "y": 2
+        },
+        "gate": {
+          "x": 1,
+          "y": 3
+        }
+      }
+    ],
+    "minimumMoves": 8,
+    "difficulty": "candidate",
+    "revision": 1,
+    "reviewStatus": "awaiting_manual_play",
+    "learningIntent": "Eraser와 Gate의 이동 순서"
+  },
+  {
+    "id": 32,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 2,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 2,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 3,
+        "y": 3
+      },
+      {
+        "id": "b2",
+        "x": 2,
+        "y": 2
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 2
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 2,
+            "y": 2
+          }
+        ]
+      },
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 1,
+            "y": 2
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 10,
+    "difficulty": "candidate",
+    "revision": 1,
+    "reviewStatus": "awaiting_manual_play",
+    "learningIntent": "Hold와 목표 전용 칸의 순서"
+  },
+  {
+    "id": 33,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 2,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 0,
+        "y": 3
+      },
+      {
+        "id": "b2",
+        "x": 2,
+        "y": 2
+      },
+      {
+        "id": "b3",
+        "x": 1,
+        "y": 2
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 0
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoEraser",
+        "positions": [
+          {
+            "x": 0,
+            "y": 2
+          }
+        ]
+      },
+      {
+        "type": "oneWay",
+        "tiles": [
+          {
+            "x": 1,
+            "y": 2,
+            "dx": 0,
+            "dy": 1
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 10,
+    "difficulty": "candidate",
+    "revision": 1,
+    "reviewStatus": "awaiting_manual_play",
+    "learningIntent": "Eraser와 One-way의 통로"
+  },
+  {
+    "id": 34,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 0,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 2,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 0,
+        "y": 3
+      },
+      {
+        "id": "b2",
+        "x": 2,
+        "y": 2
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 0,
+        "y": 1
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 2,
+            "y": 1
+          }
+        ]
+      },
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 2,
+          "y": 0
+        },
+        "gate": {
+          "x": 1,
+          "y": 0
+        }
+      }
+    ],
+    "minimumMoves": 11,
+    "difficulty": "candidate",
+    "revision": 1,
+    "reviewStatus": "awaiting_manual_play",
+    "learningIntent": "목표 전용 통로와 Gate"
+  },
+  {
+    "id": 35,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 2,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 1,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 1,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 2,
+        "y": 1
+      },
+      {
+        "id": "b3",
+        "x": 2,
+        "y": 3
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 3,
+            "y": 2
+          }
+        ]
+      },
+      {
+        "type": "oneWay",
+        "tiles": [
+          {
+            "x": 2,
+            "y": 2,
+            "dx": 0,
+            "dy": -1
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 12,
+    "difficulty": "candidate",
+    "revision": 1,
+    "reviewStatus": "awaiting_manual_play",
+    "learningIntent": "Hold와 One-way의 복습"
+  },
+  {
+    "id": 36,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 3,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 1
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 2,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 0,
+        "y": 3
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 1
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 2,
+            "y": 3
+          }
+        ]
+      },
+      {
+        "type": "oneWay",
+        "tiles": [
+          {
+            "x": 1,
+            "y": 1,
+            "dx": 0,
+            "dy": -1
+          }
+        ]
+      },
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 2,
+          "y": 1
+        },
+        "gate": {
+          "x": 2,
+          "y": 2
+        }
+      }
+    ],
+    "minimumMoves": 10,
+    "difficulty": "candidate",
+    "revision": 1,
+    "reviewStatus": "awaiting_manual_play",
+    "learningIntent": "잔상 유지와 Gate 진입 순서"
+  },
+  {
+    "id": 37,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 2,
+      "y": 2
+    },
+    "exitPosition": {
+      "x": 1,
+      "y": 1
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 0,
+        "y": 3
+      },
+      {
+        "id": "b2",
+        "x": 3,
+        "y": 0
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 3
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 3,
+            "y": 2
+          }
+        ]
+      },
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 2,
+          "y": 2
+        },
+        "gate": {
+          "x": 3,
+          "y": 3
+        }
+      }
+    ],
+    "minimumMoves": 11,
+    "difficulty": "candidate",
+    "revision": 1,
+    "reviewStatus": "awaiting_manual_play",
+    "learningIntent": "일반 블록으로 Gate 타이밍 조절"
+  },
+  {
+    "id": 38,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 1,
+      "y": 2
+    },
+    "exitPosition": {
+      "x": 3,
+      "y": 2
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 0,
+        "y": 2
+      },
+      {
+        "id": "b2",
+        "x": 2,
+        "y": 2
+      },
+      {
+        "id": "b3",
+        "x": 1,
+        "y": 0
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 3
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "oneWay",
+        "tiles": [
+          {
+            "x": 1,
+            "y": 1,
+            "dx": -1,
+            "dy": 0
+          }
+        ]
+      },
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 1,
+          "y": 0
+        },
+        "gate": {
+          "x": 0,
+          "y": 3
+        }
+      }
+    ],
+    "minimumMoves": 11,
+    "difficulty": "candidate",
+    "revision": 1,
+    "reviewStatus": "awaiting_manual_play",
+    "learningIntent": "One-way 경유 후 문 열기"
+  },
+  {
+    "id": 39,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 2,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 1,
+      "y": 1
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 2,
+        "y": 1
+      },
+      {
+        "id": "b2",
+        "x": 0,
+        "y": 1
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 0
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 3,
+            "y": 2
+          }
+        ]
+      },
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 2,
+            "y": 2
+          }
+        ]
+      },
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 3,
+          "y": 3
+        },
+        "gate": {
+          "x": 3,
+          "y": 1
+        }
+      }
+    ],
+    "minimumMoves": 11,
+    "difficulty": "candidate",
+    "revision": 1,
+    "reviewStatus": "awaiting_manual_play",
+    "learningIntent": "Hold·전용 칸·문 조합"
+  },
+  {
+    "id": 40,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 2,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 2,
+        "y": 1
+      },
+      {
+        "id": "b2",
+        "x": 0,
+        "y": 2
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 0
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoEraser",
+        "positions": [
+          {
+            "x": 0,
+            "y": 1
+          }
+        ]
+      },
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 0,
+            "y": 0
+          }
+        ]
+      },
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 0,
+          "y": 2
+        },
+        "gate": {
+          "x": 2,
+          "y": 2
+        }
+      }
+    ],
+    "minimumMoves": 12,
+    "difficulty": "candidate",
+    "revision": 1,
+    "reviewStatus": "awaiting_manual_play",
+    "learningIntent": "Eraser로 잔상 정리 후 Gate 진입"
+  }
+]

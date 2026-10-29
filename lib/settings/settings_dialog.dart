@@ -4,6 +4,8 @@ import '../audio/game_audio.dart';
 import '../design/game_theme.dart';
 import '../l10n/app_localizations.dart';
 import 'game_settings.dart';
+import '../analytics/local_analytics.dart';
+import '../analytics/playtest_controls.dart';
 
 class SettingsDialog extends StatefulWidget {
   const SettingsDialog({
@@ -11,10 +13,12 @@ class SettingsDialog extends StatefulWidget {
     required this.settings,
     required this.audio,
     this.onReplayIntro,
+    this.analytics,
   });
 
   final GameSettings settings;
   final GameAudio audio;
+  final LocalAnalytics? analytics;
   final VoidCallback? onReplayIntro;
 
   @override
@@ -97,6 +101,8 @@ class _SettingsDialogState extends State<SettingsDialog> {
                   onTap: widget.onReplayIntro,
                 ),
               ],
+              if (widget.analytics case final analytics?)
+                PlaytestControls(analytics: analytics),
               if (widget.settings.saveFailed)
                 Text(
                   t.settingsSaveError,

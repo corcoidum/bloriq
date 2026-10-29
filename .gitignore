@@ -5,6 +5,9 @@
 .pub-cache/
 build/
 coverage/
+.playtest-data/
+playtest-exports/
+bloriq-playtest*.json
 __pycache__/
 android/.gradle/
 android/local.properties

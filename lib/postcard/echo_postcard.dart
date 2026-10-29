@@ -261,9 +261,11 @@ class EchoPostcardDialog extends StatefulWidget {
     required this.closeLabel,
     required this.errorLabel,
     this.share = shareEchoPostcard,
+    this.onShareTap,
   });
 
   final EchoPostcardData data;
+  final VoidCallback? onShareTap;
   final String title;
   final String shareLabel;
   final String closeLabel;
@@ -280,6 +282,7 @@ class _EchoPostcardDialogState extends State<EchoPostcardDialog> {
 
   Future<void> _share() async {
     if (_sharing) return;
+    widget.onShareTap?.call();
     final box = context.findRenderObject() as RenderBox?;
     final origin = box == null
         ? null

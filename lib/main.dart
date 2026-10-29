@@ -22,15 +22,24 @@ import 'app/level_picker.dart';
 import 'design/arcade_components.dart';
 import 'app/play_context.dart';
 import 'tutorial/echo_tutorial.dart';
+import 'analytics/local_analytics.dart';
 
 void main() => runApp(const BloriqApp());
 
 class BloriqApp extends StatefulWidget {
-  const BloriqApp({super.key, this.loadLevels, this.settings});
+  const BloriqApp({
+    super.key,
+    this.loadLevels,
+    this.settings,
+    this.clock,
+    this.playtestMode = const bool.fromEnvironment('PLAYTEST_MODE'),
+  });
 
   /// 테스트에서 이전 스테이지 구성과 기기 설정을 주입할 수 있다.
   final Future<List<Level>> Function()? loadLevels;
   final GameSettings? settings;
+  final DateTime Function()? clock;
+  final bool playtestMode;
 
   @override
   State<BloriqApp> createState() => _BloriqAppState();
@@ -84,6 +93,8 @@ class _BloriqAppState extends State<BloriqApp> {
         ? const Scaffold(body: Center(child: CircularProgressIndicator()))
         : AppEntry(
             loadLevels: widget.loadLevels,
+            clock: widget.clock,
+            playtestMode: widget.playtestMode,
             settings: _settings!,
             gameBuilder: (session, levelId, play) => GameScreen(
               session: session,
@@ -119,6 +130,8 @@ class _GameScreenState extends State<GameScreen>
   bool _allowPop = false;
   bool _leaving = false;
   EchoTutorial? _tutorial;
+  AttemptRecorder? _attempt;
+  bool _modalOpen = false;
   PuzzleController? _controller;
   BloriqGame? _game;
   int _index = 0;
@@ -161,11 +174,60 @@ class _GameScreenState extends State<GameScreen>
     _progress = widget.session.progress;
     _controller = PuzzleController(_loaded[_index]);
     _game = BloriqGame(_controller!);
+    widget.session.analytics.addListener(_analyticsChanged);
+    _startAttempt();
+  }
+
+  Map<String, Object?> get _eventContext => {
+    'mode': widget.play.mode.name,
+    'levelId': _controller!.state.level.id,
+    'revision': _controller!.state.level.revision,
+    if (_attempt != null) 'runId': _attempt!.runId,
+    if (widget.play.dailyDate != null) 'date': widget.play.dailyDate,
+    if (widget.play.challenge != null)
+      'poolVersion': widget.play.challenge!.poolVersion,
+  };
+  void _startAttempt() {
+    if (!widget.session.analytics.enabled) return;
+    _attempt = AttemptRecorder(widget.session.analytics, _eventContext);
+    if (_modalOpen) _attempt?.pause();
+    if (_tutorial != null) {
+      widget.session.analytics.record('tutorial_start', {
+        ..._eventContext,
+        'replay': widget.play.mode == PlayMode.tutorialReplay,
+        'reason': _tutorial!.step == 0 ? 'entry' : 'consent_midrun',
+      });
+    }
+    if (widget.play.mode == PlayMode.daily) {
+      widget.session.analytics.record('daily_open', _eventContext);
+    }
+  }
+
+  void _analyticsChanged() {
+    if (widget.session.analytics.enabled) {
+      if (_attempt == null) _startAttempt();
+    } else {
+      _attempt = null;
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _attempt?.foreground(state == AppLifecycleState.resumed);
   }
 
   @override
   void didChangeAccessibilityFeatures() {
     if (mounted) setState(() {});
+  }
+
+  int? get _bestMoves {
+    final level = _controller!.state.level;
+    if (widget.play.mode == PlayMode.daily) {
+      return widget.session.daily.bestMoves(widget.play.dailyDate!);
+    }
+    if (widget.play.mode == PlayMode.tutorialReplay) return null;
+    return _progress!.forLevel(level.id, revision: level.revision)?.bestMoves;
   }
 
   void _updateVictory() {
@@ -186,7 +248,22 @@ class _GameScreenState extends State<GameScreen>
     final previous = widget.play.mode == PlayMode.campaign
         ? _progress!.forLevel(state.level.id, revision: state.level.revision)
         : null;
-    _isNewBest = previous == null || state.moves < previous.bestMoves;
+    _isNewBest = widget.play.mode == PlayMode.daily
+        ? (widget.session.daily.bestMoves(widget.play.dailyDate!) == null ||
+              state.moves <
+                  widget.session.daily.bestMoves(widget.play.dailyDate!)!)
+        : widget.play.mode == PlayMode.campaign &&
+              (previous == null || state.moves < previous.bestMoves);
+    _attempt?.finish(
+      widget.play.mode == PlayMode.daily ? 'daily_complete' : 'level_complete',
+      state.moves,
+    );
+    if (_tutorial?.complete == true) {
+      widget.session.analytics.record('tutorial_complete', {
+        ..._eventContext,
+        'replay': widget.play.mode == PlayMode.tutorialReplay,
+      });
+    }
     // 저장과 별 평가는 애니메이션 타이머/Canvas 성공 여부에 의존하지 않는다.
     unawaited(_recordCompletion(controller));
     _victoryFallback?.cancel();
@@ -207,6 +284,12 @@ class _GameScreenState extends State<GameScreen>
   }
 
   void _select(int index) {
+    _attempt?.finish(
+      'level_end',
+      _controller!.state.moves,
+      reason: 'stage_change',
+    );
+    _tutorial = null;
     _skipCelebration();
     _stopReplay();
     setState(() {
@@ -217,6 +300,8 @@ class _GameScreenState extends State<GameScreen>
       _dragStart = null;
       _gateBlocked = false;
       _completion = null;
+      _attempt = null;
+      _startAttempt();
     });
   }
 
@@ -227,6 +312,8 @@ class _GameScreenState extends State<GameScreen>
 
   @override
   void dispose() {
+    _attempt?.finish('level_end', _controller!.state.moves, reason: 'leave');
+    widget.session.analytics.removeListener(_analyticsChanged);
     _victoryFallback?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _victory.removeListener(_updateVictory);
@@ -257,6 +344,16 @@ class _GameScreenState extends State<GameScreen>
         unawaited(widget.session.onboarding.mark('complete'));
       }
     }
+    if (widget.play.mode == PlayMode.daily) {
+      final result = await widget.session.daily.recordCompletion(
+        widget.play.challenge!,
+        state.moves,
+      );
+      if (mounted && identical(_controller, controller)) {
+        setState(() => _completion = result);
+      }
+      return;
+    }
     if (widget.play.mode != PlayMode.campaign) return;
     final result = await _progress!.recordCompletion(
       levelId: state.level.id,
@@ -273,12 +370,9 @@ class _GameScreenState extends State<GameScreen>
   }
 
   void _showPostcard(AppLocalizations t, PuzzleController controller) {
+    widget.session.analytics.record('postcard_open', _eventContext);
     final state = controller.state;
-    final best =
-        _progress!
-            .forLevel(state.level.id, revision: state.level.revision)
-            ?.bestMoves ??
-        state.moves;
+    final best = _bestMoves ?? state.moves;
     showDialog<void>(
       context: context,
       animationStyle: _reduceMotion ? AnimationStyle.noAnimation : null,
@@ -291,9 +385,15 @@ class _GameScreenState extends State<GameScreen>
             moves: state.moves,
             minimumMoves: state.level.minimumMoves,
           ),
-          levelText: t.level(state.level.id),
+          levelText: widget.play.mode == PlayMode.daily
+              ? '${t.dailyEcho} ${widget.play.dailyDate}'
+              : t.level(state.level.id),
           movesText: t.moves(state.moves),
           bestText: t.bestMoves(best),
+        ),
+        onShareTap: () => widget.session.analytics.record(
+          'postcard_share_tap',
+          _eventContext,
         ),
         title: t.postcard,
         shareLabel: t.shareImage,
@@ -356,7 +456,10 @@ class _GameScreenState extends State<GameScreen>
     final controller = _controller!;
     if (_dragBlock != null && _dragStart != null && _dragEnd != null) {
       final delta = _dragEnd! - _dragStart!;
-      final threshold = width / controller.state.level.boardWidth * .24;
+      final threshold =
+          width /
+          controller.state.level.boardWidth *
+          GameEffects.dragThresholdFraction;
       if (math.max(delta.dx.abs(), delta.dy.abs()) >= threshold) {
         final block = controller.state.blocks.firstWhere(
           (item) => item.id == _dragBlock,
@@ -376,6 +479,10 @@ class _GameScreenState extends State<GameScreen>
         final moved = controller.move(block.id, target);
         _tutorial?.observe(before, target, moved);
         if (moved) {
+          _attempt?.moved(echo: controller.state.echo != null);
+          if (widget.play.mode == PlayMode.daily) {
+            unawaited(widget.session.daily.markPlayed(widget.play.challenge!));
+          }
           _gateBlocked = false;
           _game!.animateMove(block.id, from, previousEcho);
           if (controller.state.isComplete) _beginCompletion(controller);
@@ -419,43 +526,64 @@ class _GameScreenState extends State<GameScreen>
     _skipCelebration();
     setState(() {
       controller.undo();
+      _attempt?.undo();
       _game!.clearEffects();
       _gateBlocked = false;
       _completion = null;
     });
   }
 
-  Future<void> _showSettings() async {
+  Future<T?> _withModal<T>(Future<T?> Function() action) async {
+    if (_modalOpen || !mounted) return null;
+    _modalOpen = true;
     _cancelDrag();
-    await showExperienceSettings(
-      context,
-      widget.settings,
-      _audio!,
-      resumeGame: true,
+    _attempt?.pause();
+    try {
+      return await action();
+    } finally {
+      _modalOpen = false;
+      _attempt?.resume();
+    }
+  }
+
+  Future<void> _showSettings() async {
+    await _withModal<void>(
+      () => showExperienceSettings(
+        context,
+        widget.settings,
+        _audio!,
+        resumeGame: true,
+        analytics: widget.session.analytics,
+      ),
     );
     if (mounted) setState(() {});
   }
 
   Future<void> _showHelp(AppLocalizations t) async {
-    _cancelDrag();
-    final replay = await showGameHelp(context, widget.settings);
-    if (replay == true && mounted) {
-      await Navigator.of(context).push<void>(
-        MaterialPageRoute(
-          builder: (_) => GameScreen(
-            session: widget.session,
-            initialLevelId: 1,
-            settings: widget.settings,
-            play: PlayContext.tutorialReplay(
-              widget.session.levels.firstWhere((level) => level.id == 1),
+    await _withModal<void>(() async {
+      final replay = await showGameHelp(context, widget.settings);
+      if (replay == true && mounted) {
+        await Navigator.of(context).push<void>(
+          MaterialPageRoute(
+            builder: (_) => GameScreen(
+              session: widget.session,
+              initialLevelId: 1,
+              settings: widget.settings,
+              play: PlayContext.tutorialReplay(
+                widget.session.levels.firstWhere((level) => level.id == 1),
+              ),
             ),
           ),
-        ),
-      );
-    }
+        );
+      }
+    });
   }
 
   void _skipTutorial() {
+    widget.session.analytics.record('tutorial_skip', {
+      ..._eventContext,
+      'replay': widget.play.mode == PlayMode.tutorialReplay,
+    });
     if (widget.play.mode == PlayMode.campaign) {
       unawaited(widget.session.onboarding.mark('skipped'));
     }
@@ -463,12 +591,13 @@ class _GameScreenState extends State<GameScreen>
   }
 
   Future<void> _pickLevel() async {
-    _cancelDrag();
-    final id = await showLevelPicker(
-      context,
-      widget.session,
-      widget.settings,
-      currentLevelId: _loaded[_index].id,
+    final id = await _withModal<int>(
+      () => showLevelPicker(
+        context,
+        widget.session,
+        widget.settings,
+        currentLevelId: _loaded[_index].id,
+      ),
     );
     if (id != null && mounted) {
       _select(_loaded.indexWhere((level) => level.id == id));
@@ -537,12 +666,7 @@ class _GameScreenState extends State<GameScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(t.completeDetail(state.moves)),
-            if (_progress!.forLevel(
-                  state.level.id,
-                  revision: state.level.revision,
-                )
-                case final best?)
-              Text(t.bestMoves(best.bestMoves)),
+            if (_bestMoves case final best?) Text(t.bestMoves(best)),
             if (_completion?.saved == false) Text(t.saveError),
             const SizedBox(height: GameSpacing.small),
             Text(
@@ -666,6 +790,15 @@ class _GameScreenState extends State<GameScreen>
       canPop: _allowPop || !_dirty,
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop) unawaited(_leaveGame());
+        if (didPop &&
+            _tutorial != null &&
+            widget.play.mode == PlayMode.campaign) {
+          widget.session.analytics.record('tutorial_skip', {
+            ..._eventContext,
+            'reason': 'leave',
+          });
+          unawaited(widget.session.onboarding.mark('skipped'));
+        }
       },
       child: Scaffold(
         body: ArcadeBackdrop(
@@ -746,7 +879,9 @@ class _GameScreenState extends State<GameScreen>
                             children: [
                               StatPill(
                                 icon: Icons.layers_outlined,
-                                label: t.level(_loaded[_index].id),
+                                label: widget.play.mode == PlayMode.daily
+                                    ? t.dailyEcho
+                                    : t.level(_loaded[_index].id),
                                 color: colors.primaryInk,
                               ),
                               StatPill(
@@ -794,7 +929,7 @@ class _GameScreenState extends State<GameScreen>
                           ),
                           const SizedBox(height: GameSpacing.large),
                           AnimatedSwitcher(
-                            duration: _reduceMotion
+                            duration: _reduceMotion || _tutorial != null
                                 ? Duration.zero
                                 : GameEffects.panelDuration,
                             layoutBuilder: (current, previous) => Stack(
@@ -832,41 +967,53 @@ class _GameScreenState extends State<GameScreen>
                                   ),
                           ),
                           const SizedBox(height: GameSpacing.medium),
-                          Wrap(
-                            alignment: WrapAlignment.center,
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              OutlinedButton.icon(
-                                onPressed:
-                                    controller.canUndo &&
-                                        !_replaying &&
-                                        !_celebrating
-                                    ? () => _undo(controller)
-                                    : null,
-                                icon: const Icon(Icons.undo_rounded),
-                                label: Text(t.undo),
-                              ),
-                              OutlinedButton.icon(
-                                onPressed: _replaying || _celebrating
-                                    ? null
-                                    : () => setState(() {
-                                        _skipCelebration();
-                                        controller.restart();
-                                        _game!.clearEffects();
-                                        _gateBlocked = false;
-                                        _completion = null;
-                                      }),
-                                icon: const Icon(Icons.refresh_rounded),
-                                label: Text(t.restart),
-                              ),
-                              TextButton.icon(
-                                onPressed: _pickLevel,
-                                icon: const Icon(Icons.grid_view_rounded),
-                                label: Text(t.levels),
-                              ),
-                            ],
-                          ),
+                          if (_tutorial == null)
+                            Wrap(
+                              alignment: WrapAlignment.center,
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                OutlinedButton.icon(
+                                  onPressed:
+                                      controller.canUndo &&
+                                          !_replaying &&
+                                          !_celebrating
+                                      ? () => _undo(controller)
+                                      : null,
+                                  icon: const Icon(Icons.undo_rounded),
+                                  label: Text(t.undo),
+                                ),
+                                OutlinedButton.icon(
+                                  onPressed: _replaying || _celebrating
+                                      ? null
+                                      : () => setState(() {
+                                          _skipCelebration();
+                                          _attempt?.restart();
+                                          _attempt?.finish(
+                                            'level_end',
+                                            controller.state.moves,
+                                            reason: 'restart',
+                                          );
+                                          controller.restart();
+                                          _attempt = null;
+                                          _startAttempt();
+                                          _game!.clearEffects();
+                                          _gateBlocked = false;
+                                          _completion = null;
+                                        }),
+                                  icon: const Icon(Icons.refresh_rounded),
+                                  label: Text(t.restart),
+                                ),
+                                TextButton.icon(
+                                  onPressed:
+                                      widget.play.mode == PlayMode.campaign
+                                      ? _pickLevel
+                                      : null,
+                                  icon: const Icon(Icons.grid_view_rounded),
+                                  label: Text(t.levels),
+                                ),
+                              ],
+                            ),
                         ],
                       ),
                     ),

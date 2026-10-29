@@ -6,12 +6,14 @@ import '../l10n/app_localizations.dart';
 import '../settings/game_settings.dart';
 import '../settings/settings_dialog.dart';
 import 'intro_screen.dart';
+import '../analytics/local_analytics.dart';
 
 Future<void> showExperienceSettings(
   BuildContext context,
   GameSettings settings,
   GameAudio audio, {
   required bool resumeGame,
+  LocalAnalytics? analytics,
 }) async {
   final replay = await showDialog<bool>(
     context: context,
@@ -21,6 +23,7 @@ Future<void> showExperienceSettings(
     builder: (dialogContext) => SettingsDialog(
       settings: settings,
       audio: audio,
+      analytics: analytics,
       onReplayIntro: () => Navigator.pop(dialogContext, true),
     ),
   );

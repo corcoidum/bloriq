@@ -145,5 +145,61 @@
   "tutorialBlock": "Try sliding back left. Your last move becomes your next obstacle.",
   "tutorialFinish": "Slide right to the star. The old Echo changes after your next move.",
   "skipTutorial": "Skip tutorial",
-  "replayTutorial": "Practice Echo again"
+  "replayTutorial": "Practice Echo again",
+  "dailyEcho": "Daily Echo",
+  "dailyTarget": "Perfect target: {count} moves",
+  "dailyPerfect": "Perfect Echo achieved!",
+  "dailyStreak": "Consecutive days played: {count}",
+  "dailyDone": "Completed",
+  "dailyPlayed": "Played",
+  "dailyQuiet": "No play recorded",
+  "dailyPlay": "Play Daily Echo",
+  "dailyReplay": "Replay today’s Echo",
+  "playtestTitle": "Optional playtest records",
+  "playtestConsent": "Record playtest data on this device",
+  "playtestPrivacy": "Optional. Records puzzle results and timings on this device, without names, contacts or move paths. Nothing is uploaded automatically. Share a JSON file only when you choose Export. You can stop or delete records anytime.",
+  "playWithoutRecording": "Play without recording",
+  "exportTestData": "Export test data",
+  "deleteTestData": "Delete test records",
+  "deleteTestDataBody": "Delete all playtest records and stop recording? Your puzzle progress and Daily history will remain.",
+  "playtestError": "Could not save or share test records. Your game is still available.",
+  "playtestCount": "Recorded events: {count}",
+  "chapterSummary": "Chapter {number} · {completed}/{total} completed · {stars} stars",
+  "@dailyTarget": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@dailyStreak": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@playtestCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@chapterSummary": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "stars": {
+        "type": "int"
+      }
+    }
+  }
 }

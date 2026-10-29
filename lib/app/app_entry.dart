@@ -12,6 +12,7 @@ import 'game_session.dart';
 import 'intro_screen.dart';
 import 'level_picker.dart';
 import 'play_context.dart';
+import '../daily/daily_panel.dart';
 
 class AppEntry extends StatefulWidget {
   const AppEntry({
@@ -19,8 +20,12 @@ class AppEntry extends StatefulWidget {
     required this.settings,
     required this.gameBuilder,
     this.loadLevels,
+    this.clock,
+    this.playtestMode = const bool.fromEnvironment('PLAYTEST_MODE'),
   });
   final GameSettings settings;
+  final DateTime Function()? clock;
+  final bool playtestMode;
   final Future<List<Level>> Function()? loadLevels;
   final Widget Function(GameSession session, int levelId, PlayContext play)
   gameBuilder;
@@ -29,9 +34,10 @@ class AppEntry extends StatefulWidget {
   State<AppEntry> createState() => _AppEntryState();
 }
 
-class _AppEntryState extends State<AppEntry> {
+class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   bool _intro = false;
   bool _entryResolved = false;
+  bool _startingTutorial = false;
   bool _failed = false;
   bool _opening = false;
   bool _loading = false;
@@ -41,6 +47,7 @@ class _AppEntryState extends State<AppEntry> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _load();
   }
 
@@ -50,11 +57,13 @@ class _AppEntryState extends State<AppEntry> {
     try {
       final session = await GameSession.load(
         loadLevels: widget.loadLevels,
+        clock: widget.clock,
         onOnboardingReady: (onboarding) {
-          if (mounted) {
+          if (mounted && !_entryResolved) {
             setState(() {
               _entryResolved = true;
               _intro = !onboarding.pending;
+              _startingTutorial = onboarding.pending;
             });
           }
         },
@@ -67,18 +76,10 @@ class _AppEntryState extends State<AppEntry> {
         _session = session;
         _loading = false;
       });
-      if (session.onboarding.pending &&
-          session.levels.any((level) => level.id == 1)) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            _open(
-              1,
-              play: const PlayContext.campaign(guided: true),
-              userInitiated: false,
-            );
-          }
-        });
+      if (!session.levels.any((level) => level.id == 1)) {
+        _startingTutorial = false;
       }
+      _startTutorial();
     } catch (_) {
       if (mounted) {
         setState(() {
@@ -87,6 +88,41 @@ class _AppEntryState extends State<AppEntry> {
         });
       }
     }
+  }
+
+  void _startTutorial() {
+    final session = _session;
+    if (session == null ||
+        (widget.playtestMode && !session.analytics.consentKnown)) {
+      return;
+    }
+    if (session.onboarding.pending &&
+        session.levels.any((level) => level.id == 1)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _open(
+            1,
+            play: const PlayContext.campaign(guided: true),
+            userInitiated: false,
+          );
+        }
+      });
+    }
+  }
+
+  Future<void> _consent(bool value) async {
+    final session = _session;
+    if (session == null) return;
+    await session.analytics.setEnabled(value);
+    if (mounted) {
+      setState(() {});
+      _startTutorial();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) setState(() {});
   }
 
   void _retry() {
@@ -102,10 +138,14 @@ class _AppEntryState extends State<AppEntry> {
   }) async {
     final session = _session;
     if (_opening || session == null) return;
-    setState(() => _opening = true);
+    setState(() {
+      _opening = true;
+      _startingTutorial = false;
+    });
     session.audio.setGameVisible(true);
     if (userInitiated) session.audio.onUserInteraction();
-    final transition = prefersReducedMotion(context, widget.settings)
+    final transition =
+        !userInitiated || prefersReducedMotion(context, widget.settings)
         ? Duration.zero
         : GameEffects.panelDuration;
     try {
@@ -157,6 +197,7 @@ class _AppEntryState extends State<AppEntry> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     unawaited(_session?.dispose());
     super.dispose();
   }
@@ -166,6 +207,41 @@ class _AppEntryState extends State<AppEntry> {
     if (!_entryResolved) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
+    if (widget.playtestMode &&
+        _session != null &&
+        !_session!.analytics.consentKnown) {
+      final t = AppLocalizations.of(context)!;
+      return Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    t.playtestTitle,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  Text(t.playtestPrivacy),
+                  const SizedBox(height: 24),
+                  FilledButton(
+                    key: const ValueKey('consent-accept'),
+                    onPressed: () => _consent(true),
+                    child: Text(t.playtestConsent),
+                  ),
+                  TextButton(
+                    key: const ValueKey('consent-decline'),
+                    onPressed: () => _consent(false),
+                    child: Text(t.playWithoutRecording),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     if (_intro) {
       return IntroScreen(
         settings: widget.settings,
@@ -173,6 +249,9 @@ class _AppEntryState extends State<AppEntry> {
           if (mounted && _intro) setState(() => _intro = false);
         },
       );
+    }
+    if (_startingTutorial && !_failed) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     final t = AppLocalizations.of(context)!;
     final colors = GameTheme.colorsOf(context);
@@ -215,6 +294,7 @@ class _AppEntryState extends State<AppEntry> {
                                   widget.settings,
                                   session.audio,
                                   resumeGame: false,
+                                  analytics: session.analytics,
                                 ),
                           icon: const Icon(Icons.tune_rounded),
                         ),
@@ -322,6 +402,21 @@ class _AppEntryState extends State<AppEntry> {
                       icon: const Icon(Icons.grid_view_rounded),
                       label: Text(t.levels),
                     ),
+                    const SizedBox(height: GameSpacing.large),
+                    if (session != null &&
+                        (session.progress.saveFailed ||
+                            session.onboarding.saveFailed))
+                      Text(t.saveError),
+                    if (session != null)
+                      DailyPanel(
+                        daily: session.daily,
+                        onPlay: _opening
+                            ? null
+                            : () => _open(
+                                session.daily.today.level.id,
+                                play: PlayContext.daily(session.daily.today),
+                              ),
+                      ),
                     const SizedBox(height: GameSpacing.large),
                   ],
                 ),

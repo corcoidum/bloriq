@@ -39,6 +39,32 @@ Future<void> swipe(WidgetTester tester, int x, int direction) async {
 }
 
 void main() {
+  test('failed migration and completion writes retain source and report unsaved memory state', () async {
+    final raw = jsonEncode({
+      'version': 1,
+      'levels': [
+        {'levelId': 6, 'bestMoves': 6, 'bestStars': 3, 'completionCount': 1},
+      ],
+    });
+    SharedPreferences.setMockInitialValues({
+      ProgressRepository.course2StorageKey: raw,
+    });
+    final repo = await ProgressRepository.load(writer: (_, _) async => false);
+    expect(repo.saveFailed, true);
+    expect(repo.forLevel(6)!.bestMoves, 6);
+    final result = await repo.recordCompletion(
+      levelId: 2,
+      revision: 2,
+      moves: 4,
+      minimumMoves: 4,
+    );
+    expect(result.saved, false);
+    expect(repo.forLevel(2, revision: 2), isNotNull);
+    final preferences = await SharedPreferences.getInstance();
+    expect(preferences.getString(ProgressRepository.course2StorageKey), raw);
+    expect(preferences.getString(ProgressRepository.storageKey), isNull);
+    expect((await ProgressRepository.load()).forLevel(6)!.bestMoves, 6);
+  });
   setUp(() {
     rootBundle.clear();
     SharedPreferences.setMockInitialValues({
@@ -113,12 +139,35 @@ void main() {
     },
   );
   testWidgets(
+    'unfinished tutorial starts fresh after process restart; home exit is a skip',
+    (tester) async {
+      await tester.pumpWidget(const BloriqApp());
+      await ready(tester);
+      await swipe(tester, 0, 1);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(const BloriqApp());
+      await ready(tester);
+      expect(game(tester).controller.state.moves, 0);
+      expect(find.byKey(const ValueKey('skip-tutorial')), findsOneWidget);
+      await tapVisible(tester, find.byKey(const ValueKey('game-home')));
+      await tester.pump(const Duration(milliseconds: 350));
+      expect(
+        (await SharedPreferences.getInstance()).getString(
+          Onboarding.storageKey,
+        ),
+        'skipped',
+      );
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+  testWidgets(
     'fresh launch teaches real Echo in three gestures and saves campaign once',
     (tester) async {
       await tester.pumpWidget(const BloriqApp());
       await ready(tester);
       expect(find.byKey(const ValueKey('intro-screen')), findsNothing);
       await swipe(tester, 0, 1);
+      expect(find.textContaining('Try sliding back left'), findsOneWidget);
       expect(game(tester).controller.state.moves, 1);
       expect(game(tester).controller.state.echo, const Position(0, 1));
       await swipe(tester, 1, -1);

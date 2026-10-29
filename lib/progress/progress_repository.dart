@@ -84,7 +84,14 @@ class CompletionResult {
 
 /// 서버 없이 버전이 있는 JSON으로 스테이지별 기록을 보존한다.
 class ProgressRepository {
-  ProgressRepository._(this._preferences, this._levels, this._writable);
+  ProgressRepository._(
+    this._preferences,
+    this._levels,
+    this._writable, {
+    this.writer,
+  }) {
+    saveFailed = !_writable;
+  }
 
   // 같은 단계 번호라도 리디자인된 퍼즐은 이전 코스의 기록과 섞지 않는다.
   // 기존 키는 삭제하지 않아 과거 기록을 보존한다.
@@ -93,42 +100,63 @@ class ProgressRepository {
   static const storageKey = 'bloriq.progress.v2';
   static const schemaVersion = 2;
   final SharedPreferences? _preferences;
+  final Future<bool> Function(String, String)? writer;
   final Map<String, LevelProgress> _levels;
   final bool _writable;
   Future<void> _writeQueue = Future.value();
 
-  static Future<ProgressRepository> load() async {
+  static Future<ProgressRepository> load({
+    Future<bool> Function(String, String)? writer,
+  }) async {
     SharedPreferences? preferences;
     try {
       preferences = await SharedPreferences.getInstance();
       final rawV2 = preferences.getString(storageKey);
       final raw = rawV2 ?? preferences.getString(course2StorageKey);
-      if (raw == null) return ProgressRepository._(preferences, {}, true);
+      if (raw == null) {
+        return ProgressRepository._(preferences, {}, true, writer: writer);
+      }
       final decoded = jsonDecode(raw);
       if (decoded is! Map || decoded['version'] is! int) {
-        return ProgressRepository._(preferences, {}, true);
+        return ProgressRepository._(preferences, {}, true, writer: writer);
       }
       // 알 수 없는 새 버전은 읽거나 덮어쓰지 않아 데이터 손실을 막는다.
       if (decoded['version'] != (rawV2 == null ? 1 : schemaVersion)) {
-        return ProgressRepository._(preferences, {}, false);
+        return ProgressRepository._(preferences, {}, false, writer: writer);
       }
       final values = decoded['levels'];
-      if (values is! List) return ProgressRepository._(preferences, {}, true);
+      if (values is! List) {
+        return ProgressRepository._(preferences, {}, true, writer: writer);
+      }
       final levels = <String, LevelProgress>{};
       for (final value in values) {
         final entry = LevelProgress.fromJson(value);
         if (entry != null) levels['${entry.levelId}:${entry.revision}'] = entry;
       }
-      final repository = ProgressRepository._(preferences, levels, true);
+      final repository = ProgressRepository._(
+        preferences,
+        levels,
+        true,
+        writer: writer,
+      );
       if (rawV2 == null) await repository._persist();
       return repository;
     } catch (_) {
       // 손상된 JSON 또는 플랫폼 저장소 오류가 게임 시작을 막지 않는다.
-      return ProgressRepository._(preferences, {}, preferences != null);
+      return ProgressRepository._(
+        preferences,
+        {},
+        preferences != null,
+        writer: writer,
+      );
     }
   }
 
   bool get hasAnyProgress => _levels.isNotEmpty;
+  bool get hasHistoricalStorage =>
+      _preferences?.containsKey(legacyStorageKey) == true ||
+      _preferences?.containsKey(course2StorageKey) == true ||
+      _preferences?.containsKey(storageKey) == true;
   bool saveFailed = false;
   LevelProgress? forLevel(int levelId, {int revision = 1}) =>
       _levels['$levelId:$revision'];
@@ -142,7 +170,9 @@ class ProgressRepository {
     final write = _writeQueue.then((_) async {
       if (!_writable || _preferences == null) return;
       try {
-        saved = await _preferences.setString(storageKey, snapshot);
+        saved =
+            await (writer?.call(storageKey, snapshot) ??
+                _preferences.setString(storageKey, snapshot));
       } catch (_) {
         saved = false;
       }
