@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:bloriq/design/game_theme.dart';
 import 'package:bloriq/domain/puzzle.dart';
 import 'package:bloriq/game/bloriq_game.dart';
+import 'package:bloriq/game/block_art.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -36,6 +37,27 @@ Future<Uint8List> renderPixels(BloriqGame game) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  test('shared block artwork keeps saturated fill after drawing its translucent shadow', () async {
+    for (final colors in [GameColors.light, GameColors.dark]) {
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(recorder)..drawColor(colors.tileTop, BlendMode.src);
+      BlockArt.block(canvas, const Offset(50, 50), 100, colors);
+      final picture = recorder.endRecording();
+      final image = await picture.toImage(100, 100);
+      final bytes = (await image.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      ))!;
+      final offset = (50 * 100 + 25) * 4;
+      expect(
+        bytes.getUint8(offset + 1) - bytes.getUint8(offset),
+        greaterThan(60),
+      );
+      expect(bytes.getUint8(offset + 3), 255);
+      image.dispose();
+      picture.dispose();
+    }
+  });
 
   test('theme changes keep an active drag, echo, state and undo history', () {
     final controller = PuzzleController(sampleLevel());

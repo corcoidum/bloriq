@@ -1,3 +1,4 @@
+import 'support/start_game.dart';
 import 'support/legacy_levels.dart';
 
 import 'dart:convert';
@@ -29,7 +30,7 @@ void main() {
         .toList();
     expect(levels, hasLength(10));
 
-    await tester.pumpWidget(BloriqApp(loadLevels: loadLegacyLevels));
+    await pumpGame(tester, BloriqApp(loadLevels: loadLegacyLevels));
     for (
       var frame = 0;
       frame < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;

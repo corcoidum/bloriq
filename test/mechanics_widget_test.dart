@@ -1,3 +1,5 @@
+import 'support/start_game.dart';
+
 import 'package:bloriq/domain/puzzle.dart';
 import 'package:bloriq/game/bloriq_game.dart';
 import 'package:bloriq/main.dart';
@@ -28,7 +30,7 @@ void main() {
       oneWays: {const Position(2, 1): const Position(1, 0)},
       goalOnlyTiles: {const Position(3, 1)},
     );
-    await tester.pumpWidget(BloriqApp(loadLevels: () async => [level]));
+    await pumpGame(tester, BloriqApp(loadLevels: () async => [level]));
     final boardFinder = find.byType(GameWidget<BloriqGame>);
     for (var i = 0; i < 100 && boardFinder.evaluate().isEmpty; i++) {
       await tester.pump(const Duration(milliseconds: 20));

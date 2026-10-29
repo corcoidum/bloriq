@@ -4,6 +4,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
 import '../design/game_theme.dart';
+import 'block_art.dart';
 import '../domain/puzzle.dart';
 
 /// 드래그 중 표시할 가상 이동. 실제 게임 상태에는 적용하지 않는다.
@@ -420,69 +421,10 @@ class BloriqGame extends FlameGame {
     }
 
     final exit = center(state.level.exitPosition);
-    final glow = _reduceMotion ? .5 : .5 + .5 * math.sin(_hintTime * 1.8);
-    canvas.drawCircle(
-      exit,
-      cell * (.39 + glow * .015),
-      paint..color = _colors.reward.withValues(alpha: .12 + glow * .05),
-    );
-    canvas.drawCircle(exit, cell * .33, paint..color = _colors.reward);
-    canvas.drawCircle(
-      exit,
-      cell * .27,
-      paint..color = Color.lerp(_colors.reward, _colors.surface, .65)!,
-    );
-    canvas.drawCircle(
-      exit,
-      cell * .27,
-      paint
-        ..color = _colors.highlight.withValues(alpha: .75)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = math.max(1, cell * .015),
-    );
-    paint.style = PaintingStyle.fill;
-    _label(canvas, '★', exit, cell * .33, _colors.rewardInk);
+    BlockArt.exit(canvas, exit, cell, _colors);
 
-    void drawEcho(Position p, double alpha) {
-      if (alpha <= 0) return;
-      final rect = Rect.fromCenter(
-        center: center(p),
-        width: cell * .72,
-        height: cell * .72,
-      );
-      final rounded = RRect.fromRectAndRadius(
-        rect,
-        Radius.circular(cell * .17),
-      );
-      canvas.drawRRect(
-        rounded,
-        paint..color = _colors.echo.withValues(alpha: .18 * alpha),
-      );
-      canvas.drawRRect(
-        rounded,
-        paint
-          ..color = _colors.echoInk.withValues(alpha: .95 * alpha)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = math.max(2.0, cell * .025),
-      );
-      paint.style = PaintingStyle.fill;
-      canvas.drawCircle(
-        center(p),
-        cell * (.19 + (_reduceMotion ? 0 : .008 * math.sin(_hintTime * 2.4))),
-        paint
-          ..color = _colors.echoInk.withValues(alpha: .16 * alpha)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = math.max(1, cell * .015),
-      );
-      paint.style = PaintingStyle.fill;
-      _label(
-        canvas,
-        '◌',
-        center(p),
-        cell * .30,
-        _colors.echoInk.withValues(alpha: alpha),
-      );
-    }
+    void drawEcho(Position p, double alpha) =>
+        BlockArt.echo(canvas, center(p), cell, _colors, opacity: alpha);
 
     if (_oldEcho != null && _motion < 1 && _oldEcho != state.echo) {
       drawEcho(_oldEcho!, 1 - _motion);
@@ -550,67 +492,14 @@ class BloriqGame extends FlameGame {
           );
         }
       }
-      final rect = Rect.fromCenter(
-        center: at,
-        width: cell * .76 * scale,
-        height: cell * .76 * scale,
-      );
-      final color = isGoal ? _colors.goal : _colors.primary;
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          rect.shift(Offset(0, cell * .05)),
-          Radius.circular(cell * .18),
-        ),
-        paint..color = color.withValues(alpha: .25 * opacity),
-      );
-      final rounded = RRect.fromRectAndRadius(
-        rect,
-        Radius.circular(cell * .18),
-      );
-      canvas.drawRRect(
-        rounded,
-        paint
-          ..color = _colors.highlight
-          ..shader = LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color.lerp(
-                color,
-                _colors.highlight,
-                .20,
-              )!.withValues(alpha: opacity),
-              color.withValues(alpha: opacity),
-            ],
-          ).createShader(rect),
-      );
-      paint.shader = null;
-      canvas.drawRRect(
-        rounded.deflate(cell * .022),
-        paint
-          ..color = _colors.highlight.withValues(alpha: .45 * opacity)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = math.max(1, cell * .014),
-      );
-      paint.style = PaintingStyle.fill;
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(
-            rect.left + rect.width * .18,
-            rect.top + rect.height * .12,
-            rect.width * .38,
-            rect.height * .06,
-          ),
-          Radius.circular(cell * .04),
-        ),
-        paint..color = _colors.highlight.withValues(alpha: .36 * opacity),
-      );
-      _label(
+      BlockArt.block(
         canvas,
-        isGoal ? '▶' : '•',
         at,
-        cell * (isGoal ? .31 : .4) * scale,
-        _colors.blockSymbol.withValues(alpha: opacity),
+        cell,
+        _colors,
+        goal: isGoal,
+        scale: scale,
+        opacity: opacity,
       );
     }
     for (final (position, symbol, color) in mechanicTiles) {

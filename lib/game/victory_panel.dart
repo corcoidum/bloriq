@@ -97,14 +97,9 @@ class VictoryPanel extends StatelessWidget {
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(GameSpacing.page),
-                decoration: BoxDecoration(
-                  color: colors.surface,
-                  borderRadius: BorderRadius.circular(GameSpacing.radius),
-                  border: Border.all(
-                    color: isNewBest
-                        ? colors.reward.withValues(alpha: .7)
-                        : colors.outline.withValues(alpha: .3),
-                  ),
+                decoration: GameTheme.surfaceDecoration(
+                  colors,
+                  accent: isNewBest ? colors.reward : colors.goal,
                 ),
                 child: Column(
                   children: [

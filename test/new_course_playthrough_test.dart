@@ -1,3 +1,5 @@
+import 'support/start_game.dart';
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -27,7 +29,7 @@ void main() {
           .toList();
       expect(levels, hasLength(10));
 
-      await tester.pumpWidget(const BloriqApp());
+      await pumpGame(tester, const BloriqApp());
       for (
         var frame = 0;
         frame < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;

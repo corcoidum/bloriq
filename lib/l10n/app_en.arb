@@ -96,5 +96,49 @@
   "soundEffects": "Sound effects",
   "backgroundMusic": "Background music",
   "settingsSaveError": "Settings could not be saved. Your choice still applies for this session.",
-  "skipCelebration": "Skip celebration"
+  "skipCelebration": "Skip celebration",
+  "home": "Home",
+  "homeTagline": "One move. An echo that changes the next.",
+  "playLevel": "Play · Level {number}",
+  "completedLevels": "{count} / {total} completed",
+  "collectedStars": "{count} stars",
+  "skipIntro": "Skip intro",
+  "replayIntro": "Watch intro again",
+  "introLabel": "A green block leaves a purple echo and reaches the star.",
+  "preparingGame": "Getting your puzzles ready…",
+  "retry": "Try loading again",
+  "motionSection": "Motion",
+  "audioSection": "Audio",
+  "leaveGameTitle": "Return home?",
+  "leaveGameBody": "This unfinished board and its Undo history will reset. Your completed levels and stars are saved.",
+  "leaveGame": "Return home",
+  "keepPlaying": "Keep playing",
+  "chooseLevel": "Choose your next move",
+  "currentLevel": "Current level",
+  "homeProgress": "Your progress",
+  "introSection": "Opening sequence",
+  "@playLevel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "@completedLevels": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@collectedStars": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

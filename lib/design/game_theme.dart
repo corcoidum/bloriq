@@ -130,6 +130,7 @@ abstract final class GameSpacing {
 }
 
 abstract final class GameEffects {
+  static const introDuration = Duration(seconds: 4);
   static const moveDuration = Duration(milliseconds: 220);
   static const celebrationDuration = Duration(milliseconds: 1450);
   static const panelDuration = Duration(milliseconds: 200);
@@ -144,6 +145,24 @@ abstract final class GameTheme {
       Theme.of(context).brightness == Brightness.dark
       ? GameColors.dark
       : GameColors.light;
+
+  static BoxDecoration surfaceDecoration(GameColors colors, {Color? accent}) =>
+      BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(GameSpacing.radius),
+        border: Border.all(
+          color: (accent ?? colors.outline).withValues(
+            alpha: accent == null ? .22 : .55,
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: colors.blockSymbol.withValues(alpha: .06),
+            blurRadius: 18,
+            offset: const Offset(0, 7),
+          ),
+        ],
+      );
 
   static ThemeData _build(Brightness brightness, GameColors colors) {
     final scheme =
@@ -181,10 +200,17 @@ abstract final class GameTheme {
         displayColor: colors.text,
       ),
       iconTheme: IconThemeData(color: colors.secondaryText),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
+      ),
       dividerColor: colors.outline.withValues(alpha: .3),
       dialogTheme: DialogThemeData(
         backgroundColor: colors.surface,
         surfaceTintColor: Colors.transparent,
+        titleTextStyle: base.textTheme.titleLarge?.copyWith(
+          color: colors.text,
+          fontWeight: FontWeight.w800,
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(GameSpacing.radius),
         ),
@@ -199,6 +225,9 @@ abstract final class GameTheme {
           minimumSize: const Size(48, 48),
           padding: const EdgeInsets.symmetric(horizontal: GameSpacing.page),
           textStyle: GameTypography.label,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -207,6 +236,9 @@ abstract final class GameTheme {
           foregroundColor: colors.primaryInk,
           side: BorderSide(color: colors.outline),
           textStyle: GameTypography.label,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(

@@ -1,3 +1,4 @@
+import 'support/start_game.dart';
 import 'support/legacy_levels.dart';
 
 import 'dart:convert';
@@ -19,7 +20,7 @@ void main() {
   testWidgets('optional help explains the rules without changing the board', (
     tester,
   ) async {
-    await tester.pumpWidget(BloriqApp(loadLevels: loadLegacyLevels));
+    await pumpGame(tester, BloriqApp(loadLevels: loadLegacyLevels));
     for (
       var i = 0;
       i < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;
@@ -47,7 +48,7 @@ void main() {
     expect(find.text('Moves: 0'), findsOneWidget);
   });
   testWidgets('drag, undo, restart, escape and echo blocking', (tester) async {
-    await tester.pumpWidget(BloriqApp(loadLevels: loadLegacyLevels));
+    await pumpGame(tester, BloriqApp(loadLevels: loadLegacyLevels));
     for (
       var i = 0;
       i < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;
@@ -111,7 +112,7 @@ void main() {
   });
 
   testWidgets('nonoptimal completion suggests a retry', (tester) async {
-    await tester.pumpWidget(BloriqApp(loadLevels: loadLegacyLevels));
+    await pumpGame(tester, BloriqApp(loadLevels: loadLegacyLevels));
     for (
       var i = 0;
       i < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;
@@ -148,7 +149,7 @@ void main() {
   });
 
   testWidgets('last stage offers a return to the first stage', (tester) async {
-    await tester.pumpWidget(BloriqApp(loadLevels: loadLegacyLevels));
+    await pumpGame(tester, BloriqApp(loadLevels: loadLegacyLevels));
     for (
       var i = 0;
       i < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;
@@ -165,8 +166,7 @@ void main() {
     await tester.tap(find.text('Levels'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
-    await tester.ensureVisible(find.text('Level ${level.id}').last);
-    await tester.tap(find.text('Level ${level.id}').last);
+    await selectOpenLevel(tester, level.id);
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump(const Duration(milliseconds: 300));
 
@@ -206,7 +206,7 @@ void main() {
   testWidgets('drag uses both dimensions on a rectangular board', (
     tester,
   ) async {
-    await tester.pumpWidget(BloriqApp(loadLevels: loadLegacyLevels));
+    await pumpGame(tester, BloriqApp(loadLevels: loadLegacyLevels));
     for (
       var i = 0;
       i < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;
@@ -231,8 +231,7 @@ void main() {
     await tester.tap(find.text('Levels'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
-    await tester.ensureVisible(find.text('Level ${level.id}').last);
-    await tester.tap(find.text('Level ${level.id}').last);
+    await selectOpenLevel(tester, level.id);
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump(const Duration(milliseconds: 300));
 
@@ -263,7 +262,7 @@ void main() {
   testWidgets('echo switch opens gate for one move and undo restores it', (
     tester,
   ) async {
-    await tester.pumpWidget(BloriqApp(loadLevels: loadLegacyLevels));
+    await pumpGame(tester, BloriqApp(loadLevels: loadLegacyLevels));
     for (
       var i = 0;
       i < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;
@@ -283,8 +282,7 @@ void main() {
     await tester.tap(find.text('Levels'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
-    await tester.ensureVisible(find.text('Level ${level.id}').last);
-    await tester.tap(find.text('Level ${level.id}').last);
+    await selectOpenLevel(tester, level.id);
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump(const Duration(milliseconds: 300));
     expect(
@@ -368,7 +366,7 @@ void main() {
   });
 
   testWidgets('a position with no legal move suggests undo', (tester) async {
-    await tester.pumpWidget(BloriqApp(loadLevels: loadLegacyLevels));
+    await pumpGame(tester, BloriqApp(loadLevels: loadLegacyLevels));
     for (
       var i = 0;
       i < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;
@@ -379,8 +377,7 @@ void main() {
     await tester.tap(find.text('Levels'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
-    await tester.ensureVisible(find.text('Level 11').last);
-    await tester.tap(find.text('Level 11').last);
+    await selectOpenLevel(tester, 11);
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump(const Duration(milliseconds: 300));
 

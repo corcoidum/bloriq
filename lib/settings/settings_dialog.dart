@@ -10,10 +10,12 @@ class SettingsDialog extends StatefulWidget {
     super.key,
     required this.settings,
     required this.audio,
+    this.onReplayIntro,
   });
 
   final GameSettings settings;
   final GameAudio audio;
+  final VoidCallback? onReplayIntro;
 
   @override
   State<SettingsDialog> createState() => _SettingsDialogState();
@@ -23,6 +25,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
+    final colors = GameTheme.colorsOf(context);
     return ListenableBuilder(
       listenable: widget.settings,
       builder: (context, _) => AlertDialog(
@@ -46,12 +49,17 @@ class _SettingsDialogState extends State<SettingsDialog> {
                   leading: Icon(option.$3),
                   title: Text(option.$2),
                   selected: widget.settings.themeMode == option.$1,
+                  selectedTileColor: colors.primary.withValues(alpha: .08),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   trailing: widget.settings.themeMode == option.$1
                       ? const Icon(Icons.check_circle_outline)
                       : null,
                   onTap: () => widget.settings.setThemeMode(option.$1),
                 ),
               const Divider(),
+              Text(t.motionSection, style: GameTypography.label),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(t.reduceMotion),
@@ -59,6 +67,8 @@ class _SettingsDialogState extends State<SettingsDialog> {
                 value: widget.settings.reduceMotion,
                 onChanged: widget.settings.setReduceMotion,
               ),
+              const Divider(),
+              Text(t.audioSection, style: GameTypography.label),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(t.soundEffects),
@@ -73,6 +83,20 @@ class _SettingsDialogState extends State<SettingsDialog> {
                 onChanged: (value) =>
                     setState(() => widget.audio.setMusicEnabled(value)),
               ),
+              if (widget.onReplayIntro != null) ...[
+                const Divider(),
+                Text(t.introSection, style: GameTypography.label),
+                ListTile(
+                  key: const ValueKey('replay-intro'),
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    Icons.movie_filter_outlined,
+                    color: colors.echoInk,
+                  ),
+                  title: Text(t.replayIntro),
+                  onTap: widget.onReplayIntro,
+                ),
+              ],
               if (widget.settings.saveFailed)
                 Text(
                   t.settingsSaveError,

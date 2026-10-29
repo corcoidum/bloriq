@@ -38,6 +38,37 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   test(
+    'home and intro mute playback without overwriting saved preferences',
+    () async {
+      final backend = FakeBackend();
+      final audio = await GameAudio.load(backend: backend);
+      audio.setGameVisible(false);
+      audio.onUserInteraction();
+      audio.setMusicEnabled(true);
+      audio.play(SoundEffect.complete);
+      await flush();
+      expect(backend.events, isNot(contains('start')));
+      expect(backend.events, isNot(contains('complete')));
+      audio.setGameVisible(true);
+      await flush();
+      expect(backend.events.last, 'start');
+      audio.setGameVisible(false);
+      await flush();
+      expect(backend.events, contains('stop'));
+      audio.didChangeAppLifecycleState(AppLifecycleState.paused);
+      audio.didChangeAppLifecycleState(AppLifecycleState.resumed);
+      await flush();
+      expect(backend.events.where((event) => event == 'start'), hasLength(1));
+      expect(
+        (await SharedPreferences.getInstance()).getBool(GameAudio.musicKey),
+        true,
+      );
+      expect(audio.effectsEnabled, true);
+      await audio.dispose();
+    },
+  );
+
+  test(
     'music starts only after interaction and pauses in background',
     () async {
       final backend = FakeBackend();

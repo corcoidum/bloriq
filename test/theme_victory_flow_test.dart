@@ -1,3 +1,5 @@
+import 'support/start_game.dart';
+
 import 'package:bloriq/design/game_theme.dart';
 import 'package:bloriq/domain/puzzle.dart';
 import 'package:bloriq/game/bloriq_game.dart';
@@ -59,7 +61,7 @@ void main() {
     (tester) async {
       tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
       addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
-      await tester.pumpWidget(const BloriqApp());
+      await pumpGame(tester, const BloriqApp());
       await _ready(tester);
       final original = _game(tester);
       final solution = const PuzzleSolver().solve(
@@ -87,7 +89,7 @@ void main() {
       await _tap(tester, find.text('Light'));
       await _tap(tester, find.text('Close'));
       await tester.pumpWidget(const SizedBox());
-      await tester.pumpWidget(const BloriqApp());
+      await pumpGame(tester, const BloriqApp());
       await _ready(tester);
       expect(_game(tester).gameColors, same(GameColors.light));
       expect((await GameSettings.load()).themeMode, ThemeMode.light);
@@ -101,7 +103,7 @@ void main() {
       (tester) async {
         final settings = await GameSettings.load();
         await settings.setThemeMode(mode);
-        await tester.pumpWidget(BloriqApp(settings: settings));
+        await pumpGame(tester, BloriqApp(settings: settings));
         await _ready(tester);
         final game = _game(tester);
         for (final move in const PuzzleSolver().solve(
@@ -151,7 +153,7 @@ void main() {
         addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
         final settings = await GameSettings.load();
         await settings.setThemeMode(mode);
-        await tester.pumpWidget(BloriqApp(settings: settings));
+        await pumpGame(tester, BloriqApp(settings: settings));
         await _ready(tester);
         expect(tester.takeException(), isNull);
         await _tap(tester, find.byTooltip('Settings'));
@@ -175,7 +177,7 @@ void main() {
       addTearDown(
         tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
       );
-      await tester.pumpWidget(const BloriqApp());
+      await pumpGame(tester, const BloriqApp());
       await _ready(tester);
       for (final move in const PuzzleSolver().solve(
         _game(tester).controller.state.level,
@@ -201,7 +203,8 @@ void main() {
     'independent watchdog reveals results when animation tickers are stopped',
     (tester) async {
       final ticking = ValueNotifier(true);
-      await tester.pumpWidget(
+      await pumpGame(
+        tester,
         ValueListenableBuilder<bool>(
           valueListenable: ticking,
           child: const BloriqApp(),
@@ -234,7 +237,7 @@ void main() {
     'stage change during victory cancels old callbacks and reduced motion skips timeline',
     (tester) async {
       final settings = await GameSettings.load();
-      await tester.pumpWidget(BloriqApp(settings: settings));
+      await pumpGame(tester, BloriqApp(settings: settings));
       await _ready(tester);
       for (final move in const PuzzleSolver().solve(
         _game(tester).controller.state.level,

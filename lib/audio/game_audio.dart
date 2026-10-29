@@ -81,6 +81,7 @@ class GameAudio with WidgetsBindingObserver {
   bool _musicEnabled;
   bool _effectsEnabled;
   bool _active = true;
+  bool _gameVisible = true;
   bool _interacted = false;
   bool _musicPlaying = false;
   bool _disposed = false;
@@ -90,6 +91,14 @@ class GameAudio with WidgetsBindingObserver {
 
   bool get musicEnabled => _musicEnabled;
   bool get effectsEnabled => _effectsEnabled;
+
+  /// 홈/인트로에서는 저장된 설정을 바꾸지 않고 소리만 일시 중단한다.
+  void setGameVisible(bool visible) {
+    if (_disposed || _gameVisible == visible) return;
+    _gameVisible = visible;
+    _syncMusic();
+    if (!visible) _enqueueEffect(backend.stopEffects);
+  }
 
   static Future<GameAudio> load({AudioBackend? backend}) async {
     SharedPreferences? preferences;
@@ -144,7 +153,8 @@ class GameAudio with WidgetsBindingObserver {
 
   void _syncMusic() {
     _enqueue(() async {
-      final shouldPlay = !_disposed && _active && _interacted && _musicEnabled;
+      final shouldPlay =
+          !_disposed && _active && _gameVisible && _interacted && _musicEnabled;
       if (shouldPlay && !_musicPlaying) {
         await backend.startMusic();
         _musicPlaying = true;
@@ -185,9 +195,9 @@ class GameAudio with WidgetsBindingObserver {
   }
 
   void play(SoundEffect effect) {
-    if (_disposed || !_effectsEnabled || !_active) return;
+    if (_disposed || !_effectsEnabled || !_active || !_gameVisible) return;
     _enqueueEffect(() async {
-      if (!_disposed && _effectsEnabled && _active) {
+      if (!_disposed && _effectsEnabled && _active && _gameVisible) {
         await backend.playEffect(effect);
       }
     });

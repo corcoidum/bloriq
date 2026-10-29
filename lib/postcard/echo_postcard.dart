@@ -303,6 +303,7 @@ class _EchoPostcardDialogState extends State<EchoPostcardDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
+    icon: const Icon(Icons.auto_awesome_outlined),
     title: Text(widget.title),
     content: SingleChildScrollView(
       child: Column(
