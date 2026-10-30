@@ -13,6 +13,7 @@ Move = tuple[str, Position, Position]
 def validate_level(
     level: dict[str, Any], *, use_echo: bool = True, gate_locked: bool = False,
     disabled_rule: str | None = None,
+    stats: dict[str, int] | None = None, max_states: int = 200000,
 ) -> list[Move]:
     width, height = level['boardWidth'], level['boardHeight']
     assert type(width) is int and type(height) is int and width > 0 and height > 0
@@ -82,6 +83,8 @@ def validate_level(
     while pending:
         (positions, echo), moves = pending.popleft()
         if positions[0] == exit_point:
+            if stats is not None:
+                stats['visited'] = len(seen)
             return moves
         for index, source in enumerate(positions):
             for dest in adjacent(source):
@@ -108,6 +111,8 @@ def validate_level(
                 next_state = (tuple(updated), next_echo)
                 if next_state not in seen:
                     seen.add(next_state)
+                    if len(seen) > max_states:
+                        raise RuntimeError(f"Level {level['id']} search budget exceeded: {max_states}")
                     block_id = 'goal' if index == 0 else ids[index - 1]
                     pending.append((next_state, moves + [(block_id, source, dest)]))
     raise ValueError(f"Level {level['id']} has no solution")

@@ -55,6 +55,7 @@ class Level {
     required List<Position> obstacles,
     required this.minimumMoves,
     required this.difficulty,
+    this.revision = 1,
     this.echoSwitch,
     this.echoGate,
     Set<Position> echoErasers = const {},
@@ -67,7 +68,11 @@ class Level {
        echoHolds = Set.unmodifiable(echoHolds),
        oneWays = Map.unmodifiable(oneWays),
        goalOnlyTiles = Set.unmodifiable(goalOnlyTiles) {
-    if (id < 1 || boardWidth < 1 || boardHeight < 1 || minimumMoves < 0) {
+    if (revision < 1 ||
+        id < 1 ||
+        boardWidth < 1 ||
+        boardHeight < 1 ||
+        minimumMoves < 0) {
       throw const FormatException('Invalid level dimensions or metadata');
     }
     if (!contains(startPosition) ||
@@ -134,6 +139,7 @@ class Level {
 
   static const goalBlockId = 'goal';
   final int id;
+  final int revision;
   final int boardWidth;
   final int boardHeight;
   final Position startPosition;
@@ -220,6 +226,7 @@ class Level {
     }
     return Level(
       id: json['id'] as int,
+      revision: json['revision'] as int? ?? 1,
       boardWidth: json['boardWidth'] as int,
       boardHeight: json['boardHeight'] as int,
       startPosition: Position.fromJson(
@@ -417,7 +424,10 @@ class PuzzleSolver {
   final int maxStates;
 
   List<PuzzleMove>? solve(Level level) {
-    final initial = PuzzleState.initial(level);
+    return solveFromState(PuzzleState.initial(level));
+  }
+
+  List<PuzzleMove>? solveFromState(PuzzleState initial) {
     final queue = Queue<_SearchNode>()..add(_SearchNode(initial, const []));
     final visited = <String>{_key(initial)};
     while (queue.isNotEmpty) {

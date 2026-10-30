@@ -17,23 +17,23 @@
       }
     }
   },
-  "instruction": "Slide the green block to the star.",
+  "instruction": "Slide the mint courier to the star.",
   "echoInstruction": "An echo disappears after your next move.",
   "gateInstruction": "Leave an echo on the diamond to open the gate.",
   "gateOpen": "Gate open! Move through on this turn.",
   "gateClosed": "The gate is closed. Leave an echo on the diamond.",
   "gateOccupied": "A block on a closed gate can still leave.",
   "noMoves": "No moves left. Undo and try another way.",
-  "boardLabel": "Drag blocks one square at a time to move the green block to the star.",
+  "boardLabel": "Slide a friend one square at a time. Guide the mint courier to the star.",
   "soundOn": "Turn sound effects off",
   "soundOff": "Turn sound effects on",
   "help": "How to play",
-  "helpBody": "Slide one block one square at a time. Move the green block to the star.\n\nThe square a block leaves behind becomes an echo. It blocks movement until another valid move finishes.\n\nOn diamond stages, an echo on the diamond opens the gate for the next move. A block on a closed gate can still leave.\n\nUse Undo to try a different move.\n\nSpecial tiles have rules shown beneath the board: × erases the echo, Ⅱ keeps it, arrows restrict the exit direction, and ▶ admits only the green block.",
+  "helpBody": "Slide one block one square at a time. Move the mint courier to the star.\n\nThe square a block leaves behind becomes an echo. It blocks movement until another valid move finishes.\n\nOn diamond stages, an echo on the diamond opens the gate for the next move. A block on a closed gate can still leave.\n\nUse Undo to try a different move.\n\nSpecial tiles have rules shown beneath the board: × erases the echo, Ⅱ keeps it, arrows restrict the exit direction, and ▶ admits only the mint courier.",
   "undo": "Undo",
   "undoLastMove": "Undo last move",
   "restart": "Restart",
   "levels": "Levels",
-  "complete": "You escaped!",
+  "complete": "Our star, at last!",
   "completeDetail": "Moves: {count}.",
   "@completeDetail": {
     "placeholders": {
@@ -85,7 +85,7 @@
   "eraserRule": "Crossed tiles erase the echo when a block leaves.",
   "holdRule": "Pause tiles keep the previous echo when a block leaves.",
   "oneWayRule": "A block on an arrow tile can leave only in the arrow’s direction.",
-  "goalOnlyRule": "Triangle tiles admit only the green block.",
+  "goalOnlyRule": "Triangle tiles admit only the mint courier.",
   "settings": "Settings",
   "appearance": "Appearance",
   "themeSystem": "System",
@@ -96,5 +96,115 @@
   "soundEffects": "Sound effects",
   "backgroundMusic": "Background music",
   "settingsSaveError": "Settings could not be saved. Your choice still applies for this session.",
-  "skipCelebration": "Skip celebration"
+  "skipCelebration": "Skip celebration",
+  "home": "Home",
+  "homeTagline": "Every little step leaves an Echo.",
+  "playLevel": "Play · Level {number}",
+  "completedLevels": "{count} / {total} completed",
+  "collectedStars": "{count} stars",
+  "skipIntro": "Skip intro",
+  "replayIntro": "Watch intro again",
+  "introLabel": "The mint courier leaves a purple Echo and reaches the star.",
+  "preparingGame": "Getting your puzzles ready…",
+  "retry": "Try loading again",
+  "motionSection": "Motion",
+  "audioSection": "Audio",
+  "leaveGameTitle": "Return home?",
+  "leaveGameBody": "This unfinished board and its Undo history will reset. Your completed levels and stars are saved.",
+  "leaveGame": "Return home",
+  "keepPlaying": "Keep playing",
+  "chooseLevel": "Choose your next move",
+  "currentLevel": "Current level",
+  "homeProgress": "Your progress",
+  "introSection": "Opening sequence",
+  "@playLevel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "@completedLevels": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@collectedStars": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tutorialMove": "Slide right. Move a block. Leave an Echo.",
+  "tutorialBlock": "Try sliding back left. Your last move becomes your next obstacle.",
+  "tutorialFinish": "Slide right to the star. The old Echo changes after your next move.",
+  "skipTutorial": "Skip tutorial",
+  "replayTutorial": "Practice Echo again",
+  "dailyEcho": "Daily Echo",
+  "dailyTarget": "Perfect target: {count} moves",
+  "dailyPerfect": "Perfect Echo achieved!",
+  "dailyStreak": "Consecutive days played: {count}",
+  "dailyDone": "Completed",
+  "dailyPlayed": "Played",
+  "dailyQuiet": "No play recorded",
+  "dailyPlay": "Play Daily Echo",
+  "dailyReplay": "Replay today’s Echo",
+  "playtestTitle": "Optional playtest records",
+  "playtestConsent": "Record playtest data on this device",
+  "playtestPrivacy": "Optional. Records puzzle results and timings on this device, without names, contacts or move paths. Nothing is uploaded automatically. Share a JSON file only when you choose Export. You can stop or delete records anytime.",
+  "playWithoutRecording": "Play without recording",
+  "exportTestData": "Export test data",
+  "deleteTestData": "Delete test records",
+  "deleteTestDataBody": "Delete all playtest records and stop recording? Your puzzle progress and Daily history will remain.",
+  "playtestError": "Could not save or share test records. Your game is still available.",
+  "playtestCount": "Recorded events: {count}",
+  "chapterSummary": "Chapter {number} · {completed}/{total} completed · {stars} stars",
+  "@dailyTarget": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@dailyStreak": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@playtestCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@chapterSummary": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "stars": {
+        "type": "int"
+      }
+    }
+  },
+  "storyTitle": "A Little Star Home",
+  "storyInvite": "Time to find our star!",
+  "courierName": "The little star courier",
+  "homeSubtitle": "Every little step leaves an Echo.",
+  "credits": "Fonts & open source"
 }

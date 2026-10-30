@@ -27,4 +27,15 @@ flutter:
   generate: true
   assets:
     - assets/levels/levels.json
+    - assets/levels/daily_pool_v1.json
     - assets/audio/
+    - assets/art/star_courier/
+    - assets/fonts/Jua-OFL.txt
+    - assets/fonts/NanumGothic-OFL.txt
+  fonts:
+    - family: Jua
+      fonts:
+        - asset: assets/fonts/Jua-Regular.ttf
+    - family: NanumGothic
+      fonts:
+        - asset: assets/fonts/NanumGothic-Regular.ttf

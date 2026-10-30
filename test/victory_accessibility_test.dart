@@ -1,3 +1,5 @@
+import 'support/start_game.dart';
+
 import 'dart:convert';
 
 import 'package:bloriq/domain/puzzle.dart';
@@ -84,7 +86,7 @@ void main() {
       addTearDown(
         tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
       );
-      await tester.pumpWidget(const BloriqApp());
+      await pumpGame(tester, const BloriqApp());
       await _ready(tester);
       final game = _game(tester);
       expect(game.reduceMotion, isTrue);
@@ -104,7 +106,7 @@ void main() {
     tester,
   ) async {
     addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
-    await tester.pumpWidget(const BloriqApp());
+    await pumpGame(tester, const BloriqApp());
     await _ready(tester);
     final game = _game(tester);
     await _solve(tester);
@@ -131,7 +133,8 @@ void main() {
     tester,
   ) async {
     final ticking = ValueNotifier(true);
-    await tester.pumpWidget(
+    await pumpGame(
+      tester,
       ValueListenableBuilder<bool>(
         valueListenable: ticking,
         builder: (context, enabled, child) =>
@@ -180,8 +183,10 @@ void main() {
         final settings = await GameSettings.load();
         await settings.setThemeMode(mode);
         await settings.setReduceMotion(true);
-        await tester.pumpWidget(
+        await pumpGame(
+          tester,
           BloriqApp(settings: settings, loadLevels: () async => levels),
+          levelId: 14,
         );
         await _ready(tester);
         for (final id in [14, 20]) {

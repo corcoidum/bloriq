@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class GameSettings extends ChangeNotifier {
   GameSettings({
     SharedPreferences? preferences,
-    ThemeMode themeMode = ThemeMode.system,
+    ThemeMode themeMode = ThemeMode.dark,
     bool reduceMotion = false,
   }) : // 외부 주입용 매개변수와 읽기 전용 getter를 내부 상태에서 분리한다.
        // ignore: prefer_initializing_formals
@@ -31,7 +31,7 @@ class GameSettings extends ChangeNotifier {
 
   static Future<GameSettings> load() async {
     SharedPreferences? preferences;
-    var mode = ThemeMode.system;
+    var mode = ThemeMode.dark;
     var reduceMotion = false;
     try {
       preferences = await SharedPreferences.getInstance();
@@ -39,7 +39,7 @@ class GameSettings extends ChangeNotifier {
         final stored = preferences.getString(themeModeKey);
         mode = ThemeMode.values.firstWhere(
           (candidate) => candidate.name == stored,
-          orElse: () => ThemeMode.system,
+          orElse: () => ThemeMode.dark,
         );
       } catch (_) {
         // 해당 설정만 손상되어도 다른 설정은 복원한다.
@@ -48,7 +48,7 @@ class GameSettings extends ChangeNotifier {
         reduceMotion = preferences.getBool(reduceMotionKey) ?? false;
       } catch (_) {}
     } catch (_) {
-      // 저장소를 사용할 수 없어도 시스템 테마로 실행할 수 있다.
+      // 저장소를 사용할 수 없어도 기본 야간 테마로 실행할 수 있다.
     }
     return GameSettings(
       preferences: preferences,

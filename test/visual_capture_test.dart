@@ -1,3 +1,5 @@
+import 'support/start_game.dart';
+
 // 문서용 화면: flutter test test/visual_capture_test.dart --dart-define=CAPTURE_DESIGN=true
 // 일반 테스트 실행에서는 캡처와 파일 쓰기를 수행하지 않는다.
 import 'dart:io';
@@ -22,6 +24,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
     // 플랫폼 기본 글꼴은 테스트에서 Ahem으로 대체된다. 캡처만 실제 글꼴을 쓴다.
     const fontPath = String.fromEnvironment(
       'DESIGN_FONT',
@@ -41,7 +44,7 @@ void main() {
     final icons = FontLoader('MaterialIcons')
       ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
     await icons.load();
-    Directory('docs/screenshots').createSync(recursive: true);
+    Directory('docs/screenshots/arcade').createSync(recursive: true);
     final board = find.byType(GameWidget<BloriqGame>);
     BloriqGame game() => tester.widget<GameWidget<BloriqGame>>(board).game!;
     final boundary = GlobalKey();
@@ -55,7 +58,7 @@ void main() {
                 as RenderRepaintBoundary;
         final image = await render.toImage();
         final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-        File('docs/screenshots/$name.png')
+        File('docs/screenshots/arcade/$name.png')
             .writeAsBytesSync(bytes!.buffer.asUint8List());
         image.dispose();
       });
@@ -71,7 +74,7 @@ void main() {
 
     Future<void> select(int id) async {
       await tap(find.text('Levels'));
-      await tap(find.text('Level $id').last);
+      await selectOpenLevel(tester, id);
     }
 
     Future<void> step(PuzzleMove move) async {
@@ -107,6 +110,7 @@ void main() {
 
     for (final mode in [ThemeMode.light, ThemeMode.dark]) {
       SharedPreferences.setMockInitialValues({
+        'bloriq.onboarding.v1': 'skipped',
         GameAudio.musicKey: false,
         GameAudio.effectsKey: false,
       });
@@ -118,11 +122,27 @@ void main() {
           child: BloriqApp(settings: settings),
         ),
       );
+      final prefix = mode.name;
+      await tester.pump(const Duration(milliseconds: 300));
+      await capture('$prefix-intro-reveal');
+      await tester.pump(const Duration(milliseconds: 1000));
+      await capture('$prefix-intro-echo');
+      await tester.pump(const Duration(milliseconds: 900));
+      await capture('$prefix-intro-exit');
+      await tester.pump(const Duration(milliseconds: 700));
+      await capture('$prefix-intro-burst');
+      await tester.pump(const Duration(milliseconds: 800));
+      await capture('$prefix-intro-logo');
+      await tester.pump(const Duration(milliseconds: 500));
+      await waitForHome(tester);
+      await capture('$prefix-home');
+      await tap(find.byKey(const ValueKey('home-levels')));
+      await capture('$prefix-levels');
+      await selectOpenLevel(tester, 1);
       for (var frame = 0; frame < 100 && board.evaluate().isEmpty; frame++) {
         await tester.pump(const Duration(milliseconds: 20));
       }
       await tester.pump(const Duration(milliseconds: 400));
-      final prefix = mode.name;
       await capture('$prefix-stage-1');
       await select(2);
       for (final move in const PuzzleSolver().solve(
@@ -173,6 +193,21 @@ void main() {
       await tester.pump();
       expect(find.text('New personal best!'), findsNothing);
       await capture('$prefix-victory-repeat');
+      await tap(find.byKey(const ValueKey('game-home')));
+      await tester.pump(const Duration(milliseconds: 400));
+      tester.platformDispatcher.localesTestValue = [const Locale('ko')];
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      await capture('$prefix-home-ko');
+      await tap(find.byKey(const ValueKey('home-levels')));
+      await capture('$prefix-levels-ko');
+      await tap(find.text('닫기'));
+      await tap(find.byTooltip('설정'));
+      await capture('$prefix-settings-ko');
+      await tap(find.text('닫기'));
+      await tap(find.byTooltip('게임 방법'));
+      await capture('$prefix-help-ko');
+      tester.platformDispatcher.localesTestValue = [const Locale('en')];
       await tester.pumpWidget(const SizedBox());
       await tester.pump();
       settings.dispose();

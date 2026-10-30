@@ -70,7 +70,7 @@ void main() {
   test('잘못된 개별 레코드는 건너뛰고 정상 레코드는 유지한다', () async {
     SharedPreferences.setMockInitialValues({
       ProgressRepository.storageKey: jsonEncode({
-        'version': 1,
+        'version': ProgressRepository.schemaVersion,
         'levels': [
           {'levelId': 1, 'bestMoves': 4, 'bestStars': 3, 'completionCount': 2},
           {
@@ -90,7 +90,10 @@ void main() {
   });
 
   test('미래 버전의 저장 데이터는 덮어쓰지 않는다', () async {
-    final raw = jsonEncode({'version': 2, 'levels': []});
+    final raw = jsonEncode({
+      'version': ProgressRepository.schemaVersion + 1,
+      'levels': [],
+    });
     SharedPreferences.setMockInitialValues({
       ProgressRepository.storageKey: raw,
     });
