@@ -1,3 +1,5 @@
+이전 `affe391` 첫 챕터 구현 기록입니다. 최신 전체 시즌은 [달빛 석판 시즌 1](MOONSTONE_SEASON1.md)을 참고하세요.
+
 # THE LAST ECHO — 첫 챕터 디자인 QA
 
 **final result: passed**

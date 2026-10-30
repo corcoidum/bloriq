@@ -1,3 +1,5 @@
+이전 `affe391` 첫 챕터 구현 기록입니다. 최신 전체 시즌은 [달빛 석판 시즌 1](MOONSTONE_SEASON1.md)을 참고하세요.
+
 # BLORIQ — THE LAST ECHO: 첫 챕터 구현·검증
 
 2026-10-30 · 기준 `codex/star-courier-design` / `694ad9e` → 작업 `codex/last-echo-chapter1`.

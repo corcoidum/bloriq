@@ -40,7 +40,8 @@ class _SpiritAlbumState extends State<SpiritAlbum> {
   bool _busy = false;
   Future<void> _detail(SpiritDefinition friend) async {
     final session = widget.session;
-    if (!session.collection.owns(friend.id)) return;
+    if (_busy || !session.collection.owns(friend.id)) return;
+    _busy = true;
     await session.collection.acknowledge(friend.id);
     if (!mounted) return;
     await showDialog<void>(
@@ -52,26 +53,88 @@ class _SpiritAlbumState extends State<SpiritAlbum> {
         reduceMotion: widget.reduceMotion,
       ),
     );
-    if (mounted) setState(() {});
+    if (mounted) setState(() => _busy = false);
   }
 
-  Future<void> _share() async {
+  Future<void> _share(StoryChapter chapter) async {
     if (_busy) return;
     setState(() => _busy = true);
     await showStoryCard(
       context,
-      widget.session.collection.owned,
+      widget.session.collection.inChapter(chapter.number),
+      chapter: chapter,
       collection: true,
       reduceMotion: widget.reduceMotion,
     );
     if (mounted) setState(() => _busy = false);
   }
 
+  Widget _tile(SpiritDefinition friend, double width) {
+    final t = AppLocalizations.of(context)!,
+        colors = GameTheme.colorsOf(context),
+        repo = widget.session.collection;
+    final owned = repo.owns(friend.id);
+    return SizedBox(
+      width: width,
+      child: Material(
+        color: repo.companion?.id == friend.id
+            ? colors.echo.withValues(alpha: .13)
+            : colors.boardSurface.withValues(alpha: .4),
+        borderRadius: BorderRadius.circular(18),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          key: ValueKey('spirit-${friend.id}'),
+          onTap: owned ? () => _detail(friend) : null,
+          child: Semantics(
+            label: owned
+                ? friend.name.inLocale(t.localeName)
+                : '${t.unknownSpirit}, ${t.level(friend.levelId)}',
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SpiritPortrait(spirit: friend, size: 96, hidden: !owned),
+                  Text(
+                    owned
+                        ? friend.name.inLocale(t.localeName)
+                        : t.unknownSpirit,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    t.level(friend.levelId),
+                    style: TextStyle(color: colors.secondaryText, fontSize: 12),
+                  ),
+                  if (repo.companion?.id == friend.id)
+                    Icon(
+                      Icons.favorite_rounded,
+                      color: colors.echoInk,
+                      size: 18,
+                    ),
+                  if (repo.pendingIds.contains(friend.id))
+                    Icon(
+                      Icons.auto_awesome_rounded,
+                      color: colors.rewardInk,
+                      size: 18,
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!,
         colors = GameTheme.colorsOf(context),
-        repo = widget.session.collection;
+        session = widget.session,
+        repo = session.collection;
+    final initialChapter =
+        repo.companion?.chapter ?? session.recommendedChapter.number;
     return Dialog(
       child: ConstrainedBox(
         constraints: BoxConstraints(
@@ -101,116 +164,85 @@ class _SpiritAlbumState extends State<SpiritAlbum> {
             ),
             Flexible(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      t.gardenProgress(repo.owned.length),
+                      t.seasonProgress(repo.owned.length),
                       key: const ValueKey('album-progress'),
                       style: TextStyle(color: colors.rewardInk),
                     ),
                     const SizedBox(height: 8),
                     LinearProgressIndicator(
-                      value: repo.owned.length / 5,
+                      value: repo.owned.length / session.story.spirits.length,
                       color: colors.goal,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     CollectionStorageNotice(
-                      session: widget.session,
+                      session: session,
                       onChanged: () => setState(() {}),
                     ),
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final columns =
-                            MediaQuery.textScalerOf(context).scale(14) > 21
-                            ? 1
-                            : 2;
-                        final width =
-                            (constraints.maxWidth - (columns - 1) * 12) /
-                            columns;
-                        return Wrap(
-                          spacing: 12,
-                          runSpacing: 12,
-                          children: [
-                            for (final friend in widget.session.story.released)
-                              SizedBox(
-                                width: width,
-                                child: Material(
-                                  color: repo.companion?.id == friend.id
-                                      ? colors.echo.withValues(alpha: .13)
-                                      : colors.boardSurface.withValues(
-                                          alpha: .4,
-                                        ),
-                                  borderRadius: BorderRadius.circular(18),
-                                  clipBehavior: Clip.antiAlias,
-                                  child: InkWell(
-                                    key: ValueKey('spirit-${friend.id}'),
-                                    onTap: repo.owns(friend.id)
-                                        ? () => _detail(friend)
-                                        : null,
-                                    child: Semantics(
-                                      label: repo.owns(friend.id)
-                                          ? friend.name.inLocale(t.localeName)
-                                          : '${t.unknownSpirit}, ${t.level(friend.levelId)}',
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(12),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            SpiritPortrait(
-                                              spirit: friend,
-                                              size: 96,
-                                              hidden: !repo.owns(friend.id),
-                                            ),
-                                            Text(
-                                              repo.owns(friend.id)
-                                                  ? friend.name.inLocale(
-                                                      t.localeName,
-                                                    )
-                                                  : t.unknownSpirit,
-                                              textAlign: TextAlign.center,
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              t.level(friend.levelId),
-                                              style: TextStyle(
-                                                color: colors.secondaryText,
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                            if (repo.companion?.id == friend.id)
-                                              Icon(
-                                                Icons.favorite_rounded,
-                                                color: colors.echoInk,
-                                                size: 18,
-                                              ),
-                                            if (repo.pendingIds.contains(
-                                              friend.id,
-                                            ))
-                                              Icon(
-                                                Icons.auto_awesome_rounded,
-                                                color: colors.rewardInk,
-                                                size: 18,
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                    for (final chapter in session.story.chapters.where(
+                      (c) => c.released,
+                    ))
+                      ExpansionTile(
+                        key: ValueKey('album-chapter-${chapter.number}'),
+                        initiallyExpanded: chapter.number == initialChapter,
+                        tilePadding: const EdgeInsets.symmetric(horizontal: 4),
+                        childrenPadding: const EdgeInsets.only(bottom: 16),
+                        title: Text(
+                          chapter.name.inLocale(t.localeName),
+                          style: TextStyle(color: colors.rewardInk),
+                        ),
+                        subtitle: Text(
+                          t.chapterFriends(
+                            repo.inChapter(chapter.number).length,
+                          ),
+                        ),
+                        children: [
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              final columns =
+                                  MediaQuery.textScalerOf(context).scale(14) >
+                                      21
+                                  ? 1
+                                  : 2;
+                              final width =
+                                  (constraints.maxWidth - (columns - 1) * 12) /
+                                  columns;
+                              return Wrap(
+                                spacing: 12,
+                                runSpacing: 12,
+                                children: [
+                                  for (final friend in session.story.inChapter(
+                                    chapter.number,
+                                  ))
+                                    _tile(friend, width),
+                                ],
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          OutlinedButton.icon(
+                            key: ValueKey(
+                              chapter.number == 1
+                                  ? 'share-collection'
+                                  : 'share-chapter-${chapter.number}',
+                            ),
+                            onPressed:
+                                _busy || repo.inChapter(chapter.number).isEmpty
+                                ? null
+                                : () => _share(chapter),
+                            icon: const Icon(Icons.ios_share_rounded),
+                            label: Text(
+                              t.chapterCard(
+                                chapter.name.inLocale(t.localeName),
                               ),
-                          ],
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    OutlinedButton.icon(
-                      key: const ValueKey('share-collection'),
-                      onPressed: _busy || repo.owned.isEmpty ? null : _share,
-                      icon: const Icon(Icons.ios_share_rounded),
-                      label: Text(t.collectionCard),
-                    ),
+                            ),
+                          ),
+                        ],
+                      ),
                   ],
                 ),
               ),
@@ -242,6 +274,7 @@ class _SpiritDetailState extends State<_SpiritDetail> {
     final t = AppLocalizations.of(context)!,
         f = widget.friend,
         repo = widget.session.collection;
+    final chapter = widget.session.story.chapter(f.chapter);
     return AlertDialog(
       scrollable: true,
       title: Text(f.name.inLocale(t.localeName)),
@@ -252,7 +285,7 @@ class _SpiritDetailState extends State<_SpiritDetail> {
           children: [
             Center(child: SpiritPortrait(spirit: f, size: 150)),
             Text(
-              t.familyForest,
+              chapter.familyName.inLocale(t.localeName),
               style: TextStyle(color: GameTheme.colorsOf(context).goalInk),
             ),
             Text(f.personality.inLocale(t.localeName)),
@@ -261,8 +294,11 @@ class _SpiritDetailState extends State<_SpiritDetail> {
             Text(f.memory.inLocale(t.localeName)),
             if (f.guardian) ...[
               const SizedBox(height: 12),
-              Text(t.guardianEndingTitle, style: GameTypography.label),
-              Text(t.guardianEnding),
+              Text(
+                chapter.endingTitle.inLocale(t.localeName),
+                style: GameTypography.label,
+              ),
+              Text(chapter.ending.inLocale(t.localeName)),
             ],
             const SizedBox(height: 12),
             Text(t.foundAtStage(f.levelId)),
@@ -301,9 +337,12 @@ class _SpiritDetailState extends State<_SpiritDetail> {
               ? null
               : () async {
                   setState(() => _busy = true);
-                  await showStoryCard(context, [
-                    f,
-                  ], reduceMotion: widget.reduceMotion);
+                  await showStoryCard(
+                    context,
+                    [f],
+                    chapter: chapter,
+                    reduceMotion: widget.reduceMotion,
+                  );
                   if (mounted) setState(() => _busy = false);
                 },
           icon: const Icon(Icons.ios_share_rounded),

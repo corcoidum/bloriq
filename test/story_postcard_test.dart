@@ -16,7 +16,7 @@ void main() {
       );
       for (final friends in [
         [catalog.released.first],
-        catalog.released,
+        catalog.inChapter(1),
       ]) {
         final bytes = await tester.runAsync(
           () => renderEchoPostcardPng(

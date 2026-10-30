@@ -20,13 +20,28 @@ class SpiritPortrait extends StatelessWidget {
   final bool hidden;
   @override
   Widget build(BuildContext context) {
-    final image = Image.asset(
-      spirit.asset!,
-      width: size,
-      height: size,
-      fit: BoxFit.contain,
-      cacheWidth: 384,
-      excludeFromSemantics: true,
+    final image = ClipRect(
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Transform.translate(
+          offset: Offset(
+            (.5 - spirit.portraitAnchor.dx) * size * spirit.portraitScale,
+            (.5 - spirit.portraitAnchor.dy) * size * spirit.portraitScale,
+          ),
+          child: Transform.scale(
+            scale: spirit.portraitScale,
+            child: Image.asset(
+              spirit.asset!,
+              width: size,
+              height: size,
+              fit: BoxFit.contain,
+              cacheWidth: 384,
+              excludeFromSemantics: true,
+            ),
+          ),
+        ),
+      ),
     );
     return hidden
         ? ColorFiltered(
@@ -77,7 +92,11 @@ class _JourneyCompanionsState extends State<JourneyCompanions>
       oldWidget.narrative?.removeListener(_react);
       widget.narrative?.addListener(_react);
     }
-    if (widget.reduceMotion) _motion.stop();
+    if (widget.reduceMotion) {
+      _motion.stop();
+    } else if (oldWidget.companion?.id != widget.companion?.id) {
+      _motion.forward(from: 0);
+    }
   }
 
   void _react() {
@@ -178,7 +197,7 @@ class _JourneyCompanionsState extends State<JourneyCompanions>
                           minHeight: 48,
                         ),
                         child: character(
-                          SpiritPortrait(spirit: friend, size: size),
+                          _friendMotion(friend, size),
                           friend.name.inLocale(t.localeName),
                         ),
                       ),
@@ -210,4 +229,34 @@ class _JourneyCompanionsState extends State<JourneyCompanions>
       ),
     );
   }
+
+  Widget _friendMotion(SpiritDefinition friend, double size) => AnimatedBuilder(
+    animation: _motion,
+    child: SpiritPortrait(spirit: friend, size: size),
+    builder: (_, child) {
+      final wave = widget.reduceMotion
+          ? 0.0
+          : math.sin(_motion.value * math.pi);
+      final floating = friend.motionKind == 'float';
+      final bowing = friend.motionKind == 'bow';
+      return Transform.translate(
+        offset: Offset(
+          friend.motionKind == 'wave' ? wave * 2 : 0,
+          wave *
+              (floating
+                  ? -4
+                  : bowing
+                  ? 2
+                  : -1),
+        ),
+        child: Transform.rotate(
+          angle: wave * (friend.motionKind == 'tilt' ? .07 : .025),
+          child: Transform.scale(
+            scale: bowing ? 1 - .02 * wave : 1,
+            child: child,
+          ),
+        ),
+      );
+    },
+  );
 }

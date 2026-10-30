@@ -1,3 +1,5 @@
+최신 전체 시즌 검증: [달빛 석판 시즌 1 QA](docs/MOONSTONE_SEASON1_QA.md).
+
 최신 첫 챕터 검증은 [THE LAST ECHO 디자인 QA](docs/LAST_ECHO_DESIGN_QA.md)에 있습니다. 아래는 이전 2번 시안 적용 기록입니다.
 
 # 2번 시안 → Flutter 디자인 QA

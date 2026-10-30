@@ -41,9 +41,13 @@ class StoryCardContent {
     required this.detail,
     required this.quote,
     required this.portraitAssets,
+    this.portraitAnchors = const [],
+    this.portraitScales = const [],
   });
   final String title, detail, quote;
   final List<String> portraitAssets;
+  final List<Offset> portraitAnchors;
+  final List<double> portraitScales;
 }
 
 /// 동일한 결과에 동일한 이미지를 만든다. 실제 이동 좌표는 사용하지 않는다.
@@ -182,28 +186,62 @@ class EchoPostcardPainter extends CustomPainter {
       final rows = (count / columns).ceil();
       final x = (1080 - columns * width) / 2 + i % columns * width;
       final y = count <= 2 ? 245.0 : 205.0 + (i ~/ columns) * (390 / rows);
-      StarArt.draw(canvas, image, Rect.fromLTWH(x, y, width, width));
+      final anchor = story.portraitAnchors.length > i
+          ? story.portraitAnchors[i]
+          : const Offset(.5, .5);
+      final scale = story.portraitScales.length > i
+          ? story.portraitScales[i]
+          : 1.0;
+      StarArt.draw(
+        canvas,
+        image,
+        Rect.fromCenter(
+          center: Offset(
+            x + width / 2 + (.5 - anchor.dx) * width * scale,
+            y + width / 2 + (.5 - anchor.dy) * width * scale,
+          ),
+          width: width * scale,
+          height: width * scale,
+        ),
+      );
     }
-    void wrapped(String value, double y, double size, Color color) {
-      final painter = TextPainter(
+    double wrapped(
+      String value,
+      double y,
+      double size,
+      Color color, {
+      double maxHeight = 1000,
+    }) {
+      TextPainter layout(double fontSize) => TextPainter(
         text: TextSpan(
           text: value,
           style: TextStyle(
             fontFamily: 'NanumGothic',
-            fontSize: size,
+            fontSize: fontSize,
             color: color,
             height: 1.35,
           ),
         ),
         textDirection: TextDirection.ltr,
       )..layout(maxWidth: 870);
+      var painter = layout(size);
+      while (painter.height > maxHeight && size > 20) {
+        painter.dispose();
+        size -= 1;
+        painter = layout(size);
+      }
       painter.paint(canvas, Offset(105, y));
+      final height = painter.height;
       painter.dispose();
+      return height;
     }
 
-    wrapped(story.title, 710, 44, colors.text);
-    wrapped(story.detail, 782, 29, colors.secondaryText);
-    wrapped(story.quote, 845, 29, colors.text);
+    var cursor = 710.0;
+    cursor += wrapped(story.title, cursor, 44, colors.text, maxHeight: 60) + 12;
+    cursor +=
+        wrapped(story.detail, cursor, 29, colors.secondaryText, maxHeight: 45) +
+        16;
+    wrapped(story.quote, cursor, 29, colors.text, maxHeight: 948 - cursor);
     wrapped('Every Move Leaves an Echo.', 970, 20, colors.secondaryText);
   }
 
@@ -360,9 +398,9 @@ class _EchoPostcardDialogState extends State<EchoPostcardDialog> {
         children: [
           Semantics(
             image: true,
-            label:
-                '${widget.data.levelText}, ${widget.data.movesText}, '
-                '${widget.data.bestText}, ${widget.data.stars}/3',
+            label: widget.data.story == null
+                ? '${widget.data.levelText}, ${widget.data.movesText}, ${widget.data.bestText}, ${widget.data.stars}/3'
+                : '${widget.data.story!.title}, ${widget.data.story!.detail}, ${widget.data.story!.quote}',
             child: AspectRatio(
               aspectRatio: 1,
               child: CustomPaint(

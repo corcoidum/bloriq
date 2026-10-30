@@ -757,6 +757,7 @@ class _GameScreenState extends State<GameScreen>
         discovery: _discovery != null && !_storyHidden
             ? DiscoveryPanel(
                 spirit: _discovery!,
+                chapter: widget.session.story.chapter(_discovery!.chapter),
                 progress: _victory.value,
                 reduceMotion: _reduceMotion,
                 onSkip: () {
@@ -785,8 +786,11 @@ class _GameScreenState extends State<GameScreen>
                 session: widget.session,
                 onChanged: () => setState(() {}),
               ),
-            if (widget.play.mode == PlayMode.campaign && state.level.id == 5)
-              Text(t.futureStoryNote),
+            if (widget.play.mode == PlayMode.campaign &&
+                widget.session.collection.owned.length ==
+                    widget.session.story.released.length &&
+                widget.session.story.released.length == 25)
+              Text(t.seasonComplete),
             const SizedBox(height: GameSpacing.small),
             Text(
               state.moves == state.level.minimumMoves
@@ -825,9 +829,12 @@ class _GameScreenState extends State<GameScreen>
                   OutlinedButton.icon(
                     key: const ValueKey('result-discovery-share'),
                     onPressed: () => _withModal<void>(
-                      () => showStoryCard(context, [
-                        friend,
-                      ], reduceMotion: _reduceMotion),
+                      () => showStoryCard(
+                        context,
+                        [friend],
+                        chapter: widget.session.story.chapter(friend.chapter),
+                        reduceMotion: _reduceMotion,
+                      ),
                     ),
                     icon: const Icon(Icons.ios_share_rounded),
                     label: Text(t.discoveryCard),
@@ -1071,7 +1078,10 @@ class _GameScreenState extends State<GameScreen>
                               onAlbum: _openAlbum,
                             ),
                           if (widget.play.mode == PlayMode.campaign &&
-                              _loaded[_index].id <= 5)
+                              widget.session.story
+                                      .forLevel(_loaded[_index].id)
+                                      ?.released ==
+                                  true)
                             Text(
                               widget.session.story
                                   .forLevel(_loaded[_index].id)!
@@ -1101,6 +1111,7 @@ class _GameScreenState extends State<GameScreen>
                           ),
                           const SizedBox(height: 14),
                           StarBoardFrame(
+                            geometry: geometry,
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(
                                 GameSpacing.radius,

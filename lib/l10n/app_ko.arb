@@ -145,5 +145,42 @@
   "newGuardian": "수호 정령, {name}!",
   "backfillSummary": "이미 만났던 친구 {count}마리와 기억을 복구했어요.",
   "pendingMemories": "아직 펼쳐 보지 않은 기억 {count}개",
-  "foundAtStage": "발견한 별문 · 스테이지 {level}"
+  "foundAtStage": "발견한 별문 · 스테이지 {level}",
+  "seasonComplete": "시즌 1의 빛이 모두 돌아왔어요.",
+  "backfillUpdated": "기존 별문 기록으로 새 친구와 기억이 도감에 추가됐어요.",
+  "seasonProgress": "시즌 1의 친구 {count}/25",
+  "@seasonProgress": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chapterFriends": "친구 {count}/5",
+  "@chapterFriends": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chapterCollection": "{name} · 친구 {count}/5",
+  "@chapterCollection": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chapterCard": "{name} 수집 카드",
+  "@chapterCard": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

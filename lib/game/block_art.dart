@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../design/game_theme.dart';
 import '../design/star_art.dart';
+import '../design/board_material.dart';
 import 'board_geometry.dart';
 
 /// 게임판과 시작 연출이 같은 블록의 소재감과 기호를 사용한다.
@@ -17,35 +18,56 @@ abstract final class BlockArt {
     double scale = 1,
     double opacity = 1,
   }) {
-    final image = goal ? StarArt.riqImage : StarArt.runeImage;
-    if (image != null) {
-      if (goal) {
-        final mark = RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: at + Offset(0, cell * .045),
-            width: cell * .77 * scale,
-            height: cell * .73 * scale,
-          ),
-          Radius.circular(cell * .18),
-        );
-        canvas.drawRRect(
-          mark,
-          Paint()..color = colors.goal.withValues(alpha: .18 * opacity),
-        );
-        canvas.drawRRect(
-          mark,
-          Paint()
-            ..color = colors.goalInk.withValues(alpha: opacity)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = math.max(2, cell * .023),
-        );
-      }
-      final extent = cell * BoardGeometry.spriteFraction * scale;
-      // Source silhouette anchor (.486,.539) places RIQ's visual center on the cell center.
-      final anchor = goal ? const Offset(.486, .539) : const Offset(.5, .5);
+    final material = BoardMaterial(colors);
+    if (!goal) {
       final rect = Rect.fromCenter(
-        center:
-            at + Offset((.5 - anchor.dx) * extent, (.5 - anchor.dy) * extent),
+        center: at,
+        width: cell * .72 * scale,
+        height: cell * .69 * scale,
+      );
+      material.raised(
+        canvas,
+        rect,
+        cell * scale,
+        colors == GameColors.dark
+            ? const Color(0xff416795)
+            : const Color(0xff557bae),
+        opacity: opacity,
+      );
+      canvas.drawCircle(
+        at + Offset(0, -cell * .015),
+        cell * .19 * scale,
+        Paint()
+          ..color = colors.primary.withValues(alpha: opacity)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = cell * .045 * scale,
+      );
+      canvas.drawCircle(
+        at + Offset(0, -cell * .015),
+        cell * .205 * scale,
+        Paint()
+          ..color = colors.highlight.withValues(alpha: .16 * opacity)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1,
+      );
+      return;
+    }
+    final image = StarArt.riqImage;
+    if (image != null) {
+      material.raised(
+        canvas,
+        Rect.fromCenter(
+          center: at + Offset(0, cell * .045),
+          width: cell * .77 * scale,
+          height: cell * .71 * scale,
+        ),
+        cell * scale,
+        colors.goalInk,
+        opacity: opacity,
+      );
+      final extent = cell * BoardGeometry.spriteFraction * scale;
+      final rect = Rect.fromCenter(
+        center: at + Offset(.014 * extent, -.039 * extent),
         width: extent,
         height: extent,
       );
@@ -132,7 +154,7 @@ abstract final class BlockArt {
           width: cell * BoardGeometry.spriteFraction,
           height: cell * BoardGeometry.spriteFraction,
         ),
-        opacity: opacity,
+        opacity: opacity * .72,
         tint: colors == GameColors.light
             ? colors.echoInk.withValues(alpha: .85)
             : null,
@@ -170,6 +192,24 @@ abstract final class BlockArt {
   }
 
   static void exit(Canvas canvas, Offset at, double cell, GameColors colors) {
+    canvas.drawCircle(
+      at + Offset(0, cell * .025),
+      cell * .37,
+      Paint()..color = Colors.black.withValues(alpha: .18),
+    );
+    canvas.drawCircle(
+      at,
+      cell * .37,
+      Paint()..color = colors.rewardInk.withValues(alpha: .16),
+    );
+    canvas.drawCircle(
+      at,
+      cell * .385,
+      Paint()
+        ..color = colors.reward.withValues(alpha: .35)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = math.max(1, cell * .015),
+    );
     if (StarArt.portalImage case final image?) {
       StarArt.draw(
         canvas,

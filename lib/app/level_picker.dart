@@ -172,10 +172,6 @@ class LevelPicker extends StatelessWidget {
         height: MediaQuery.sizeOf(context).height * .55,
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
-            final columns = (constraints.maxWidth / (100 * scale.clamp(1, 1.6)))
-                .floor()
-                .clamp(1, 4);
             final chapters = ChapterProgress.group(
               session.levels,
               session.progress,
@@ -195,14 +191,6 @@ class LevelPicker extends StatelessWidget {
                                 .inLocale(t.localeName),
                             style: TextStyle(color: colors.rewardInk),
                           ),
-                          if (chapter.number > 1)
-                            Text(
-                              t.storySoon,
-                              style: TextStyle(
-                                color: colors.secondaryText,
-                                fontSize: 12,
-                              ),
-                            ),
                           Text(
                             t.chapterSummary(
                               chapter.number,
@@ -222,31 +210,15 @@ class LevelPicker extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (chapter.number == 1)
-                    SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: _tile(context, index),
-                        ),
-                        childCount: chapter.levels.length,
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: _tile(context, (chapter.number - 1) * 5 + index),
                       ),
-                    )
-                  else
-                    SliverGrid(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: columns,
-                        mainAxisExtent:
-                            (chapter.number == 1 ? 174 : 96) + 96 * (scale - 1),
-                        crossAxisSpacing: 10,
-                        mainAxisSpacing: 10,
-                      ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) =>
-                            _tile(context, (chapter.number - 1) * 5 + index),
-                        childCount: chapter.levels.length,
-                      ),
+                      childCount: chapter.levels.length,
                     ),
+                  ),
                 ],
               ],
             );

@@ -1,0 +1,510 @@
+{
+  "source": "Flutter widget/Canvas renderer; synthetic test progress",
+  "rawCaptureCount": 201,
+  "captures": [
+    {
+      "file": "board-14.png",
+      "width": 720,
+      "height": 720,
+      "sha256": "f0965bce068e014e5515f072bdf16f61b9b229d9798980a0ea6e1d10bd4fc64b"
+    },
+    {
+      "file": "board-2.png",
+      "width": 720,
+      "height": 720,
+      "sha256": "d22402282ee288f0d3bb929eceed40a54db44e832402b258862517f1cff90bb3"
+    },
+    {
+      "file": "board-25.png",
+      "width": 720,
+      "height": 720,
+      "sha256": "924da5ad7eb3de66701a6afd92d61427ee33e54511256f7f045da8af91cfec81"
+    },
+    {
+      "file": "board-3.png",
+      "width": 720,
+      "height": 720,
+      "sha256": "bce8d05d7a9dbdbaab5cd722927aab5176003a00ea853911bc6b1568dafa26ca"
+    },
+    {
+      "file": "board-4.png",
+      "width": 720,
+      "height": 720,
+      "sha256": "5e6c3af900eb4d78c350a94558747eff4b40cf0a72f46d3d55ab9bf7e670eb22"
+    },
+    {
+      "file": "board-5.png",
+      "width": 720,
+      "height": 720,
+      "sha256": "a24e217c54b59cd3b1b5ccd91c5d931d93695b608759104545859361b25b0ca3"
+    },
+    {
+      "file": "board-9.png",
+      "width": 720,
+      "height": 720,
+      "sha256": "bfe4731e13fc2a241c236addf6f796214c56b3ba3e834fcbb66d1a0ae28df92d"
+    },
+    {
+      "file": "chapter-1-card.png",
+      "width": 1080,
+      "height": 1080,
+      "sha256": "861d0f0b4406fa7fd5afd3af5d9550be40c1470ee66827799df12ad48566a498"
+    },
+    {
+      "file": "chapter-2-card.png",
+      "width": 1080,
+      "height": 1080,
+      "sha256": "f9ff825ee4e851cda5f2dc05163c549d66385e60a08a071648a875916986d0ba"
+    },
+    {
+      "file": "chapter-3-card.png",
+      "width": 1080,
+      "height": 1080,
+      "sha256": "ec6d44eb0562777cd3222b998100e90d782c1ce4cf27cbfbc05a001a25eeed79"
+    },
+    {
+      "file": "chapter-4-card.png",
+      "width": 1080,
+      "height": 1080,
+      "sha256": "bdfa3e9aad3c5d8591cd9bdcd072b1d8ee21fa828fce72e87f13110e32fd72a0"
+    },
+    {
+      "file": "chapter-5-card.png",
+      "width": 1080,
+      "height": 1080,
+      "sha256": "c723f53edfab96294c5243e4e1654f9554842123512c2e1218237e5900e7e8d4"
+    },
+    {
+      "file": "compare-level-2.png",
+      "width": 1040,
+      "height": 580,
+      "sha256": "14f4702c92db47e62b2437cf0643ab2ceb3eae3e90b11d443c30db026eca26a9"
+    },
+    {
+      "file": "compare-level-3.png",
+      "width": 1040,
+      "height": 580,
+      "sha256": "6349699cc1d2513c52302d99a96fa97f0d2085470d761e8eb1c3f0695ebaf867"
+    },
+    {
+      "file": "compare-level-4.png",
+      "width": 1040,
+      "height": 580,
+      "sha256": "83e7974258d37afcaa51e94479b64e828954b659ec6ecdc0928819bf148dbd76"
+    },
+    {
+      "file": "compare-level-5.png",
+      "width": 1040,
+      "height": 580,
+      "sha256": "555df79da14ab7aa962bada2f740b3ec3e6144649a700d357d6905cfe5bd8907"
+    },
+    {
+      "file": "compare-level-9.png",
+      "width": 1040,
+      "height": 580,
+      "sha256": "081aff7f706041beb2d0d3a161642c033ee948ae1881e3de2afb2e5978f7af74"
+    },
+    {
+      "file": "dark-en-album-5.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "c6018be391906e7a254c8265293374b844398c3dee22558f08098d0f529092d6"
+    },
+    {
+      "file": "dark-en-guardian-5.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "42b0d5f9f0c397c5ec40fd24b72eddea2ed29f1cd106096e71ffff84aff62daa"
+    },
+    {
+      "file": "dark-en-home.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "86b6ce2eb3e7584abc283bf6498f9c337d2b10307a23dbce1ccb28bf9567a1c3"
+    },
+    {
+      "file": "dark-en-portraits-48.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "f8233962e8a5194aab0695d7f73d71cf3e98c479fd0fe55ea015c2bd5498ea36"
+    },
+    {
+      "file": "dark-en-share-chapter-5.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "ba042eba67822b400b51630f7c0dc1f9ae5a45a835c89efb294726b8fd2a599b"
+    },
+    {
+      "file": "dark-en-share-guardian-5.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "36e789e23cd84d6ccc732fd830d2b0cb4c30aab4c872f90bdb9c421fe43b80bb"
+    },
+    {
+      "file": "dark-en-stage25.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "fc65f5e0db02a23efd12a5338f875762ecdd76a5b347e2ef10b38bb35dac9773"
+    },
+    {
+      "file": "dark-en-stage9.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "4376e3fd87b5b4c79eb740aae2e910c4e07403db486264cd7c9d148c55ca52fd"
+    },
+    {
+      "file": "dark-ko-album-1.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "5248de1b0920b584864b1e8743c2186f27386846fe655a4e3f122c7012fb8962"
+    },
+    {
+      "file": "dark-ko-album-2.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "adcb0fb8319700f75be70fecd58332d2bced67f78ddc90f974c59307ad58058e"
+    },
+    {
+      "file": "dark-ko-album-3.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "4529813604fca0d67ef5e650769ac9c33e2f8b196c5f2635882f08f0f134ddd7"
+    },
+    {
+      "file": "dark-ko-album-4.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "09214d0994bf517374c940b8f7fc03fa67c24aab50942e66fb80a4164e114166"
+    },
+    {
+      "file": "dark-ko-album-5.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "4ac812f7af1cd3b592ff4a1369326d74c5f7caf1c3ccd178efce8fb47e353943"
+    },
+    {
+      "file": "dark-ko-blocked.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "bc6d7c3e797ae4b23a90b8ce3c7a17ad1e69e10f07a70688e39ee9ca3bdf44f9"
+    },
+    {
+      "file": "dark-ko-daily.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "221dba68e0cf64eab94e752b7f9c4fcb7f854377f7e6a7954b5859c9fd2a0abb"
+    },
+    {
+      "file": "dark-ko-discovery-10.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "23fecd1bad0c12d5be88c999d55414a23c8878b7a1b9076a00628a400869f2df"
+    },
+    {
+      "file": "dark-ko-discovery-13.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "ac5058af1dbebe8cafa8dcc42a0fd3097f192e9a90ffbb22bd92fd65bc37ad3d"
+    },
+    {
+      "file": "dark-ko-discovery-15.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "ae7fb8c274b87dec5be49dd7deb408b7d64733d7631448a696d08dacd845fe47"
+    },
+    {
+      "file": "dark-ko-discovery-20.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "92daad3ee260039da7013910ddfcf728c889f424f9cd597649830d62633c865a"
+    },
+    {
+      "file": "dark-ko-discovery-25.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "335592257c4fa90c4f78648a0947c5346b8a84c75a91322e694fbb2c721df429"
+    },
+    {
+      "file": "dark-ko-discovery-5.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "0124b55500455f4214239131a47635a8b70bc2609c191ea4dbe96d256d86d2f2"
+    },
+    {
+      "file": "dark-ko-discovery-6.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "7aa6eb3e4ca7287c0523d6d328d551d57581656aa2e17584b56a169bff28d47a"
+    },
+    {
+      "file": "dark-ko-discovery-mori.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "5e4726f7b84713843dbc4407f79be53fc0eddffd7d6dba1e4d55d18a9ac82f10"
+    },
+    {
+      "file": "dark-ko-echo.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "7e0ce0b9124f18585263d29e779b0e24a0d64107dd0ab4f3a3510647b6c72b35"
+    },
+    {
+      "file": "dark-ko-guardian-1.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "94dc4b18276629b34e0f47b6f8289d3144c30501b846b671061b1c45b6c06257"
+    },
+    {
+      "file": "dark-ko-guardian-2.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "504e1e0e618c2456c10cc7693ff86c91dea68b9c836b66c39ab3b8f71082de70"
+    },
+    {
+      "file": "dark-ko-guardian-3.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "ebfcf6a2b781b2f9808853c8bb22f6f0654ec9db761b629e0db62d917c9cb2fa"
+    },
+    {
+      "file": "dark-ko-guardian-4.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "fcc8583a8e704a72de178948864eab5832e00d86349061f5adfaafb354ab05eb"
+    },
+    {
+      "file": "dark-ko-guardian-5.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "621c856dfa50f1f44e03eeb7e184d517582be835e915bdbe56ca071e45704d9a"
+    },
+    {
+      "file": "dark-ko-home.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "828b350d503369667c62cc2a08a86f6d1ba4a0d93d36a479fd4c631c213356d9"
+    },
+    {
+      "file": "dark-ko-map.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "8fb7dd7a45a382a1f8a8d61fc787c9a634fd8f692f4a4a4fbccf0b8e0303e09c"
+    },
+    {
+      "file": "dark-ko-portraits-48.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "2cd585c2c9b261b495571149f78d2837f067584784c46775e17cfafdce163a21"
+    },
+    {
+      "file": "dark-ko-share-chapter-1.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "f62f793372d3497bc0187f1b94015fc2c3e144e1e39bd77fa1533f3d3666f373"
+    },
+    {
+      "file": "dark-ko-share-chapter-2.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "14f960330e2e636c22477c44762476b9fc3cd0c10673a86b8c406d2a797fe385"
+    },
+    {
+      "file": "dark-ko-share-chapter-3.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "105694b280eeb60e4369b727513ce33d993018e2676693c47469824fb04ae723"
+    },
+    {
+      "file": "dark-ko-share-chapter-4.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "9019f2c88db86ca1bf0ff70d14874d0808e6598800073414f68d7a5348700d35"
+    },
+    {
+      "file": "dark-ko-share-chapter-5.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "37af027586c0f7eb2ab9947f88d90b98e1327eaf8a54e7f882b8b4aa2cc5ddab"
+    },
+    {
+      "file": "dark-ko-share-guardian-5.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "848a60f832829408e233d4ec2a563d7e696c1592fb491524f40bad29639e3b53"
+    },
+    {
+      "file": "dark-ko-stage14.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "c93652f40d3b27821dd4a96765fffd7a3bd0896b9771f027a4ac4b9e113eeb13"
+    },
+    {
+      "file": "dark-ko-stage2.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "67a1d84b6571bd4bfefc69e715240ddda3392a335deacaa8fe69784f05d03e8d"
+    },
+    {
+      "file": "dark-ko-stage25.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "ac8631df08e02e03847802b0d4e5ecbe00737596f59647da6925d343f7926868"
+    },
+    {
+      "file": "dark-ko-stage3.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "7572ec3a89165ded5fe3a5976e7db5766cdaca6e8e183ad85ffd540ce31a3e81"
+    },
+    {
+      "file": "dark-ko-stage4.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "586c4ed131c63168e04e43bfaaaa093f7b0c71710cd5b462c1712518ff3d8f67"
+    },
+    {
+      "file": "dark-ko-stage5.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "a54d9be84c350e40a2cd540f782c9d32be9c64819510fe2018fa5731b448ed67"
+    },
+    {
+      "file": "dark-ko-stage9.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "aa52dc83d4265ac89470da03020c63e7953fd278bedd1c5edc3c55b4ef6829dd"
+    },
+    {
+      "file": "dark-ko-tutorial.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "fb655ef8a81928f6eb12260edb11ede2696a1a9dd4c066f1f919f2bd4f61f945"
+    },
+    {
+      "file": "guardian-1-card.png",
+      "width": 1080,
+      "height": 1080,
+      "sha256": "f32415cef993f483b1358a5ae04ef0063085edd3cd7d36596fe1154c0c09206d"
+    },
+    {
+      "file": "guardian-2-card.png",
+      "width": 1080,
+      "height": 1080,
+      "sha256": "65c77174ba27cb2871a87312cb1eb10835e40d96b3d98e34019cad5fbf36dae5"
+    },
+    {
+      "file": "guardian-3-card.png",
+      "width": 1080,
+      "height": 1080,
+      "sha256": "ca76895fb7dbe8936eb1d85b7b525e27ce9177b8211adb037f04f13ad9ab4932"
+    },
+    {
+      "file": "guardian-4-card.png",
+      "width": 1080,
+      "height": 1080,
+      "sha256": "17bff36a08df0d6d5174f44af76a2fbaf1c658de0cdd472eac6afe9a2b1cfa22"
+    },
+    {
+      "file": "guardian-5-card.png",
+      "width": 1080,
+      "height": 1080,
+      "sha256": "f23d99b290102b8db489edbdc24310b3d0147a03d9663210997eb502d5b1aaa5"
+    },
+    {
+      "file": "light-en-album-5.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "2191ca1a39aa6a0761e85fc90aa8b59e97efcc2a8fa6beadb015ecfe84aad2b5"
+    },
+    {
+      "file": "light-en-guardian-5.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "0559fb29dba69baf035216fcdc014b7a6f7db8bf707ebc112c188be026a77850"
+    },
+    {
+      "file": "light-en-home.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "83f40e1f052bf00437b97265416fa23307e00e9ffd87ba8115dbbf84c890acb3"
+    },
+    {
+      "file": "light-en-portraits-48.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "55880c59157f41844608fb70f5bb843fbdd3a7fb6d19d6a896920232c9c3e623"
+    },
+    {
+      "file": "light-en-share-chapter-5.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "b4bbc8236882a671c0afa3268d16f2e783a4ebba55d3704e3a7bc95d163e6e87"
+    },
+    {
+      "file": "light-en-share-guardian-5.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "8e95ba6131a49fc18aae9b45ca5e456d5e72221aa1a62299cda1a7dc13f5c879"
+    },
+    {
+      "file": "light-en-stage25.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "960bf20a8d228bad3852e16509129db865a3720035ad28e0aba884f114c45918"
+    },
+    {
+      "file": "light-en-stage9.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "b95d03a391cf31a26ef88f8de1c60a6e3966436109e634c183b54d89caf735aa"
+    },
+    {
+      "file": "light-ko-album-5.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "93ef3d0be49fc0112a245defe351a83401b2d67a9dd0b0df555fafc636e647ae"
+    },
+    {
+      "file": "light-ko-guardian-5.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "e378e9c2a9bfe065c9e5f9b5c32570c82df7e95d39de99843f35bd9bd25d3147"
+    },
+    {
+      "file": "light-ko-home.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "83f5cd22b4c847bce869c869522ea76d0467150f66e6abda2a387ac0a98775cf"
+    },
+    {
+      "file": "light-ko-portraits-48.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "267e2c243a35ac41274b81e3715d8168d31b916c8721e3fc3dc688a9fb9e95cf"
+    },
+    {
+      "file": "light-ko-share-chapter-5.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "e3c5357280f0cbf9b8564736da5584174295d9972e1c577a62c72b573e87bb6f"
+    },
+    {
+      "file": "light-ko-share-guardian-5.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "c1213dce881bbe9018efd06259e66721c8a3dacc60fd4959e98335b2a544c47f"
+    },
+    {
+      "file": "light-ko-stage25.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "ba3051ceb0dac051a3bc30f643f9520a81cd36148ac7dad28355a24309bc3605"
+    },
+    {
+      "file": "light-ko-stage9.png",
+      "width": 393,
+      "height": 852,
+      "sha256": "c47245de12e88c2bf2a701499a6c8c4492b3804ce92ddaef13ae3c9b34ea6bb1"
+    }
+  ]
+}

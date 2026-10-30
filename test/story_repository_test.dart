@@ -17,9 +17,9 @@ void main() {
     );
   });
 
-  test('25 stable bilingual definitions, only five released assets and five guardians', () {
+  test('25 stable bilingual released assets and five chapter guardians', () {
     expect(catalog.spirits.length, 25);
-    expect(catalog.released.length, 5);
+    expect(catalog.released.length, 25);
     expect(catalog.spirits.where((s) => s.guardian).map((s) => s.levelId), [
       5,
       10,
@@ -40,21 +40,27 @@ void main() {
     }
   });
 
-  test('first completion grants once, auto equips Mori, unreleased levels grant nothing', () async {
-    final repo = await CollectionRepository.load(catalog);
-    expect((await repo.reconcile({1})).map((s) => s.id), ['s1-01']);
-    expect(repo.companion?.id, 's1-01');
-    expect(repo.pendingIds, {'s1-01'});
-    expect(repo.memoryIds, {'s1-memory-01'});
-    expect(await repo.reconcile({1, 6, 25}), isEmpty);
-    final restored = await CollectionRepository.load(catalog);
-    expect(restored.ownedIds, {'s1-01'});
-    expect(restored.pendingIds, {'s1-01'});
-    await restored.acknowledge('s1-01');
-    final again = await CollectionRepository.load(catalog);
-    expect(again.hasSeen('s1-01'), true);
-    expect(again.pendingIds, isEmpty);
-  });
+  test(
+    'each released stage grants once and first completion auto equips Mori',
+    () async {
+      final repo = await CollectionRepository.load(catalog);
+      expect((await repo.reconcile({1})).map((s) => s.id), ['s1-01']);
+      expect(repo.companion?.id, 's1-01');
+      expect(repo.pendingIds, {'s1-01'});
+      expect(repo.memoryIds, {'s1-memory-01'});
+      expect((await repo.reconcile({1, 6, 25})).map((s) => s.id), [
+        's1-06',
+        's1-25',
+      ]);
+      final restored = await CollectionRepository.load(catalog);
+      expect(restored.ownedIds, {'s1-01', 's1-06', 's1-25'});
+      expect(restored.pendingIds, {'s1-01', 's1-06', 's1-25'});
+      await restored.acknowledge('s1-01');
+      final again = await CollectionRepository.load(catalog);
+      expect(again.hasSeen('s1-01'), true);
+      expect(again.pendingIds, {'s1-06', 's1-25'});
+    },
+  );
 
   test(
     'backfill uses old revisions of course2, never unrelated legacy course',
@@ -151,7 +157,7 @@ void main() {
       expect(await repo.equip('s1-02'), true);
       await repo.reconcile({1, 2, 3, 4, 5, 25});
       expect((await CollectionRepository.load(catalog)).companion?.id, 's1-02');
-      expect(repo.owned.length, 5);
+      expect(repo.owned.length, 6);
     },
   );
 

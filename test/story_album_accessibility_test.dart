@@ -15,66 +15,96 @@ import 'support/start_game.dart';
 import 'support/story_session.dart';
 
 void main() {
-  for (final dark in [true, false]) {
-    for (final language in ['ko', 'en']) {
-      testWidgets(
-        '320px 200% text ${dark ? 'dark' : 'light'} $language: album hides unknown memories and keeps actions accessible',
-        (tester) async {
-          SharedPreferences.setMockInitialValues({
-            'bloriq.audio.music': false,
-            'bloriq.audio.effects': false,
-          });
-          tester.view.physicalSize = const Size(320, 568);
-          tester.view.devicePixelRatio = 1;
-          tester.platformDispatcher.textScaleFactorTestValue = 2;
-          addTearDown(tester.view.resetPhysicalSize);
-          addTearDown(tester.view.resetDevicePixelRatio);
-          addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-          final session = await loadStorySession(tester);
-          await session.collection.reconcile({1, 2, 5});
-          final settings = GameSettings(reduceMotion: true);
-          await tester.pumpWidget(
-            MaterialApp(
-              theme: dark ? GameTheme.dark : GameTheme.light,
-              locale: Locale(language),
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              home: Builder(
-                builder: (context) => Scaffold(
-                  body: TextButton(
-                    onPressed: () =>
-                        showSpiritAlbum(context, session, settings),
-                    child: const Text('OPEN'),
+  for (final chapter in [1, 5]) {
+    for (final dark in [true, false]) {
+      for (final language in ['ko', 'en']) {
+        testWidgets(
+          'chapter $chapter: 320px 200% text ${dark ? 'dark' : 'light'} $language: album hides unknown memories and keeps actions accessible',
+          (tester) async {
+            SharedPreferences.setMockInitialValues({
+              'bloriq.audio.music': false,
+              'bloriq.audio.effects': false,
+            });
+            tester.view.physicalSize = const Size(320, 568);
+            tester.view.devicePixelRatio = 1;
+            tester.platformDispatcher.textScaleFactorTestValue = 2;
+            addTearDown(tester.view.resetPhysicalSize);
+            addTearDown(tester.view.resetDevicePixelRatio);
+            addTearDown(
+              tester.platformDispatcher.clearTextScaleFactorTestValue,
+            );
+            final session = await loadStorySession(tester);
+            await session.collection.reconcile(
+              chapter == 1 ? {1, 2, 5} : {21, 22, 25},
+            );
+            final settings = GameSettings(reduceMotion: true);
+            await tester.pumpWidget(
+              MaterialApp(
+                theme: dark ? GameTheme.dark : GameTheme.light,
+                locale: Locale(language),
+                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                home: Builder(
+                  builder: (context) => Scaffold(
+                    body: TextButton(
+                      onPressed: () =>
+                          showSpiritAlbum(context, session, settings),
+                      child: const Text('OPEN'),
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-          await tapVisible(tester, find.text('OPEN'));
-          expect(tester.takeException(), isNull);
-          expect(find.text(language == 'ko' ? '도토' : 'Doto'), findsNothing);
-          expect(find.text(language == 'ko' ? '루루' : 'Lulu'), findsNothing);
-          await tapVisible(tester, find.byKey(const ValueKey('spirit-s1-05')));
-          expect(tester.takeException(), isNull);
-          await tapVisible(
-            tester,
-            find.byKey(const ValueKey('equip-companion')),
-          );
-          expect(session.collection.companion?.id, 's1-05');
-          expect(tester.takeException(), isNull);
-          await tapVisible(
-            tester,
-            find.text(language == 'ko' ? '닫기' : 'Close').last,
-          );
-          await tapVisible(
-            tester,
-            find.byTooltip(language == 'ko' ? '닫기' : 'Close'),
-          );
-          await tester.pumpWidget(const SizedBox());
-          await disposeStorySession(tester, session);
-          settings.dispose();
-        },
-      );
+            );
+            await tapVisible(tester, find.text('OPEN'));
+            expect(tester.takeException(), isNull);
+            expect(
+              find.text(
+                language == 'ko'
+                    ? (chapter == 1 ? '도토' : '오르')
+                    : (chapter == 1 ? 'Doto' : 'Or'),
+              ),
+              findsNothing,
+            );
+            expect(
+              find.text(
+                language == 'ko'
+                    ? (chapter == 1 ? '루루' : '루체')
+                    : (chapter == 1 ? 'Lulu' : 'Luche'),
+              ),
+              findsNothing,
+            );
+            await tapVisible(
+              tester,
+              find.byKey(
+                ValueKey(
+                  'spirit-s1-${(chapter * 5).toString().padLeft(2, '0')}',
+                ),
+              ),
+            );
+            expect(tester.takeException(), isNull);
+            await tapVisible(
+              tester,
+              find.byKey(const ValueKey('equip-companion')),
+            );
+            expect(
+              session.collection.companion?.id,
+              's1-${(chapter * 5).toString().padLeft(2, '0')}',
+            );
+            expect(tester.takeException(), isNull);
+            await tapVisible(
+              tester,
+              find.text(language == 'ko' ? '닫기' : 'Close').last,
+            );
+            await tapVisible(
+              tester,
+              find.byTooltip(language == 'ko' ? '닫기' : 'Close'),
+            );
+            await tester.pumpWidget(const SizedBox());
+            await disposeStorySession(tester, session);
+            settings.dispose();
+          },
+        );
+      }
     }
   }
 

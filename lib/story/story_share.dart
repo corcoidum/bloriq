@@ -10,10 +10,14 @@ import 'story_catalog.dart';
 Future<void> showStoryCard(
   BuildContext context,
   List<SpiritDefinition> friends, {
+  required StoryChapter chapter,
   bool collection = false,
   bool reduceMotion = false,
 }) async {
   if (friends.isEmpty) return;
+  if (friends.any((s) => s.chapter != chapter.number || !s.released)) {
+    throw ArgumentError('Cards must belong to one released chapter');
+  }
   final t = AppLocalizations.of(context)!;
   try {
     for (final friend in friends) {
@@ -21,20 +25,31 @@ Future<void> showStoryCard(
     }
     if (!context.mounted) return;
     final first = friends.first;
-    final title = collection ? t.collectionCard : t.discoveryCard;
+    final title = collection
+        ? t.chapterCard(chapter.name.inLocale(t.localeName))
+        : t.discoveryCard;
     final content = StoryCardContent(
       title: collection
-          ? t.gardenProgress(friends.length)
+          ? t.chapterCollection(
+              chapter.name.inLocale(t.localeName),
+              friends.length,
+            )
           : first.name.inLocale(t.localeName),
       detail: collection
-          ? t.gardenName
-          : '${t.gardenName} · ${t.foundAtStage(first.levelId)}',
+          ? chapter.name.inLocale(t.localeName)
+          : '${chapter.name.inLocale(t.localeName)} · ${t.foundAtStage(first.levelId)}',
       quote: collection
           ? friends.length == 5
-                ? t.guardianEnding
+                ? chapter.ending.inLocale(t.localeName)
                 : t.homeSubtitle
           : first.memory.inLocale(t.localeName),
       portraitAssets: friends.map((s) => s.asset!).toList(growable: false),
+      portraitAnchors: friends
+          .map((s) => s.portraitAnchor)
+          .toList(growable: false),
+      portraitScales: friends
+          .map((s) => s.portraitScale)
+          .toList(growable: false),
     );
     await showDialog<void>(
       context: context,

@@ -12,11 +12,13 @@ class DiscoveryPanel extends StatelessWidget {
   const DiscoveryPanel({
     super.key,
     required this.spirit,
+    required this.chapter,
     required this.progress,
     required this.reduceMotion,
     required this.onSkip,
   });
   final SpiritDefinition spirit;
+  final StoryChapter chapter;
   final double progress;
   final bool reduceMotion;
   final VoidCallback onSkip;
@@ -84,8 +86,14 @@ class DiscoveryPanel extends StatelessWidget {
           ),
           if (spirit.guardian) ...[
             const SizedBox(height: 8),
-            Text(t.guardianEndingTitle, style: GameTypography.label),
-            Text(t.guardianEnding, textAlign: TextAlign.center),
+            Text(
+              chapter.endingTitle.inLocale(t.localeName),
+              style: GameTypography.label,
+            ),
+            Text(
+              chapter.ending.inLocale(t.localeName),
+              textAlign: TextAlign.center,
+            ),
           ],
           TextButton(
             key: const ValueKey('skip-story'),

@@ -30,13 +30,21 @@ class SpiritDefinition {
       appearance = StoryText.fromJson(data['appearance']),
       personality = StoryText.fromJson(data['personality']),
       motion = StoryText.fromJson(data['motion']),
+      motionKind = data['motionKind'] as String? ?? 'sway',
+      portraitScale = (data['portraitScale'] as num?)?.toDouble() ?? 1,
+      portraitAnchor = Offset(
+        (data['portraitAnchor']?[0] as num?)?.toDouble() ?? .5,
+        (data['portraitAnchor']?[1] as num?)?.toDouble() ?? .5,
+      ),
       memory = StoryText.fromJson(data['memory']),
       description = StoryText.fromJson(data['description']),
       quote = StoryText.fromJson(data['quote']);
-  final String id, memoryId, family;
+  final String id, memoryId, family, motionKind;
   final int levelId, chapter;
   final bool guardian, released;
   final String? asset;
+  final double portraitScale;
+  final Offset portraitAnchor;
   final StoryText name,
       levelTitle,
       appearance,
@@ -51,9 +59,12 @@ class StoryChapter {
   StoryChapter.fromJson(Map<String, dynamic> data)
     : number = data['number'] as int,
       name = StoryText.fromJson(data['name']),
+      familyName = StoryText.fromJson(data['familyName']),
+      endingTitle = StoryText.fromJson(data['endingTitle']),
+      ending = StoryText.fromJson(data['ending']),
       released = data['released'] as bool;
   final int number;
-  final StoryText name;
+  final StoryText name, familyName, endingTitle, ending;
   final bool released;
 }
 
@@ -73,6 +84,11 @@ class StoryCatalog {
         spirits.map((s) => s.levelId).toSet().length != 25) {
       throw const FormatException('Invalid season catalog');
     }
+    for (var i = 0; i < chapters.length; i++) {
+      if (chapters[i].number != i + 1) {
+        throw const FormatException('Chapter order');
+      }
+    }
     for (var index = 0; index < spirits.length; index++) {
       final s = spirits[index];
       if (s.id != 's1-${(index + 1).toString().padLeft(2, '0')}' ||
@@ -86,8 +102,21 @@ class StoryCatalog {
             'cloud',
             'memory',
           }.contains(s.family) ||
-          s.released != (index < 5) ||
-          (s.released && s.asset == null)) {
+          s.memoryId != 's1-memory-${(index + 1).toString().padLeft(2, '0')}' ||
+          s.family !=
+              ['forest', 'starlight', 'letter', 'cloud', 'memory'][index ~/
+                  5] ||
+          !{'sway', 'tilt', 'wave', 'float', 'bow'}.contains(s.motionKind) ||
+          !s.portraitScale.isFinite ||
+          s.portraitScale <= 0 ||
+          s.portraitScale > 2 ||
+          !s.portraitAnchor.dx.isFinite ||
+          !s.portraitAnchor.dy.isFinite ||
+          s.portraitAnchor.dx < 0 ||
+          s.portraitAnchor.dx > 1 ||
+          s.portraitAnchor.dy < 0 ||
+          s.portraitAnchor.dy > 1 ||
+          (s.released && (s.asset == null || s.asset!.isEmpty))) {
         throw const FormatException('Unstable spirit mapping');
       }
     }
@@ -96,6 +125,11 @@ class StoryCatalog {
   final List<StoryChapter> chapters;
   List<SpiritDefinition> get released =>
       spirits.where((s) => s.released).toList(growable: false);
+  StoryChapter chapter(int number) =>
+      chapters.firstWhere((c) => c.number == number);
+  StoryChapter chapterForLevel(int id) => chapter(forLevel(id)?.chapter ?? 1);
+  List<SpiritDefinition> inChapter(int number) =>
+      released.where((s) => s.chapter == number).toList(growable: false);
   SpiritDefinition? forLevel(int id) =>
       spirits.where((s) => s.levelId == id).firstOrNull;
   SpiritDefinition? byId(String? id) =>

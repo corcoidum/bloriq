@@ -89,6 +89,16 @@ class GameSession {
       )
       .id;
 
+  StoryChapter get recommendedChapter => story.chapterForLevel(
+    completedCount == levels.length ? levels.last.id : nextLevelId,
+  );
+  int completedInChapter(int number) => levels
+      .where(
+        (l) =>
+            story.forLevel(l.id)?.chapter == number &&
+            progress.forLevel(l.id, revision: l.revision) != null,
+      )
+      .length;
   int get completedCount => levels
       .where(
         (level) =>

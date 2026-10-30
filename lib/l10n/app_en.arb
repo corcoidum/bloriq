@@ -290,5 +290,42 @@
         "type": "int"
       }
     }
+  },
+  "seasonComplete": "Every light in Season 1 is home.",
+  "backfillUpdated": "Your star-gate progress restored new friends and memories to the album.",
+  "seasonProgress": "Season 1 friends {count}/25",
+  "@seasonProgress": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chapterFriends": "Friends {count}/5",
+  "@chapterFriends": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chapterCollection": "{name} · friends {count}/5",
+  "@chapterCollection": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chapterCard": "{name} collection card",
+  "@chapterCard": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

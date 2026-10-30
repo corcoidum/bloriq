@@ -13,7 +13,19 @@
         "en": "Crescent Garden"
       },
       "family": "forest",
-      "released": true
+      "released": true,
+      "familyName": {
+        "ko": "숲",
+        "en": "Forest"
+      },
+      "endingTitle": {
+        "ko": "초승달 정원의 약속",
+        "en": "The Garden’s Promise"
+      },
+      "ending": {
+        "ko": "친구들은 사라진 것이 아니라 별문 안에서 잠들어 있었어. 누가 그들을 지켜 준 걸까요?",
+        "en": "The friends had not vanished. They were sleeping inside the star gates. Who kept them safe?"
+      }
     },
     {
       "number": 2,
@@ -22,7 +34,19 @@
         "en": "Sleeping Watergate"
       },
       "family": "starlight",
-      "released": false
+      "released": true,
+      "familyName": {
+        "ko": "별빛",
+        "en": "Starlight"
+      },
+      "endingTitle": {
+        "ko": "다섯 빛이 만나는 곳",
+        "en": "Where Five Lights Meet"
+      },
+      "ending": {
+        "ko": "다섯 등대는 하나의 길을 비추고 있었어. 수문을 닫은 건 그 길을 잠시 쉬게 하려는 선택이었어.",
+        "en": "Five lighthouses shone upon one path. Closing the watergates let that path rest for a while."
+      }
     },
     {
       "number": 3,
@@ -31,7 +55,19 @@
         "en": "Forgotten Post Office"
       },
       "family": "letter",
-      "released": false
+      "released": true,
+      "familyName": {
+        "ko": "편지",
+        "en": "Letter"
+      },
+      "endingTitle": {
+        "ko": "답장을 기다리는 편지",
+        "en": "A Letter Awaiting a Reply"
+      },
+      "ending": {
+        "ko": "편지는 작별 인사가 아니었어. 빛이 돌아오는 날 다시 만나자는 약속이었어.",
+        "en": "The letter was not a goodbye. It was a promise to meet when the light returned."
+      }
     },
     {
       "number": 4,
@@ -40,7 +76,19 @@
         "en": "Hall of Winds"
       },
       "family": "cloud",
-      "released": false
+      "released": true,
+      "familyName": {
+        "ko": "구름",
+        "en": "Cloud"
+      },
+      "endingTitle": {
+        "ko": "멈춘 노래의 신호",
+        "en": "The Signal in the Silent Song"
+      },
+      "ending": {
+        "ko": "위험을 알리는 바람 뒤에 등대가 멈췄어. 누군가는 불빛보다 친구들의 안전을 먼저 생각했어.",
+        "en": "After the wind carried a warning, the lighthouses fell silent. Someone chose the friends’ safety over the light."
+      }
     },
     {
       "number": 5,
@@ -49,7 +97,19 @@
         "en": "Observatory of the First Star"
       },
       "family": "memory",
-      "released": false
+      "released": true,
+      "familyName": {
+        "ko": "기억",
+        "en": "Memory"
+      },
+      "endingTitle": {
+        "ko": "마지막 등대의 고백",
+        "en": "The Last Lighthouse’s Secret"
+      },
+      "ending": {
+        "ko": "기억 보존 장치가 고장 나자 아스테르가 친구들을 지키려고 등대를 멈췄어. 그런데 오래된 기록에는 리크의 별 표식이 있었어.",
+        "en": "When the memory keeper broke, Aster stopped the lighthouses to protect the friends. Yet RIQ’s star was already in the oldest records."
+      }
     }
   ],
   "spirits": [
@@ -93,7 +153,13 @@
       "quote": {
         "ko": "함께 가면 덜 무서울 거야.",
         "en": "It is less scary together."
-      }
+      },
+      "motionKind": "sway",
+      "portraitScale": 0.89983,
+      "portraitAnchor": [
+        0.49721,
+        0.51077
+      ]
     },
     {
       "id": "s1-02",
@@ -135,7 +201,13 @@
       "quote": {
         "ko": "다음 꽃길도 같이 걸을래?",
         "en": "Shall we follow the next flower path?"
-      }
+      },
+      "motionKind": "wave",
+      "portraitScale": 0.936,
+      "portraitAnchor": [
+        0.50558,
+        0.50598
+      ]
     },
     {
       "id": "s1-03",
@@ -177,7 +249,13 @@
       "quote": {
         "ko": "천천히 가도 괜찮아.",
         "en": "It is all right to take our time."
-      }
+      },
+      "motionKind": "tilt",
+      "portraitScale": 1.04948,
+      "portraitAnchor": [
+        0.5012,
+        0.5311
+      ]
     },
     {
       "id": "s1-04",
@@ -219,7 +297,13 @@
       "quote": {
         "ko": "작은 빛도 길을 남겨.",
         "en": "Even a little light leaves a path."
-      }
+      },
+      "motionKind": "float",
+      "portraitScale": 0.989,
+      "portraitAnchor": [
+        0.50199,
+        0.52073
+      ]
     },
     {
       "id": "s1-05",
@@ -261,7 +345,13 @@
       "quote": {
         "ko": "우린 여기서 서로를 기다렸어.",
         "en": "We waited here for one another."
-      }
+      },
+      "motionKind": "bow",
+      "portraitScale": 0.991,
+      "portraitAnchor": [
+        0.50518,
+        0.50159
+      ]
     },
     {
       "id": "s1-06",
@@ -270,8 +360,8 @@
       "chapter": 2,
       "family": "starlight",
       "guardian": false,
-      "released": false,
-      "asset": null,
+      "released": true,
+      "asset": "assets/art/season1/lumi.png",
       "name": {
         "ko": "루미",
         "en": "Lumi"
@@ -303,7 +393,13 @@
       "quote": {
         "ko": "별 하나만 따라오면 돼!",
         "en": "Follow this little star!"
-      }
+      },
+      "motionKind": "sway",
+      "portraitScale": 1.07841,
+      "portraitAnchor": [
+        0.5012,
+        0.50678
+      ]
     },
     {
       "id": "s1-07",
@@ -312,8 +408,8 @@
       "chapter": 2,
       "family": "starlight",
       "guardian": false,
-      "released": false,
-      "asset": null,
+      "released": true,
+      "asset": "assets/art/season1/pico.png",
       "name": {
         "ko": "피코",
         "en": "Pico"
@@ -345,7 +441,13 @@
       "quote": {
         "ko": "작은 빛도 길을 비출 수 있어.",
         "en": "Even a little light can guide us."
-      }
+      },
+      "motionKind": "tilt",
+      "portraitScale": 1.0063,
+      "portraitAnchor": [
+        0.50478,
+        0.57097
+      ]
     },
     {
       "id": "s1-08",
@@ -354,8 +456,8 @@
       "chapter": 2,
       "family": "starlight",
       "guardian": false,
-      "released": false,
-      "asset": null,
+      "released": true,
+      "asset": "assets/art/season1/tori.png",
       "name": {
         "ko": "토리",
         "en": "Tori"
@@ -387,7 +489,13 @@
       "quote": {
         "ko": "문틈의 노래가 들려?",
         "en": "Can you hear the song in the gate?"
-      }
+      },
+      "motionKind": "wave",
+      "portraitScale": 1.12557,
+      "portraitAnchor": [
+        0.4988,
+        0.54266
+      ]
     },
     {
       "id": "s1-09",
@@ -396,8 +504,8 @@
       "chapter": 2,
       "family": "starlight",
       "guardian": false,
-      "released": false,
-      "asset": null,
+      "released": true,
+      "asset": "assets/art/season1/mio.png",
       "name": {
         "ko": "미오",
         "en": "Mio"
@@ -429,7 +537,13 @@
       "quote": {
         "ko": "이쪽에도 반짝이는 길이 있어!",
         "en": "There is a sparkling path this way!"
-      }
+      },
+      "motionKind": "float",
+      "portraitScale": 1.12299,
+      "portraitAnchor": [
+        0.54904,
+        0.52512
+      ]
     },
     {
       "id": "s1-10",
@@ -438,8 +552,8 @@
       "chapter": 2,
       "family": "starlight",
       "guardian": true,
-      "released": false,
-      "asset": null,
+      "released": true,
+      "asset": "assets/art/season1/lumen.png",
       "name": {
         "ko": "루멘",
         "en": "Lumen"
@@ -471,7 +585,13 @@
       "quote": {
         "ko": "문은 다시 만날 곳을 기억해.",
         "en": "A gate remembers where we will meet."
-      }
+      },
+      "motionKind": "bow",
+      "portraitScale": 1.24127,
+      "portraitAnchor": [
+        0.50638,
+        0.53349
+      ]
     },
     {
       "id": "s1-11",
@@ -480,8 +600,8 @@
       "chapter": 3,
       "family": "letter",
       "guardian": false,
-      "released": false,
-      "asset": null,
+      "released": true,
+      "asset": "assets/art/season1/pepi.png",
       "name": {
         "ko": "페피",
         "en": "Pepi"
@@ -513,7 +633,13 @@
       "quote": {
         "ko": "이 편지는 꼭 전해 줄 거야.",
         "en": "I will deliver this letter."
-      }
+      },
+      "motionKind": "sway",
+      "portraitScale": 1.18993,
+      "portraitAnchor": [
+        0.51595,
+        0.53947
+      ]
     },
     {
       "id": "s1-12",
@@ -522,8 +648,8 @@
       "chapter": 3,
       "family": "letter",
       "guardian": false,
-      "released": false,
-      "asset": null,
+      "released": true,
+      "asset": "assets/art/season1/ribon.png",
       "name": {
         "ko": "리본",
         "en": "Ribon"
@@ -555,7 +681,13 @@
       "quote": {
         "ko": "매듭이 풀려도 약속은 남아.",
         "en": "Promises stay when ribbons come undone."
-      }
+      },
+      "motionKind": "tilt",
+      "portraitScale": 1.01676,
+      "portraitAnchor": [
+        0.50718,
+        0.55702
+      ]
     },
     {
       "id": "s1-13",
@@ -564,8 +696,8 @@
       "chapter": 3,
       "family": "letter",
       "guardian": false,
-      "released": false,
-      "asset": null,
+      "released": true,
+      "asset": "assets/art/season1/coco.png",
       "name": {
         "ko": "코코",
         "en": "Coco"
@@ -597,7 +729,13 @@
       "quote": {
         "ko": "한 글자씩 읽어 볼까?",
         "en": "Shall we read it one word at a time?"
-      }
+      },
+      "motionKind": "wave",
+      "portraitScale": 1.27525,
+      "portraitAnchor": [
+        0.49003,
+        0.53628
+      ]
     },
     {
       "id": "s1-14",
@@ -606,8 +744,8 @@
       "chapter": 3,
       "family": "letter",
       "guardian": false,
-      "released": false,
-      "asset": null,
+      "released": true,
+      "asset": "assets/art/season1/noti.png",
       "name": {
         "ko": "노티",
         "en": "Noti"
@@ -639,7 +777,13 @@
       "quote": {
         "ko": "아직 답장은 늦지 않았어.",
         "en": "It is not too late to reply."
-      }
+      },
+      "motionKind": "float",
+      "portraitScale": 1.00423,
+      "portraitAnchor": [
+        0.50159,
+        0.57974
+      ]
     },
     {
       "id": "s1-15",
@@ -648,8 +792,8 @@
       "chapter": 3,
       "family": "letter",
       "guardian": true,
-      "released": false,
-      "asset": null,
+      "released": true,
+      "asset": "assets/art/season1/ello.png",
       "name": {
         "ko": "엘로",
         "en": "Ello"
@@ -681,7 +825,13 @@
       "quote": {
         "ko": "닫힌 봉투에도 따뜻한 마음이 있어.",
         "en": "A sealed letter can still hold warmth."
-      }
+      },
+      "motionKind": "bow",
+      "portraitScale": 1.13867,
+      "portraitAnchor": [
+        0.50359,
+        0.53748
+      ]
     },
     {
       "id": "s1-16",
@@ -690,8 +840,8 @@
       "chapter": 4,
       "family": "cloud",
       "guardian": false,
-      "released": false,
-      "asset": null,
+      "released": true,
+      "asset": "assets/art/season1/poff.png",
       "name": {
         "ko": "포프",
         "en": "Poff"
@@ -723,7 +873,13 @@
       "quote": {
         "ko": "바람이 아까 그 노래를 불렀어!",
         "en": "The wind was singing that song!"
-      }
+      },
+      "motionKind": "sway",
+      "portraitScale": 1.03068,
+      "portraitAnchor": [
+        0.50758,
+        0.51874
+      ]
     },
     {
       "id": "s1-17",
@@ -732,8 +888,8 @@
       "chapter": 4,
       "family": "cloud",
       "guardian": false,
-      "released": false,
-      "asset": null,
+      "released": true,
+      "asset": "assets/art/season1/suu.png",
       "name": {
         "ko": "수우",
         "en": "Suu"
@@ -765,7 +921,13 @@
       "quote": {
         "ko": "쉿, 멀리서 신호가 와.",
         "en": "Listen. A signal is coming from far away."
-      }
+      },
+      "motionKind": "tilt",
+      "portraitScale": 1.15754,
+      "portraitAnchor": [
+        0.52113,
+        0.53788
+      ]
     },
     {
       "id": "s1-18",
@@ -774,8 +936,8 @@
       "chapter": 4,
       "family": "cloud",
       "guardian": false,
-      "released": false,
-      "asset": null,
+      "released": true,
+      "asset": "assets/art/season1/momo.png",
       "name": {
         "ko": "모모",
         "en": "Momo"
@@ -807,7 +969,13 @@
       "quote": {
         "ko": "조금 쉬어도 함께 갈 수 있어.",
         "en": "We can rest and still travel together."
-      }
+      },
+      "motionKind": "wave",
+      "portraitScale": 1.11785,
+      "portraitAnchor": [
+        0.50439,
+        0.52313
+      ]
     },
     {
       "id": "s1-19",
@@ -816,8 +984,8 @@
       "chapter": 4,
       "family": "cloud",
       "guardian": false,
-      "released": false,
-      "asset": null,
+      "released": true,
+      "asset": "assets/art/season1/wiri.png",
       "name": {
         "ko": "휘리",
         "en": "Wiri"
@@ -849,7 +1017,13 @@
       "quote": {
         "ko": "바람이 돌아갈 길을 알려 줄게.",
         "en": "I will show the wind the way home."
-      }
+      },
+      "motionKind": "float",
+      "portraitScale": 1.10025,
+      "portraitAnchor": [
+        0.51475,
+        0.54705
+      ]
     },
     {
       "id": "s1-20",
@@ -858,8 +1032,8 @@
       "chapter": 4,
       "family": "cloud",
       "guardian": true,
-      "released": false,
-      "asset": null,
+      "released": true,
+      "asset": "assets/art/season1/hamo.png",
       "name": {
         "ko": "하모",
         "en": "Hamo"
@@ -891,7 +1065,13 @@
       "quote": {
         "ko": "멈춘 노래도 다시 이어 부를 수 있어.",
         "en": "Even a paused song can begin again."
-      }
+      },
+      "motionKind": "bow",
+      "portraitScale": 1.07368,
+      "portraitAnchor": [
+        0.5004,
+        0.53469
+      ]
     },
     {
       "id": "s1-21",
@@ -900,8 +1080,8 @@
       "chapter": 5,
       "family": "memory",
       "guardian": false,
-      "released": false,
-      "asset": null,
+      "released": true,
+      "asset": "assets/art/season1/miru.png",
       "name": {
         "ko": "미루",
         "en": "Miru"
@@ -933,7 +1113,13 @@
       "quote": {
         "ko": "이 빛, 어디선가 본 것 같아.",
         "en": "I have seen this light somewhere."
-      }
+      },
+      "motionKind": "sway",
+      "portraitScale": 1.33441,
+      "portraitAnchor": [
+        0.5012,
+        0.59211
+      ]
     },
     {
       "id": "s1-22",
@@ -942,8 +1128,8 @@
       "chapter": 5,
       "family": "memory",
       "guardian": false,
-      "released": false,
-      "asset": null,
+      "released": true,
+      "asset": "assets/art/season1/veil.png",
       "name": {
         "ko": "베일",
         "en": "Veil"
@@ -975,7 +1161,13 @@
       "quote": {
         "ko": "희미한 기억도 소중한 조각이야.",
         "en": "A faint memory is precious too."
-      }
+      },
+      "motionKind": "tilt",
+      "portraitScale": 1.06433,
+      "portraitAnchor": [
+        0.5299,
+        0.5622
+      ]
     },
     {
       "id": "s1-23",
@@ -984,8 +1176,8 @@
       "chapter": 5,
       "family": "memory",
       "guardian": false,
-      "released": false,
-      "asset": null,
+      "released": true,
+      "asset": "assets/art/season1/or.png",
       "name": {
         "ko": "오르",
         "en": "Or"
@@ -1017,7 +1209,13 @@
       "quote": {
         "ko": "흩어진 빛은 다시 만날 거야.",
         "en": "Scattered lights will meet again."
-      }
+      },
+      "motionKind": "wave",
+      "portraitScale": 1.02314,
+      "portraitAnchor": [
+        0.50159,
+        0.53429
+      ]
     },
     {
       "id": "s1-24",
@@ -1026,8 +1224,8 @@
       "chapter": 5,
       "family": "memory",
       "guardian": false,
-      "released": false,
-      "asset": null,
+      "released": true,
+      "asset": "assets/art/season1/luche.png",
       "name": {
         "ko": "루체",
         "en": "Luche"
@@ -1059,7 +1257,13 @@
       "quote": {
         "ko": "리크, 이 별은 네 것과 닮았어.",
         "en": "RIQ, this star looks like yours."
-      }
+      },
+      "motionKind": "float",
+      "portraitScale": 1.20607,
+      "portraitAnchor": [
+        0.51236,
+        0.5315
+      ]
     },
     {
       "id": "s1-25",
@@ -1068,8 +1272,8 @@
       "chapter": 5,
       "family": "memory",
       "guardian": true,
-      "released": false,
-      "asset": null,
+      "released": true,
+      "asset": "assets/art/season1/aster.png",
       "name": {
         "ko": "아스테르",
         "en": "Aster"
@@ -1091,8 +1295,8 @@
         "en": "Welcoming bow"
       },
       "memory": {
-        "ko": "기억 보존 장치가 고장 나자, 아스테르가 우리를 지키려고 등대를 멈췄어. 그런데 옛 기록에는 리크의 별 표식이 있었어.",
-        "en": "When the memory keeper broke, Aster stopped the lighthouse to protect us. Yet RIQ’s star was already in the old records."
+        "ko": "등대를 끈 건 나였어. 너희의 기억을 지키고 싶었어.",
+        "en": "I was the one who turned off the lighthouses. I wanted to keep your memories safe."
       },
       "description": {
         "ko": "첫 별의 관측소의 기억을 품은 친구. 말수가 적지만 모든 친구의 이름을 기억해요.",
@@ -1101,7 +1305,13 @@
       "quote": {
         "ko": "친구들을 지키려면 빛을 멈춰야 했어.",
         "en": "I had to stop the light to keep our friends safe."
-      }
+      },
+      "motionKind": "bow",
+      "portraitScale": 1.23656,
+      "portraitAnchor": [
+        0.50279,
+        0.54426
+      ]
     }
   ]
 }

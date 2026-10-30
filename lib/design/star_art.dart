@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 import '../game/board_geometry.dart';
 import 'game_theme.dart';
+import 'board_material.dart';
 
 /// 한 번 디코딩한 작은 스프라이트를 Flutter 연출과 Flame이 공유한다.
 abstract final class StarArt {
@@ -141,37 +142,30 @@ class CourierPortrait extends StatelessWidget {
 
 /// 테두리는 좌표계 밖에 둔다. 그림이 가장자리 정령이나 터치를 덮지 않는다.
 class StarBoardFrame extends StatelessWidget {
-  const StarBoardFrame({super.key, required this.child});
+  const StarBoardFrame({super.key, required this.child, this.geometry});
   final Widget child;
-
+  final BoardGeometry? geometry;
   @override
-  Widget build(BuildContext context) => Stack(
-    children: [
-      Positioned.fill(
-        child: IgnorePointer(
-          child: ExcludeSemantics(
-            child: Opacity(
-              opacity: Theme.of(context).brightness == Brightness.dark
-                  ? 1
-                  : .45,
-              child: Image.asset(
-                StarArt.boardFrame,
-                scale: 4,
-                centerSlice: const Rect.fromLTWH(180, 180, 894, 894),
-                fit: BoxFit.fill,
-                filterQuality: FilterQuality.medium,
-              ),
-            ),
+  Widget build(BuildContext context) {
+    final layout = geometry;
+    // Production provides geometry; this fallback keeps standalone widget previews usable.
+    if (layout == null) {
+      return Padding(
+        padding: const EdgeInsets.all(BoardGeometry.defaultFrameInset),
+        child: child,
+      );
+    }
+    return RepaintBoundary(
+      child: CustomPaint(
+        painter: MoonstoneFramePainter(layout, GameTheme.colorsOf(context)),
+        child: Padding(
+          padding: EdgeInsets.all(layout.frameInset),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(layout.boardRadius),
+            child: child,
           ),
         ),
       ),
-      Padding(
-        padding: const EdgeInsets.all(BoardGeometry.defaultFrameInset),
-        child: ColoredBox(
-          color: GameTheme.colorsOf(context).boardSurface,
-          child: child,
-        ),
-      ),
-    ],
-  );
+    );
+  }
 }

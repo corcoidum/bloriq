@@ -328,31 +328,37 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                     ),
                     if (session != null) ...[
                       Text(
-                        t.gardenName,
+                        session.recommendedChapter.name.inLocale(t.localeName),
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        t.gardenProgress(session.collection.owned.length),
+                        t.seasonProgress(session.collection.owned.length),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        t.chapterCollection(
+                          session.recommendedChapter.name.inLocale(
+                            t.localeName,
+                          ),
+                          session.collection
+                              .inChapter(session.recommendedChapter.number)
+                              .length,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
                       LinearProgressIndicator(
                         value:
-                            session.levels
-                                .where(
-                                  (l) =>
-                                      l.id <= 5 &&
-                                      session.progress.forLevel(
-                                            l.id,
-                                            revision: l.revision,
-                                          ) !=
-                                          null,
-                                )
-                                .length /
+                            session.completedInChapter(
+                              session.recommendedChapter.number,
+                            ) /
                             5,
                       ),
+                      if (session.collection.owned.length == 25)
+                        Text(t.seasonComplete, textAlign: TextAlign.center),
                     ],
                     const SizedBox(height: 14),
                     FilledButton.icon(
@@ -444,11 +450,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                         ArcadeSurface(
                           child: Column(
                             children: [
-                              Text(
-                                t.backfillSummary(
-                                  session.collection.owned.length,
-                                ),
-                              ),
+                              Text(t.backfillUpdated),
                               TextButton(
                                 key: const ValueKey('dismiss-backfill'),
                                 onPressed: () async {

@@ -4,6 +4,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
 import '../design/game_theme.dart';
+import '../design/board_material.dart';
 import 'block_art.dart';
 import 'board_geometry.dart';
 import '../domain/puzzle.dart';
@@ -206,42 +207,14 @@ class BloriqGame extends FlameGame {
     }
     final layout = geometry;
     final cell = layout.cellSize;
-    final boardSize = layout.boardSize;
-    final origin = layout.origin;
     Offset center(Position p) => layout.center(p);
     final paint = Paint();
     final preview = currentPreview;
     final previewTarget = preview?.target;
     final previewState = preview?.nextState;
 
-    // A quiet border makes the grid read as one tactile game board.
-    final board = RRect.fromRectAndRadius(
-      (origin & boardSize).deflate(cell * .015),
-      Radius.circular(cell * .22),
-    );
-    canvas.drawRRect(
-      board,
-      paint..color = _colors.boardSurface.withValues(alpha: .92),
-    );
-
-    for (var y = 0; y < state.level.boardHeight; y++) {
-      for (var x = 0; x < state.level.boardWidth; x++) {
-        final rect = layout.tileRect(Position(x, y));
-        final tile = RRect.fromRectAndRadius(rect, Radius.circular(cell * .16));
-        canvas.drawRRect(
-          tile,
-          paint..color = _colors.tileBottom.withValues(alpha: .82),
-        );
-        canvas.drawRRect(
-          tile.deflate(1),
-          paint
-            ..color = _colors.outline.withValues(alpha: .72)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.4,
-        );
-        paint.style = PaintingStyle.fill;
-      }
-    }
+    final material = BoardMaterial(_colors);
+    material.floor(canvas, layout);
 
     // 기믹은 색과 모양을 함께 사용하고, 블록이 덮어도 아래 모서리 표시를 남긴다.
     String directionSymbol(Position direction) {
@@ -384,38 +357,16 @@ class BloriqGame extends FlameGame {
       );
     }
     for (final p in state.level.obstacles) {
-      final rect = Rect.fromCenter(
-        center: center(p),
-        width: cell * .86,
-        height: cell * .86,
+      material.raised(
+        canvas,
+        Rect.fromCenter(
+          center: center(p),
+          width: cell * .8,
+          height: cell * .76,
+        ),
+        cell,
+        _colors.slate,
       );
-      final wall = RRect.fromRectAndRadius(rect, Radius.circular(cell * .15));
-      canvas.drawRRect(
-        wall.shift(Offset(0, cell * .025)),
-        paint..color = _colors.slate.withValues(alpha: .25),
-      );
-      canvas.drawRRect(
-        wall,
-        paint
-          ..color = _colors.highlight
-          ..shader = LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color.lerp(_colors.slate, _colors.highlight, .12)!,
-              _colors.slate,
-            ],
-          ).createShader(rect),
-      );
-      paint.shader = null;
-      canvas.drawRRect(
-        wall.deflate(cell * .035),
-        paint
-          ..color = _colors.highlight.withValues(alpha: .23)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = math.max(1, cell * .012),
-      );
-      paint.style = PaintingStyle.fill;
     }
 
     final exit = center(state.level.exitPosition);
@@ -638,20 +589,62 @@ class BloriqGame extends FlameGame {
     double fontSize,
     Color color,
   ) {
-    final text = TextPainter(
-      text: TextSpan(
-        text: value,
-        style: TextStyle(
-          // Flutter UI와 같은 서체를 명시해 Canvas 기호도 일관되게 표시한다.
-          fontFamily: GameTypography.canvasFontFamily,
-          fontSize: fontSize,
-          color: color,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    text.paint(canvas, center - Offset(text.width / 2, text.height / 2));
-    text.dispose();
+    final radius = fontSize * .36;
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = math.max(1.3, fontSize * .12)
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..style = PaintingStyle.stroke;
+    if (value == '×') {
+      canvas.drawLine(
+        center + Offset(-radius, -radius),
+        center + Offset(radius, radius),
+        paint,
+      );
+      canvas.drawLine(
+        center + Offset(radius, -radius),
+        center + Offset(-radius, radius),
+        paint,
+      );
+    } else if (value == 'Ⅱ') {
+      for (final x in [-radius * .55, radius * .55]) {
+        canvas.drawLine(
+          center + Offset(x, -radius),
+          center + Offset(x, radius),
+          paint,
+        );
+      }
+    } else if (value == '▶') {
+      canvas.drawPath(
+        Path()
+          ..moveTo(center.dx - radius * .65, center.dy - radius)
+          ..lineTo(center.dx + radius, center.dy)
+          ..lineTo(center.dx - radius * .65, center.dy + radius)
+          ..close(),
+        paint..style = PaintingStyle.fill,
+      );
+    } else {
+      final direction = switch (value) {
+        '←' => const Offset(-1, 0),
+        '↑' => const Offset(0, -1),
+        '↓' => const Offset(0, 1),
+        '↗' => const Offset(.707, -.707),
+        _ => const Offset(1, 0),
+      };
+      final normal = Offset(-direction.dy, direction.dx);
+      final tip = center + direction * radius;
+      canvas.drawLine(center - direction * radius, tip, paint);
+      canvas.drawLine(
+        tip,
+        tip - direction * radius * .65 + normal * radius * .6,
+        paint,
+      );
+      canvas.drawLine(
+        tip,
+        tip - direction * radius * .65 - normal * radius * .6,
+        paint,
+      );
+    }
   }
 }

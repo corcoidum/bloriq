@@ -30,6 +30,11 @@ class CollectionRepository {
   bool hasSeen(String id) => _seen.contains(id);
   List<SpiritDefinition> get owned =>
       catalog.released.where((s) => owns(s.id)).toList(growable: false);
+  List<SpiritDefinition> inChapter(int number) =>
+      owned.where((s) => s.chapter == number).toList(growable: false);
+  bool chapterComplete(int number) =>
+      catalog.inChapter(number).isNotEmpty &&
+      inChapter(number).length == catalog.inChapter(number).length;
   SpiritDefinition? get companion {
     final selected = catalog.byId(_equipped);
     return selected != null && selected.released && owns(selected.id)

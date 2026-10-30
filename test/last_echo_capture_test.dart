@@ -42,8 +42,12 @@ void main() {
       'MaterialIcons',
     )..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'))).load();
     await tester.runAsync(StarArt.load);
-    final directory = Directory('docs/screenshots/last-echo')
-      ..createSync(recursive: true);
+    final directory = Directory(
+      const String.fromEnvironment(
+        'CAPTURE_DIRECTORY',
+        defaultValue: 'docs/screenshots/last-echo',
+      ),
+    )..createSync(recursive: true);
     final key = GlobalKey();
     final board = find.byType(GameWidget<BloriqGame>);
     BloriqGame game() => tester.widget<GameWidget<BloriqGame>>(board).game!;
