@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../design/game_theme.dart';
 import '../design/star_art.dart';
+import 'board_geometry.dart';
 
 /// 게임판과 시작 연출이 같은 블록의 소재감과 기호를 사용한다.
 abstract final class BlockArt {
@@ -16,26 +17,39 @@ abstract final class BlockArt {
     double scale = 1,
     double opacity = 1,
   }) {
-    if (StarArt.courierImage case final image?) {
-      StarArt.draw(
-        canvas,
-        image,
-        Rect.fromCenter(
-          center: at,
-          width: cell * .98 * scale,
-          height: cell * .98 * scale,
-        ),
-        opacity: opacity,
-        tint: goal ? null : colors.primary.withValues(alpha: .70),
-      );
-      if (!goal) {
-        // 일반 친구는 푸른 몸체와 원형 배지로 목표 정령과 구분한다.
-        canvas.drawCircle(
-          at + Offset(cell * .23, cell * .24),
-          cell * .065,
-          Paint()..color = colors.primaryInk,
+    final image = goal ? StarArt.riqImage : StarArt.runeImage;
+    if (image != null) {
+      if (goal) {
+        final mark = RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: at + Offset(0, cell * .045),
+            width: cell * .77 * scale,
+            height: cell * .73 * scale,
+          ),
+          Radius.circular(cell * .18),
+        );
+        canvas.drawRRect(
+          mark,
+          Paint()..color = colors.goal.withValues(alpha: .18 * opacity),
+        );
+        canvas.drawRRect(
+          mark,
+          Paint()
+            ..color = colors.goalInk.withValues(alpha: opacity)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = math.max(2, cell * .023),
         );
       }
+      final extent = cell * BoardGeometry.spriteFraction * scale;
+      // Source silhouette anchor (.486,.539) places RIQ's visual center on the cell center.
+      final anchor = goal ? const Offset(.486, .539) : const Offset(.5, .5);
+      final rect = Rect.fromCenter(
+        center:
+            at + Offset((.5 - anchor.dx) * extent, (.5 - anchor.dy) * extent),
+        width: extent,
+        height: extent,
+      );
+      StarArt.draw(canvas, image, rect, opacity: opacity);
       return;
     }
     final paint = Paint();
@@ -113,7 +127,11 @@ abstract final class BlockArt {
       StarArt.draw(
         canvas,
         image,
-        Rect.fromCenter(center: at, width: cell * .98, height: cell * .98),
+        Rect.fromCenter(
+          center: at,
+          width: cell * BoardGeometry.spriteFraction,
+          height: cell * BoardGeometry.spriteFraction,
+        ),
         opacity: opacity,
         tint: colors == GameColors.light
             ? colors.echoInk.withValues(alpha: .85)

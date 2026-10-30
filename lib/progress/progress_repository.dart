@@ -91,6 +91,7 @@ class ProgressRepository {
     this.writer,
   }) {
     saveFailed = !_writable;
+    _persistedLevelIds = _levels.values.map((e) => e.levelId).toSet();
   }
 
   // 같은 단계 번호라도 리디자인된 퍼즐은 이전 코스의 기록과 섞지 않는다.
@@ -102,6 +103,7 @@ class ProgressRepository {
   final SharedPreferences? _preferences;
   final Future<bool> Function(String, String)? writer;
   final Map<String, LevelProgress> _levels;
+  late final Set<int> _persistedLevelIds;
   final bool _writable;
   Future<void> _writeQueue = Future.value();
 
@@ -118,7 +120,7 @@ class ProgressRepository {
       }
       final decoded = jsonDecode(raw);
       if (decoded is! Map || decoded['version'] is! int) {
-        return ProgressRepository._(preferences, {}, true, writer: writer);
+        return ProgressRepository._(preferences, {}, false, writer: writer);
       }
       // 알 수 없는 새 버전은 읽거나 덮어쓰지 않아 데이터 손실을 막는다.
       if (decoded['version'] != (rawV2 == null ? 1 : schemaVersion)) {
@@ -126,33 +128,39 @@ class ProgressRepository {
       }
       final values = decoded['levels'];
       if (values is! List) {
-        return ProgressRepository._(preferences, {}, true, writer: writer);
+        return ProgressRepository._(preferences, {}, false, writer: writer);
       }
       final levels = <String, LevelProgress>{};
+      var valid = true;
       for (final value in values) {
         final entry = LevelProgress.fromJson(value);
-        if (entry != null) levels['${entry.levelId}:${entry.revision}'] = entry;
+        if (entry != null) {
+          levels['${entry.levelId}:${entry.revision}'] = entry;
+        } else {
+          valid = false;
+        }
       }
       final repository = ProgressRepository._(
         preferences,
         levels,
-        true,
+        valid,
         writer: writer,
       );
       if (rawV2 == null) await repository._persist();
       return repository;
     } catch (_) {
       // 손상된 JSON 또는 플랫폼 저장소 오류가 게임 시작을 막지 않는다.
-      return ProgressRepository._(
-        preferences,
-        {},
-        preferences != null,
-        writer: writer,
-      );
+      return ProgressRepository._(preferences, {}, false, writer: writer);
     }
   }
 
   bool get hasAnyProgress => _levels.isNotEmpty;
+
+  /// 수집 권리는 성공적으로 읽거나 쓴 스냅샷만 근거로 삼는다.
+  Set<int> get completedCampaignLevelIds =>
+      Set.unmodifiable(_persistedLevelIds);
+  Future<bool> retrySave() => _persist();
+  Future<void> flush() => _writeQueue;
   bool get hasHistoricalStorage =>
       _preferences?.containsKey(legacyStorageKey) == true ||
       _preferences?.containsKey(course2StorageKey) == true ||
@@ -162,6 +170,7 @@ class ProgressRepository {
       _levels['$levelId:$revision'];
 
   Future<bool> _persist() async {
+    final snapshotIds = _levels.values.map((e) => e.levelId).toSet();
     final snapshot = jsonEncode({
       'version': schemaVersion,
       'levels': _levels.values.map((entry) => entry.toJson()).toList(),
@@ -173,6 +182,11 @@ class ProgressRepository {
         saved =
             await (writer?.call(storageKey, snapshot) ??
                 _preferences.setString(storageKey, snapshot));
+        if (saved) {
+          _persistedLevelIds
+            ..clear()
+            ..addAll(snapshotIds);
+        }
       } catch (_) {
         saved = false;
       }

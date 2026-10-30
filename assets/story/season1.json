@@ -1,0 +1,1107 @@
+{
+  "version": 1,
+  "seasonId": "s1",
+  "title": {
+    "ko": "잊힌 별의 발자국",
+    "en": "Footprints of a Forgotten Star"
+  },
+  "chapters": [
+    {
+      "number": 1,
+      "name": {
+        "ko": "초승달 정원",
+        "en": "Crescent Garden"
+      },
+      "family": "forest",
+      "released": true
+    },
+    {
+      "number": 2,
+      "name": {
+        "ko": "잠든 수문",
+        "en": "Sleeping Watergate"
+      },
+      "family": "starlight",
+      "released": false
+    },
+    {
+      "number": 3,
+      "name": {
+        "ko": "잊힌 우체국",
+        "en": "Forgotten Post Office"
+      },
+      "family": "letter",
+      "released": false
+    },
+    {
+      "number": 4,
+      "name": {
+        "ko": "바람의 회랑",
+        "en": "Hall of Winds"
+      },
+      "family": "cloud",
+      "released": false
+    },
+    {
+      "number": 5,
+      "name": {
+        "ko": "첫 별의 관측소",
+        "en": "Observatory of the First Star"
+      },
+      "family": "memory",
+      "released": false
+    }
+  ],
+  "spirits": [
+    {
+      "id": "s1-01",
+      "memoryId": "s1-memory-01",
+      "levelId": 1,
+      "chapter": 1,
+      "family": "forest",
+      "guardian": false,
+      "released": true,
+      "asset": "assets/art/star_courier/courier.png",
+      "name": {
+        "ko": "모리",
+        "en": "Mori"
+      },
+      "levelTitle": {
+        "ko": "첫 번째 발자국",
+        "en": "The First Footprint"
+      },
+      "appearance": {
+        "ko": "민트 몸체와 두 잎 새싹, 작은 삼각 귀",
+        "en": "Mint body, two sprout leaves and small triangular ears"
+      },
+      "personality": {
+        "ko": "다정하고 호기심이 많아요.",
+        "en": "Kind and curious."
+      },
+      "motion": {
+        "ko": "잎 흔들기",
+        "en": "Wiggles sprout leaves"
+      },
+      "memory": {
+        "ko": "별문 너머에서 누군가 우리를 기다리고 있었어.",
+        "en": "Someone was waiting for us beyond the star gate."
+      },
+      "description": {
+        "ko": "초승달 정원의 기억을 품은 작은 친구. 다정하고 호기심이 많아요.",
+        "en": "A little friend holding a memory of Crescent Garden. Kind and curious."
+      },
+      "quote": {
+        "ko": "함께 가면 덜 무서울 거야.",
+        "en": "It is less scary together."
+      }
+    },
+    {
+      "id": "s1-02",
+      "memoryId": "s1-memory-02",
+      "levelId": 2,
+      "chapter": 1,
+      "family": "forest",
+      "guardian": false,
+      "released": true,
+      "asset": "assets/art/last_echo/pomi.png",
+      "name": {
+        "ko": "포미",
+        "en": "Pomi"
+      },
+      "levelTitle": {
+        "ko": "꽃잎 사이의 길",
+        "en": "A Path through Petals"
+      },
+      "appearance": {
+        "ko": "크림·살구 몸체, 분홍 꽃봉오리와 꽃잎 발",
+        "en": "Cream-peach body, pink flowerbud and petal feet"
+      },
+      "personality": {
+        "ko": "친구를 만나면 먼저 손을 흔들어요.",
+        "en": "Always the first to wave hello."
+      },
+      "motion": {
+        "ko": "작은 손 흔들기",
+        "en": "Waves a tiny hand"
+      },
+      "memory": {
+        "ko": "다섯 등대는 한 줄의 빛으로 이어져 있었어.",
+        "en": "Five lighthouses were joined by a single thread of light."
+      },
+      "description": {
+        "ko": "초승달 정원의 기억을 품은 작은 친구. 친구를 만나면 먼저 손을 흔들어요.",
+        "en": "A little friend holding a memory of Crescent Garden. Always the first to wave hello."
+      },
+      "quote": {
+        "ko": "다음 꽃길도 같이 걸을래?",
+        "en": "Shall we follow the next flower path?"
+      }
+    },
+    {
+      "id": "s1-03",
+      "memoryId": "s1-memory-03",
+      "levelId": 3,
+      "chapter": 1,
+      "family": "forest",
+      "guardian": false,
+      "released": true,
+      "asset": "assets/art/last_echo/doto.png",
+      "name": {
+        "ko": "도토",
+        "en": "Doto"
+      },
+      "levelTitle": {
+        "ko": "도토리의 약속",
+        "en": "The Acorn Promise"
+      },
+      "appearance": {
+        "ko": "도토리 모자와 둥근 귀, 짧은 꼬리",
+        "en": "Acorn cap, round ears and a stubby tail"
+      },
+      "personality": {
+        "ko": "한 번 더 생각하고 천천히 고개를 끄덕여요.",
+        "en": "Thinks once more, then gives a careful nod."
+      },
+      "motion": {
+        "ko": "신중하게 끄덕이기",
+        "en": "Gives a thoughtful nod"
+      },
+      "memory": {
+        "ko": "불빛이 꺼지기 전, 모두를 별문 안으로 데려갔어.",
+        "en": "Before the lights went out, someone led everyone inside the star gates."
+      },
+      "description": {
+        "ko": "초승달 정원의 기억을 품은 작은 친구. 한 번 더 생각하고 천천히 고개를 끄덕여요.",
+        "en": "A little friend holding a memory of Crescent Garden. Thinks once more, then gives a careful nod."
+      },
+      "quote": {
+        "ko": "천천히 가도 괜찮아.",
+        "en": "It is all right to take our time."
+      }
+    },
+    {
+      "id": "s1-04",
+      "memoryId": "s1-memory-04",
+      "levelId": 4,
+      "chapter": 1,
+      "family": "forest",
+      "guardian": false,
+      "released": true,
+      "asset": "assets/art/last_echo/lulu.png",
+      "name": {
+        "ko": "루루",
+        "en": "Lulu"
+      },
+      "levelTitle": {
+        "ko": "이슬에 남긴 편지",
+        "en": "A Letter in the Dew"
+      },
+      "appearance": {
+        "ko": "둥근 이슬 장식과 작은 청록 잎 날개",
+        "en": "Round dew ornament and little teal leaf wings"
+      },
+      "personality": {
+        "ko": "수줍지만 친구 곁을 지켜요.",
+        "en": "Shy, but stays beside a friend."
+      },
+      "motion": {
+        "ko": "작은 잎 날개 펼치기",
+        "en": "Opens little leaf wings"
+      },
+      "memory": {
+        "ko": "편지에는 한 문장만 남아 있었어. “기억이 돌아오면 만나자.”",
+        "en": "Only one sentence remained: “Let us meet when the memories return.”"
+      },
+      "description": {
+        "ko": "초승달 정원의 기억을 품은 작은 친구. 수줍지만 친구 곁을 지켜요.",
+        "en": "A little friend holding a memory of Crescent Garden. Shy, but stays beside a friend."
+      },
+      "quote": {
+        "ko": "작은 빛도 길을 남겨.",
+        "en": "Even a little light leaves a path."
+      }
+    },
+    {
+      "id": "s1-05",
+      "memoryId": "s1-memory-05",
+      "levelId": 5,
+      "chapter": 1,
+      "family": "forest",
+      "guardian": true,
+      "released": true,
+      "asset": "assets/art/last_echo/lunabel.png",
+      "name": {
+        "ko": "루나벨",
+        "en": "Lunabel"
+      },
+      "levelTitle": {
+        "ko": "달빛 아래의 약속",
+        "en": "A Promise under Moonlight"
+      },
+      "appearance": {
+        "ko": "달꽃과 잎 관을 가진 둥근 숲 수호자",
+        "en": "Round forest guardian with a moonflower and leaf crown"
+      },
+      "personality": {
+        "ko": "작은 친구들을 조용히 감싸 줘요.",
+        "en": "Quietly shelters the little friends."
+      },
+      "motion": {
+        "ko": "잎을 펼쳐 친구 맞이하기",
+        "en": "Spreads leaves to welcome friends"
+      },
+      "memory": {
+        "ko": "우린 버려진 게 아니었어. 누군가 우리를 지키려고 별문을 닫았어.",
+        "en": "We were not abandoned. Someone closed the star gates to keep us safe."
+      },
+      "description": {
+        "ko": "초승달 정원의 기억을 품은 작은 친구. 작은 친구들을 조용히 감싸 줘요.",
+        "en": "A little friend holding a memory of Crescent Garden. Quietly shelters the little friends."
+      },
+      "quote": {
+        "ko": "우린 여기서 서로를 기다렸어.",
+        "en": "We waited here for one another."
+      }
+    },
+    {
+      "id": "s1-06",
+      "memoryId": "s1-memory-06",
+      "levelId": 6,
+      "chapter": 2,
+      "family": "starlight",
+      "guardian": false,
+      "released": false,
+      "asset": null,
+      "name": {
+        "ko": "루미",
+        "en": "Lumi"
+      },
+      "levelTitle": {
+        "ko": "잠든 문을 두드리면",
+        "en": "Knocking on a Sleeping Gate"
+      },
+      "appearance": {
+        "ko": "작고 둥근 몸체와 작은 별 안테나",
+        "en": "Small round body with little star antenna"
+      },
+      "personality": {
+        "ko": "어두운 곳에서도 가장 먼저 빛을 찾아요.",
+        "en": "Always finds the first light in the dark."
+      },
+      "motion": {
+        "ko": "작게 흔들리기",
+        "en": "Gentle sway"
+      },
+      "memory": {
+        "ko": "문양은 발걸음보다 방금 남은 빛에 반응했어.",
+        "en": "The mark listened to the light just left behind."
+      },
+      "description": {
+        "ko": "잠든 수문의 기억을 품은 친구. 어두운 곳에서도 가장 먼저 빛을 찾아요.",
+        "en": "A friend holding a memory of Sleeping Watergate. Always finds the first light in the dark."
+      },
+      "quote": {
+        "ko": "별 하나만 따라오면 돼!",
+        "en": "Follow this little star!"
+      }
+    },
+    {
+      "id": "s1-07",
+      "memoryId": "s1-memory-07",
+      "levelId": 7,
+      "chapter": 2,
+      "family": "starlight",
+      "guardian": false,
+      "released": false,
+      "asset": null,
+      "name": {
+        "ko": "피코",
+        "en": "Pico"
+      },
+      "levelTitle": {
+        "ko": "별빛이 닿는 마름모",
+        "en": "A Diamond of Starlight"
+      },
+      "appearance": {
+        "ko": "작고 둥근 몸체와 별 볼무늬",
+        "en": "Small round body with star cheek mark"
+      },
+      "personality": {
+        "ko": "작은 반짝임을 모아 친구에게 나눠 줘요.",
+        "en": "Collects tiny sparks to share."
+      },
+      "motion": {
+        "ko": "고개 기울이기",
+        "en": "Curious tilt"
+      },
+      "memory": {
+        "ko": "다섯 등대가 모두 꺼진 건 아니었어.",
+        "en": "Not all five lighthouses had gone completely dark."
+      },
+      "description": {
+        "ko": "잠든 수문의 기억을 품은 친구. 작은 반짝임을 모아 친구에게 나눠 줘요.",
+        "en": "A friend holding a memory of Sleeping Watergate. Collects tiny sparks to share."
+      },
+      "quote": {
+        "ko": "작은 빛도 길을 비출 수 있어.",
+        "en": "Even a little light can guide us."
+      }
+    },
+    {
+      "id": "s1-08",
+      "memoryId": "s1-memory-08",
+      "levelId": 8,
+      "chapter": 2,
+      "family": "starlight",
+      "guardian": false,
+      "released": false,
+      "asset": null,
+      "name": {
+        "ko": "토리",
+        "en": "Tori"
+      },
+      "levelTitle": {
+        "ko": "잠깐 머무는 빛",
+        "en": "A Light That Lingers"
+      },
+      "appearance": {
+        "ko": "작고 둥근 몸체와 초승달 귀",
+        "en": "Small round body with crescent ears"
+      },
+      "personality": {
+        "ko": "수문 틈으로 들려오는 소리를 유심히 들어요.",
+        "en": "Listens carefully to sounds beyond the gates."
+      },
+      "motion": {
+        "ko": "손 흔들기",
+        "en": "Little wave"
+      },
+      "memory": {
+        "ko": "문지기는 빛이 돌아올 자리를 비워 두었어.",
+        "en": "The keeper left a place for the light to return."
+      },
+      "description": {
+        "ko": "잠든 수문의 기억을 품은 친구. 수문 틈으로 들려오는 소리를 유심히 들어요.",
+        "en": "A friend holding a memory of Sleeping Watergate. Listens carefully to sounds beyond the gates."
+      },
+      "quote": {
+        "ko": "문틈의 노래가 들려?",
+        "en": "Can you hear the song in the gate?"
+      }
+    },
+    {
+      "id": "s1-09",
+      "memoryId": "s1-memory-09",
+      "levelId": 9,
+      "chapter": 2,
+      "family": "starlight",
+      "guardian": false,
+      "released": false,
+      "asset": null,
+      "name": {
+        "ko": "미오",
+        "en": "Mio"
+      },
+      "levelTitle": {
+        "ko": "두 별 사이의 길",
+        "en": "Between Two Stars"
+      },
+      "appearance": {
+        "ko": "작고 둥근 몸체와 반짝이는 리본 꼬리",
+        "en": "Small round body with sparkling ribbon tail"
+      },
+      "personality": {
+        "ko": "새로운 길을 먼저 찾아 나서는 탐험가예요.",
+        "en": "An eager explorer who scouts new paths."
+      },
+      "motion": {
+        "ko": "잠깐 떠오르기",
+        "en": "Short float"
+      },
+      "memory": {
+        "ko": "길은 끊어진 게 아니라 잠시 접혀 있었어.",
+        "en": "The path was folded for a while, not broken."
+      },
+      "description": {
+        "ko": "잠든 수문의 기억을 품은 친구. 새로운 길을 먼저 찾아 나서는 탐험가예요.",
+        "en": "A friend holding a memory of Sleeping Watergate. An eager explorer who scouts new paths."
+      },
+      "quote": {
+        "ko": "이쪽에도 반짝이는 길이 있어!",
+        "en": "There is a sparkling path this way!"
+      }
+    },
+    {
+      "id": "s1-10",
+      "memoryId": "s1-memory-10",
+      "levelId": 10,
+      "chapter": 2,
+      "family": "starlight",
+      "guardian": true,
+      "released": false,
+      "asset": null,
+      "name": {
+        "ko": "루멘",
+        "en": "Lumen"
+      },
+      "levelTitle": {
+        "ko": "수문지기의 노래",
+        "en": "The Keeper’s Song"
+      },
+      "appearance": {
+        "ko": "작고 둥근 몸체와 다섯 별의 작은 관",
+        "en": "Small round body with small five-star crown"
+      },
+      "personality": {
+        "ko": "천천히 문을 열며 친구를 끝까지 기다려요.",
+        "en": "Opens gates slowly and waits for every friend."
+      },
+      "motion": {
+        "ko": "친구 맞이하기",
+        "en": "Welcoming bow"
+      },
+      "memory": {
+        "ko": "수문지기는 다시 만날 날을 약속했어.",
+        "en": "The watergate keeper promised another meeting."
+      },
+      "description": {
+        "ko": "잠든 수문의 기억을 품은 친구. 천천히 문을 열며 친구를 끝까지 기다려요.",
+        "en": "A friend holding a memory of Sleeping Watergate. Opens gates slowly and waits for every friend."
+      },
+      "quote": {
+        "ko": "문은 다시 만날 곳을 기억해.",
+        "en": "A gate remembers where we will meet."
+      }
+    },
+    {
+      "id": "s1-11",
+      "memoryId": "s1-memory-11",
+      "levelId": 11,
+      "chapter": 3,
+      "family": "letter",
+      "guardian": false,
+      "released": false,
+      "asset": null,
+      "name": {
+        "ko": "페피",
+        "en": "Pepi"
+      },
+      "levelTitle": {
+        "ko": "첫 번째 봉투",
+        "en": "The First Envelope"
+      },
+      "appearance": {
+        "ko": "작고 둥근 몸체와 접힌 종이 귀",
+        "en": "Small round body with folded paper ears"
+      },
+      "personality": {
+        "ko": "마지막 한 통까지 편지를 전하려 해요.",
+        "en": "Makes sure every last letter is delivered."
+      },
+      "motion": {
+        "ko": "작게 흔들리기",
+        "en": "Gentle sway"
+      },
+      "memory": {
+        "ko": "편지는 잊힌 이름들을 한 줄씩 지키고 있었어.",
+        "en": "The letters protected forgotten names, one line at a time."
+      },
+      "description": {
+        "ko": "잊힌 우체국의 기억을 품은 친구. 마지막 한 통까지 편지를 전하려 해요.",
+        "en": "A friend holding a memory of Forgotten Post Office. Makes sure every last letter is delivered."
+      },
+      "quote": {
+        "ko": "이 편지는 꼭 전해 줄 거야.",
+        "en": "I will deliver this letter."
+      }
+    },
+    {
+      "id": "s1-12",
+      "memoryId": "s1-memory-12",
+      "levelId": 12,
+      "chapter": 3,
+      "family": "letter",
+      "guardian": false,
+      "released": false,
+      "asset": null,
+      "name": {
+        "ko": "리본",
+        "en": "Ribon"
+      },
+      "levelTitle": {
+        "ko": "리본이 가리킨 곳",
+        "en": "Where the Ribbon Points"
+      },
+      "appearance": {
+        "ko": "작고 둥근 몸체와 리본 꼬리",
+        "en": "Small round body with ribbon tail"
+      },
+      "personality": {
+        "ko": "잊힌 약속을 작은 매듭으로 기억해요.",
+        "en": "Keeps forgotten promises in little knots."
+      },
+      "motion": {
+        "ko": "고개 기울이기",
+        "en": "Curious tilt"
+      },
+      "memory": {
+        "ko": "리본의 매듭은 다섯 지역을 가리켰어.",
+        "en": "A ribbon knot pointed toward five regions."
+      },
+      "description": {
+        "ko": "잊힌 우체국의 기억을 품은 친구. 잊힌 약속을 작은 매듭으로 기억해요.",
+        "en": "A friend holding a memory of Forgotten Post Office. Keeps forgotten promises in little knots."
+      },
+      "quote": {
+        "ko": "매듭이 풀려도 약속은 남아.",
+        "en": "Promises stay when ribbons come undone."
+      }
+    },
+    {
+      "id": "s1-13",
+      "memoryId": "s1-memory-13",
+      "levelId": 13,
+      "chapter": 3,
+      "family": "letter",
+      "guardian": false,
+      "released": false,
+      "asset": null,
+      "name": {
+        "ko": "코코",
+        "en": "Coco"
+      },
+      "levelTitle": {
+        "ko": "배달되지 않은 안부",
+        "en": "An Undelivered Hello"
+      },
+      "appearance": {
+        "ko": "작고 둥근 몸체와 봉투 가슴무늬",
+        "en": "Small round body with envelope chest patch"
+      },
+      "personality": {
+        "ko": "글을 천천히 읽지만 마음은 누구보다 빨리 알아요.",
+        "en": "Reads slowly but understands feelings quickly."
+      },
+      "motion": {
+        "ko": "손 흔들기",
+        "en": "Little wave"
+      },
+      "memory": {
+        "ko": "누군가는 모두의 안부를 마지막까지 적었어.",
+        "en": "Someone kept writing everyone’s greetings to the very end."
+      },
+      "description": {
+        "ko": "잊힌 우체국의 기억을 품은 친구. 글을 천천히 읽지만 마음은 누구보다 빨리 알아요.",
+        "en": "A friend holding a memory of Forgotten Post Office. Reads slowly but understands feelings quickly."
+      },
+      "quote": {
+        "ko": "한 글자씩 읽어 볼까?",
+        "en": "Shall we read it one word at a time?"
+      }
+    },
+    {
+      "id": "s1-14",
+      "memoryId": "s1-memory-14",
+      "levelId": 14,
+      "chapter": 3,
+      "family": "letter",
+      "guardian": false,
+      "released": false,
+      "asset": null,
+      "name": {
+        "ko": "노티",
+        "en": "Noti"
+      },
+      "levelTitle": {
+        "ko": "바람에 실린 주소",
+        "en": "An Address on the Wind"
+      },
+      "appearance": {
+        "ko": "작고 둥근 몸체와 작은 종이 날개",
+        "en": "Small round body with small paper wings"
+      },
+      "personality": {
+        "ko": "망설이는 친구가 답장을 쓰도록 곁에 있어 줘요.",
+        "en": "Stays beside friends who are unsure how to reply."
+      },
+      "motion": {
+        "ko": "잠깐 떠오르기",
+        "en": "Short float"
+      },
+      "memory": {
+        "ko": "바람은 발신인의 이름만 가져가지 않았어.",
+        "en": "The wind had not taken the sender’s name."
+      },
+      "description": {
+        "ko": "잊힌 우체국의 기억을 품은 친구. 망설이는 친구가 답장을 쓰도록 곁에 있어 줘요.",
+        "en": "A friend holding a memory of Forgotten Post Office. Stays beside friends who are unsure how to reply."
+      },
+      "quote": {
+        "ko": "아직 답장은 늦지 않았어.",
+        "en": "It is not too late to reply."
+      }
+    },
+    {
+      "id": "s1-15",
+      "memoryId": "s1-memory-15",
+      "levelId": 15,
+      "chapter": 3,
+      "family": "letter",
+      "guardian": true,
+      "released": false,
+      "asset": null,
+      "name": {
+        "ko": "엘로",
+        "en": "Ello"
+      },
+      "levelTitle": {
+        "ko": "이름 없는 발신인",
+        "en": "The Nameless Sender"
+      },
+      "appearance": {
+        "ko": "작고 둥근 몸체와 편지 봉인 문양",
+        "en": "Small round body with letter-seal mark"
+      },
+      "personality": {
+        "ko": "친구들의 편지를 안전한 곳에 간직해요.",
+        "en": "Keeps every friend’s letters safe."
+      },
+      "motion": {
+        "ko": "친구 맞이하기",
+        "en": "Welcoming bow"
+      },
+      "memory": {
+        "ko": "편지의 별 표식은 리크의 것과 닮아 있었어.",
+        "en": "The letter’s star mark resembled RIQ’s."
+      },
+      "description": {
+        "ko": "잊힌 우체국의 기억을 품은 친구. 친구들의 편지를 안전한 곳에 간직해요.",
+        "en": "A friend holding a memory of Forgotten Post Office. Keeps every friend’s letters safe."
+      },
+      "quote": {
+        "ko": "닫힌 봉투에도 따뜻한 마음이 있어.",
+        "en": "A sealed letter can still hold warmth."
+      }
+    },
+    {
+      "id": "s1-16",
+      "memoryId": "s1-memory-16",
+      "levelId": 16,
+      "chapter": 4,
+      "family": "cloud",
+      "guardian": false,
+      "released": false,
+      "asset": null,
+      "name": {
+        "ko": "포프",
+        "en": "Poff"
+      },
+      "levelTitle": {
+        "ko": "구름이 지나간 자리",
+        "en": "Where a Cloud Passed"
+      },
+      "appearance": {
+        "ko": "작고 둥근 몸체와 보송한 구름 모자",
+        "en": "Small round body with fluffy cloud cap"
+      },
+      "personality": {
+        "ko": "바람에 실린 소식이면 무엇이든 궁금해해요.",
+        "en": "Curious about every message on the wind."
+      },
+      "motion": {
+        "ko": "작게 흔들리기",
+        "en": "Gentle sway"
+      },
+      "memory": {
+        "ko": "바람 속에는 멈추라는 신호가 남아 있었어.",
+        "en": "A signal to stop still lingered in the wind."
+      },
+      "description": {
+        "ko": "바람의 회랑의 기억을 품은 친구. 바람에 실린 소식이면 무엇이든 궁금해해요.",
+        "en": "A friend holding a memory of Hall of Winds. Curious about every message on the wind."
+      },
+      "quote": {
+        "ko": "바람이 아까 그 노래를 불렀어!",
+        "en": "The wind was singing that song!"
+      }
+    },
+    {
+      "id": "s1-17",
+      "memoryId": "s1-memory-17",
+      "levelId": 17,
+      "chapter": 4,
+      "family": "cloud",
+      "guardian": false,
+      "released": false,
+      "asset": null,
+      "name": {
+        "ko": "수우",
+        "en": "Suu"
+      },
+      "levelTitle": {
+        "ko": "돌아오는 산들바람",
+        "en": "The Returning Breeze"
+      },
+      "appearance": {
+        "ko": "작고 둥근 몸체와 짧은 바람 꼬리",
+        "en": "Small round body with short wind tail"
+      },
+      "personality": {
+        "ko": "작은 소리와 숨은 신호를 놓치지 않아요.",
+        "en": "Never misses a quiet sound or hidden signal."
+      },
+      "motion": {
+        "ko": "고개 기울이기",
+        "en": "Curious tilt"
+      },
+      "memory": {
+        "ko": "신호는 친구들을 별문으로 안내했어.",
+        "en": "The signal guided friends into the star gates."
+      },
+      "description": {
+        "ko": "바람의 회랑의 기억을 품은 친구. 작은 소리와 숨은 신호를 놓치지 않아요.",
+        "en": "A friend holding a memory of Hall of Winds. Never misses a quiet sound or hidden signal."
+      },
+      "quote": {
+        "ko": "쉿, 멀리서 신호가 와.",
+        "en": "Listen. A signal is coming from far away."
+      }
+    },
+    {
+      "id": "s1-18",
+      "memoryId": "s1-memory-18",
+      "levelId": 18,
+      "chapter": 4,
+      "family": "cloud",
+      "guardian": false,
+      "released": false,
+      "asset": null,
+      "name": {
+        "ko": "모모",
+        "en": "Momo"
+      },
+      "levelTitle": {
+        "ko": "보송한 길모퉁이",
+        "en": "A Soft Corner"
+      },
+      "appearance": {
+        "ko": "작고 둥근 몸체와 작은 구름 볼",
+        "en": "Small round body with puffy cloud cheeks"
+      },
+      "personality": {
+        "ko": "느긋하지만 뒤처진 친구는 꼭 챙겨요.",
+        "en": "Easygoing, and always looks after the last friend."
+      },
+      "motion": {
+        "ko": "손 흔들기",
+        "en": "Little wave"
+      },
+      "memory": {
+        "ko": "아무도 혼자 남지 않도록 기다렸어.",
+        "en": "They waited until nobody was left alone."
+      },
+      "description": {
+        "ko": "바람의 회랑의 기억을 품은 친구. 느긋하지만 뒤처진 친구는 꼭 챙겨요.",
+        "en": "A friend holding a memory of Hall of Winds. Easygoing, and always looks after the last friend."
+      },
+      "quote": {
+        "ko": "조금 쉬어도 함께 갈 수 있어.",
+        "en": "We can rest and still travel together."
+      }
+    },
+    {
+      "id": "s1-19",
+      "memoryId": "s1-memory-19",
+      "levelId": 19,
+      "chapter": 4,
+      "family": "cloud",
+      "guardian": false,
+      "released": false,
+      "asset": null,
+      "name": {
+        "ko": "휘리",
+        "en": "Wiri"
+      },
+      "levelTitle": {
+        "ko": "휘파람을 따라",
+        "en": "Following a Whistle"
+      },
+      "appearance": {
+        "ko": "작고 둥근 몸체와 깃털 같은 귀",
+        "en": "Small round body with feather-like ears"
+      },
+      "personality": {
+        "ko": "재빨리 움직여 흩어진 바람을 한데 모아요.",
+        "en": "Quickly gathers wandering winds."
+      },
+      "motion": {
+        "ko": "잠깐 떠오르기",
+        "en": "Short float"
+      },
+      "memory": {
+        "ko": "등대를 멈춘 날에도 노래는 다정했어.",
+        "en": "Even on that day, the song was kind."
+      },
+      "description": {
+        "ko": "바람의 회랑의 기억을 품은 친구. 재빨리 움직여 흩어진 바람을 한데 모아요.",
+        "en": "A friend holding a memory of Hall of Winds. Quickly gathers wandering winds."
+      },
+      "quote": {
+        "ko": "바람이 돌아갈 길을 알려 줄게.",
+        "en": "I will show the wind the way home."
+      }
+    },
+    {
+      "id": "s1-20",
+      "memoryId": "s1-memory-20",
+      "levelId": 20,
+      "chapter": 4,
+      "family": "cloud",
+      "guardian": true,
+      "released": false,
+      "asset": null,
+      "name": {
+        "ko": "하모",
+        "en": "Hamo"
+      },
+      "levelTitle": {
+        "ko": "멈춤의 화음",
+        "en": "A Chord of Stillness"
+      },
+      "appearance": {
+        "ko": "작고 둥근 몸체와 바람 고리 문양",
+        "en": "Small round body with wind-ring pattern"
+      },
+      "personality": {
+        "ko": "서로 다른 목소리가 어울리도록 귀 기울여요.",
+        "en": "Listens until different voices find harmony."
+      },
+      "motion": {
+        "ko": "친구 맞이하기",
+        "en": "Welcoming bow"
+      },
+      "memory": {
+        "ko": "멈춤은 끝이 아니라 보호의 시작이었어.",
+        "en": "The pause began their protection, not their ending."
+      },
+      "description": {
+        "ko": "바람의 회랑의 기억을 품은 친구. 서로 다른 목소리가 어울리도록 귀 기울여요.",
+        "en": "A friend holding a memory of Hall of Winds. Listens until different voices find harmony."
+      },
+      "quote": {
+        "ko": "멈춘 노래도 다시 이어 부를 수 있어.",
+        "en": "Even a paused song can begin again."
+      }
+    },
+    {
+      "id": "s1-21",
+      "memoryId": "s1-memory-21",
+      "levelId": 21,
+      "chapter": 5,
+      "family": "memory",
+      "guardian": false,
+      "released": false,
+      "asset": null,
+      "name": {
+        "ko": "미루",
+        "en": "Miru"
+      },
+      "levelTitle": {
+        "ko": "수정에 남은 빛",
+        "en": "Light in a Crystal"
+      },
+      "appearance": {
+        "ko": "작고 둥근 몸체와 작은 수정 장식",
+        "en": "Small round body with small crystal"
+      },
+      "personality": {
+        "ko": "낯선 장면에서도 익숙한 마음을 발견해요.",
+        "en": "Finds familiar feelings in unfamiliar places."
+      },
+      "motion": {
+        "ko": "작게 흔들리기",
+        "en": "Gentle sway"
+      },
+      "memory": {
+        "ko": "보존 장치가 기억의 빛을 지우고 있었어.",
+        "en": "The preservation device was erasing remembered light."
+      },
+      "description": {
+        "ko": "첫 별의 관측소의 기억을 품은 친구. 낯선 장면에서도 익숙한 마음을 발견해요.",
+        "en": "A friend holding a memory of Observatory of the First Star. Finds familiar feelings in unfamiliar places."
+      },
+      "quote": {
+        "ko": "이 빛, 어디선가 본 것 같아.",
+        "en": "I have seen this light somewhere."
+      }
+    },
+    {
+      "id": "s1-22",
+      "memoryId": "s1-memory-22",
+      "levelId": 22,
+      "chapter": 5,
+      "family": "memory",
+      "guardian": false,
+      "released": false,
+      "asset": null,
+      "name": {
+        "ko": "베일",
+        "en": "Veil"
+      },
+      "levelTitle": {
+        "ko": "장막 너머의 기록",
+        "en": "A Record beyond the Veil"
+      },
+      "appearance": {
+        "ko": "작고 둥근 몸체와 둥근 보라색 꼬리",
+        "en": "Small round body with rounded violet tail"
+      },
+      "personality": {
+        "ko": "옅어진 기억을 재촉하지 않고 기다려요.",
+        "en": "Patiently waits for faded memories."
+      },
+      "motion": {
+        "ko": "고개 기울이기",
+        "en": "Curious tilt"
+      },
+      "memory": {
+        "ko": "등대지기는 고장 난 장치에서 친구들을 멀리했어.",
+        "en": "The keeper led friends away from the broken device."
+      },
+      "description": {
+        "ko": "첫 별의 관측소의 기억을 품은 친구. 옅어진 기억을 재촉하지 않고 기다려요.",
+        "en": "A friend holding a memory of Observatory of the First Star. Patiently waits for faded memories."
+      },
+      "quote": {
+        "ko": "희미한 기억도 소중한 조각이야.",
+        "en": "A faint memory is precious too."
+      }
+    },
+    {
+      "id": "s1-23",
+      "memoryId": "s1-memory-23",
+      "levelId": 23,
+      "chapter": 5,
+      "family": "memory",
+      "guardian": false,
+      "released": false,
+      "asset": null,
+      "name": {
+        "ko": "오르",
+        "en": "Or"
+      },
+      "levelTitle": {
+        "ko": "작은 궤도",
+        "en": "A Little Orbit"
+      },
+      "appearance": {
+        "ko": "작고 둥근 몸체와 별자리 귀무늬",
+        "en": "Small round body with constellation ear marks"
+      },
+      "personality": {
+        "ko": "흩어진 조각의 순서를 차분히 맞춰요.",
+        "en": "Calmly puts scattered fragments in order."
+      },
+      "motion": {
+        "ko": "손 흔들기",
+        "en": "Little wave"
+      },
+      "memory": {
+        "ko": "친구들이 열어 준 길로 빛이 다시 모였어.",
+        "en": "Light gathered again along the paths the friends had opened."
+      },
+      "description": {
+        "ko": "첫 별의 관측소의 기억을 품은 친구. 흩어진 조각의 순서를 차분히 맞춰요.",
+        "en": "A friend holding a memory of Observatory of the First Star. Calmly puts scattered fragments in order."
+      },
+      "quote": {
+        "ko": "흩어진 빛은 다시 만날 거야.",
+        "en": "Scattered lights will meet again."
+      }
+    },
+    {
+      "id": "s1-24",
+      "memoryId": "s1-memory-24",
+      "levelId": 24,
+      "chapter": 5,
+      "family": "memory",
+      "guardian": false,
+      "released": false,
+      "asset": null,
+      "name": {
+        "ko": "루체",
+        "en": "Luche"
+      },
+      "levelTitle": {
+        "ko": "다섯 빛의 만남",
+        "en": "Five Lights Meet"
+      },
+      "appearance": {
+        "ko": "작고 둥근 몸체와 물방울 수정",
+        "en": "Small round body with dewdrop crystal"
+      },
+      "personality": {
+        "ko": "희미한 표식을 밝은 빛으로 비춰 줘요.",
+        "en": "Shines a light on faint forgotten marks."
+      },
+      "motion": {
+        "ko": "잠깐 떠오르기",
+        "en": "Short float"
+      },
+      "memory": {
+        "ko": "옛 기록에는 리크의 별 표식이 있었어.",
+        "en": "RIQ’s star appeared in the old records."
+      },
+      "description": {
+        "ko": "첫 별의 관측소의 기억을 품은 친구. 희미한 표식을 밝은 빛으로 비춰 줘요.",
+        "en": "A friend holding a memory of Observatory of the First Star. Shines a light on faint forgotten marks."
+      },
+      "quote": {
+        "ko": "리크, 이 별은 네 것과 닮았어.",
+        "en": "RIQ, this star looks like yours."
+      }
+    },
+    {
+      "id": "s1-25",
+      "memoryId": "s1-memory-25",
+      "levelId": 25,
+      "chapter": 5,
+      "family": "memory",
+      "guardian": true,
+      "released": false,
+      "asset": null,
+      "name": {
+        "ko": "아스테르",
+        "en": "Aster"
+      },
+      "levelTitle": {
+        "ko": "등대지기의 약속",
+        "en": "The Lighthouse Keeper’s Promise"
+      },
+      "appearance": {
+        "ko": "작고 둥근 몸체와 작은 별 관과 세 수정",
+        "en": "Small round body with little star crown with three crystals"
+      },
+      "personality": {
+        "ko": "말수가 적지만 모든 친구의 이름을 기억해요.",
+        "en": "Quiet, but remembers every friend’s name."
+      },
+      "motion": {
+        "ko": "친구 맞이하기",
+        "en": "Welcoming bow"
+      },
+      "memory": {
+        "ko": "기억 보존 장치가 고장 나자, 아스테르가 우리를 지키려고 등대를 멈췄어. 그런데 옛 기록에는 리크의 별 표식이 있었어.",
+        "en": "When the memory keeper broke, Aster stopped the lighthouse to protect us. Yet RIQ’s star was already in the old records."
+      },
+      "description": {
+        "ko": "첫 별의 관측소의 기억을 품은 친구. 말수가 적지만 모든 친구의 이름을 기억해요.",
+        "en": "A friend holding a memory of Observatory of the First Star. Quiet, but remembers every friend’s name."
+      },
+      "quote": {
+        "ko": "친구들을 지키려면 빛을 멈춰야 했어.",
+        "en": "I had to stop the light to keep our friends safe."
+      }
+    }
+  ]
+}

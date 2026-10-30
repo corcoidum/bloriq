@@ -40,6 +40,7 @@ class DailyPanel extends StatelessWidget {
               ),
             ],
           ),
+          Text(t.dailyWalk),
           Text(
             DateFormat.yMMMd(t.localeName).format(daily.clock()),
             style: TextStyle(color: colors.secondaryText),

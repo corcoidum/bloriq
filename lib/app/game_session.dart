@@ -9,6 +9,8 @@ import '../progress/progress_repository.dart';
 import '../tutorial/echo_tutorial.dart';
 import '../daily/daily_repository.dart';
 import '../analytics/local_analytics.dart';
+import '../story/story_catalog.dart';
+import '../story/collection_repository.dart';
 
 /// 홈과 게임은 하나의 기록/오디오 인스턴스를 공유한다.
 class GameSession {
@@ -19,6 +21,8 @@ class GameSession {
     required this.onboarding,
     required this.daily,
     required this.analytics,
+    required this.story,
+    required this.collection,
   }) : levels = List.unmodifiable(levels) {
     if (levels.isEmpty) throw const FormatException('No levels');
     WidgetsBinding.instance.addObserver(audio);
@@ -31,6 +35,8 @@ class GameSession {
   final Onboarding onboarding;
   final DailyRepository daily;
   final LocalAnalytics analytics;
+  final StoryCatalog story;
+  final CollectionRepository collection;
 
   static Future<GameSession> load({
     Future<List<Level>> Function()? loadLevels,
@@ -52,6 +58,14 @@ class GameSession {
         levels.map((level) => level.id).toSet().length != levels.length) {
       throw const FormatException('Empty or duplicate levels');
     }
+    final story = await StoryCatalog.load();
+    final collection = await CollectionRepository.load(story);
+    if (!progress.saveFailed) {
+      await collection.reconcile(
+        progress.completedCampaignLevelIds,
+        backfill: true,
+      );
+    }
     final daily = await DailyRepository.load(clock: clock);
     final analytics = await LocalAnalytics.load(clock: clock);
     final audio = await GameAudio.load();
@@ -62,6 +76,8 @@ class GameSession {
       onboarding: onboarding,
       daily: daily,
       analytics: analytics,
+      story: story,
+      collection: collection,
     );
   }
 
@@ -87,6 +103,8 @@ class GameSession {
   );
 
   Future<void> dispose() async {
+    await progress.flush();
+    await collection.flush();
     analytics.dispose();
     await daily.flush();
     await audio.dispose();

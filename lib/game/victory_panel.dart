@@ -16,6 +16,7 @@ class VictoryPanel extends StatelessWidget {
     required this.reduceMotion,
     required this.onSkip,
     required this.result,
+    this.discovery,
   });
 
   final double progress;
@@ -24,16 +25,19 @@ class VictoryPanel extends StatelessWidget {
   final bool reduceMotion;
   final VoidCallback onSkip;
   final Widget result;
+  final Widget? discovery;
 
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
     final colors = GameTheme.colorsOf(context);
-    final panel = reduceMotion ? 1.0 : ((progress - .78) / .22).clamp(0.0, 1.0);
+    final panel = reduceMotion || discovery != null
+        ? 1.0
+        : ((progress - .78) / .22).clamp(0.0, 1.0);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Center(child: CourierPortrait(height: 64)),
+        if (discovery == null) const Center(child: CourierPortrait(height: 64)),
         Semantics(
           liveRegion: true,
           child: Text(
@@ -142,6 +146,7 @@ class VictoryPanel extends StatelessWidget {
                       ),
                       const SizedBox(height: GameSpacing.small),
                     ],
+                    ?discovery,
                     result,
                   ],
                 ),

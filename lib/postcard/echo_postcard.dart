@@ -19,6 +19,7 @@ class EchoPostcardData {
     required this.levelText,
     required this.movesText,
     required this.bestText,
+    this.story,
   }) : assert(levelId > 0),
        assert(moves >= 0),
        assert(bestMoves >= 0),
@@ -31,6 +32,18 @@ class EchoPostcardData {
   final String levelText;
   final String movesText;
   final String bestText;
+  final StoryCardContent? story;
+}
+
+class StoryCardContent {
+  const StoryCardContent({
+    required this.title,
+    required this.detail,
+    required this.quote,
+    required this.portraitAssets,
+  });
+  final String title, detail, quote;
+  final List<String> portraitAssets;
 }
 
 /// 동일한 결과에 동일한 이미지를 만든다. 실제 이동 좌표는 사용하지 않는다.
@@ -46,6 +59,11 @@ class EchoPostcardPainter extends CustomPainter {
     canvas.scale(size.width / 1080, size.height / 1080);
     final bounds = const Rect.fromLTWH(0, 0, 1080, 1080);
     canvas.drawRect(bounds, Paint()..color = colors.background);
+    if (data.story case final story?) {
+      _paintStory(canvas, story);
+      canvas.restore();
+      return;
+    }
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         const Rect.fromLTWH(45, 45, 990, 990),
@@ -131,6 +149,64 @@ class EchoPostcardPainter extends CustomPainter {
     canvas.restore();
   }
 
+  void _paintStory(Canvas canvas, StoryCardContent story) {
+    final rect = const Rect.fromLTWH(54, 54, 972, 972);
+    canvas.save();
+    canvas.clipRRect(RRect.fromRectAndRadius(rect, const Radius.circular(48)));
+    canvas.drawRect(rect, Paint()..color = colors.surface);
+    if (StarArt.forestImage case final image?) {
+      paintImage(
+        canvas: canvas,
+        rect: const Rect.fromLTWH(54, 54, 972, 640),
+        image: image,
+        fit: BoxFit.cover,
+      );
+    }
+    canvas.restore();
+    _text(
+      canvas,
+      'BLORIQ',
+      const Offset(100, 100),
+      40,
+      colors.rewardInk,
+      FontWeight.w700,
+      3,
+    );
+    final assets = story.portraitAssets;
+    final count = assets.length;
+    for (var i = 0; i < count; i++) {
+      final image = StarArt.portraits[assets[i]];
+      if (image == null) continue;
+      final columns = count <= 2 ? count : 3;
+      final width = count <= 2 ? 380.0 : 250.0;
+      final rows = (count / columns).ceil();
+      final x = (1080 - columns * width) / 2 + i % columns * width;
+      final y = count <= 2 ? 245.0 : 205.0 + (i ~/ columns) * (390 / rows);
+      StarArt.draw(canvas, image, Rect.fromLTWH(x, y, width, width));
+    }
+    void wrapped(String value, double y, double size, Color color) {
+      final painter = TextPainter(
+        text: TextSpan(
+          text: value,
+          style: TextStyle(
+            fontFamily: 'NanumGothic',
+            fontSize: size,
+            color: color,
+            height: 1.35,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout(maxWidth: 870);
+      painter.paint(canvas, Offset(105, y));
+      painter.dispose();
+    }
+
+    wrapped(story.title, 710, 44, colors.text);
+    wrapped(story.detail, 782, 29, colors.secondaryText);
+    wrapped(story.quote, 845, 29, colors.text);
+    wrapped('Every Move Leaves an Echo.', 970, 20, colors.secondaryText);
+  }
+
   void _text(
     Canvas canvas,
     String text,
@@ -185,6 +261,11 @@ Future<Uint8List> renderEchoPostcardPng(
   EchoPostcardData data, {
   GameColors colors = GameColors.light,
 }) async {
+  if (data.story case final story?) {
+    for (final path in story.portraitAssets) {
+      await StarArt.loadPortrait(path);
+    }
+  }
   final recorder = ui.PictureRecorder();
   final canvas = Canvas(recorder);
   EchoPostcardPainter(

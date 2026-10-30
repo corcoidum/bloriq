@@ -5,6 +5,9 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../game/board_geometry.dart';
+import 'game_theme.dart';
+
 /// 한 번 디코딩한 작은 스프라이트를 Flutter 연출과 Flame이 공유한다.
 abstract final class StarArt {
   static const forest = 'assets/art/star_courier/night_forest.png';
@@ -13,13 +16,33 @@ abstract final class StarArt {
   static const portal = 'assets/art/star_courier/star_portal.png';
   static const echo = 'assets/art/star_courier/echo.png';
   static const boardFrame = 'assets/art/star_courier/board_frame.png';
+  static const riq = 'assets/art/last_echo/riq.png';
+  static const riqHappy = 'assets/art/last_echo/riq_happy.png';
+  static const riqThinking = 'assets/art/last_echo/riq_thinking.png';
+  static const riqSurprised = 'assets/art/last_echo/riq_surprised.png';
+  static const runeStone = 'assets/art/last_echo/rune_stone.png';
   static final revision = ValueNotifier(0);
   static ui.Image? courierImage;
   static ui.Image? portalImage;
   static ui.Image? echoImage;
   static ui.Image? forestImage;
+  static ui.Image? riqImage, runeImage;
   static Future<void>? _loading;
   static bool _licensesRegistered = false;
+  static final Map<String, ui.Image> portraits = {};
+  static Future<void> loadPortrait(String path) async {
+    if (portraits.containsKey(path)) return;
+    final data = await rootBundle.load(path);
+    final codec = await ui.instantiateImageCodec(
+      data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+      targetWidth: 384,
+    );
+    try {
+      portraits[path] = (await codec.getNextFrame()).image;
+    } finally {
+      codec.dispose();
+    }
+  }
 
   static Future<void> load() {
     if (!_licensesRegistered) {
@@ -31,6 +54,14 @@ abstract final class StarArt {
           ], await rootBundle.loadString('assets/fonts/$name-OFL.txt'));
         }
       });
+    }
+    if (riqImage != null &&
+        runeImage != null &&
+        echoImage != null &&
+        portalImage != null &&
+        forestImage != null &&
+        courierImage != null) {
+      return Future.value();
     }
     return _loading ??= _load();
   }
@@ -51,8 +82,10 @@ abstract final class StarArt {
 
     try {
       courierImage = await decode(courier);
+      riqImage = await decode(riq);
+      runeImage = await decode(runeStone);
       portalImage = await decode(portal);
-      echoImage = await decode(echo);
+      echoImage = await decode('assets/art/last_echo/echo.png');
       forestImage = await decode(forest);
       revision.value++;
     } catch (error) {
@@ -96,7 +129,7 @@ class CourierPortrait extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Image.asset(
-    resting ? StarArt.restingCourier : StarArt.courier,
+    StarArt.riq,
     height: height,
     width: resting ? height * 1.5 : height,
     fit: BoxFit.contain,
@@ -114,7 +147,6 @@ class StarBoardFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Stack(
     children: [
-      Padding(padding: const EdgeInsets.all(10), child: child),
       Positioned.fill(
         child: IgnorePointer(
           child: ExcludeSemantics(
@@ -131,6 +163,13 @@ class StarBoardFrame extends StatelessWidget {
               ),
             ),
           ),
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.all(BoardGeometry.defaultFrameInset),
+        child: ColoredBox(
+          color: GameTheme.colorsOf(context).boardSurface,
+          child: child,
         ),
       ),
     ],

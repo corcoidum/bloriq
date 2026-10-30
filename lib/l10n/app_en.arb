@@ -17,18 +17,18 @@
       }
     }
   },
-  "instruction": "Slide the mint courier to the star.",
+  "instruction": "Slide RIQ, marked in mint, to the star gate.",
   "echoInstruction": "An echo disappears after your next move.",
   "gateInstruction": "Leave an echo on the diamond to open the gate.",
   "gateOpen": "Gate open! Move through on this turn.",
   "gateClosed": "The gate is closed. Leave an echo on the diamond.",
   "gateOccupied": "A block on a closed gate can still leave.",
   "noMoves": "No moves left. Undo and try another way.",
-  "boardLabel": "Slide a friend one square at a time. Guide the mint courier to the star.",
+  "boardLabel": "Slide RIQ and the rune stones one square at a time. Guide mint-marked RIQ to the star gate.",
   "soundOn": "Turn sound effects off",
   "soundOff": "Turn sound effects on",
   "help": "How to play",
-  "helpBody": "Slide one block one square at a time. Move the mint courier to the star.\n\nThe square a block leaves behind becomes an echo. It blocks movement until another valid move finishes.\n\nOn diamond stages, an echo on the diamond opens the gate for the next move. A block on a closed gate can still leave.\n\nUse Undo to try a different move.\n\nSpecial tiles have rules shown beneath the board: × erases the echo, Ⅱ keeps it, arrows restrict the exit direction, and ▶ admits only the mint courier.",
+  "helpBody": "Slide one block one square at a time. Move the mint-marked RIQ to the star.\n\nThe square a block leaves behind becomes an echo. It blocks movement until another valid move finishes.\n\nOn diamond stages, an echo on the diamond opens the gate for the next move. A block on a closed gate can still leave.\n\nUse Undo to try a different move.\n\nSpecial tiles have rules shown beneath the board: × erases the echo, Ⅱ keeps it, arrows restrict the exit direction, and ▶ admits only the mint-marked RIQ.",
   "undo": "Undo",
   "undoLastMove": "Undo last move",
   "restart": "Restart",
@@ -85,7 +85,7 @@
   "eraserRule": "Crossed tiles erase the echo when a block leaves.",
   "holdRule": "Pause tiles keep the previous echo when a block leaves.",
   "oneWayRule": "A block on an arrow tile can leave only in the arrow’s direction.",
-  "goalOnlyRule": "Triangle tiles admit only the mint courier.",
+  "goalOnlyRule": "Triangle tiles admit only mint-marked RIQ.",
   "settings": "Settings",
   "appearance": "Appearance",
   "themeSystem": "System",
@@ -99,7 +99,7 @@
   "skipCelebration": "Skip celebration",
   "home": "Home",
   "homeTagline": "Every little step leaves an Echo.",
-  "playLevel": "Play · Level {number}",
+  "playLevel": "Continue · Gate {number}",
   "completedLevels": "{count} / {total} completed",
   "collectedStars": "{count} stars",
   "skipIntro": "Skip intro",
@@ -204,7 +204,91 @@
   },
   "storyTitle": "A Little Star Home",
   "storyInvite": "Time to find our star!",
-  "courierName": "The little star courier",
-  "homeSubtitle": "Every little step leaves an Echo.",
-  "credits": "Fonts & open source"
+  "courierName": "RIQ",
+  "homeSubtitle": "Find friends sleeping beyond the star gates. Bring their memories home.",
+  "credits": "Fonts & open source",
+  "riqName": "RIQ",
+  "lastEchoTitle": "The Last Echo",
+  "gardenName": "Crescent Garden",
+  "album": "Spirit Album",
+  "journeyMap": "Journey Map",
+  "unknownSpirit": "A sleeping friend",
+  "unknownMemory": "Open the star gate to discover this friend and its memory.",
+  "equipCompanion": "Walk together",
+  "equippedCompanion": "Your companion",
+  "recoveredMemory": "A memory restored",
+  "readMemory": "Read the memory",
+  "skipMemory": "Read later",
+  "discoveryCard": "Spirit discovery card",
+  "collectionCard": "Crescent Garden collection card",
+  "collectionError": "The album could not be saved. Friends can be restored from completed stages.",
+  "collectionFuture": "This album was saved by a newer version. Its data is protected; puzzles remain playable.",
+  "collectionCorrupt": "The album could not be read. Keep a backup and restore it from completed stages.",
+  "restoreAlbum": "Restore from progress",
+  "retrySave": "Retry saving",
+  "backfillDismiss": "Got it",
+  "familyForest": "Forest spirit",
+  "familyStarlight": "Starlight spirit",
+  "familyLetter": "Letter spirit",
+  "familyCloud": "Cloud spirit",
+  "familyMemory": "Memory spirit",
+  "guardianEndingTitle": "The Garden’s Promise",
+  "guardianEnding": "The friends had not vanished. They were sleeping inside the star gates. Who kept them safe?",
+  "futureStoryNote": "Stages 6–25 remain playable. Their friends and stories are still being prepared.",
+  "storySoon": "Story coming later · Puzzles available",
+  "dailyWalk": "A little walk today",
+  "riqIdle": "Shall we visit that star gate?",
+  "riqEcho": "Look! A little light stayed behind!",
+  "riqBlocked": "An Echo is in the way. Shall we try another path?",
+  "riqGate": "The path is open!",
+  "riqWelcome": "A new friend is awake!",
+  "journeySeason": "Footprints of a Forgotten Star",
+  "gardenProgress": "Garden memories {count}/5",
+  "@gardenProgress": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "newFriend": "Meet {name}!",
+  "@newFriend": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "newGuardian": "Guardian {name}!",
+  "@newGuardian": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "backfillSummary": "Restored {count} friends and their memories from your progress.",
+  "@backfillSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pendingMemories": "{count} memories waiting to be read",
+  "@pendingMemories": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "foundAtStage": "Found at star gate {level}",
+  "@foundAtStage": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  }
 }

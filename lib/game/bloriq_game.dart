@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../design/game_theme.dart';
 import 'block_art.dart';
+import 'board_geometry.dart';
 import '../domain/puzzle.dart';
 
 /// 드래그 중 표시할 가상 이동. 실제 게임 상태에는 적용하지 않는다.
@@ -21,6 +22,19 @@ class DragPreview {
 class BloriqGame extends FlameGame {
   BloriqGame(this.controller);
   final PuzzleController controller;
+  BoardGeometry? _geometry;
+  BoardGeometry get geometry =>
+      _geometry ??
+      BoardGeometry.canvas(
+        size: Size(size.x, size.y),
+        columns: controller.state.level.boardWidth,
+        rows: controller.state.level.boardHeight,
+      );
+
+  void configureGeometry(BoardGeometry next) {
+    if (_geometry != null && !_geometry!.sameLayout(next)) setDrag(null);
+    _geometry = next;
+  }
 
   Position? tutorialTarget;
   String? _movingId;
@@ -64,12 +78,10 @@ class BloriqGame extends FlameGame {
   DragPreview? get currentPreview {
     if (isReplaying || _dragId == null) return null;
     final state = controller.state;
-    final cell = math.min(
-      size.x / state.level.boardWidth,
-      size.y / state.level.boardHeight,
-    );
+    final cell = geometry.cellSize;
     if (cell <= 0 ||
-        _dragOffset.distance < cell * GameEffects.dragThresholdFraction) {
+        math.max(_dragOffset.dx.abs(), _dragOffset.dy.abs()) <
+            geometry.dragThreshold) {
       return null;
     }
     final block = state.blocks
@@ -192,20 +204,11 @@ class BloriqGame extends FlameGame {
     } else {
       state = controller.state;
     }
-    final cell = math.min(
-      size.x / state.level.boardWidth,
-      size.y / state.level.boardHeight,
-    );
-    final boardSize = Size(
-      cell * state.level.boardWidth,
-      cell * state.level.boardHeight,
-    );
-    final origin = Offset(
-      (size.x - boardSize.width) / 2,
-      (size.y - boardSize.height) / 2,
-    );
-    Offset center(Position p) =>
-        origin + Offset((p.x + .5) * cell, (p.y + .5) * cell);
+    final layout = geometry;
+    final cell = layout.cellSize;
+    final boardSize = layout.boardSize;
+    final origin = layout.origin;
+    Offset center(Position p) => layout.center(p);
     final paint = Paint();
     final preview = currentPreview;
     final previewTarget = preview?.target;
@@ -223,12 +226,7 @@ class BloriqGame extends FlameGame {
 
     for (var y = 0; y < state.level.boardHeight; y++) {
       for (var x = 0; x < state.level.boardWidth; x++) {
-        final rect = Rect.fromLTWH(
-          origin.dx + x * cell + 3,
-          origin.dy + y * cell + 3,
-          cell - 6,
-          cell - 6,
-        );
+        final rect = layout.tileRect(Position(x, y));
         final tile = RRect.fromRectAndRadius(rect, Radius.circular(cell * .16));
         canvas.drawRRect(
           tile,

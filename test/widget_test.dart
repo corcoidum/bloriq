@@ -163,7 +163,7 @@ void main() {
     final level = Level.fromJson(json.last as Map<String, dynamic>);
     final solution = const PuzzleSolver().solve(level)!;
     final controller = PuzzleController(level);
-    await tester.tap(find.text('Levels'));
+    await tapVisible(tester, find.text('Levels'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     await selectOpenLevel(tester, level.id);
@@ -228,7 +228,7 @@ void main() {
     final block = controller.state.blocks.firstWhere(
       (item) => item.id == firstMove.blockId,
     );
-    await tester.tap(find.text('Levels'));
+    await tapVisible(tester, find.text('Levels'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     await selectOpenLevel(tester, level.id);
@@ -279,7 +279,7 @@ void main() {
     final controller = PuzzleController(level);
     final solution = const PuzzleSolver().solve(level)!;
 
-    await tester.tap(find.text('Levels'));
+    await tapVisible(tester, find.text('Levels'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     await selectOpenLevel(tester, level.id);
@@ -374,7 +374,7 @@ void main() {
     ) {
       await tester.pump(const Duration(milliseconds: 20));
     }
-    await tester.tap(find.text('Levels'));
+    await tapVisible(tester, find.text('Levels'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     await selectOpenLevel(tester, 11);
@@ -392,7 +392,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Undo last move'), findsOneWidget);
-    await tester.tap(find.text('Undo last move'));
+    await tapVisible(tester, find.text('Undo last move'));
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('No moves left. Undo and try another way.'), findsNothing);

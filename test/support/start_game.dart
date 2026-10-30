@@ -39,7 +39,8 @@ Future<void> selectOpenLevel(WidgetTester tester, int id) async {
   final grid = find.byKey(const ValueKey('level-grid'));
   await tester.scrollUntilVisible(
     target,
-    160,
+    200,
+    maxScrolls: 120,
     scrollable: find.descendant(of: grid, matching: find.byType(Scrollable)),
   );
   await tapVisible(tester, target);

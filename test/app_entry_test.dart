@@ -21,6 +21,9 @@ BloriqGame _game(WidgetTester tester) =>
     tester.widget<GameWidget<BloriqGame>>(_board).game!;
 
 Future<void> _waitIntro(WidgetTester tester) async {
+  await waitForHome(tester);
+  await tapVisible(tester, find.byTooltip('Settings'));
+  await tapVisible(tester, find.byKey(const ValueKey('replay-intro')));
   for (var i = 0; i < 100 && find.byType(IntroScreen).evaluate().isEmpty; i++) {
     await tester.pump(const Duration(milliseconds: 10));
   }
@@ -59,39 +62,51 @@ void main() {
   });
 
   testWidgets(
-    'four-second intro leads to home without writing demo progress; cold start repeats it',
+    'returning cold starts enter journey home directly without demo progress',
     (tester) async {
-      await tester.pumpWidget(BloriqApp(loadLevels: loadLegacyLevels));
-      await _waitIntro(tester);
-      await tester.pump(const Duration(milliseconds: 2000));
-      expect(find.byType(IntroScreen), findsOneWidget);
-      await tester.pump(const Duration(milliseconds: 2100));
-      await tester.pump();
-      expect(find.byKey(const ValueKey('home-screen')), findsOneWidget);
-      expect(find.byType(IntroScreen), findsNothing);
-      expect(
-        (await SharedPreferences.getInstance()).getString(
-          ProgressRepository.storageKey,
-        ),
-        isNull,
-      );
-      await tester.pumpWidget(const SizedBox());
-      await tester.pumpWidget(BloriqApp(loadLevels: loadLegacyLevels));
-      await _waitIntro(tester);
-      await tester.pumpWidget(const SizedBox());
+      for (var i = 0; i < 2; i++) {
+        await tester.pumpWidget(BloriqApp(loadLevels: loadLegacyLevels));
+        await waitForHome(tester);
+        expect(find.byType(IntroScreen), findsNothing);
+        expect(find.byKey(const ValueKey('home-screen')), findsOneWidget);
+        expect(
+          (await SharedPreferences.getInstance()).getString(
+            ProgressRepository.storageKey,
+          ),
+          isNull,
+        );
+        await tester.pumpWidget(const SizedBox());
+      }
     },
   );
 
-  testWidgets('immediate double skip is safe while levels are loading', (
+  testWidgets('manual four-second intro finishes once after repeated skip', (
+    tester,
+  ) async {
+    await tester.pumpWidget(BloriqApp(loadLevels: loadLegacyLevels));
+    await _waitIntro(tester);
+    await tester.pump(const Duration(milliseconds: 1000));
+    final skip = tester
+        .widget<TextButton>(find.byKey(const ValueKey('skip-intro')))
+        .onPressed!;
+    skip();
+    skip();
+    await tester.pump(const Duration(milliseconds: 450));
+    await tester.pump(const Duration(seconds: 5));
+    expect(find.byType(IntroScreen), findsNothing);
+    expect(find.byKey(const ValueKey('home-screen')), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('home remains responsive while levels are loading', (
     tester,
   ) async {
     final pending = Completer<List<Level>>();
     await tester.pumpWidget(BloriqApp(loadLevels: () => pending.future));
-    await _waitIntro(tester);
-    final skip = find.byKey(const ValueKey('skip-intro'));
-    await tester.tap(skip);
-    await tester.tap(skip);
-    await tester.pump();
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    expect(find.byType(IntroScreen), findsNothing);
     final play = find.byKey(const ValueKey('home-play'));
     expect(tester.widget<FilledButton>(play).onPressed, isNull);
     await tester.pump(const Duration(seconds: 5));
@@ -117,8 +132,13 @@ void main() {
         },
       ),
     );
-    await _waitIntro(tester);
-    await tapVisible(tester, find.byKey(const ValueKey('skip-intro')));
+    for (
+      var i = 0;
+      i < 100 && find.byKey(const ValueKey('retry-load')).evaluate().isEmpty;
+      i++
+    ) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
     expect(find.text('Could not load the levels.'), findsOneWidget);
     await tapVisible(tester, find.byKey(const ValueKey('retry-load')));
     await waitForHome(tester);
@@ -170,7 +190,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('1 / 25 completed'), findsOneWidget);
     expect(find.text('3 stars'), findsOneWidget);
-    expect(find.text('Play · Level 2'), findsOneWidget);
+    expect(find.text('Continue · Gate 2'), findsOneWidget);
     await _play(tester);
     expect(_game(tester).controller.state.level.id, 2);
     await tester.pumpWidget(const SizedBox());

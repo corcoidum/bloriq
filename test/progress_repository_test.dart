@@ -57,14 +57,20 @@ void main() {
     expect(again.forLevel(2), isNull);
   });
 
-  test('손상된 JSON은 실행을 막지 않고 새 기록을 저장할 수 있다', () async {
+  test('손상된 JSON은 실행을 막지 않고 원문을 보호한다', () async {
     SharedPreferences.setMockInitialValues({
       ProgressRepository.storageKey: '{bad',
     });
     final repository = await ProgressRepository.load();
     expect(repository.forLevel(1), isNull);
     await repository.recordCompletion(levelId: 2, moves: 4, minimumMoves: 4);
-    expect((await ProgressRepository.load()).forLevel(2)!.bestMoves, 4);
+    expect(repository.saveFailed, isTrue);
+    expect(
+      (await SharedPreferences.getInstance()).getString(
+        ProgressRepository.storageKey,
+      ),
+      '{bad',
+    );
   });
 
   test('잘못된 개별 레코드는 건너뛰고 정상 레코드는 유지한다', () async {

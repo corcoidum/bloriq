@@ -30,6 +30,8 @@ flutter:
     - assets/levels/daily_pool_v1.json
     - assets/audio/
     - assets/art/star_courier/
+    - assets/art/last_echo/
+    - assets/story/season1.json
     - assets/fonts/Jua-OFL.txt
     - assets/fonts/NanumGothic-OFL.txt
   fonts:

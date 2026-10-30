@@ -10,6 +10,7 @@ import 'audio/game_audio.dart';
 import 'domain/puzzle.dart';
 import 'design/game_theme.dart';
 import 'game/bloriq_game.dart';
+import 'game/board_geometry.dart';
 import 'game/victory_panel.dart';
 import 'l10n/app_localizations.dart';
 import 'postcard/echo_postcard.dart';
@@ -24,6 +25,12 @@ import 'design/star_art.dart';
 import 'app/play_context.dart';
 import 'tutorial/echo_tutorial.dart';
 import 'analytics/local_analytics.dart';
+import 'story/narrative_controller.dart';
+import 'story/companion_view.dart';
+import 'story/story_catalog.dart';
+import 'story/spirit_album.dart';
+import 'story/discovery_panel.dart';
+import 'story/story_share.dart';
 
 void main() => runApp(const BloriqApp());
 
@@ -129,12 +136,17 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final List<Level> _loaded;
+  final _narrative = NarrativeController();
+  SpiritDefinition? _discovery;
+  bool _storyHidden = false;
+  bool _retryingSave = false;
   bool _allowPop = false;
   bool _leaving = false;
   EchoTutorial? _tutorial;
   AttemptRecorder? _attempt;
   bool _modalOpen = false;
   final ScrollController _pageScroll = ScrollController();
+  BoardGeometry? _geometry;
   PuzzleController? _controller;
   BloriqGame? _game;
   int _index = 0;
@@ -220,6 +232,12 @@ class _GameScreenState extends State<GameScreen>
   }
 
   @override
+  void didChangeMetrics() {
+    // 창/DPR 변경은 보드 크기가 같아도 진행 중 포인터의 기준을 무효화한다.
+    _cancelDrag();
+  }
+
+  @override
   void didChangeAccessibilityFeatures() {
     if (mounted) setState(() {});
   }
@@ -269,6 +287,15 @@ class _GameScreenState extends State<GameScreen>
     }
     // 저장과 별 평가는 애니메이션 타이머/Canvas 성공 여부에 의존하지 않는다.
     unawaited(_recordCompletion(controller));
+    _narrative.react(CompanionReaction.complete);
+    final friend = widget.session.story.forLevel(state.level.id);
+    _victory.duration =
+        friend?.released == true &&
+            friend!.guardian &&
+            widget.play.mode == PlayMode.campaign &&
+            !widget.session.collection.owns(friend.id)
+        ? const Duration(milliseconds: 2200)
+        : GameEffects.celebrationDuration;
     _victoryFallback?.cancel();
     if (_reduceMotion) {
       _victory.value = 1;
@@ -279,14 +306,31 @@ class _GameScreenState extends State<GameScreen>
     final game = _game;
     // ticker나 Canvas가 멈춰도 결과 버튼은 독립 타이머로 복구한다.
     _victoryFallback = Timer(
-      GameEffects.celebrationDuration + const Duration(milliseconds: 200),
+      _victory.duration! + const Duration(milliseconds: 200),
       () {
         if (mounted && identical(_game, game)) _skipCelebration();
       },
     );
   }
 
+  void _acknowledgeDiscovery() {
+    if (_discovery case final friend?) {
+      unawaited(widget.session.collection.acknowledge(friend.id));
+    }
+  }
+
+  Future<void> _openAlbum() async {
+    await _withModal<void>(
+      () => showSpiritAlbum(context, widget.session, widget.settings),
+    );
+    if (mounted) setState(() {});
+  }
+
   void _select(int index) {
+    _acknowledgeDiscovery();
+    _discovery = null;
+    _storyHidden = false;
+    _narrative.react(CompanionReaction.idle);
     if (_pageScroll.hasClients) _pageScroll.jumpTo(0);
     _attempt?.finish(
       'level_end',
@@ -317,6 +361,7 @@ class _GameScreenState extends State<GameScreen>
   @override
   void dispose() {
     _attempt?.finish('level_end', _controller!.state.moves, reason: 'leave');
+    _narrative.dispose();
     _pageScroll.dispose();
     widget.session.analytics.removeListener(_analyticsChanged);
     _victoryFallback?.cancel();
@@ -366,12 +411,48 @@ class _GameScreenState extends State<GameScreen>
       moves: state.moves,
       minimumMoves: state.level.minimumMoves,
     );
+    final added = result.saved
+        ? await widget.session.collection.reconcile(
+            _progress!.completedCampaignLevelIds,
+          )
+        : <SpiritDefinition>[];
     if (!mounted ||
         !identical(_controller, controller) ||
         !identical(controller.state, state)) {
       return;
     }
-    setState(() => _completion = result);
+    setState(() {
+      _completion = result;
+      _discovery = added.where((f) => f.levelId == state.level.id).firstOrNull;
+    });
+  }
+
+  Future<void> _retryProgressSave() async {
+    if (_retryingSave) return;
+    setState(() => _retryingSave = true);
+    final controller = _controller;
+    final result = _completion;
+    final saved = await _progress!.retrySave();
+    final added = saved
+        ? await widget.session.collection.reconcile(
+            _progress!.completedCampaignLevelIds,
+          )
+        : <SpiritDefinition>[];
+    if (!mounted) return;
+    setState(() {
+      _retryingSave = false;
+      if (identical(controller, _controller) && result != null) {
+        _completion = CompletionResult(
+          progress: result.progress,
+          stars: result.stars,
+          isNewBest: result.isNewBest,
+          saved: saved,
+        );
+        _discovery ??= added
+            .where((f) => f.levelId == controller!.state.level.id)
+            .firstOrNull;
+      }
+    });
   }
 
   void _showPostcard(AppLocalizations t, PuzzleController controller) {
@@ -408,24 +489,12 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
-  Position? _cell(Offset offset, double width, double height) {
-    final level = _controller!.state.level;
-    if (offset.dx < 0 ||
-        offset.dy < 0 ||
-        offset.dx >= width ||
-        offset.dy >= height) {
-      return null;
-    }
-    return Position(
-      (offset.dx / width * level.boardWidth).floor(),
-      (offset.dy / height * level.boardHeight).floor(),
-    );
-  }
+  Position? _cell(Offset offset) => _geometry?.positionAt(offset);
 
-  void _start(DragStartDetails details, double width, double height) {
+  void _start(DragStartDetails details) {
     final controller = _controller!;
     if (controller.state.isComplete || _replaying) return;
-    final cell = _cell(details.localPosition, width, height);
+    final cell = _cell(details.localPosition);
     _dragStart = details.localPosition;
     _dragEnd = details.localPosition;
     _dragBlock = null;
@@ -447,6 +516,10 @@ class _GameScreenState extends State<GameScreen>
           ? Offset(delta.dx, 0)
           : Offset(0, delta.dy);
       _game!.setDrag(_dragBlock, aligned);
+      _narrative.react(
+        CompanionReaction.look,
+        direction: aligned.dx.sign.toInt(),
+      );
     }
   }
 
@@ -457,14 +530,11 @@ class _GameScreenState extends State<GameScreen>
     _dragEnd = null;
   }
 
-  void _end(double width) {
+  void _end() {
     final controller = _controller!;
     if (_dragBlock != null && _dragStart != null && _dragEnd != null) {
       final delta = _dragEnd! - _dragStart!;
-      final threshold =
-          width /
-          controller.state.level.boardWidth *
-          GameEffects.dragThresholdFraction;
+      final threshold = _geometry!.dragThreshold;
       if (math.max(delta.dx.abs(), delta.dy.abs()) >= threshold) {
         final block = controller.state.blocks.firstWhere(
           (item) => item.id == _dragBlock,
@@ -489,6 +559,13 @@ class _GameScreenState extends State<GameScreen>
             unawaited(widget.session.daily.markPlayed(widget.play.challenge!));
           }
           _gateBlocked = false;
+          _narrative.react(
+            !gateWasOpen && controller.state.isGateOpen
+                ? CompanionReaction.gate
+                : controller.state.echo == from
+                ? CompanionReaction.echo
+                : CompanionReaction.idle,
+          );
           _game!.animateMove(block.id, from, previousEcho);
           if (controller.state.isComplete) _beginCompletion(controller);
           final effect = controller.state.isComplete
@@ -501,6 +578,11 @@ class _GameScreenState extends State<GameScreen>
           _audio?.play(effect);
           HapticFeedback.selectionClick();
         } else {
+          _narrative.react(
+            target == controller.state.echo
+                ? CompanionReaction.blocked
+                : CompanionReaction.look,
+          );
           _audio?.play(SoundEffect.blocked);
           _gateBlocked =
               target == controller.state.level.echoGate &&
@@ -528,9 +610,13 @@ class _GameScreenState extends State<GameScreen>
   }
 
   void _undo(PuzzleController controller) {
+    _acknowledgeDiscovery();
+    _discovery = null;
+    _storyHidden = false;
     _skipCelebration();
     setState(() {
       controller.undo();
+      _narrative.react(CompanionReaction.idle);
       _attempt?.undo();
       _game!.clearEffects();
       _gateBlocked = false;
@@ -642,6 +728,7 @@ class _GameScreenState extends State<GameScreen>
             true;
     if (!mounted) return;
     if (leave) {
+      _acknowledgeDiscovery();
       setState(() => _allowPop = true);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) Navigator.pop(context);
@@ -667,12 +754,39 @@ class _GameScreenState extends State<GameScreen>
         isNewBest: _isNewBest,
         reduceMotion: _reduceMotion,
         onSkip: _skipCelebration,
+        discovery: _discovery != null && !_storyHidden
+            ? DiscoveryPanel(
+                spirit: _discovery!,
+                progress: _victory.value,
+                reduceMotion: _reduceMotion,
+                onSkip: () {
+                  _skipCelebration();
+                  _acknowledgeDiscovery();
+                  setState(() => _storyHidden = true);
+                },
+              )
+            : null,
         result: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(t.completeDetail(state.moves)),
             if (_bestMoves case final best?) Text(t.bestMoves(best)),
-            if (_completion?.saved == false) Text(t.saveError),
+            if (_completion?.saved == false) ...[
+              Text(t.saveError),
+              if (widget.play.mode == PlayMode.campaign)
+                TextButton(
+                  key: const ValueKey('retry-progress'),
+                  onPressed: _retryingSave ? null : _retryProgressSave,
+                  child: Text(t.retrySave),
+                ),
+            ],
+            if (widget.play.mode == PlayMode.campaign)
+              CollectionStorageNotice(
+                session: widget.session,
+                onChanged: () => setState(() {}),
+              ),
+            if (widget.play.mode == PlayMode.campaign && state.level.id == 5)
+              Text(t.futureStoryNote),
             const SizedBox(height: GameSpacing.small),
             Text(
               state.moves == state.level.minimumMoves
@@ -701,6 +815,24 @@ class _GameScreenState extends State<GameScreen>
               spacing: GameSpacing.small,
               runSpacing: GameSpacing.small,
               children: [
+                if (_discovery case final friend?) ...[
+                  OutlinedButton.icon(
+                    key: const ValueKey('result-album'),
+                    onPressed: _openAlbum,
+                    icon: const Icon(Icons.auto_stories_outlined),
+                    label: Text(t.album),
+                  ),
+                  OutlinedButton.icon(
+                    key: const ValueKey('result-discovery-share'),
+                    onPressed: () => _withModal<void>(
+                      () => showStoryCard(context, [
+                        friend,
+                      ], reduceMotion: _reduceMotion),
+                    ),
+                    icon: const Icon(Icons.ios_share_rounded),
+                    label: Text(t.discoveryCard),
+                  ),
+                ],
                 OutlinedButton.icon(
                   onPressed: _replaying ? null : () => _select(_index),
                   icon: const Icon(Icons.replay),
@@ -818,22 +950,30 @@ class _GameScreenState extends State<GameScreen>
                 final availableWidth = math.max(
                   1.0,
                   math.min(
-                    constraints.maxWidth - GameSpacing.page * 2 - 20,
-                    math.min(
-                      GameSpacing.maxBoardWidth,
-                      boardRoom *
-                          controller.state.level.boardWidth /
-                          controller.state.level.boardHeight,
-                    ),
+                    constraints.maxWidth - GameSpacing.page * 2,
+                    GameSpacing.maxBoardWidth +
+                        BoardGeometry.defaultFrameInset * 2,
                   ),
                 );
-                final width = controller.state.isComplete && !_replaying
-                    ? math.min(availableWidth, compact ? 170.0 : 210.0)
+                final targetWidth = controller.state.isComplete && !_replaying
+                    ? math.min(availableWidth, compact ? 218.0 : 258.0)
                     : availableWidth;
-                final height =
-                    width *
-                    controller.state.level.boardHeight /
-                    controller.state.level.boardWidth;
+                final geometry = BoardGeometry.fit(
+                  available: Size(
+                    targetWidth,
+                    boardRoom + BoardGeometry.defaultFrameInset * 2,
+                  ),
+                  columns: controller.state.level.boardWidth,
+                  rows: controller.state.level.boardHeight,
+                  devicePixelRatio: View.of(context).devicePixelRatio,
+                );
+                if (_geometry != null && !_geometry!.sameLayout(geometry)) {
+                  _cancelDrag();
+                }
+                _geometry = geometry;
+                _game!.configureGeometry(geometry);
+                final width = geometry.canvasSize.width;
+                final height = geometry.canvasSize.height;
                 return Align(
                   alignment: Alignment.topCenter,
                   child: SingleChildScrollView(
@@ -876,7 +1016,7 @@ class _GameScreenState extends State<GameScreen>
                                       child: Column(
                                         children: [
                                           Text(
-                                            t.storyTitle,
+                                            t.lastEchoTitle,
                                             textAlign: TextAlign.center,
                                             style: TextStyle(
                                               fontSize: 25,
@@ -922,18 +1062,24 @@ class _GameScreenState extends State<GameScreen>
                             ],
                           ),
                           const SizedBox(height: 8),
-                          if (!compact && !controller.state.isComplete) ...[
-                            const CourierPortrait(height: 124, resting: true),
-                            Text(
-                              t.storyInvite,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 21,
-                                fontFamily: GameTypography.canvasFontFamily,
-                                color: colors.rewardInk,
-                              ),
+                          if (!controller.state.isComplete)
+                            JourneyCompanions(
+                              companion: widget.session.collection.companion,
+                              narrative: _narrative,
+                              reduceMotion: _reduceMotion,
+                              compact: compact,
+                              onAlbum: _openAlbum,
                             ),
-                          ],
+                          if (widget.play.mode == PlayMode.campaign &&
+                              _loaded[_index].id <= 5)
+                            Text(
+                              widget.session.story
+                                  .forLevel(_loaded[_index].id)!
+                                  .levelTitle
+                                  .inLocale(t.localeName),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: colors.rewardInk),
+                            ),
                           const SizedBox(height: 10),
                           Wrap(
                             alignment: WrapAlignment.center,
@@ -954,37 +1100,32 @@ class _GameScreenState extends State<GameScreen>
                             ],
                           ),
                           const SizedBox(height: 14),
-                          ArcadeSurface(
-                            padding: EdgeInsets.zero,
-                            child: StarBoardFrame(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(
-                                  GameSpacing.radius,
-                                ),
-                                child: SizedBox(
-                                  width: width,
-                                  height: height,
-                                  child: Semantics(
-                                    label: t.boardLabel,
-                                    child: GestureDetector(
-                                      behavior: HitTestBehavior.opaque,
-                                      dragStartBehavior: DragStartBehavior.down,
-                                      onHorizontalDragStart: (d) =>
-                                          _start(d, width, height),
-                                      onHorizontalDragUpdate: _update,
-                                      onHorizontalDragEnd: (_) => _end(width),
-                                      onHorizontalDragCancel: _cancelDrag,
-                                      onVerticalDragStart: (d) =>
-                                          _start(d, width, height),
-                                      onVerticalDragUpdate: _update,
-                                      onVerticalDragEnd: (_) => _end(width),
-                                      onVerticalDragCancel: _cancelDrag,
-                                      child: Listener(
-                                        onPointerDown: (_) =>
-                                            _audio?.onUserInteraction(),
-                                        onPointerCancel: (_) => _cancelDrag(),
-                                        child: GameWidget(game: _game!),
-                                      ),
+                          StarBoardFrame(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(
+                                GameSpacing.radius,
+                              ),
+                              child: SizedBox(
+                                width: width,
+                                height: height,
+                                child: Semantics(
+                                  label: t.boardLabel,
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    dragStartBehavior: DragStartBehavior.down,
+                                    onHorizontalDragStart: (d) => _start(d),
+                                    onHorizontalDragUpdate: _update,
+                                    onHorizontalDragEnd: (_) => _end(),
+                                    onHorizontalDragCancel: _cancelDrag,
+                                    onVerticalDragStart: (d) => _start(d),
+                                    onVerticalDragUpdate: _update,
+                                    onVerticalDragEnd: (_) => _end(),
+                                    onVerticalDragCancel: _cancelDrag,
+                                    child: Listener(
+                                      onPointerDown: (_) =>
+                                          _audio?.onUserInteraction(),
+                                      onPointerCancel: (_) => _cancelDrag(),
+                                      child: GameWidget(game: _game!),
                                     ),
                                   ),
                                 ),
@@ -1069,6 +1210,12 @@ class _GameScreenState extends State<GameScreen>
                                             'level_end',
                                             controller.state.moves,
                                             reason: 'restart',
+                                          );
+                                          _acknowledgeDiscovery();
+                                          _discovery = null;
+                                          _storyHidden = false;
+                                          _narrative.react(
+                                            CompanionReaction.idle,
                                           );
                                           controller.restart();
                                           _attempt = null;

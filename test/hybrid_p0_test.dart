@@ -190,7 +190,9 @@ void main() {
       for (var i = 0; i < 30; i++) {
         await tester.pump(const Duration(milliseconds: 20));
       }
-      expect(find.byKey(const ValueKey('intro-screen')), findsOneWidget);
+      expect(find.byKey(const ValueKey('intro-screen')), findsNothing);
+      await waitForHome(tester);
+      expect(find.byKey(const ValueKey('home-screen')), findsOneWidget);
       await tester.pumpWidget(const SizedBox());
     },
   );

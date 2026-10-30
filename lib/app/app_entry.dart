@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 
 import '../design/arcade_components.dart';
 import '../design/game_theme.dart';
-import '../design/star_art.dart';
 import '../domain/puzzle.dart';
 import '../l10n/app_localizations.dart';
 import '../settings/game_settings.dart';
 import 'experience_dialogs.dart';
 import 'game_session.dart';
-import 'intro_screen.dart';
+import '../story/companion_view.dart';
+import '../story/spirit_album.dart';
 import 'level_picker.dart';
 import 'play_context.dart';
 import '../daily/daily_panel.dart';
@@ -36,7 +36,6 @@ class AppEntry extends StatefulWidget {
 }
 
 class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
-  bool _intro = false;
   bool _entryResolved = false;
   bool _startingTutorial = false;
   bool _failed = false;
@@ -63,7 +62,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
           if (mounted && !_entryResolved) {
             setState(() {
               _entryResolved = true;
-              _intro = !onboarding.pending;
               _startingTutorial = onboarding.pending;
             });
           }
@@ -183,6 +181,12 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _album() async {
+    if (_session == null) return;
+    await showSpiritAlbum(context, _session!, widget.settings);
+    if (mounted) setState(() {});
+  }
+
   Future<void> _help() async {
     final replay = await showGameHelp(context, widget.settings);
     final session = _session;
@@ -243,14 +247,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
         ),
       );
     }
-    if (_intro) {
-      return IntroScreen(
-        settings: widget.settings,
-        onFinished: () {
-          if (mounted && _intro) setState(() => _intro = false);
-        },
-      );
-    }
     if (_startingTutorial && !_failed) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -303,7 +299,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      t.storyTitle,
+                      t.lastEchoTitle,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 38,
@@ -322,13 +318,42 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Center(
-                      child: CourierPortrait(
-                        height: 184,
-                        label: t.courierName,
-                        resting: true,
+                    JourneyCompanions(
+                      companion: session?.collection.companion,
+                      reduceMotion: prefersReducedMotion(
+                        context,
+                        widget.settings,
                       ),
+                      onAlbum: session == null ? null : _album,
                     ),
+                    if (session != null) ...[
+                      Text(
+                        t.gardenName,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        t.gardenProgress(session.collection.owned.length),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      LinearProgressIndicator(
+                        value:
+                            session.levels
+                                .where(
+                                  (l) =>
+                                      l.id <= 5 &&
+                                      session.progress.forLevel(
+                                            l.id,
+                                            revision: l.revision,
+                                          ) !=
+                                          null,
+                                )
+                                .length /
+                            5,
+                      ),
+                    ],
                     const SizedBox(height: 14),
                     FilledButton.icon(
                       key: const ValueKey('home-play'),
@@ -406,8 +431,50 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                           ? null
                           : _chooseLevel,
                       icon: const Icon(Icons.route_rounded),
-                      label: Text(t.levels),
+                      label: Text(t.journeyMap),
                     ),
+                    if (session != null) ...[
+                      OutlinedButton.icon(
+                        key: const ValueKey('home-album'),
+                        onPressed: _album,
+                        icon: const Icon(Icons.auto_stories_outlined),
+                        label: Text(t.album),
+                      ),
+                      if (session.collection.backfillPending)
+                        ArcadeSurface(
+                          child: Column(
+                            children: [
+                              Text(
+                                t.backfillSummary(
+                                  session.collection.owned.length,
+                                ),
+                              ),
+                              TextButton(
+                                key: const ValueKey('dismiss-backfill'),
+                                onPressed: () async {
+                                  await session.collection
+                                      .acknowledgeBackfill();
+                                  if (mounted) setState(() {});
+                                },
+                                child: Text(t.backfillDismiss),
+                              ),
+                            ],
+                          ),
+                        ),
+                      if (session.collection.pendingIds.isNotEmpty)
+                        TextButton(
+                          onPressed: _album,
+                          child: Text(
+                            t.pendingMemories(
+                              session.collection.pendingIds.length,
+                            ),
+                          ),
+                        ),
+                      CollectionStorageNotice(
+                        session: session,
+                        onChanged: () => setState(() {}),
+                      ),
+                    ],
                     const SizedBox(height: 18),
                     if (session != null &&
                         (session.progress.saveFailed ||

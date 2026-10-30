@@ -126,7 +126,7 @@ class _IntroScreenState extends State<IntroScreen>
                         child: Center(child: IntroScene(progress: _timeline)),
                       ),
                       Text(
-                        t.storyTitle,
+                        t.lastEchoTitle,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 30,
