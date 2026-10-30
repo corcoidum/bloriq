@@ -1,84 +1,83 @@
-# 집에서 이어서 작업하기
+# 맥북에서 최신 BLORIQ 이어서 작업하기
 
-2026-10-29. 최신 작업 브랜치는 **`codex/star-courier-design`**이다. `main`에 병합하지 않고 현재 개발 상태를 보관한다.
+2026-10-30. 최신 개발 브랜치는 **`codex/moonstone-season1`**이다. `main`에 병합하지 않고 작업 브랜치로 전달한다. 게임 구현 기준은 `026c70f`이며 그 뒤 이 안내를 갱신했다.
 
-## 현재 완료 상태
+## 완료 상태
 
-| 단계 | 상태 |
-|---|---|
-| 인트로·홈 | 공통 세션, 4초 인트로, 홈 진입 구현 |
-| P0 | 실제 1레벨 튜토리얼, 2~5레벨 개선, revision별 진행 기록 보존 |
-| P1 | Daily Echo, 최근 7일·연속 참여, 챕터 진행률, 선택 동의 기반 로컬 분석·내보내기 |
-| 최신 디자인 | 선택한 2번 ‘밤하늘 별배달부’를 홈·인트로·게임판·결과·Daily·설정·공유에 적용 |
-| 공개 콘텐츠 | 25개. 26~40은 자동 검증한 초안이며 수동 검토 전 비공개 |
-| 출시 | Android 실기기·사람 관찰 미검증. 광고·release 서명 작업은 미진행 |
+- 달빛 석판 보드: 프레임·타일 홈·룬석·장애물·목표 받침의 깊이와 정렬 통일.
+- 시즌1: 실제25종 친구·기억·5개 챕터 결말·도감·동행·발견/챕터 공유.
+- 기존25개 퍼즐·ID·revision·최단 이동·기믹·별 평가·진행 저장 유지.
+- 신규 사용자는 실제1번 튜토리얼, 재방문자는 홈으로 바로 진입.
+- Daily·7일 기록·로컬 분석 동의·Preview·Replay·Postcard·테마·오디오 유지.
+- 3초 인트로는 콘티 제안만 작성. 설정의 기존4초 다시 보기는 보존.
 
-디자인 구현 기준 커밋은 `cc765b1`이다. 그 이후 이 문서를 추가했다. 이전 인트로·P0·P1 작업도 같은 브랜치 이력에 포함되어 있다.
+[전체 실제 화면](moonstone-season1-review.html) · [구현/검증](MOONSTONE_SEASON1.md) · [25종 바이블](LAST_ECHO_BIBLE.md) · [인트로 콘티](INTRO_3S_STORYBOARD.md)
 
-## 가장 안전하게 받는 방법: 별도 폴더
+## 가장 안전한 방법: 새 폴더로 받기
 
-기존 집 PC 작업 폴더를 덮어쓰지 않으려면 아래처럼 새 폴더에 받는다. `bloriq-home`이라는 폴더가 이미 있다면 다른 새 이름을 사용한다.
+맥북의 기존 작업을 덮어쓰지 않도록 새 폴더에 받는다. `bloriq-moonstone`이 이미 있으면 다른 새 이름을 사용한다.
 
-```powershell
-git clone --branch codex/star-courier-design --single-branch https://github.com/corcoidum/bloriq.git bloriq-home
-cd bloriq-home
+```bash
+git clone --branch codex/moonstone-season1 --single-branch https://github.com/corcoidum/bloriq.git bloriq-moonstone
+cd bloriq-moonstone
 git status --short --branch
 flutter --version
 flutter pub get
 flutter gen-l10n
-flutter run -d chrome --web-port 8877
+flutter run -d chrome --web-port 8878
 ```
 
-개발 기준은 Flutter **3.47.8**, Dart **3.13.7**이다. Flutter SDK의 `bin`이 PATH에 있어야 한다. Dart는 Flutter에 포함된 버전을 사용한다. `pubspec.lock`을 그대로 사용하며 불필요한 `pub upgrade`는 하지 않는다. 해당 포트를 이미 쓰고 있으면 기존 개발 서버를 확인하거나 다른 포트를 지정한다.
+개발·검증 기준은 Flutter **3.47.8**, Dart **3.13.7**이다. `pubspec.yaml`은 Dart>=3.13을 요구한다. 다른 컴퓨터의 SDK는 `flutter --version`으로 확인하고, 기존 lockfile을 유지하며 불필요한 `pub upgrade`는 하지 않는다. Chrome이 없으면 `flutter devices`에서 가능한 실행 대상을 확인한다.8878이 사용 중이면 기존 실행을 종료하거나 다른 포트를 쓴다.
 
-새 설치는 Dark의 밤하늘 화면으로 시작한다. 기존에 저장한 테마 선택이 있으면 유지하므로, 필요한 경우 설정에서 Dark를 선택한다. 새 사용자는 인트로·홈 대신 실제 1레벨의 튜토리얼로 시작한다. 완료/건너뛰기 후의 다음 실행은 인트로→홈이다.
+## 이미 맥북에 저장소가 있는 경우
 
-## 집에 이미 저장소가 있는 경우
-
-먼저 `git status --short`로 변경 사항을 확인한다. 미커밋 작업을 자동으로 지우거나 덮어쓰지 않는다. 변경이 있거나 브랜치 상황이 불확실하면 위의 새 폴더 방식을 사용한다.
-
-작업 폴더가 깨끗하고 이 브랜치를 처음 받는 경우:
-
-```powershell
+```bash
+git status --short --branch
 git fetch origin --prune
-git switch --track origin/codex/star-courier-design
 ```
 
-이미 해당 로컬 브랜치가 존재하는 경우:
+미커밋 작업이나 별도 커밋이 있으면 그대로 보존하고 위 새 폴더 방식을 사용한다. 자동 reset·stash·강제 push로 맞추지 않는다.
 
-```powershell
-git fetch origin --prune
-git switch codex/star-courier-design
-git pull --ff-only origin codex/star-courier-design
-git rev-list --left-right --count HEAD...origin/codex/star-courier-design
+깨끗한 작업 폴더에서 이 브랜치를 처음 받는다면:
+
+```bash
+git switch --track origin/codex/moonstone-season1
 ```
 
-마지막 결과는 `0 0`이면 양쪽 커밋이 같다. fast-forward가 거부되면 별도 로컬 커밋이 있는지 확인하고 강제 reset/push로 맞추지 않는다.
+이미 같은 로컬 브랜치가 있다면:
 
-## 수행한 검증과 재현
+```bash
+git switch codex/moonstone-season1
+git pull --ff-only origin codex/moonstone-season1
+git rev-list --left-right --count HEAD...origin/codex/moonstone-season1
+```
 
-코드 기준 `cc765b1`에서 정적 분석 정상, **Flutter 테스트 153개**, **Python 도구 테스트 5개**, **25/25 레벨 BFS**, 웹 release 빌드를 통과했다. 새 그림·폰트·퍼즐·Daily 데이터는 저장소에 포함되어 있다. 캡처 60장과 선택 시안 비교 자료는 [화면 모음](star-courier-review.html)에 있다.
+마지막 결과가 `0 0`이면 일치한다. fast-forward가 거부되면 중단하고 새 폴더로 받는다. 앱이 실행 중이었다면 `q`로 종료 후 재실행한다. 새 카탈로그는 세션 시작 시 읽으므로 단순 hot reload만으로 확인하지 않는다.
 
-```powershell
+## 검증 근거와 남은 작업
+
+구현 기준 `026c70f`에서 정적 분석 정상, **Flutter261개·Python5개·BFS25/25·웹 release 빌드**를 통과했다. 이 인수인계 문서만 수정하는 업로드 단계에서 전체 검사를 다시 수행한 것은 아니다.
+
+```bash
 flutter analyze
 flutter test
-python tools/validate_levels.py
-python -m unittest tools.test_hybrid_tools -q
+python3 tools/validate_levels.py
+python3 -m unittest tools.test_hybrid_tools -v
 flutter build web --release
 ```
 
-Python은 레벨·플레이 테스트 분석 도구용이다. 웹 게임을 실행하는 데 Python 서버나 외부 서비스는 필요하지 않다. 브라우저 직접 조작과 Android 실기기 검증을 자동 테스트 통과로 대신하지 않았다.
+Android APK는 아직 생성하지 않았다. 회사 PC에서 사용자 동의 후 Java/Android SDK 다운로드 준비를 시작했으나 APK 빌드 완료 상태가 아니다. SDK·JDK·Gradle 캐시·서명 키는 Git에 올리지 않는다. 맥북에서는 자신의 Android 환경을 준비하고 라이선스 동의 후 아래 명령으로 확인한다.
 
-## Git으로 옮겨지지 않는 것
+```bash
+flutter doctor -v
+flutter devices
+flutter build apk --debug
+# 실제 기기가 준비되면
+flutter run --profile -d YOUR_ANDROID_DEVICE_ID
+```
 
-- 브라우저/앱의 로컬 진행·별·Daily 기록·설정·분석 로그는 기기 저장소에 있다. Git clone은 현재 PC의 플레이 기록을 옮기지 않는다. 미완료 보드 재실행 복원도 지원하지 않는다.
-- SDK, Android SDK/JDK, 빌드 폴더, 로컬 서버 프로세스는 복제되지 않는다. 집 PC에서 의존성을 받고 다시 실행한다.
-- 수집에 동의한 플레이 테스트 JSON은 명시적으로 내보내는 별도 자료다. 실제 테스트 로그·서명 키·비밀정보를 저장소에 추가하지 않는다.
+기존 release 설정은 debug 서명이며 스토어용 서명으로 간주하지 않는다. 실제 Android 터치·오프라인·음향·종료/복귀·프레임·공유 시트와 사람 관찰은 남아 있다. 이번 전달은 원격 브랜치 업로드이며 main 병합·스토어 배포가 아니다.
 
-## 다음 작업 순서와 완료 기준
+## PC 사이에 자동으로 옮겨지지 않는 데이터
 
-1. 실제 Android 기기에서 게임 시작→3동작 튜토리얼→5레벨, Undo·Restart·오디오·백그라운드 복귀를 확인한다. SDK/기기 준비 후 `flutter devices`에 나온 ID로 `flutter run -d "YOUR_DEVICE_ID"`를 실행한다.
-2. [5명 무설명 관찰표](PLAYTEST_OBSERVATION.md)로 Echo 이해와 작은 캐릭터 식별을 확인한다. 규칙·조작 문제를 추가 콘텐츠보다 먼저 수정한다.
-3. [26~40 검토표](LEVEL_REVIEW.md)의 수동 플레이를 마친 후보만 공개한다. 광고·힌트·release 서명은 별도 승인 범위다.
-
-[최신 구현 상세](STAR_COURIER_DESIGN.md) · [P0/P1 구현 상세](HYBRID_EXECUTION.md) · [Android 출시 체크리스트](ANDROID_SOFT_LAUNCH.md)
+진행·수집·테마·오디오·Daily·선택한 테스트 로그는 기기/브라우저 로컬 데이터다. Git clone으로 회사 PC의 플레이 기록이 맥북으로 이동하지 않는다. 새 브라우저 origin/포트에서는 신규 사용자로 시작할 수 있다. 코드·25종 아트·폰트·퍼즐·문서는 저장소에 포함돼 있다. APK·로컬 SDK와 빌드 캐시는 제외한다.
