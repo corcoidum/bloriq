@@ -136,6 +136,9 @@ abstract final class GameEffects {
   static const introDuration = Duration(seconds: 4);
   static const moveDuration = Duration(milliseconds: 220);
   static const celebrationDuration = Duration(milliseconds: 1450);
+
+  /// 별자리 완성은 수호 정령 발견과 같은 길이를 쓴다. 새 별은 기본 축하 안에 켜진다.
+  static const constellationCompleteDuration = Duration(milliseconds: 2200);
   static const panelDuration = Duration(milliseconds: 200);
   static const particleCount = 16;
 }

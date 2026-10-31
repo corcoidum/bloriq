@@ -8,9 +8,11 @@ import '../domain/puzzle.dart';
 import '../l10n/app_localizations.dart';
 import '../settings/game_settings.dart';
 import 'experience_dialogs.dart';
+import 'intro_screen.dart';
 import 'game_session.dart';
 import '../story/companion_view.dart';
 import '../story/spirit_album.dart';
+import '../constellation/constellation_atlas.dart';
 import 'level_picker.dart';
 import 'play_context.dart';
 import '../daily/daily_panel.dart';
@@ -23,10 +25,14 @@ class AppEntry extends StatefulWidget {
     this.loadLevels,
     this.clock,
     this.playtestMode = const bool.fromEnvironment('PLAYTEST_MODE'),
+    this.firstRunIntro = true,
   });
   final GameSettings settings;
   final DateTime Function()? clock;
   final bool playtestMode;
+
+  /// 처음 실행한 사용자에게만 인트로를 한 번 보여 준 뒤 튜토리얼로 잇는다.
+  final bool firstRunIntro;
   final Future<List<Level>> Function()? loadLevels;
   final Widget Function(GameSession session, int levelId, PlayContext play)
   gameBuilder;
@@ -38,6 +44,7 @@ class AppEntry extends StatefulWidget {
 class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   bool _entryResolved = false;
   bool _startingTutorial = false;
+  bool _introPlaying = false;
   bool _failed = false;
   bool _opening = false;
   bool _loading = false;
@@ -63,6 +70,9 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
             setState(() {
               _entryResolved = true;
               _startingTutorial = onboarding.pending;
+              // 'unseen'만 해당한다. 튜토리얼을 열면 inProgress가 되어 다시 나오지 않는다.
+              _introPlaying =
+                  widget.firstRunIntro && onboarding.status == 'unseen';
             });
           }
         },
@@ -89,9 +99,17 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     }
   }
 
+  void _introFinished() {
+    if (!mounted || !_introPlaying) return;
+    setState(() => _introPlaying = false);
+    _startTutorial();
+  }
+
   void _startTutorial() {
     final session = _session;
-    if (session == null ||
+    // 인트로가 끝날 때 다시 호출되므로 그동안은 튜토리얼을 열지 않는다.
+    if (_introPlaying ||
+        session == null ||
         (widget.playtestMode && !session.analytics.consentKnown)) {
       return;
     }
@@ -187,6 +205,22 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     if (mounted) setState(() {});
   }
 
+  Future<void> _atlas() async {
+    final session = _session;
+    if (session == null || _opening || _choosing) return;
+    _choosing = true;
+    try {
+      final id = await showConstellationAtlas(
+        context,
+        session,
+        widget.settings,
+      );
+      if (id != null && mounted) await _open(id);
+    } finally {
+      _choosing = false;
+    }
+  }
+
   Future<void> _help() async {
     final replay = await showGameHelp(context, widget.settings);
     final session = _session;
@@ -246,6 +280,10 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
           ),
         ),
       );
+    }
+    // 레벨과 기록은 인트로가 도는 동안 뒤에서 계속 불러온다.
+    if (_introPlaying) {
+      return IntroScreen(settings: widget.settings, onFinished: _introFinished);
     }
     if (_startingTutorial && !_failed) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -445,6 +483,13 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                         onPressed: _album,
                         icon: const Icon(Icons.auto_stories_outlined),
                         label: Text(t.album),
+                      ),
+                      const SizedBox(height: GameSpacing.small),
+                      OutlinedButton.icon(
+                        key: const ValueKey('home-atlas'),
+                        onPressed: _opening ? null : _atlas,
+                        icon: const Icon(Icons.auto_awesome),
+                        label: Text(t.constellationAtlas),
                       ),
                       if (session.collection.backfillPending)
                         ArcadeSurface(

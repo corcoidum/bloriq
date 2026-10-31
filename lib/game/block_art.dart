@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
@@ -17,6 +18,7 @@ abstract final class BlockArt {
     bool goal = true,
     double scale = 1,
     double opacity = 1,
+    ui.Image? face,
   }) {
     final material = BoardMaterial(colors);
     if (!goal) {
@@ -52,7 +54,7 @@ abstract final class BlockArt {
       );
       return;
     }
-    final image = StarArt.riqImage;
+    final image = face ?? StarArt.riqImage;
     if (image != null) {
       material.raised(
         canvas,
@@ -65,13 +67,12 @@ abstract final class BlockArt {
         colors.goalInk,
         opacity: opacity,
       );
-      final extent = cell * BoardGeometry.spriteFraction * scale;
-      final rect = Rect.fromCenter(
-        center: at + Offset(.014 * extent, -.039 * extent),
-        width: extent,
-        height: extent,
+      StarArt.draw(
+        canvas,
+        image,
+        goalSpriteRect(at, cell, scale: scale),
+        opacity: opacity,
       );
-      StarArt.draw(canvas, image, rect, opacity: opacity);
       return;
     }
     final paint = Paint();
@@ -135,6 +136,16 @@ abstract final class BlockArt {
       at,
       cell * (goal ? .31 : .4) * scale,
       colors.blockSymbol.withValues(alpha: opacity),
+    );
+  }
+
+  /// 리크 스프라이트가 놓이는 영역. 표정 오버레이도 같은 영역을 쓴다.
+  static Rect goalSpriteRect(Offset at, double cell, {double scale = 1}) {
+    final extent = cell * BoardGeometry.spriteFraction * scale;
+    return Rect.fromCenter(
+      center: at + Offset(.014 * extent, -.039 * extent),
+      width: extent,
+      height: extent,
     );
   }
 
