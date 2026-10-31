@@ -6,6 +6,7 @@ import 'package:bloriq/domain/puzzle.dart';
 import 'package:bloriq/game/bloriq_game.dart';
 import 'package:bloriq/main.dart';
 import 'package:bloriq/progress/progress_repository.dart';
+import 'package:bloriq/settings/game_settings.dart';
 import 'package:bloriq/tutorial/echo_tutorial.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,12 @@ BloriqGame game(WidgetTester tester) =>
 Future<void> ready(WidgetTester tester) async {
   for (var i = 0; i < 150 && board.evaluate().isEmpty; i++) {
     await tester.pump(const Duration(milliseconds: 20));
+    // 첫 실행 인트로는 건너뛰기로 바로 튜토리얼에 들어간다.
+    final skip = find.byKey(const ValueKey('skip-intro'));
+    if (skip.evaluate().isNotEmpty) {
+      await tester.tap(skip);
+      await tester.pump();
+    }
   }
   await tester.pump(const Duration(milliseconds: 350));
   expect(board, findsOneWidget);
@@ -161,9 +168,21 @@ void main() {
     },
   );
   testWidgets(
-    'fresh launch teaches real Echo in three gestures and saves campaign once',
+    'fresh launch plays the intro once, then teaches real Echo in three gestures',
     (tester) async {
       await tester.pumpWidget(const BloriqApp());
+      for (
+        var i = 0;
+        i < 100 &&
+            find.byKey(const ValueKey('intro-screen')).evaluate().isEmpty;
+        i++
+      ) {
+        await tester.pump(const Duration(milliseconds: 20));
+      }
+      expect(find.byKey(const ValueKey('intro-screen')), findsOneWidget);
+      expect(board, findsNothing);
+      // 끝까지 보면 건너뛰기 없이도 튜토리얼이 열린다.
+      await tester.pump(const Duration(milliseconds: 4300));
       await ready(tester);
       expect(find.byKey(const ValueKey('intro-screen')), findsNothing);
       expect(
@@ -196,6 +215,43 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     },
   );
+  testWidgets('reduced motion fresh launch goes straight to the tutorial', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      BloriqApp(settings: GameSettings(reduceMotion: true)),
+    );
+    for (var i = 0; i < 150 && board.evaluate().isEmpty; i++) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    expect(board, findsOneWidget);
+    expect(find.byKey(const ValueKey('intro-screen')), findsNothing);
+    expect(find.byKey(const ValueKey('skip-tutorial')), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+  testWidgets('skipping the first-run intro opens the tutorial exactly once', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const BloriqApp());
+    for (
+      var i = 0;
+      i < 100 && find.byKey(const ValueKey('skip-intro')).evaluate().isEmpty;
+      i++
+    ) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    final skip = tester
+        .widget<TextButton>(find.byKey(const ValueKey('skip-intro')))
+        .onPressed!;
+    skip();
+    skip();
+    await ready(tester);
+    expect(find.byKey(const ValueKey('skip-tutorial')), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
+    expect(board, findsOneWidget);
+    expect(find.byType(GameScreen), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
   testWidgets(
     'skip preserves moved board and persists; practice never saves campaign',
     (tester) async {

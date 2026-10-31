@@ -104,7 +104,7 @@
   "collectedStars": "{count} stars",
   "skipIntro": "Skip intro",
   "replayIntro": "Watch intro again",
-  "introLabel": "The mint courier leaves a purple Echo and reaches the star.",
+  "introLabel": "Riq wakes up, leaves a purple Echo, reaches the star gate and lights a constellation.",
   "preparingGame": "Getting your puzzles ready…",
   "retry": "Try loading again",
   "motionSection": "Motion",
@@ -327,5 +327,107 @@
         "type": "String"
       }
     }
-  }
+  },
+  "constellationAtlas": "Constellation Atlas",
+  "constellationName1": "Moonflower",
+  "constellationName2": "Five Lights",
+  "constellationName3": "Sealed Letter",
+  "constellationName4": "Wind Ring",
+  "constellationName5": "First Star",
+  "constellationLit": "{lit} of {total} stars lit",
+  "@constellationLit": {
+    "placeholders": {
+      "lit": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "constellationBestStars": "Best stars {stars}/{max}",
+  "@constellationBestStars": {
+    "placeholders": {
+      "stars": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "constellationDormant": "Still asleep",
+  "constellationRestored": "Restored",
+  "constellationGolden": "Golden",
+  "constellationSummary": "{name} constellation. {lit} of {total} stars lit. Best stars {stars} of {max}. {status}.",
+  "@constellationSummary": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "lit": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "stars": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "constellationNewStar": "A star in {name} woke up",
+  "@constellationNewStar": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "constellationCompleteTitle": "{name} shines again",
+  "@constellationCompleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "constellationGoldenTitle": "{name} turned golden",
+  "@constellationGoldenTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "constellationPending": "This star lights up once your progress is saved.",
+  "constellationNewVersion": "Cleared in an earlier version. Stars count once you clear this one.",
+  "constellationLevelStars": "Gate {number} · {stars} of 3 stars",
+  "@constellationLevelStars": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "stars": {
+        "type": "int"
+      }
+    }
+  },
+  "constellationLevelDark": "Gate {number} · not cleared yet",
+  "@constellationLevelDark": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "constellationPlay": "Play",
+  "constellationBack": "All constellations",
+  "viewConstellation": "View constellation"
 }

@@ -31,6 +31,9 @@ import 'story/story_catalog.dart';
 import 'story/spirit_album.dart';
 import 'story/discovery_panel.dart';
 import 'story/story_share.dart';
+import 'constellation/constellation_atlas.dart';
+import 'constellation/constellation_state.dart';
+import 'constellation/victory_constellation.dart';
 
 void main() => runApp(const BloriqApp());
 
@@ -41,6 +44,7 @@ class BloriqApp extends StatefulWidget {
     this.settings,
     this.clock,
     this.playtestMode = const bool.fromEnvironment('PLAYTEST_MODE'),
+    this.firstRunIntro = true,
   });
 
   /// 테스트에서 이전 스테이지 구성과 기기 설정을 주입할 수 있다.
@@ -48,6 +52,7 @@ class BloriqApp extends StatefulWidget {
   final GameSettings? settings;
   final DateTime Function()? clock;
   final bool playtestMode;
+  final bool firstRunIntro;
 
   @override
   State<BloriqApp> createState() => _BloriqAppState();
@@ -104,6 +109,7 @@ class _BloriqAppState extends State<BloriqApp> {
             loadLevels: widget.loadLevels,
             clock: widget.clock,
             playtestMode: widget.playtestMode,
+            firstRunIntro: widget.firstRunIntro,
             settings: _settings!,
             gameBuilder: (session, levelId, play) => GameScreen(
               session: session,
@@ -160,6 +166,11 @@ class _GameScreenState extends State<GameScreen>
   bool _replaying = false;
   bool _reduceMotion = false;
   bool _isNewBest = false;
+
+  /// 저장 전 별자리. 저장이 성공한 뒤 [_atlasAfter]와 비교해 연출을 고른다.
+  ConstellationAtlas? _atlasBefore, _atlasAfter;
+  ConstellationEvent? _constellation;
+  bool _constellationPending = false;
   Timer? _victoryFallback;
   late final AnimationController _victory = AnimationController(
     vsync: this,
@@ -285,16 +296,28 @@ class _GameScreenState extends State<GameScreen>
         'replay': widget.play.mode == PlayMode.tutorialReplay,
       });
     }
+    // 기록이 메모리에서 바뀌기 전에 별자리 상태를 떠 둔다.
+    _constellation = null;
+    _constellationPending = false;
+    _atlasAfter = null;
+    _atlasBefore = widget.play.mode == PlayMode.campaign
+        ? ConstellationAtlas.derive(widget.session.levels, _progress!)
+        : null;
+    final chapter = _atlasBefore?.forLevel(state.level.id);
+    final lightsStar = chapter != null && !chapter.isLit(state.level.id);
+    final completesChapter =
+        lightsStar && chapter.litCount == chapter.levels.length - 1;
     // 저장과 별 평가는 애니메이션 타이머/Canvas 성공 여부에 의존하지 않는다.
     unawaited(_recordCompletion(controller));
     _narrative.react(CompanionReaction.complete);
     final friend = widget.session.story.forLevel(state.level.id);
-    _victory.duration =
+    final newGuardian =
         friend?.released == true &&
-            friend!.guardian &&
-            widget.play.mode == PlayMode.campaign &&
-            !widget.session.collection.owns(friend.id)
-        ? const Duration(milliseconds: 2200)
+        friend!.guardian &&
+        widget.play.mode == PlayMode.campaign &&
+        !widget.session.collection.owns(friend.id);
+    _victory.duration = completesChapter || newGuardian
+        ? GameEffects.constellationCompleteDuration
         : GameEffects.celebrationDuration;
     _victoryFallback?.cancel();
     if (_reduceMotion) {
@@ -330,6 +353,9 @@ class _GameScreenState extends State<GameScreen>
     _acknowledgeDiscovery();
     _discovery = null;
     _storyHidden = false;
+    _constellation = null;
+    _constellationPending = false;
+    _atlasBefore = _atlasAfter = null;
     _narrative.react(CompanionReaction.idle);
     if (_pageScroll.hasClients) _pageScroll.jumpTo(0);
     _attempt?.finish(
@@ -424,6 +450,7 @@ class _GameScreenState extends State<GameScreen>
     setState(() {
       _completion = result;
       _discovery = added.where((f) => f.levelId == state.level.id).firstOrNull;
+      _updateConstellation(state.level.id, saved: result.saved);
     });
   }
 
@@ -451,8 +478,58 @@ class _GameScreenState extends State<GameScreen>
         _discovery ??= added
             .where((f) => f.levelId == controller!.state.level.id)
             .firstOrNull;
+        _updateConstellation(controller!.state.level.id, saved: saved);
       }
     });
+  }
+
+  /// 저장 결과로만 별을 켠다. 실패하면 점선 고리로 대기 상태를 보여 준다.
+  void _updateConstellation(int levelId, {required bool saved}) {
+    final before = _atlasBefore;
+    if (before == null) return;
+    if (!saved) {
+      _constellationPending = before.forLevel(levelId)?.isLit(levelId) == false;
+      return;
+    }
+    final after = ConstellationAtlas.derive(widget.session.levels, _progress!);
+    _atlasAfter = after;
+    _constellationPending = false;
+    _constellation = ConstellationAtlas.diff(before, after, levelId);
+  }
+
+  Widget? _constellationView(PuzzleController controller) {
+    final levelId = controller.state.level.id;
+    final event = _constellation;
+    final atlas = _constellationPending ? _atlasBefore : _atlasAfter;
+    final chapter = atlas?.forLevel(levelId);
+    if (chapter == null ||
+        (!_constellationPending && (event == null || event.isEmpty))) {
+      return null;
+    }
+    return VictoryConstellation(
+      chapter: chapter,
+      levelId: levelId,
+      progress: _victory.value,
+      reduceMotion: _reduceMotion,
+      guardianAsset: guardianAssetFor(widget.session, chapter),
+      event: _constellationPending ? null : event,
+      pending: _constellationPending,
+      onOpen: () => _openAtlas(chapter.chapter),
+    );
+  }
+
+  Future<void> _openAtlas(int chapter) async {
+    final id = await _withModal<int>(
+      () => showConstellationAtlas(
+        context,
+        widget.session,
+        widget.settings,
+        initialChapter: chapter,
+      ),
+    );
+    if (!mounted || id == null) return;
+    final index = _loaded.indexWhere((level) => level.id == id);
+    if (index >= 0) _select(index);
   }
 
   void _showPostcard(AppLocalizations t, PuzzleController controller) {
@@ -767,6 +844,7 @@ class _GameScreenState extends State<GameScreen>
                 },
               )
             : null,
+        constellation: _constellationView(controller),
         result: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

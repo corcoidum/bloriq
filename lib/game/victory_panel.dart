@@ -17,6 +17,7 @@ class VictoryPanel extends StatelessWidget {
     required this.onSkip,
     required this.result,
     this.discovery,
+    this.constellation,
   });
 
   final double progress;
@@ -26,6 +27,9 @@ class VictoryPanel extends StatelessWidget {
   final VoidCallback onSkip;
   final Widget result;
   final Widget? discovery;
+
+  /// 새로 켜진 별자리. 같은 결과 패널 안에 표시한다.
+  final Widget? constellation;
 
   @override
   Widget build(BuildContext context) {
@@ -147,6 +151,7 @@ class VictoryPanel extends StatelessWidget {
                       const SizedBox(height: GameSpacing.small),
                     ],
                     ?discovery,
+                    ?constellation,
                     result,
                   ],
                 ),

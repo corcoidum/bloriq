@@ -62,7 +62,7 @@
   "collectedStars": "별 {count}개",
   "skipIntro": "건너뛰기",
   "replayIntro": "인트로 다시 보기",
-  "introLabel": "민트 정령이 보라색 잔상을 남기고 별에 도착해요.",
+  "introLabel": "잠에서 깬 리크가 보라색 잔상을 남기고 별문에 도착해 별자리를 밝혀요.",
   "preparingGame": "퍼즐을 준비하고 있어요…",
   "retry": "다시 불러오기",
   "motionSection": "모션",
@@ -182,5 +182,27 @@
         "type": "String"
       }
     }
-  }
+  },
+  "constellationAtlas": "별자리 도감",
+  "constellationName1": "달꽃자리",
+  "constellationName2": "다섯빛자리",
+  "constellationName3": "봉인편지자리",
+  "constellationName4": "바람고리자리",
+  "constellationName5": "첫별자리",
+  "constellationLit": "별 {lit}/{total}개 밝힘",
+  "constellationBestStars": "최고 별 {stars}/{max}",
+  "constellationDormant": "아직 잠든 별자리",
+  "constellationRestored": "복원 완료",
+  "constellationGolden": "황금 별자리",
+  "constellationSummary": "{name}. 별 {total}개 중 {lit}개 밝힘. 최고 별 {max}개 중 {stars}개. {status}.",
+  "constellationNewStar": "{name}의 별 하나가 깨어났어요",
+  "constellationCompleteTitle": "{name}가 다시 빛나요",
+  "constellationGoldenTitle": "{name}가 황금빛이 되었어요",
+  "constellationPending": "기록이 저장되면 이 별이 켜져요.",
+  "constellationNewVersion": "이전 버전에서 완료했어요. 새 버전을 완료하면 별이 집계돼요.",
+  "constellationLevelStars": "별문 {number} · 별 {stars}/3",
+  "constellationLevelDark": "별문 {number} · 아직 열지 않음",
+  "constellationPlay": "도전",
+  "constellationBack": "별자리 목록",
+  "viewConstellation": "별자리 보기"
 }

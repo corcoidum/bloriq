@@ -21,13 +21,22 @@ abstract final class StarArt {
   static const riqHappy = 'assets/art/last_echo/riq_happy.png';
   static const riqThinking = 'assets/art/last_echo/riq_thinking.png';
   static const riqSurprised = 'assets/art/last_echo/riq_surprised.png';
+  static const riqSleep = 'assets/art/last_echo/riq_sleep.png';
   static const runeStone = 'assets/art/last_echo/rune_stone.png';
+  static const lunabel = 'assets/art/last_echo/lunabel.png';
+
+  /// riq.png 안의 두 눈 중심(정규화)과 반지름. 잠든 얼굴 그림이 없을 때 쓴다.
+  static const riqEyes = [Offset(.380, .582), Offset(.645, .585)];
+  static const riqEyeRadius = Size(.040, .042);
   static final revision = ValueNotifier(0);
   static ui.Image? courierImage;
   static ui.Image? portalImage;
   static ui.Image? echoImage;
   static ui.Image? forestImage;
   static ui.Image? riqImage, runeImage;
+
+  /// 인트로 표정. 없으면 기본 얼굴로 그린다.
+  static ui.Image? riqHappyImage, riqSurprisedImage, riqSleepImage;
   static Future<void>? _loading;
   static bool _licensesRegistered = false;
   static final Map<String, ui.Image> portraits = {};
@@ -93,7 +102,21 @@ abstract final class StarArt {
       // 그림 준비 실패가 조작이나 기록 로딩을 막지 않는다.
       _loading = null;
       debugPrint('Star courier artwork unavailable: $error');
+      return;
     }
+    // 표정은 하나씩 따로 읽어 하나가 없어도 나머지 그림에 영향을 주지 않는다.
+    Future<ui.Image?> optional(String asset) async {
+      try {
+        return await decode(asset);
+      } catch (_) {
+        return null;
+      }
+    }
+
+    riqHappyImage ??= await optional(riqHappy);
+    riqSurprisedImage ??= await optional(riqSurprised);
+    riqSleepImage ??= await optional(riqSleep);
+    revision.value++;
   }
 
   static void draw(
