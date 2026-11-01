@@ -62,10 +62,13 @@ class JourneyCompanions extends StatefulWidget {
     required this.reduceMotion,
     this.narrative,
     this.compact = false,
+    this.inline = false,
     this.onAlbum,
   });
   final SpiritDefinition? companion;
-  final bool reduceMotion, compact;
+
+  /// [inline]은 게임 화면용 한 줄 배치다. 작은 초상과 대사를 나란히 둔다.
+  final bool reduceMotion, compact, inline;
   final NarrativeController? narrative;
   final VoidCallback? onAlbum;
   @override
@@ -125,7 +128,28 @@ class _JourneyCompanionsState extends State<JourneyCompanions>
       CompanionReaction.welcome => StarArt.riqHappy,
       _ => StarArt.riq,
     };
-    final size = widget.compact ? 44.0 : 88.0;
+    final size = widget.inline
+        ? (widget.compact ? 38.0 : 46.0)
+        : widget.compact
+        ? 44.0
+        : 88.0;
+    final showNames = !widget.compact && !widget.inline;
+    final speech = Text(
+      switch (reaction) {
+        CompanionReaction.echo => t.riqEcho,
+        CompanionReaction.blocked => t.riqBlocked,
+        CompanionReaction.gate => t.riqGate,
+        CompanionReaction.welcome || CompanionReaction.complete => t.riqWelcome,
+        _ => t.riqIdle,
+      },
+      textAlign: widget.inline ? TextAlign.start : TextAlign.center,
+      maxLines: widget.inline ? 2 : null,
+      overflow: widget.inline ? TextOverflow.ellipsis : null,
+      style: TextStyle(
+        color: GameTheme.colorsOf(context).rewardInk,
+        fontSize: 13,
+      ),
+    );
     Widget character(Widget image, String label) => Semantics(
       image: true,
       label: label,
@@ -133,7 +157,7 @@ class _JourneyCompanionsState extends State<JourneyCompanions>
         mainAxisSize: MainAxisSize.min,
         children: [
           image,
-          if (!widget.compact)
+          if (showNames)
             Text(
               label,
               style: TextStyle(
@@ -162,8 +186,10 @@ class _JourneyCompanionsState extends State<JourneyCompanions>
             ),
           );
         },
-        child: Column(
+        child: Flex(
+          direction: widget.inline ? Axis.horizontal : Axis.vertical,
           mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -180,7 +206,7 @@ class _JourneyCompanionsState extends State<JourneyCompanions>
                   t.riqName,
                 ),
                 if (widget.companion case final friend?) ...[
-                  const SizedBox(width: 12),
+                  SizedBox(width: widget.inline ? 4 : 12),
                   if (widget.onAlbum == null)
                     character(
                       SpiritPortrait(spirit: friend, size: size),
@@ -205,25 +231,16 @@ class _JourneyCompanionsState extends State<JourneyCompanions>
                 ],
               ],
             ),
-            if (!widget.compact && widget.narrative != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Text(
-                  switch (reaction) {
-                    CompanionReaction.echo => t.riqEcho,
-                    CompanionReaction.blocked => t.riqBlocked,
-                    CompanionReaction.gate => t.riqGate,
-                    CompanionReaction.welcome ||
-                    CompanionReaction.complete => t.riqWelcome,
-                    _ => t.riqIdle,
-                  },
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: GameTheme.colorsOf(context).rewardInk,
-                    fontSize: 13,
+            if ((widget.inline || !widget.compact) && widget.narrative != null)
+              if (widget.inline)
+                Flexible(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 10),
+                    child: speech,
                   ),
-                ),
-              ),
+                )
+              else
+                Padding(padding: const EdgeInsets.only(top: 6), child: speech),
           ],
         ),
       ),

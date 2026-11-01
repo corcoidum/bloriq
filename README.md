@@ -33,6 +33,9 @@
 - 축하 연출은 건너뛸 수 있으며, 앱 또는 시스템의 모션 줄이기 설정에서는 결과를 바로 표시합니다. Android의 Remove animations와 iOS의 Reduce Motion 변경도 반영합니다.
 - 별 평가와 기록 저장은 완료 즉시 수행합니다. 렌더러가 멈춰도 독립 타이머가 결과 버튼을 표시하며, 스테이지 전환 시 이전 연출을 정리합니다.
 - 공통 토큰은 `lib/design/game_theme.dart`, 로컬 설정은 `lib/settings/`, 연출은 `lib/game/`에 있습니다. 퍼즐 규칙과 스테이지 데이터는 변경하지 않았으며 새 production dependency는 없습니다.
+- 게임 화면은 스크롤 없이 한 화면에 고정됩니다. 상단 중앙에 금빛 BLORIQ 로고, 그 아래 스테이지 이름을 두고 보드가 남은 높이를 채웁니다. 보드 칸이 48px보다 작아지는 아주 작은 화면이나 가로 화면에서만 스크롤 배치로 바뀝니다.
+- 블록 이동은 출발 파동·빛 꼬리·잔영, 늘어남/눌림, 착지 파동·별가루·보드 흔들림으로 표현하고, 막힌 이동은 블록이 부딪혀 튕깁니다. 모션 줄이기에서는 모두 생략합니다.
+- 앱 아이콘은 리크 캐릭터입니다. `python3 tools/generate_app_icon.py`(Pillow 필요)로 Android legacy/adaptive 아이콘과 웹 아이콘을 다시 만듭니다.
 
 [Light/Dark 및 개선 전후 화면 비교](docs/design-comparison.html)와 [디자인 QA 결과](docs/DESIGN_QA.md)를 참고하세요. 문서의 화면은 Flutter widget renderer로 생성한 검증 이미지이며 실기기 성능 측정 자료는 아닙니다.
 
