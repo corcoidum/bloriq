@@ -59,7 +59,8 @@ void main() {
             final initial = game().controller.state;
             final geometry = game().geometry;
             final rect = tester.getRect(board);
-            expect(rect.size, geometry.canvasSize);
+            expect(rect.width, closeTo(geometry.canvasSize.width, .001));
+            expect(rect.height, closeTo(geometry.canvasSize.height, .001));
             expect(geometry.cellSize, greaterThanOrEqualTo(48));
             final frame = tester.getRect(find.byType(StarBoardFrame));
             expect((rect.topLeft - frame.topLeft).dx, closeTo(24, .001));

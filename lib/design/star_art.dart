@@ -40,6 +40,20 @@ abstract final class StarArt {
   static Future<void>? _loading;
   static bool _licensesRegistered = false;
   static final Map<String, ui.Image> portraits = {};
+
+  /// `assets/art/devices/`에 넣은 장치 그림. 없으면 코드 그림을 쓴다.
+  static final Map<String, ui.Image> devices = {};
+  static const deviceAssets = [
+    'gate_closed',
+    'gate_open',
+    'switch_bud',
+    'switch_bloom',
+    'eraser',
+    'hold',
+    'oneway',
+    'goal_only',
+    'wall',
+  ];
   static Future<void> loadPortrait(String path) async {
     if (portraits.containsKey(path)) return;
     final data = await rootBundle.load(path);
@@ -116,6 +130,10 @@ abstract final class StarArt {
     riqHappyImage ??= await optional(riqHappy);
     riqSurprisedImage ??= await optional(riqSurprised);
     riqSleepImage ??= await optional(riqSleep);
+    for (final name in deviceAssets) {
+      final image = await optional('assets/art/devices/$name.png');
+      if (image != null) devices[name] = image;
+    }
     revision.value++;
   }
 

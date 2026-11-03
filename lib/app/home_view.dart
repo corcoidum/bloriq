@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../constellation/constellation_atlas.dart';
@@ -40,14 +42,15 @@ class HomeView extends StatelessWidget {
     body: ArcadeBackdrop(
       child: SafeArea(
         child: LayoutBuilder(
-          builder: (context, box) => SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: box.maxHeight),
-              child: IntrinsicHeight(
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 560),
+          builder: (context, box) => Align(
+            alignment: Alignment.topCenter,
+            child: SizedBox(
+              // 폭을 먼저 정해야 IntrinsicHeight가 글줄 수를 바르게 계산한다.
+              width: math.min(box.maxWidth, 560),
+              child: SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: box.maxHeight),
+                  child: IntrinsicHeight(
                     child: Padding(
                       padding: const EdgeInsets.all(GameSpacing.page),
                       child: _content(context),
@@ -169,29 +172,25 @@ class HomeView extends StatelessWidget {
             key: const ValueKey('home-hero'),
             borderRadius: BorderRadius.circular(GameSpacing.radius),
             onTap: opening ? null : onAtlas,
-            child: SizedBox(
-              height: 190,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  if (constellation != null)
-                    Positioned.fill(
-                      child: ExcludeSemantics(
-                        child: ConstellationArt(
-                          chapter: constellation,
-                          guardianAsset: guardianAssetFor(
-                            session,
-                            constellation,
-                          ),
-                        ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (constellation != null)
+                  SizedBox(
+                    width: 230,
+                    height: 112,
+                    child: ExcludeSemantics(
+                      child: ConstellationArt(
+                        chapter: constellation,
+                        guardianAsset: guardianAssetFor(session, constellation),
                       ),
                     ),
-                  JourneyCompanions(
-                    companion: session.collection.companion,
-                    reduceMotion: reduceMotion,
                   ),
-                ],
-              ),
+                JourneyCompanions(
+                  companion: session.collection.companion,
+                  reduceMotion: reduceMotion,
+                ),
+              ],
             ),
           ),
         ),

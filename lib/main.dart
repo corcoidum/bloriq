@@ -11,6 +11,8 @@ import 'domain/puzzle.dart';
 import 'design/game_theme.dart';
 import 'game/bloriq_game.dart';
 import 'game/board_geometry.dart';
+import 'game/device_art.dart';
+import 'game/device_legend.dart';
 import 'game/victory_panel.dart';
 import 'l10n/app_localizations.dart';
 import 'postcard/echo_postcard.dart';
@@ -167,6 +169,7 @@ class _GameScreenState extends State<GameScreen>
   ConstellationAtlas? _atlasBefore, _atlasAfter;
   ConstellationEvent? _constellation;
   bool _constellationPending = false;
+  DeviceKind? _legendSelected;
   Timer? _victoryFallback;
   late final AnimationController _victory = AnimationController(
     vsync: this,
@@ -352,6 +355,7 @@ class _GameScreenState extends State<GameScreen>
     _constellation = null;
     _constellationPending = false;
     _atlasBefore = _atlasAfter = null;
+    _legendSelected = null;
     _narrative.react(CompanionReaction.idle);
     if (_pageScroll.hasClients) _pageScroll.jumpTo(0);
     _attempt?.finish(
@@ -957,28 +961,6 @@ class _GameScreenState extends State<GameScreen>
       };
     }
     if (_hasNoMoves(controller)) return t.noMoves;
-    final mechanics = <String>[
-      if (state.level.echoErasers.isNotEmpty) t.eraserRule,
-      if (state.level.echoHolds.isNotEmpty) t.holdRule,
-      if (state.level.oneWays.isNotEmpty) t.oneWayRule,
-      if (state.level.goalOnlyTiles.isNotEmpty) t.goalOnlyRule,
-    ];
-    if (mechanics.isNotEmpty) {
-      // 팝업 없이 현재 스테이지의 규칙을 보드 아래에 계속 표시한다.
-      if (state.level.echoGate != null) {
-        final gateHint = _gateBlocked
-            ? t.gateClosed
-            : state.isGateOpen
-            ? t.gateOpen
-            : state.blocks.any(
-                (block) => block.position == state.level.echoGate,
-              )
-            ? t.gateOccupied
-            : t.gateInstruction;
-        mechanics.add(gateHint);
-      }
-      return mechanics.join('\n');
-    }
     if (state.level.echoGate == null) {
       return state.echo == null ? t.instruction : t.echoInstruction;
     }
@@ -1026,7 +1008,7 @@ class _GameScreenState extends State<GameScreen>
                 final compact = constraints.maxHeight < 700;
                 final boardRoom = math.max(
                   controller.state.level.boardHeight * 48.0,
-                  constraints.maxHeight - (compact ? 310 : 350),
+                  constraints.maxHeight - (compact ? 330 : 400),
                 );
                 final availableWidth = math.max(
                   1.0,
@@ -1063,9 +1045,9 @@ class _GameScreenState extends State<GameScreen>
                       constraints: const BoxConstraints(maxWidth: 560),
                       padding: EdgeInsets.fromLTRB(
                         GameSpacing.page,
-                        compact ? 12 : 28,
+                        compact ? 4 : 12,
                         GameSpacing.page,
-                        12,
+                        4,
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -1148,7 +1130,7 @@ class _GameScreenState extends State<GameScreen>
                               companion: widget.session.collection.companion,
                               narrative: _narrative,
                               reduceMotion: _reduceMotion,
-                              compact: compact,
+                              compact: true,
                               onAlbum: _openAlbum,
                             ),
                           if (widget.play.mode == PlayMode.campaign &&
@@ -1237,8 +1219,23 @@ class _GameScreenState extends State<GameScreen>
                                 : Column(
                                     key: ValueKey(hint),
                                     children: [
+                                      if (_tutorial == null)
+                                        DeviceLegend(
+                                          level: controller.state.level,
+                                          selected: _legendSelected,
+                                          onSelect: (kind) => setState(
+                                            () => _legendSelected =
+                                                _legendSelected == kind
+                                                ? null
+                                                : kind,
+                                          ),
+                                        ),
                                       Text(
-                                        hint,
+                                        _tutorial == null &&
+                                                _legendSelected != null
+                                            ? '${DeviceLegend.name(t, _legendSelected!)} · '
+                                                  '${DeviceLegend.rule(t, _legendSelected!)}'
+                                            : hint,
                                         textAlign: TextAlign.center,
                                         style: Theme.of(context)
                                             .textTheme
@@ -1323,15 +1320,6 @@ class _GameScreenState extends State<GameScreen>
                                   ),
                               ],
                             ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'BLORIQ',
-                            style: TextStyle(
-                              fontSize: 11,
-                              letterSpacing: 4,
-                              color: colors.secondaryText,
-                            ),
-                          ),
                         ],
                       ),
                     ),
