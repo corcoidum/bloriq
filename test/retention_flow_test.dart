@@ -48,6 +48,12 @@ void main() {
       }
     }
 
+    Future<void> tapAction(String label) async {
+      await tester.tap(find.byTooltip(label));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+    }
+
     Future<void> tapVisible(String label) async {
       final target = find.text(label);
       await tester.ensureVisible(target);
@@ -59,15 +65,15 @@ void main() {
     await move(0, 1, 1, 0);
     await move(1, 1, 1, 0);
     expect(find.text('Our star, at last!'), findsOneWidget);
-    expect(find.text('Personal best: 2 moves'), findsOneWidget);
+    expect(find.textContaining('Personal best: 2 moves'), findsOneWidget);
     expect(find.text('New personal best!'), findsOneWidget);
-    expect(find.text('★★★'), findsOneWidget);
+    expect(find.byIcon(Icons.star_rounded), findsNWidgets(3));
     final game = tester.widget<GameWidget<BloriqGame>>(boardFinder).game!;
     final completed = game.controller.state;
     expect(completed.moves, 2);
     expect(completed.isComplete, isTrue);
 
-    await tapVisible('Watch Echo Replay');
+    await tapAction('Watch Echo Replay');
     expect(game.isReplaying, isTrue);
     expect(find.text('Skip replay'), findsOneWidget);
     expect(
@@ -88,7 +94,7 @@ void main() {
     expect(game.isReplaying, isFalse);
     expect(game.controller.state, same(completed));
 
-    await tapVisible('Watch Echo Replay');
+    await tapAction('Watch Echo Replay');
     for (var i = 0; i < 200 && game.isReplaying; i++) {
       await tester.pump(const Duration(milliseconds: 20));
     }
@@ -97,7 +103,7 @@ void main() {
     expect(find.text('Moves: 2'), findsOneWidget);
     expect((await ProgressRepository.load()).forLevel(1)!.completionCount, 1);
 
-    await tapVisible('Echo Postcard');
+    await tapAction('Echo Postcard');
     await tester.pump(const Duration(milliseconds: 300));
     final dialog = tester.widget<EchoPostcardDialog>(
       find.byType(EchoPostcardDialog),
@@ -110,22 +116,25 @@ void main() {
     await tester.tap(find.text('Close'));
     await tester.pump(const Duration(milliseconds: 300));
 
-    await tapVisible('Try again');
+    await tapAction('Try again');
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump(const Duration(milliseconds: 300));
     await move(0, 1, 0, -1);
     await move(0, 0, 1, 0);
     await move(1, 0, 0, 1);
     await move(1, 1, 1, 0);
-    expect(find.text('Personal best: 2 moves'), findsOneWidget);
+    expect(find.textContaining('Personal best: 2 moves'), findsOneWidget);
     expect(find.text('New personal best!'), findsNothing);
-    expect(find.text('★★☆'), findsOneWidget);
+    expect(find.byIcon(Icons.star_rounded), findsNWidgets(2));
+    expect(find.byIcon(Icons.star_outline_rounded), findsOneWidget);
     final progress = (await ProgressRepository.load()).forLevel(1)!;
     expect(progress.bestMoves, 2);
     expect(progress.bestStars, 3);
     expect(progress.completionCount, 2);
 
-    await tapVisible('Levels');
+    await tapAction('Try again');
+    await tester.tap(find.byKey(const ValueKey('game-levels')));
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('★★★'), findsWidgets);
   });

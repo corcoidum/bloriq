@@ -10,10 +10,15 @@ import 'audio/game_audio.dart';
 import 'domain/puzzle.dart';
 import 'design/game_theme.dart';
 import 'game/bloriq_game.dart';
+import 'endless/endless_repository.dart';
 import 'game/board_geometry.dart';
+
+import 'game/device_art.dart';
+import 'game/device_legend.dart';
 import 'game/victory_panel.dart';
 import 'l10n/app_localizations.dart';
 import 'postcard/echo_postcard.dart';
+import 'progress/player_repository.dart';
 import 'progress/progress_repository.dart';
 import 'settings/game_settings.dart';
 import 'app/app_entry.dart';
@@ -44,7 +49,7 @@ class BloriqApp extends StatefulWidget {
     this.settings,
     this.clock,
     this.playtestMode = const bool.fromEnvironment('PLAYTEST_MODE'),
-    this.firstRunIntro = true,
+    this.showIntro = true,
   });
 
   /// 테스트에서 이전 스테이지 구성과 기기 설정을 주입할 수 있다.
@@ -52,7 +57,7 @@ class BloriqApp extends StatefulWidget {
   final GameSettings? settings;
   final DateTime Function()? clock;
   final bool playtestMode;
-  final bool firstRunIntro;
+  final bool showIntro;
 
   @override
   State<BloriqApp> createState() => _BloriqAppState();
@@ -94,11 +99,7 @@ class _BloriqAppState extends State<BloriqApp> {
   Widget build(BuildContext context) => MaterialApp(
     title: 'BLORIQ',
     debugShowCheckedModeBanner: false,
-    theme: GameTheme.light,
-    darkTheme: GameTheme.dark,
-    themeMode: _settings?.themeMode ?? ThemeMode.system,
-    // Flutter 위젯과 Flame 보드가 같은 프레임에 같은 팔레트로 바뀐다.
-    themeAnimationDuration: Duration.zero,
+    theme: GameTheme.dark,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     localeResolutionCallback: (locale, supported) =>
@@ -109,7 +110,7 @@ class _BloriqAppState extends State<BloriqApp> {
             loadLevels: widget.loadLevels,
             clock: widget.clock,
             playtestMode: widget.playtestMode,
-            firstRunIntro: widget.firstRunIntro,
+            showIntro: widget.showIntro,
             settings: _settings!,
             gameBuilder: (session, levelId, play) => GameScreen(
               session: session,
@@ -120,6 +121,9 @@ class _BloriqAppState extends State<BloriqApp> {
           ),
   );
 }
+
+/// 게임 화면 배치 단계. full: 전부 표시, tight: 동행과 긴 안내를 줄임, scroll: 최후 수단.
+enum _GameFit { full, tight, scroll }
 
 class GameScreen extends StatefulWidget {
   const GameScreen({
@@ -141,10 +145,10 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  late final List<Level> _loaded;
+  late List<Level> _loaded;
+
   final _narrative = NarrativeController();
   SpiritDefinition? _discovery;
-  bool _storyHidden = false;
   bool _retryingSave = false;
   bool _allowPop = false;
   bool _leaving = false;
@@ -155,7 +159,7 @@ class _GameScreenState extends State<GameScreen>
 
   /// 보드 칸의 최소 터치 크기. 고정 배치로 이를 지킬 수 없을 때만 스크롤한다.
   static const _minCell = 48.0;
-  bool _scrollLayout = false;
+  _GameFit _fitFloor = _GameFit.full;
   Object? _layoutKey;
   PuzzleController? _controller;
   BloriqGame? _game;
@@ -175,6 +179,16 @@ class _GameScreenState extends State<GameScreen>
   ConstellationAtlas? _atlasBefore, _atlasAfter;
   ConstellationEvent? _constellation;
   bool _constellationPending = false;
+  DeviceKind? _legendSelected;
+  String? _lastHint;
+  bool _advancing = false;
+  bool _endlessUnsaved = false;
+
+  RunScore? _runScore;
+  XpAward? _award;
+
+  /// 저장이 성공하면 지급할 경험치. 지급 뒤에는 0이다.
+  int _pendingXp = 0;
   Timer? _victoryFallback;
   late final AnimationController _victory = AnimationController(
     vsync: this,
@@ -206,6 +220,33 @@ class _GameScreenState extends State<GameScreen>
     _game = BloriqGame(_controller!);
     widget.session.analytics.addListener(_analyticsChanged);
     _startAttempt();
+    _prepareEndlessRound();
+  }
+
+  bool get _isEndless => widget.play.mode == PlayMode.endless;
+
+  /// 다음 판을 미리 만들고, 처음 만나는 장치는 설명을 켜 둔 채 시작한다.
+  void _prepareEndlessRound() {
+    if (!_isEndless) return;
+    final endless = widget.session.endless;
+    endless.prefetchNext();
+    for (final (_, kind, _) in deviceTiles(_controller!.state.level)) {
+      if (!endless.seenDevice(kind.name)) {
+        endless.markDeviceSeen(kind.name);
+        _legendSelected ??= kind;
+      }
+    }
+  }
+
+  Future<void> _nextEndless() async {
+    if (_advancing) return;
+    _advancing = true;
+    final level = await widget.session.endless.nextPuzzle();
+    _advancing = false;
+    if (!mounted) return;
+    _loaded = [level];
+    _select(0);
+    setState(_prepareEndlessRound);
   }
 
   Map<String, Object?> get _eventContext => {
@@ -262,7 +303,8 @@ class _GameScreenState extends State<GameScreen>
     if (widget.play.mode == PlayMode.daily) {
       return widget.session.daily.bestMoves(widget.play.dailyDate!);
     }
-    if (widget.play.mode == PlayMode.tutorialReplay) return null;
+    if (widget.play.mode == PlayMode.tutorialReplay || _isEndless) return null;
+
     return _progress!.forLevel(level.id, revision: level.revision)?.bestMoves;
   }
 
@@ -300,6 +342,7 @@ class _GameScreenState extends State<GameScreen>
         'replay': widget.play.mode == PlayMode.tutorialReplay,
       });
     }
+    _prepareReward(state, previous);
     // 기록이 메모리에서 바뀌기 전에 별자리 상태를 떠 둔다.
     _constellation = null;
     _constellationPending = false;
@@ -340,6 +383,44 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
+  /// 점수는 바로 정해지고, 경험치는 기록 저장이 성공한 뒤에 지급한다.
+  void _prepareReward(PuzzleState state, LevelProgress? previous) {
+    _award = null;
+    _pendingXp = 0;
+    _runScore = null;
+    if (widget.play.mode == PlayMode.tutorialReplay) return;
+    final stars = starRating(
+      moves: state.moves,
+      minimumMoves: state.level.minimumMoves,
+    );
+    final score = RunScore.of(
+      minimumMoves: state.level.minimumMoves,
+      stars: stars,
+      combo: _isEndless ? widget.session.endless.combo : 1,
+    );
+    _runScore = score;
+    if (_isEndless) {
+      // 판이 매번 새로우니 경험치는 언제나 전부 준다.
+      _pendingXp = score.total;
+    } else if (widget.play.mode == PlayMode.daily) {
+      // Daily 경험치는 그날 처음 완료했을 때만 준다.
+      final done = widget.session.daily.completed(widget.play.dailyDate!);
+      _pendingXp = done ? 0 : score.total;
+    } else {
+      final improved = previous == null || stars > previous.bestStars;
+      _pendingXp = improved
+          ? score.total
+          : (score.total * PlayerRepository.replayRate).round();
+    }
+  }
+
+  Future<XpAward?> _grantXp() async {
+    final gained = _pendingXp;
+    if (gained <= 0) return null;
+    _pendingXp = 0;
+    return widget.session.player.award(gained);
+  }
+
   void _acknowledgeDiscovery() {
     if (_discovery case final friend?) {
       unawaited(widget.session.collection.acknowledge(friend.id));
@@ -356,10 +437,14 @@ class _GameScreenState extends State<GameScreen>
   void _select(int index) {
     _acknowledgeDiscovery();
     _discovery = null;
-    _storyHidden = false;
+    _runScore = null;
+    _award = null;
+    _pendingXp = 0;
+    _endlessUnsaved = false;
     _constellation = null;
     _constellationPending = false;
     _atlasBefore = _atlasAfter = null;
+    _legendSelected = null;
     _narrative.react(CompanionReaction.idle);
     _attempt?.finish(
       'level_end',
@@ -427,8 +512,23 @@ class _GameScreenState extends State<GameScreen>
         widget.play.challenge!,
         state.moves,
       );
+      final award = result.saved ? await _grantXp() : null;
       if (mounted && identical(_controller, controller)) {
-        setState(() => _completion = result);
+        setState(() {
+          _completion = result;
+          _award = award;
+        });
+      }
+      return;
+    }
+    if (_isEndless) {
+      final saved = await widget.session.endless.recordClear();
+      final award = await _grantXp();
+      if (mounted && identical(_controller, controller)) {
+        setState(() {
+          _endlessUnsaved = !saved;
+          _award = award;
+        });
       }
       return;
     }
@@ -444,6 +544,7 @@ class _GameScreenState extends State<GameScreen>
             _progress!.completedCampaignLevelIds,
           )
         : <SpiritDefinition>[];
+    final award = result.saved ? await _grantXp() : null;
     if (!mounted ||
         !identical(_controller, controller) ||
         !identical(controller.state, state)) {
@@ -451,6 +552,7 @@ class _GameScreenState extends State<GameScreen>
     }
     setState(() {
       _completion = result;
+      _award = award;
       _discovery = added.where((f) => f.levelId == state.level.id).firstOrNull;
       _updateConstellation(state.level.id, saved: result.saved);
     });
@@ -459,6 +561,26 @@ class _GameScreenState extends State<GameScreen>
   Future<void> _retryProgressSave() async {
     if (_retryingSave) return;
     setState(() => _retryingSave = true);
+    if (_isEndless) {
+      final saved = await widget.session.endless.retrySave();
+      final playerSaved = await widget.session.player.retrySave();
+      if (mounted) {
+        setState(() {
+          _retryingSave = false;
+          _endlessUnsaved = !saved;
+          final old = _award;
+          if (old != null && playerSaved) {
+            _award = XpAward(
+              gained: old.gained,
+              before: old.before,
+              after: old.after,
+              saved: true,
+            );
+          }
+        });
+      }
+      return;
+    }
     final controller = _controller;
     final result = _completion;
     final saved = await _progress!.retrySave();
@@ -467,6 +589,19 @@ class _GameScreenState extends State<GameScreen>
             _progress!.completedCampaignLevelIds,
           )
         : <SpiritDefinition>[];
+    var award = saved ? await _grantXp() : null;
+    if (saved && _award?.saved == false) {
+      final playerSaved = await widget.session.player.retrySave();
+      if (playerSaved) {
+        final old = _award!;
+        award = XpAward(
+          gained: old.gained,
+          before: old.before,
+          after: old.after,
+          saved: true,
+        );
+      }
+    }
     if (!mounted) return;
     setState(() {
       _retryingSave = false;
@@ -480,6 +615,7 @@ class _GameScreenState extends State<GameScreen>
         _discovery ??= added
             .where((f) => f.levelId == controller!.state.level.id)
             .firstOrNull;
+        _award = award ?? _award;
         _updateConstellation(controller!.state.level.id, saved: saved);
       }
     });
@@ -499,7 +635,11 @@ class _GameScreenState extends State<GameScreen>
     _constellation = ConstellationAtlas.diff(before, after, levelId);
   }
 
-  Widget? _constellationView(PuzzleController controller) {
+  Widget? _constellationView(
+    PuzzleController controller, {
+    bool compact = false,
+    void Function(int chapter)? onOpen,
+  }) {
     final levelId = controller.state.level.id;
     final event = _constellation;
     final atlas = _constellationPending ? _atlasBefore : _atlasAfter;
@@ -516,11 +656,14 @@ class _GameScreenState extends State<GameScreen>
       guardianAsset: guardianAssetFor(widget.session, chapter),
       event: _constellationPending ? null : event,
       pending: _constellationPending,
-      onOpen: () => _openAtlas(chapter.chapter),
+      compact: compact,
+      onOpen: () => onOpen != null
+          ? onOpen(chapter.chapter)
+          : _openAtlas(chapter.chapter),
     );
   }
 
-  Future<void> _openAtlas(int chapter) async {
+  Future<void> _openAtlas(int? chapter) async {
     final id = await _withModal<int>(
       () => showConstellationAtlas(
         context,
@@ -550,7 +693,9 @@ class _GameScreenState extends State<GameScreen>
             moves: state.moves,
             minimumMoves: state.level.minimumMoves,
           ),
-          levelText: widget.play.mode == PlayMode.daily
+          levelText: _isEndless
+              ? t.endlessRound(state.level.id - EndlessRepository.firstId + 1)
+              : widget.play.mode == PlayMode.daily
               ? '${t.dailyEcho} ${widget.play.dailyDate}'
               : t.level(state.level.id),
           movesText: t.moves(state.moves),
@@ -692,7 +837,6 @@ class _GameScreenState extends State<GameScreen>
   void _undo(PuzzleController controller) {
     _acknowledgeDiscovery();
     _discovery = null;
-    _storyHidden = false;
     _skipCelebration();
     setState(() {
       controller.undo();
@@ -820,11 +964,12 @@ class _GameScreenState extends State<GameScreen>
 
   Widget _buildVictory(AppLocalizations t, PuzzleController controller) {
     final state = controller.state;
-    final colors = GameTheme.colorsOf(context);
     final stars = starRating(
       moves: state.moves,
       minimumMoves: state.level.minimumMoves,
     );
+    final best = _bestMoves;
+    final campaign = widget.play.mode == PlayMode.campaign;
     return AnimatedBuilder(
       key: const ValueKey('complete'),
       animation: _victory,
@@ -834,123 +979,237 @@ class _GameScreenState extends State<GameScreen>
         isNewBest: _isNewBest,
         reduceMotion: _reduceMotion,
         onSkip: _skipCelebration,
-        discovery: _discovery != null && !_storyHidden
-            ? DiscoveryPanel(
-                spirit: _discovery!,
-                chapter: widget.session.story.chapter(_discovery!.chapter),
-                progress: _victory.value,
-                reduceMotion: _reduceMotion,
-                onSkip: () {
-                  _skipCelebration();
-                  _acknowledgeDiscovery();
-                  setState(() => _storyHidden = true);
-                },
-              )
-            : null,
-        constellation: _constellationView(controller),
-        result: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(t.completeDetail(state.moves)),
-            if (_bestMoves case final best?) Text(t.bestMoves(best)),
-            if (_completion?.saved == false) ...[
-              Text(t.saveError),
-              if (widget.play.mode == PlayMode.campaign)
-                TextButton(
-                  key: const ValueKey('retry-progress'),
-                  onPressed: _retryingSave ? null : _retryProgressSave,
-                  child: Text(t.retrySave),
-                ),
-            ],
-            if (widget.play.mode == PlayMode.campaign)
-              CollectionStorageNotice(
-                session: widget.session,
-                onChanged: () => setState(() {}),
+        score: _runScore,
+        award: _award,
+        details: [
+          best == null
+              ? t.completeDetail(state.moves)
+              : '${t.completeDetail(state.moves)} ${t.bestMoves(best)}',
+          state.moves == state.level.minimumMoves
+              ? t.optimalComplete
+              : t.improveComplete(state.level.minimumMoves),
+        ],
+        reward: _rewardSlot(t, controller),
+        notices: [
+          if (_completion?.saved == false ||
+              _award?.saved == false ||
+              _endlessUnsaved) ...[
+            Text(t.saveError, textAlign: TextAlign.center),
+            if (campaign || _isEndless)
+              TextButton(
+                key: const ValueKey('retry-progress'),
+                onPressed: _retryingSave ? null : _retryProgressSave,
+                child: Text(t.retrySave),
               ),
-            if (widget.play.mode == PlayMode.campaign &&
-                widget.session.collection.owned.length ==
-                    widget.session.story.released.length &&
-                widget.session.story.released.length == 25)
-              Text(t.seasonComplete),
-            const SizedBox(height: GameSpacing.small),
-            Text(
-              state.moves == state.level.minimumMoves
-                  ? t.optimalComplete
-                  : t.improveComplete(state.level.minimumMoves),
-              textAlign: TextAlign.center,
-              style: TextStyle(color: colors.secondaryText),
+          ],
+          if (campaign)
+            CollectionStorageNotice(
+              session: widget.session,
+              onChanged: () => setState(() {}),
             ),
-            const SizedBox(height: GameSpacing.medium),
-            FilledButton.icon(
-              onPressed: () => widget.play.mode != PlayMode.campaign
-                  ? Navigator.pop(context)
-                  : _select(_index + 1 < _loaded.length ? _index + 1 : 0),
-              icon: const Icon(Icons.arrow_forward),
-              label: Text(
-                widget.play.mode != PlayMode.campaign
-                    ? t.close
-                    : _index + 1 < _loaded.length
-                    ? t.next
-                    : t.firstLevel,
-              ),
+          if (campaign &&
+              widget.session.collection.owned.length ==
+                  widget.session.story.released.length &&
+              widget.session.story.released.length == 25)
+            Text(t.seasonComplete, textAlign: TextAlign.center),
+        ],
+        next: FilledButton.icon(
+          key: const ValueKey('result-next'),
+          style: FilledButton.styleFrom(minimumSize: const Size(48, 60)),
+          onPressed: () => _isEndless
+              ? _nextEndless()
+              : !campaign
+              ? Navigator.pop(context)
+              : _select(_index + 1 < _loaded.length ? _index + 1 : 0),
+          icon: const Icon(Icons.arrow_forward_rounded),
+          label: Text(
+            _isEndless
+                ? t.next
+                : !campaign
+                ? t.close
+                : _index + 1 < _loaded.length
+                ? t.next
+                : t.firstLevel,
+            style: const TextStyle(fontSize: 19),
+          ),
+        ),
+        actions: [
+          IconButton.filledTonal(
+            key: const ValueKey('result-home'),
+            tooltip: t.home,
+            iconSize: 26,
+            constraints: const BoxConstraints(minWidth: 52, minHeight: 52),
+            onPressed: _replaying ? null : _leaveGame,
+            icon: const Icon(Icons.home_rounded),
+          ),
+          // 무한 모드는 같은 판으로 경험치를 다시 벌 수 없게 다시 도전을 두지 않는다.
+          if (!_isEndless)
+            _resultAction(
+              Icons.replay_rounded,
+              t.tryAgain,
+              _replaying ? null : () => _select(_index),
             ),
-            const SizedBox(height: GameSpacing.small),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: GameSpacing.small,
-              runSpacing: GameSpacing.small,
-              children: [
-                if (_discovery case final friend?) ...[
-                  OutlinedButton.icon(
-                    key: const ValueKey('result-album'),
-                    onPressed: _openAlbum,
-                    icon: const Icon(Icons.auto_stories_outlined),
-                    label: Text(t.album),
+          _resultAction(
+            Icons.play_circle_outline_rounded,
+            t.watchReplay,
+            _celebrating ? null : _watchReplay,
+          ),
+          _resultAction(
+            Icons.image_outlined,
+            t.postcard,
+            _replaying ? null : () => _showPostcard(t, controller),
+          ),
+          if (campaign)
+            _resultAction(
+              Icons.more_horiz_rounded,
+              t.moreActions,
+              () => _showMore(t),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _resultAction(IconData icon, String label, VoidCallback? onPressed) =>
+      IconButton.filledTonal(
+        tooltip: label,
+        iconSize: 26,
+        constraints: const BoxConstraints(minWidth: 52, minHeight: 52),
+        onPressed: onPressed,
+        icon: Icon(icon),
+      );
+
+  /// 보상은 한 칸만 보여 준다. 새 친구가 있으면 친구, 없으면 별자리다.
+  Widget? _rewardSlot(AppLocalizations t, PuzzleController controller) {
+    if (_discovery case final friend?) {
+      final chapter = _atlasAfter?.forLevel(controller.state.level.id);
+      final caption = chapter == null
+          ? null
+          : VictoryConstellation.caption(t, chapter, event: _constellation);
+      return RewardCard(
+        leading: SpiritPortrait(spirit: friend, size: 64),
+        title: friend.guardian
+            ? t.newGuardian(friend.name.inLocale(t.localeName))
+            : t.newFriend(friend.name.inLocale(t.localeName)),
+        subtitle: caption ?? t.readMemory,
+        // 첫 클리어마다 친구가 오므로 별이 켜지는 모습을 같은 칸에서 함께 보여 준다.
+        trailing: _constellationView(controller, compact: true),
+        onTap: () => _showStory(controller),
+      );
+    }
+    return _constellationView(controller);
+  }
+
+  /// 기억과 결말의 긴 글은 결과 화면 대신 시트에서 읽는다.
+  Future<void> _showStory(PuzzleController controller) async {
+    final friend = _discovery;
+    if (friend == null) return;
+    int? atlasChapter;
+    await _withModal<void>(
+      () => showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (sheet) => SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(GameSpacing.medium),
+            child: ArcadeSurface(
+              accent: GameColors.dark.reward,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DiscoveryPanel(
+                    spirit: friend,
+                    chapter: widget.session.story.chapter(friend.chapter),
+                    progress: 1,
+                    reduceMotion: true,
+                    onSkip: () => Navigator.pop(sheet),
                   ),
-                  OutlinedButton.icon(
-                    key: const ValueKey('result-discovery-share'),
-                    onPressed: () => _withModal<void>(
-                      () => showStoryCard(
-                        context,
-                        [friend],
-                        chapter: widget.session.story.chapter(friend.chapter),
-                        reduceMotion: _reduceMotion,
-                      ),
-                    ),
-                    icon: const Icon(Icons.ios_share_rounded),
-                    label: Text(t.discoveryCard),
+                  ?_constellationView(
+                    controller,
+                    onOpen: (chapter) {
+                      atlasChapter = chapter;
+                      Navigator.pop(sheet);
+                    },
                   ),
                 ],
-                OutlinedButton.icon(
-                  onPressed: _replaying ? null : () => _select(_index),
-                  icon: const Icon(Icons.replay),
-                  label: Text(t.tryAgain),
-                ),
-                OutlinedButton.icon(
-                  onPressed: _celebrating
-                      ? null
-                      : _replaying
-                      ? () {
-                          _stopReplay();
-                          setState(() {});
-                        }
-                      : _watchReplay,
-                  icon: Icon(_replaying ? Icons.skip_next : Icons.play_arrow),
-                  label: Text(_replaying ? t.skipReplay : t.watchReplay),
-                ),
-                OutlinedButton.icon(
-                  onPressed: _replaying
-                      ? null
-                      : () => _showPostcard(t, controller),
-                  icon: const Icon(Icons.image_outlined),
-                  label: Text(t.postcard),
-                ),
-              ],
+              ),
             ),
-          ],
+          ),
         ),
       ),
     );
+    _acknowledgeDiscovery();
+    if (atlasChapter != null && mounted) await _openAtlas(atlasChapter);
+  }
+
+  Future<void> _showMore(AppLocalizations t) async {
+    final friend = _discovery;
+    // 시트가 닫힌 뒤에 실행해야 다음 대화상자가 열린다.
+    Future<void> Function()? after;
+    await _withModal<void>(
+      () => showModalBottomSheet<void>(
+        context: context,
+        backgroundColor: GameColors.dark.surface,
+        builder: (sheet) {
+          Widget item(
+            String key,
+            IconData icon,
+            String label,
+            Future<void> Function() action,
+          ) => ListTile(
+            key: ValueKey(key),
+            leading: Icon(icon),
+            title: Text(label),
+            onTap: () {
+              after = action;
+              Navigator.pop(sheet);
+            },
+          );
+          return SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                item(
+                  'result-album',
+                  Icons.auto_stories_outlined,
+                  t.album,
+                  _openAlbum,
+                ),
+                item(
+                  'result-atlas',
+                  Icons.auto_awesome,
+                  t.constellationAtlas,
+                  () => _openAtlas(
+                    ConstellationAtlas.derive(
+                      widget.session.levels,
+                      _progress!,
+                    ).forLevel(_controller!.state.level.id)?.chapter,
+                  ),
+                ),
+                if (friend != null)
+                  item(
+                    'result-discovery-share',
+                    Icons.ios_share_rounded,
+                    t.discoveryCard,
+                    () async {
+                      await _withModal<void>(
+                        () => showStoryCard(
+                          context,
+                          [friend],
+                          chapter: widget.session.story.chapter(friend.chapter),
+                          reduceMotion: _reduceMotion,
+                        ),
+                      );
+                    },
+                  ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+    if (mounted) await after?.call();
   }
 
   String _hint(AppLocalizations t, PuzzleController controller) {
@@ -964,28 +1223,6 @@ class _GameScreenState extends State<GameScreen>
       };
     }
     if (_hasNoMoves(controller)) return t.noMoves;
-    final mechanics = <String>[
-      if (state.level.echoErasers.isNotEmpty) t.eraserRule,
-      if (state.level.echoHolds.isNotEmpty) t.holdRule,
-      if (state.level.oneWays.isNotEmpty) t.oneWayRule,
-      if (state.level.goalOnlyTiles.isNotEmpty) t.goalOnlyRule,
-    ];
-    if (mechanics.isNotEmpty) {
-      // 팝업 없이 현재 스테이지의 규칙을 보드 아래에 계속 표시한다.
-      if (state.level.echoGate != null) {
-        final gateHint = _gateBlocked
-            ? t.gateClosed
-            : state.isGateOpen
-            ? t.gateOpen
-            : state.blocks.any(
-                (block) => block.position == state.level.echoGate,
-              )
-            ? t.gateOccupied
-            : t.gateInstruction;
-        mechanics.add(gateHint);
-      }
-      return mechanics.join('\n');
-    }
     if (state.level.echoGate == null) {
       return state.echo == null ? t.instruction : t.echoInstruction;
     }
@@ -1010,6 +1247,7 @@ class _GameScreenState extends State<GameScreen>
     _game!.configureAppearance(colors: colors, reduceMotion: _reduceMotion);
     final controller = _controller!;
     final hint = _hint(t, controller);
+    if (!controller.state.isComplete) _lastHint = hint;
     _game!.tutorialTarget = _tutorial?.target;
     return PopScope<void>(
       canPop: _allowPop || !_dirty,
@@ -1026,371 +1264,509 @@ class _GameScreenState extends State<GameScreen>
         }
       },
       child: Scaffold(
-        body: ArcadeBackdrop(
-          child: SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // 스크롤 없이 한 화면에 고정한다. 보드는 남은 높이를 모두 쓴다.
-                final compact = constraints.maxHeight < 700;
-                final complete = controller.state.isComplete;
-                final story = widget.play.mode == PlayMode.campaign
-                    ? widget.session.story.forLevel(_loaded[_index].id)
-                    : null;
-                final canPickLevel =
-                    widget.play.mode == PlayMode.campaign && _tutorial == null;
-                final labelStyle = TextStyle(
-                  color: colors.echoInk,
-                  fontSize: 15,
-                  decoration: canPickLevel ? TextDecoration.underline : null,
-                );
-                // 보드 칸이 48px보다 작아지는 아주 작은 화면이나 가로 화면에서만 스크롤한다.
-                final layoutKey = (
-                  constraints.biggest,
-                  _loaded[_index].id,
-                  MediaQuery.textScalerOf(context).scale(1),
-                );
-                if (_layoutKey != layoutKey) {
-                  _layoutKey = layoutKey;
-                  _scrollLayout = false;
-                }
-                final rows = controller.state.level.boardHeight;
-                final minBoard =
-                    rows * _minCell + BoardGeometry.defaultFrameInset * 2;
-                if (!complete &&
-                    _widthCell(
-                          constraints.maxWidth - GameSpacing.page * 2,
-                          controller.state.level.boardWidth,
-                        ) >=
-                        _minCell &&
-                    constraints.maxHeight -
-                            _chromeEstimate(
-                              constraints,
-                              hint,
-                              _hasNoMoves(controller),
-                            ) <
-                        minBoard) {
-                  // 첫 프레임부터 넘치지 않도록 보드 외 높이를 넉넉히 추정한다.
-                  _scrollLayout = true;
-                }
-                final scroll = _scrollLayout;
-                final boardHeight = math.max(
-                  minBoard,
-                  constraints.maxHeight * .55,
-                );
-                return Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 560),
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        GameSpacing.page,
-                        compact ? 2 : 8,
-                        GameSpacing.page,
-                        compact ? 6 : 12,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            ArcadeBackdrop(
+              child: SafeArea(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // 스크롤 없이 한 화면에 고정한다. 보드는 남은 높이를 모두 쓴다.
+                    final compact = constraints.maxHeight < 700;
+                    final complete = controller.state.isComplete;
+                    final story = widget.play.mode == PlayMode.campaign
+                        ? widget.session.story.forLevel(_loaded[_index].id)
+                        : null;
+                    final canPickLevel =
+                        widget.play.mode == PlayMode.campaign &&
+                        _tutorial == null;
+                    final labelStyle = TextStyle(
+                      color: colors.echoInk,
+                      fontSize: 15,
+                      decoration: canPickLevel
+                          ? TextDecoration.underline
+                          : null,
+                    );
+                    final layoutKey = (
+                      constraints.biggest,
+                      _loaded[_index].id,
+                      MediaQuery.textScalerOf(context).scale(1),
+                    );
+                    if (_layoutKey != layoutKey) {
+                      _layoutKey = layoutKey;
+                      _fitFloor = _GameFit.full;
+                    }
+                    final columns = controller.state.level.boardWidth;
+                    final rows = controller.state.level.boardHeight;
+                    final minBoard =
+                        rows * _minCell + BoardGeometry.defaultFrameInset * 2;
+                    final fit = _chooseFit(t, constraints, minBoard);
+                    final tight = fit != _GameFit.full;
+                    final scroll = fit == _GameFit.scroll;
+                    final boardHeight = math.max(
+                      minBoard,
+                      constraints.maxHeight * .55,
+                    );
+                    // 보드는 너비에 막혀 더 커지지 않으므로 남는 높이는 아래 버튼을 키워 채운다.
+                    final spare = tight
+                        ? 0.0
+                        : math.max(
+                            0.0,
+                            constraints.maxHeight -
+                                _chromeHeight(t, constraints, fit) -
+                                _widthCell(
+                                      constraints.maxWidth -
+                                          GameSpacing.page * 2,
+                                      columns,
+                                    ) *
+                                    rows -
+                                BoardGeometry.defaultFrameInset * 2,
+                          );
+                    final buttonHeight = 48.0 + math.min(8.0, spare * .1);
+                    final levelLabel = Semantics(
+                      label: t.levels,
+                      button: true,
+                      child: InkWell(
+                        key: const ValueKey('game-levels'),
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: canPickLevel ? _pickLevel : null,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  _isEndless
+                                      ? t.endlessRound(
+                                          widget.session.endless.round -
+                                              (complete ? 1 : 0),
+                                        )
+                                      : widget.play.mode == PlayMode.daily
+                                      ? t.dailyEcho
+                                      : t.level(_loaded[_index].id),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: labelStyle,
+                                ),
+                              ),
+                              if (_isEndless &&
+                                  widget.session.endless.streak > 0)
+                                Flexible(
+                                  child: Text(
+                                    ' · ${t.comboLabel(widget.session.endless.combo.toStringAsFixed(1))}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: labelStyle.copyWith(
+                                      color: colors.rewardInk,
+                                      decoration: TextDecoration.none,
+                                    ),
+                                  ),
+                                ),
+                              if (story?.released == true)
+                                Flexible(
+                                  child: Text(
+                                    ' · ${story!.levelTitle.inLocale(t.localeName)}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: labelStyle.copyWith(
+                                      color: colors.rewardInk,
+                                      decoration: TextDecoration.none,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
                       ),
-                      child: _scrollable(
-                        scroll,
-                        Column(
-                          mainAxisSize: scroll
-                              ? MainAxisSize.min
-                              : MainAxisSize.max,
-                          children: [
-                            SizedBox(
-                              height: 48,
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 92,
-                                    ),
-                                    child: FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      child: GameWordmark(
-                                        size: compact ? 28 : 32,
-                                      ),
-                                    ),
-                                  ),
-                                  Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: IconButton(
-                                      key: const ValueKey('game-home'),
-                                      tooltip: t.home,
-                                      onPressed: _leaveGame,
-                                      icon: const Icon(Icons.home_outlined),
-                                    ),
-                                  ),
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton(
-                                          tooltip: t.help,
-                                          visualDensity: VisualDensity.compact,
-                                          onPressed: () => _showHelp(t),
-                                          icon: const Icon(
-                                            Icons.help_outline_rounded,
+                    );
+                    return Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 560),
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            GameSpacing.page,
+                            compact ? 2 : 8,
+                            GameSpacing.page,
+                            compact ? 6 : 12,
+                          ),
+                          child: _scrollable(
+                            scroll,
+                            Column(
+                              mainAxisSize: scroll
+                                  ? MainAxisSize.min
+                                  : MainAxisSize.max,
+                              children: [
+                                SizedBox(
+                                  height: 48,
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 92,
+                                        ),
+                                        child: FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: GameWordmark(
+                                            size: compact ? 28 : 32,
                                           ),
                                         ),
-                                        IconButton(
-                                          tooltip: t.settings,
-                                          visualDensity: VisualDensity.compact,
-                                          onPressed: _showSettings,
-                                          icon: const Icon(Icons.tune_rounded),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Semantics(
-                              label: t.levels,
-                              button: true,
-                              child: InkWell(
-                                key: const ValueKey('game-levels'),
-                                borderRadius: BorderRadius.circular(12),
-                                onTap: canPickLevel ? _pickLevel : null,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 4,
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        widget.play.mode == PlayMode.daily
-                                            ? t.dailyEcho
-                                            : t.level(_loaded[_index].id),
-                                        style: labelStyle,
                                       ),
-                                      if (story?.released == true)
+                                      Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: IconButton(
+                                          key: const ValueKey('game-home'),
+                                          tooltip: t.home,
+                                          onPressed: _leaveGame,
+                                          icon: const Icon(Icons.home_outlined),
+                                        ),
+                                      ),
+                                      Align(
+                                        alignment: Alignment.centerRight,
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton(
+                                              tooltip: t.help,
+                                              visualDensity:
+                                                  VisualDensity.compact,
+                                              onPressed: () => _showHelp(t),
+                                              icon: const Icon(
+                                                Icons.help_outline_rounded,
+                                              ),
+                                            ),
+                                            IconButton(
+                                              tooltip: t.settings,
+                                              visualDensity:
+                                                  VisualDensity.compact,
+                                              onPressed: _showSettings,
+                                              icon: const Icon(
+                                                Icons.tune_rounded,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (tight)
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        flex: 3,
+                                        child: Center(child: levelLabel),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Flexible(
+                                        flex: 2,
+                                        child: FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                Icons.swipe_rounded,
+                                                size: 16,
+                                                color: colors.echoInk,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                t.moves(controller.state.moves),
+                                                style: GameTypography.label
+                                                    .copyWith(
+                                                      color: colors.echoInk,
+                                                      fontSize: 13,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                else ...[
+                                  levelLabel,
+                                  SizedBox(height: compact ? 4 : 8),
+                                  SizedBox(
+                                    height: math.max(
+                                      compact ? 38.0 : 46.0,
+                                      46 * _textScale,
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Expanded(
+                                          flex: 3,
+                                          child: JourneyCompanions(
+                                            companion: widget
+                                                .session
+                                                .collection
+                                                .companion,
+                                            narrative: _narrative,
+                                            reduceMotion: _reduceMotion,
+                                            compact: compact,
+                                            inline: true,
+                                            onAlbum: _openAlbum,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
                                         Flexible(
-                                          child: Text(
-                                            ' · ${story!.levelTitle.inLocale(t.localeName)}',
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: labelStyle.copyWith(
-                                              color: colors.rewardInk,
-                                              decoration: TextDecoration.none,
+                                          flex: 2,
+                                          child: FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            child: StatPill(
+                                              icon: Icons.swipe_rounded,
+                                              label: t.moves(
+                                                controller.state.moves,
+                                              ),
+                                              color: colors.echoInk,
                                             ),
                                           ),
                                         ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: compact ? 4 : 8),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                if (!complete) ...[
-                                  Expanded(
-                                    flex: 3,
-                                    child: JourneyCompanions(
-                                      companion:
-                                          widget.session.collection.companion,
-                                      narrative: _narrative,
-                                      reduceMotion: _reduceMotion,
-                                      compact: compact,
-                                      inline: true,
-                                      onAlbum: _openAlbum,
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
                                 ],
-                                Flexible(
-                                  flex: 2,
-                                  child: StatPill(
-                                    icon: Icons.swipe_rounded,
-                                    label: t.moves(controller.state.moves),
-                                    color: colors.echoInk,
+                                SizedBox(height: compact ? 4 : 8),
+                                if (scroll)
+                                  SizedBox(
+                                    height: boardHeight,
+                                    child: _buildBoard(t),
+                                  )
+                                else
+                                  Expanded(child: _buildBoard(t)),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: compact ? 6 : 10,
                                   ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: compact ? 4 : 8),
-                            if (scroll)
-                              SizedBox(
-                                height: complete && !_replaying
-                                    ? (compact ? 218.0 : 258.0)
-                                    : boardHeight,
-                                child: _buildBoard(t),
-                              )
-                            else
-                              Expanded(
-                                flex: complete ? (_replaying ? 5 : 2) : 1,
-                                child: _buildBoard(t),
-                              ),
-                            if (complete && scroll)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 8),
-                                child: _buildVictory(t, controller),
-                              )
-                            else if (complete)
-                              Expanded(
-                                flex: _replaying ? 4 : 8,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 8),
-                                  child: LayoutBuilder(
-                                    // 결과가 길어도 스크롤 없이 남은 칸에 맞춰 줄인다.
-                                    builder: (context, area) => FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      alignment: Alignment.topCenter,
-                                      child: SizedBox(
-                                        width: area.maxWidth,
-                                        child: _buildVictory(t, controller),
+                                  // 안내 칸 높이를 고정해 문구가 바뀌거나 클리어해도 보드 크기가 유지된다.
+                                  child: ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      minHeight: _hintSlotHeight(
+                                        t,
+                                        constraints,
+                                        fit,
                                       ),
+                                      minWidth: double.infinity,
+                                    ),
+                                    child: AnimatedSwitcher(
+                                      duration:
+                                          _reduceMotion || _tutorial != null
+                                          ? Duration.zero
+                                          : GameEffects.panelDuration,
+                                      layoutBuilder: (current, previous) =>
+                                          Stack(
+                                            alignment: Alignment.topCenter,
+                                            children: [
+                                              for (final child in previous)
+                                                IgnorePointer(
+                                                  child: ExcludeSemantics(
+                                                    child: child,
+                                                  ),
+                                                ),
+                                              ?current,
+                                            ],
+                                          ),
+                                      child: complete
+                                          ? Stack(
+                                              key: const ValueKey(
+                                                'complete-slot',
+                                              ),
+                                              alignment: Alignment.center,
+                                              children: [
+                                                // 보이지 않게 두어 클리어해도 칸 높이와 보드 위치가 그대로다.
+                                                Visibility.maintain(
+                                                  visible: false,
+                                                  child: _hintPanel(
+                                                    t,
+                                                    controller,
+                                                    _lastHint ?? hint,
+                                                    fit,
+                                                  ),
+                                                ),
+                                                if (_replaying)
+                                                  FilledButton.icon(
+                                                    key: const ValueKey(
+                                                      'skip-replay',
+                                                    ),
+                                                    onPressed: () {
+                                                      _stopReplay();
+                                                      setState(() {});
+                                                    },
+                                                    icon: const Icon(
+                                                      Icons.skip_next,
+                                                    ),
+                                                    label: Text(t.skipReplay),
+                                                  ),
+                                              ],
+                                            )
+                                          : KeyedSubtree(
+                                              key: ValueKey(hint),
+                                              child: _hintPanel(
+                                                t,
+                                                controller,
+                                                hint,
+                                                fit,
+                                              ),
+                                            ),
                                     ),
                                   ),
                                 ),
-                              )
-                            else
-                              Padding(
-                                padding: EdgeInsets.symmetric(
-                                  vertical: compact ? 6 : 10,
-                                ),
-                                child: AnimatedSwitcher(
-                                  duration: _reduceMotion || _tutorial != null
-                                      ? Duration.zero
-                                      : GameEffects.panelDuration,
-                                  layoutBuilder: (current, previous) => Stack(
-                                    alignment: Alignment.topCenter,
-                                    children: [
-                                      for (final child in previous)
-                                        IgnorePointer(
-                                          child: ExcludeSemantics(child: child),
-                                        ),
-                                      ?current,
-                                    ],
+                                if (_tutorial != null)
+                                  TextButton(
+                                    key: const ValueKey('skip-tutorial'),
+                                    onPressed: _skipTutorial,
+                                    child: Text(t.skipTutorial),
                                   ),
-                                  child: Column(
-                                    key: ValueKey(hint),
-                                    mainAxisSize: MainAxisSize.min,
+                                if (_tutorial == null)
+                                  Row(
                                     children: [
-                                      Text(
-                                        hint,
-                                        textAlign: TextAlign.center,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyLarge
-                                            ?.copyWith(height: 1.35),
+                                      Expanded(
+                                        flex: compact ? 1 : 11,
+                                        child: FilledButton(
+                                          style: FilledButton.styleFrom(
+                                            minimumSize: Size(48, buttonHeight),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                            ),
+                                          ),
+                                          onPressed:
+                                              controller.canUndo &&
+                                                  !_replaying &&
+                                                  !_celebrating
+                                              ? () => _undo(controller)
+                                              : null,
+                                          child: _buttonLabel(
+                                            Icons.undo_rounded,
+                                            t.undo,
+                                          ),
+                                        ),
                                       ),
-                                      if (_hasNoMoves(controller)) ...[
-                                        const SizedBox(height: 8),
-                                        FilledButton.icon(
-                                          onPressed: () => _undo(controller),
-                                          icon: const Icon(Icons.undo),
-                                          label: Text(t.undoLastMove),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        flex: compact ? 1 : 9,
+                                        child: OutlinedButton(
+                                          style: OutlinedButton.styleFrom(
+                                            minimumSize: Size(48, buttonHeight),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                            ),
+                                          ),
+                                          onPressed: _replaying || _celebrating
+                                              ? null
+                                              : () => setState(() {
+                                                  _skipCelebration();
+                                                  if (_isEndless) {
+                                                    widget.session.endless
+                                                        .breakStreak();
+                                                  }
+                                                  _attempt?.restart();
+                                                  _attempt?.finish(
+                                                    'level_end',
+                                                    controller.state.moves,
+                                                    reason: 'restart',
+                                                  );
+                                                  _acknowledgeDiscovery();
+                                                  _discovery = null;
+                                                  _narrative.react(
+                                                    CompanionReaction.idle,
+                                                  );
+                                                  controller.restart();
+                                                  _attempt = null;
+                                                  _startAttempt();
+                                                  _game!.clearEffects();
+                                                  _gateBlocked = false;
+                                                  _completion = null;
+                                                }),
+                                          child: _buttonLabel(
+                                            Icons.refresh_rounded,
+                                            t.restart,
+                                          ),
+                                        ),
+                                      ),
+                                      if (compact) ...[
+                                        const SizedBox(width: 4),
+                                        IconButton(
+                                          tooltip: t.levels,
+                                          constraints: BoxConstraints(
+                                            minWidth: 48,
+                                            minHeight: buttonHeight,
+                                          ),
+                                          onPressed:
+                                              widget.play.mode ==
+                                                  PlayMode.campaign
+                                              ? _pickLevel
+                                              : null,
+                                          icon: const Icon(
+                                            Icons.grid_view_rounded,
+                                          ),
                                         ),
                                       ],
                                     ],
                                   ),
-                                ),
-                              ),
-                            if (_tutorial != null)
-                              TextButton(
-                                key: const ValueKey('skip-tutorial'),
-                                onPressed: _skipTutorial,
-                                child: Text(t.skipTutorial),
-                              ),
-                            if (_tutorial == null)
-                              Row(
-                                children: [
-                                  Expanded(
-                                    flex: compact ? 4 : 11,
-                                    child: FilledButton(
-                                      style: FilledButton.styleFrom(
-                                        minimumSize: const Size(48, 48),
-                                      ),
-                                      onPressed:
-                                          controller.canUndo &&
-                                              !_replaying &&
-                                              !_celebrating
-                                          ? () => _undo(controller)
-                                          : null,
-                                      child: _buttonLabel(
-                                        Icons.undo_rounded,
-                                        t.undo,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    flex: compact ? 4 : 9,
-                                    child: OutlinedButton(
-                                      style: OutlinedButton.styleFrom(
-                                        minimumSize: const Size(48, 48),
-                                      ),
-                                      onPressed: _replaying || _celebrating
-                                          ? null
-                                          : () => setState(() {
-                                              _skipCelebration();
-                                              _attempt?.restart();
-                                              _attempt?.finish(
-                                                'level_end',
-                                                controller.state.moves,
-                                                reason: 'restart',
-                                              );
-                                              _acknowledgeDiscovery();
-                                              _discovery = null;
-                                              _storyHidden = false;
-                                              _narrative.react(
-                                                CompanionReaction.idle,
-                                              );
-                                              controller.restart();
-                                              _attempt = null;
-                                              _startAttempt();
-                                              _game!.clearEffects();
-                                              _gateBlocked = false;
-                                              _completion = null;
-                                            }),
-                                      child: _buttonLabel(
-                                        Icons.refresh_rounded,
-                                        t.restart,
-                                      ),
-                                    ),
-                                  ),
-                                  if (compact) ...[
-                                    const SizedBox(width: 4),
-                                    Expanded(
-                                      flex: 3,
-                                      child: TextButton(
-                                        style: TextButton.styleFrom(
-                                          minimumSize: const Size(48, 48),
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 6,
-                                          ),
-                                        ),
-                                        onPressed:
-                                            widget.play.mode ==
-                                                PlayMode.campaign
-                                            ? _pickLevel
-                                            : null,
-                                        child: _buttonLabel(
-                                          Icons.grid_view_rounded,
-                                          t.levels,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                          ],
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                );
-              },
+                    );
+                  },
+                ),
+              ),
             ),
-          ),
+            if (controller.state.isComplete && !_replaying)
+              BlockSemantics(child: _buildVictory(t, controller)),
+          ],
         ),
       ),
     );
   }
+
+  /// 보드 아래 장치 칩과 안내 문구. 좁은 화면에서는 두 줄까지만 보여 준다.
+  Widget _hintPanel(
+    AppLocalizations t,
+    PuzzleController controller,
+    String hint,
+    _GameFit fit,
+  ) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      if (_tutorial == null)
+        DeviceLegend(
+          level: controller.state.level,
+          selected: _legendSelected,
+          iconsOnly: fit != _GameFit.full,
+          onSelect: (kind) => setState(
+            () => _legendSelected = _legendSelected == kind ? null : kind,
+          ),
+        ),
+      Text(
+        _tutorial == null && _legendSelected != null
+            ? '${DeviceLegend.name(t, _legendSelected!)} · '
+                  '${DeviceLegend.rule(t, _legendSelected!)}'
+            : hint,
+        textAlign: TextAlign.center,
+        maxLines: fit == _GameFit.full ? null : 2,
+        overflow: fit == _GameFit.full ? null : TextOverflow.ellipsis,
+        style: _hintStyle,
+      ),
+      // 좁은 화면에서는 아래의 되돌리기 버튼으로 충분하다.
+      if (fit == _GameFit.full && _hasNoMoves(controller)) ...[
+        const SizedBox(height: 8),
+        FilledButton.icon(
+          onPressed: () => _undo(controller),
+          icon: const Icon(Icons.undo),
+          label: Text(t.undoLastMove),
+        ),
+      ],
+    ],
+  );
 
   /// 큰 글자에서도 넘치지 않도록 버튼 글자는 말줄임으로 줄인다.
   Widget _buttonLabel(IconData icon, String label) => Row(
@@ -1412,31 +1788,104 @@ class _GameScreenState extends State<GameScreen>
           BoardGeometry.defaultFrameInset * 2) /
       columns;
 
-  /// 보드를 제외한 머리글·동료·안내·버튼 높이의 보수적 추정치.
-  double _chromeEstimate(
+  double get _textScale => MediaQuery.textScalerOf(context).scale(16) / 16;
+
+  /// 칸이 48px 아래로 내려가지 않는 가장 넓은 배치를 고른다.
+  /// 스크롤은 줄여도 들어가지 않을 때(가로 화면, 아주 큰 글자)만 쓴다.
+  _GameFit _chooseFit(
+    AppLocalizations t,
     BoxConstraints constraints,
-    String hint,
-    bool noMoves,
+    double minBoard,
+  ) {
+    final room = constraints.maxHeight - minBoard;
+    var fit = room >= _chromeHeight(t, constraints, _GameFit.full)
+        ? _GameFit.full
+        : room >= _chromeHeight(t, constraints, _GameFit.tight)
+        ? _GameFit.tight
+        : _GameFit.scroll;
+    if (fit.index < _fitFloor.index) fit = _fitFloor;
+    // 너비 때문에 칸이 작은 화면은 스크롤해도 칸이 커지지 않는다.
+    if (fit == _GameFit.scroll &&
+        _widthCell(
+              constraints.maxWidth - GameSpacing.page * 2,
+              _controller!.state.level.boardWidth,
+            ) <
+            _minCell) {
+      fit = _GameFit.tight;
+    }
+    return fit;
+  }
+
+  /// 보드를 제외한 머리글·동료·안내·버튼 높이의 보수적 추정치.
+  double _chromeHeight(
+    AppLocalizations t,
+    BoxConstraints constraints,
+    _GameFit fit,
   ) {
     final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
+    final compact = constraints.maxHeight < 700;
+    final gap = compact ? 4.0 : 8.0;
+    return (compact ? 8.0 : 20.0) +
+        48 +
+        26 * scale +
+        8 +
+        gap +
+        (fit == _GameFit.full
+            ? gap + math.max(compact ? 38.0 : 46.0, 46 * _textScale)
+            : 0) +
+        (compact ? 12.0 : 20.0) +
+        _hintSlotHeight(t, constraints, fit) +
+        (_tutorial == null ? math.max(48.0, 22 * scale + 26) : 22 * scale + 24);
+  }
+
+  /// 장치 칩 한 줄의 높이. 장치가 없는 판이나 튜토리얼에서는 칩이 없다.
+  double _legendHeight() =>
+      _tutorial == null && deviceTiles(_controller!.state.level).isNotEmpty
+      ? 48.0 + GameSpacing.small
+      : 0;
+
+  TextStyle? get _hintStyle =>
+      Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.35);
+
+  /// 이번 판에 나올 수 있는 가장 긴 안내까지 들어가는 칸.
+  /// 문구가 바뀌어도 보드가 움직이지 않는다. 다시보기 건너뛰기 버튼도 들어간다.
+  double _hintSlotHeight(
+    AppLocalizations t,
+    BoxConstraints constraints,
+    _GameFit fit,
+  ) {
+    final level = _controller!.state.level;
+    final texts = _tutorial != null
+        ? [t.tutorialMove, t.tutorialBlock, t.tutorialFinish]
+        : [
+            t.noMoves,
+            t.instruction,
+            t.echoInstruction,
+            if (level.echoGate != null) ...[
+              t.gateClosed,
+              t.gateOpen,
+              t.gateOccupied,
+              t.gateInstruction,
+            ],
+            for (final tile in deviceTiles(level))
+              '${DeviceLegend.name(t, tile.$2)} · '
+                  '${DeviceLegend.rule(t, tile.$2)}',
+          ];
     final width = math.min(constraints.maxWidth, 560.0) - GameSpacing.page * 2;
-    final hintLines = hint
-        .split('\n')
-        .fold<int>(
-          0,
-          (lines, line) =>
-              lines +
-              math.max(1, (line.length * 16 * scale * .8 / width).ceil()),
-        );
-    return 48 +
-        24 * scale +
-        math.max(50.0, 34 * scale) +
-        hintLines * 22 * scale +
-        (noMoves ? 56 : 0) +
-        (_tutorial == null
-            ? math.max(48.0, 22 * scale + 26)
-            : 22 * scale + 24) +
-        56;
+    var tallest = 0.0;
+    for (final text in texts) {
+      final painter = TextPainter(
+        text: TextSpan(text: text, style: _hintStyle),
+        textAlign: TextAlign.center,
+        textDirection: Directionality.of(context),
+        textScaler: MediaQuery.textScalerOf(context),
+        maxLines: fit == _GameFit.full ? null : 2,
+        ellipsis: fit == _GameFit.full ? null : '…',
+      )..layout(maxWidth: math.max(1.0, width));
+      tallest = math.max(tallest, painter.height);
+      painter.dispose();
+    }
+    return _legendHeight() + math.max(48.0, tallest.ceilToDouble());
   }
 
   Widget _scrollable(bool scroll, Widget child) =>
@@ -1461,14 +1910,15 @@ class _GameScreenState extends State<GameScreen>
         rows: controller.state.level.boardHeight,
         devicePixelRatio: View.of(context).devicePixelRatio,
       );
-      if (!_scrollLayout &&
-          !(controller.state.isComplete && !_replaying) &&
+      if (_fitFloor != _GameFit.scroll &&
           geometry.cellSize < _minCell &&
           _widthCell(area.maxWidth, controller.state.level.boardWidth) >=
               _minCell) {
-        // 높이가 부족해 칸이 터치 기준보다 작아지면 다음 프레임에 스크롤 배치로 바꾼다.
+        // 추정보다 칸이 작아지면 다음 프레임에 한 단계 더 줄인다.
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && !_scrollLayout) setState(() => _scrollLayout = true);
+          if (mounted && _fitFloor != _GameFit.scroll) {
+            setState(() => _fitFloor = _GameFit.values[_fitFloor.index + 1]);
+          }
         });
       }
       if (_geometry != null && !_geometry!.sameLayout(geometry)) {

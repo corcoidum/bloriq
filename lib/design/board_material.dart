@@ -10,17 +10,16 @@ import 'game_theme.dart';
 class BoardMaterial {
   const BoardMaterial(this.colors);
   final GameColors colors;
-  bool get dark => colors == GameColors.dark;
-  Color get stone => dark ? const Color(0xff4b6180) : const Color(0xffb3bfce);
-  Color get edge => dark ? const Color(0xff202e49) : const Color(0xff6c7f98);
-  Color get well => dark ? const Color(0xff15263d) : const Color(0xffd0d6df);
+  Color get stone => const Color(0xff4b6180);
+  Color get edge => const Color(0xff202e49);
+  Color get well => const Color(0xff15263d);
 
   void frame(Canvas canvas, BoardGeometry geometry) {
     final shape = geometry.frameShape;
     final depth = geometry.stoneDepth;
     canvas.drawRRect(
       shape.shift(Offset(0, depth + 1)),
-      Paint()..color = Colors.black.withValues(alpha: dark ? .35 : .16),
+      Paint()..color = Colors.black.withValues(alpha: .35),
     );
     canvas.drawRRect(shape.shift(Offset(0, depth)), Paint()..color = edge);
     canvas.drawRRect(
@@ -51,7 +50,7 @@ class BoardMaterial {
     canvas.drawRRect(
       inner.inflate(4),
       Paint()
-        ..color = colors.rewardInk.withValues(alpha: dark ? .27 : .2)
+        ..color = colors.rewardInk.withValues(alpha: .27)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1,
     );
@@ -88,10 +87,7 @@ class BoardMaterial {
         final rect = geometry.tileRect(Position(x, y));
         final radius = geometry.cellSize * .14;
         final shape = RRect.fromRectAndRadius(rect, Radius.circular(radius));
-        canvas.drawRRect(
-          shape,
-          Paint()..color = edge.withValues(alpha: dark ? .78 : .45),
-        );
+        canvas.drawRRect(shape, Paint()..color = edge.withValues(alpha: .78));
         final face = shape.deflate(1.3).shift(const Offset(0, 1));
         canvas.drawRRect(
           face,
@@ -100,7 +96,7 @@ class BoardMaterial {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Color.lerp(well, Colors.black, dark ? .12 : .02)!,
+                Color.lerp(well, Colors.black, .12)!,
                 Color.lerp(well, colors.tileTop, .45)!,
               ],
             ).createShader(rect),
@@ -108,7 +104,7 @@ class BoardMaterial {
         canvas.drawRRect(
           shape.deflate(.5),
           Paint()
-            ..color = colors.highlight.withValues(alpha: dark ? .09 : .38)
+            ..color = colors.highlight.withValues(alpha: .09)
             ..style = PaintingStyle.stroke
             ..strokeWidth = .8,
         );

@@ -19,16 +19,16 @@
   },
   "instruction": "Slide RIQ, marked in mint, to the star gate.",
   "echoInstruction": "An echo disappears after your next move.",
-  "gateInstruction": "Leave an echo on the diamond to open the gate.",
+  "gateInstruction": "Leave an echo on the Moonbloom to open the Vine Gate.",
   "gateOpen": "Gate open! Move through on this turn.",
-  "gateClosed": "The gate is closed. Leave an echo on the diamond.",
+  "gateClosed": "The Vine Gate is closed. Leave an echo on the Moonbloom.",
   "gateOccupied": "A block on a closed gate can still leave.",
   "noMoves": "No moves left. Undo and try another way.",
   "boardLabel": "Slide RIQ and the rune stones one square at a time. Guide mint-marked RIQ to the star gate.",
   "soundOn": "Turn sound effects off",
   "soundOff": "Turn sound effects on",
   "help": "How to play",
-  "helpBody": "Slide one block one square at a time. Move the mint-marked RIQ to the star.\n\nThe square a block leaves behind becomes an echo. It blocks movement until another valid move finishes.\n\nOn diamond stages, an echo on the diamond opens the gate for the next move. A block on a closed gate can still leave.\n\nUse Undo to try a different move.\n\nSpecial tiles have rules shown beneath the board: × erases the echo, Ⅱ keeps it, arrows restrict the exit direction, and ▶ admits only the mint-marked RIQ.",
+  "helpBody": "Slide one block one square at a time. Move Riq to the star gate.\n\nThe square a block leaves behind becomes an echo. It blocks movement until another valid move finishes.\n\nAn echo on the Moonbloom opens the Vine Gate for the next move. A block on a closed gate can still leave.\n\nUse Undo to try a different move.\n\nThe Stardust Spring washes the echo away and the Amber Dew holds the previous one. Wind Leaves let a block leave only the way they point, and only Riq can step onto Riq's Moss. Tap the icons under the board for a reminder.",
   "undo": "Undo",
   "undoLastMove": "Undo last move",
   "restart": "Restart",
@@ -82,15 +82,11 @@
   },
   "musicOn": "Turn music off",
   "musicOff": "Turn music on",
-  "eraserRule": "Crossed tiles erase the echo when a block leaves.",
-  "holdRule": "Pause tiles keep the previous echo when a block leaves.",
-  "oneWayRule": "A block on an arrow tile can leave only in the arrow’s direction.",
-  "goalOnlyRule": "Triangle tiles admit only mint-marked RIQ.",
+  "eraserRule": "Leaving the Stardust Spring washes the echo away.",
+  "holdRule": "Leaving the Amber Dew keeps the previous echo in place.",
+  "oneWayRule": "On Wind Leaves, a block can leave only the way the leaves point.",
+  "goalOnlyRule": "Only Riq can step onto Riq's Moss.",
   "settings": "Settings",
-  "appearance": "Appearance",
-  "themeSystem": "System",
-  "themeLight": "Light",
-  "themeDark": "Dark",
   "reduceMotion": "Reduce motion",
   "reduceMotionDescription": "Use quiet, instant transitions. System reduced motion is always respected.",
   "soundEffects": "Sound effects",
@@ -208,7 +204,6 @@
   "homeSubtitle": "Find friends sleeping beyond the star gates. Bring their memories home.",
   "credits": "Fonts & open source",
   "riqName": "RIQ",
-  "lastEchoTitle": "The Last Echo",
   "gardenName": "Crescent Garden",
   "album": "Spirit Album",
   "journeyMap": "Journey Map",
@@ -429,5 +424,113 @@
   },
   "constellationPlay": "Play",
   "constellationBack": "All constellations",
-  "viewConstellation": "View constellation"
+  "viewConstellation": "View constellation",
+  "startGame": "Start",
+  "menuMap": "Map",
+  "menuAlbum": "Spirits",
+  "menuAtlas": "Stars",
+  "menuDaily": "Daily",
+  "deviceGate": "Vine Gate",
+  "deviceMoonbloom": "Moonbloom",
+  "deviceEraser": "Stardust Spring",
+  "deviceHold": "Amber Dew",
+  "deviceOneWay": "Wind Leaves",
+  "deviceGoalOnly": "Riq's Moss",
+  "playerTitle1": "Little Courier",
+  "playerTitle2": "Forest Runner",
+  "playerTitle3": "Moon Guide",
+  "playerTitle4": "Echo Explorer",
+  "playerTitle5": "Star Warden",
+  "playerTitle6": "Last Lantern",
+  "playerLevel": "Lv.{level}",
+  "@playerLevel": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "playerProgress": "Level {level}, {into} of {needed} experience to the next level",
+  "@playerProgress": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      },
+      "into": {
+        "type": "int"
+      },
+      "needed": {
+        "type": "int"
+      }
+    }
+  },
+  "levelUp": "Level up!",
+  "xpGained": "+{count} XP",
+  "@xpGained": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "resultScore": "{count} points",
+  "@resultScore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scoreDetail": "Base {base} × {stars} for stars",
+  "@scoreDetail": {
+    "placeholders": {
+      "base": {
+        "type": "String"
+      },
+      "stars": {
+        "type": "String"
+      }
+    }
+  },
+  "scoreDetailCombo": "Base {base} × {stars} for stars × {combo} combo",
+  "@scoreDetailCombo": {
+    "placeholders": {
+      "base": {
+        "type": "String"
+      },
+      "stars": {
+        "type": "String"
+      },
+      "combo": {
+        "type": "String"
+      }
+    }
+  },
+  "readMemory": "Read the memory",
+  "moreActions": "More",
+  "endlessTitle": "Endless Path",
+  "endlessBest": "Endless Path · best streak {count}",
+  "@endlessBest": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "endlessRound": "Path {round}",
+  "@endlessRound": {
+    "placeholders": {
+      "round": {
+        "type": "int"
+      }
+    }
+  },
+  "comboLabel": "Combo ×{combo}",
+  "@comboLabel": {
+    "placeholders": {
+      "combo": {
+        "type": "String"
+      }
+    }
+  }
 }

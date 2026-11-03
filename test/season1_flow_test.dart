@@ -65,6 +65,7 @@ void main() {
           1,
         );
         final chapter = session.story.chapterForLevel(id);
+        await tapVisible(tester, find.byKey(const ValueKey('result-reward')));
         if (id % 5 == 0) {
           expect(find.text(chapter.endingTitle.en), findsOneWidget);
           expect(find.text(chapter.ending.en), findsOneWidget);
@@ -74,6 +75,7 @@ void main() {
         if (id < 25) await tapVisible(tester, find.text('Next level'));
       }
       expect(find.text('Every light in Season 1 is home.'), findsOneWidget);
+      await tapVisible(tester, find.byTooltip('More'));
       await tapVisible(tester, find.byKey(const ValueKey('result-album')));
       await tapVisible(tester, find.byKey(const ValueKey('album-chapter-5')));
       await tapVisible(tester, find.byKey(const ValueKey('spirit-s1-25')));
@@ -81,7 +83,7 @@ void main() {
       expect(session.collection.companion?.id, 's1-25');
       await tapVisible(tester, find.text('Close').last);
       await tapVisible(tester, find.byTooltip('Close'));
-      await tapVisible(tester, find.text('Try again'));
+      await tapVisible(tester, find.byTooltip('Try again'));
       final level = game().controller.state.level;
       for (final move in const PuzzleSolver().solve(level)!) {
         await tester.ensureVisible(board);
@@ -105,7 +107,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 20));
       }
       expect(session.collection.owned.length, 25);
-      expect(find.byKey(const ValueKey('skip-story')), findsNothing);
+      expect(find.byKey(const ValueKey('result-reward')), findsNothing);
       expect(
         session.progress
             .forLevel(25, revision: level.revision)!

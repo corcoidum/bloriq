@@ -5,6 +5,7 @@ import 'package:bloriq/game/bloriq_game.dart';
 import 'package:bloriq/main.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -37,13 +38,16 @@ void main() {
     }
     expect(boardFinder, findsOneWidget);
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.textContaining('Crossed tiles erase the echo'), findsOneWidget);
-    expect(
-      find.textContaining('Pause tiles keep the previous echo'),
-      findsOneWidget,
-    );
-    expect(find.textContaining('arrow tile'), findsOneWidget);
-    expect(find.textContaining('Triangle tiles'), findsOneWidget);
+    for (final (kind, rule) in [
+      ('eraser', 'washes the echo away'),
+      ('hold', 'keeps the previous echo'),
+      ('oneWay', 'only the way the leaves point'),
+      ('goalOnly', "Riq's Moss"),
+    ]) {
+      await tester.tap(find.byKey(ValueKey('device-$kind')));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.textContaining(rule), findsOneWidget);
+    }
 
     final game = tester.widget<GameWidget<BloriqGame>>(boardFinder).game!;
     final board = tester.getRect(boardFinder);

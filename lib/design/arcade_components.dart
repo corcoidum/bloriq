@@ -14,20 +14,7 @@ bool prefersReducedMotion(BuildContext context, GameSettings settings) =>
         .accessibilityFeatures
         .reduceMotion;
 
-class BrandMark extends StatelessWidget {
-  const BrandMark({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = GameTheme.colorsOf(context);
-    return Text(
-      'BLORIQ',
-      style: GameTypography.brand.copyWith(color: colors.rewardInk),
-    );
-  }
-}
-
-/// 매 스테이지 상단 중앙에 고정하는 금빛 게임 로고.
+/// 인트로, 홈, 게임 화면에 쓰는 금빛 BLORIQ 로고.
 class GameWordmark extends StatelessWidget {
   const GameWordmark({super.key, this.size = 32});
   final double size;
@@ -35,7 +22,6 @@ class GameWordmark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = GameTheme.colorsOf(context);
-    final dark = Theme.of(context).brightness == Brightness.dark;
     final style = GameTypography.brand.copyWith(
       fontSize: size,
       letterSpacing: size * .16,
@@ -55,20 +41,18 @@ class GameWordmark extends StatelessWidget {
               shaderCallback: (bounds) => LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: dark
-                    ? [colors.highlight, colors.reward, const Color(0xFFE0A85A)]
-                    : [
-                        colors.reward,
-                        const Color(0xFFC98A2E),
-                        colors.rewardInk,
-                      ],
+                colors: [
+                  colors.highlight,
+                  colors.reward,
+                  const Color(0xFFE0A85A),
+                ],
               ).createShader(bounds),
               child: Text(
                 'BLORIQ',
                 style: style.copyWith(
                   shadows: [
                     Shadow(
-                      color: colors.reward.withValues(alpha: dark ? .55 : .35),
+                      color: colors.reward.withValues(alpha: .55),
                       blurRadius: size * .45,
                     ),
                   ],
@@ -91,7 +75,6 @@ class ArcadeBackdrop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = GameTheme.colorsOf(context);
-    final dark = Theme.of(context).brightness == Brightness.dark;
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -103,10 +86,6 @@ class ArcadeBackdrop extends StatelessWidget {
               fit: BoxFit.cover,
               alignment: Alignment.topCenter,
               cacheWidth: 1080,
-              color: dark
-                  ? Colors.white
-                  : colors.background.withValues(alpha: .92),
-              colorBlendMode: dark ? BlendMode.modulate : BlendMode.srcOver,
             ),
           ),
         ),

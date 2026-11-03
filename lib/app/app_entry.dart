@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../design/arcade_components.dart';
 import '../design/game_theme.dart';
@@ -8,9 +9,9 @@ import '../domain/puzzle.dart';
 import '../l10n/app_localizations.dart';
 import '../settings/game_settings.dart';
 import 'experience_dialogs.dart';
+import 'home_view.dart';
 import 'intro_screen.dart';
 import 'game_session.dart';
-import '../story/companion_view.dart';
 import '../story/spirit_album.dart';
 import '../constellation/constellation_atlas.dart';
 import 'level_picker.dart';
@@ -25,14 +26,14 @@ class AppEntry extends StatefulWidget {
     this.loadLevels,
     this.clock,
     this.playtestMode = const bool.fromEnvironment('PLAYTEST_MODE'),
-    this.firstRunIntro = true,
+    this.showIntro = true,
   });
   final GameSettings settings;
   final DateTime Function()? clock;
   final bool playtestMode;
 
-  /// 처음 실행한 사용자에게만 인트로를 한 번 보여 준 뒤 튜토리얼로 잇는다.
-  final bool firstRunIntro;
+  /// 앱을 켤 때마다 인트로 뒤 메인 화면에 도착한다. 처음은 전체, 이후는 짧은 버전.
+  final bool showIntro;
   final Future<List<Level>> Function()? loadLevels;
   final Widget Function(GameSession session, int levelId, PlayContext play)
   gameBuilder;
@@ -42,9 +43,10 @@ class AppEntry extends StatefulWidget {
 }
 
 class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
-  bool _entryResolved = false;
-  bool _startingTutorial = false;
+  static const introSeenKey = 'bloriq.intro.v1';
+  bool _introResolved = false;
   bool _introPlaying = false;
+  bool _introSeen = false;
   bool _failed = false;
   bool _opening = false;
   bool _loading = false;
@@ -55,7 +57,37 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _resolveIntro();
     _load();
+  }
+
+  Future<void> _resolveIntro() async {
+    var seen = false;
+    try {
+      seen =
+          (await SharedPreferences.getInstance()).getBool(introSeenKey) == true;
+    } catch (_) {
+      // 저장소를 못 읽으면 짧은 버전으로 지나가 시작을 늦추지 않는다.
+      seen = true;
+    }
+    if (!mounted) return;
+    setState(() {
+      _introResolved = true;
+      _introSeen = seen;
+      _introPlaying = widget.showIntro;
+    });
+  }
+
+  void _introEnded() {
+    if (!mounted || !_introPlaying) return;
+    setState(() => _introPlaying = false);
+    if (!_introSeen) {
+      unawaited(
+        SharedPreferences.getInstance()
+            .then((prefs) => prefs.setBool(introSeenKey, true))
+            .catchError((_) => false),
+      );
+    }
   }
 
   Future<void> _load() async {
@@ -65,17 +97,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
       final session = await GameSession.load(
         loadLevels: widget.loadLevels,
         clock: widget.clock,
-        onOnboardingReady: (onboarding) {
-          if (mounted && !_entryResolved) {
-            setState(() {
-              _entryResolved = true;
-              _startingTutorial = onboarding.pending;
-              // 'unseen'만 해당한다. 튜토리얼을 열면 inProgress가 되어 다시 나오지 않는다.
-              _introPlaying =
-                  widget.firstRunIntro && onboarding.status == 'unseen';
-            });
-          }
-        },
       );
       if (!mounted) {
         unawaited(session.dispose());
@@ -85,10 +106,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
         _session = session;
         _loading = false;
       });
-      if (!session.levels.any((level) => level.id == 1)) {
-        _startingTutorial = false;
-      }
-      _startTutorial();
     } catch (_) {
       if (mounted) {
         setState(() {
@@ -99,42 +116,11 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     }
   }
 
-  void _introFinished() {
-    if (!mounted || !_introPlaying) return;
-    setState(() => _introPlaying = false);
-    _startTutorial();
-  }
-
-  void _startTutorial() {
-    final session = _session;
-    // 인트로가 끝날 때 다시 호출되므로 그동안은 튜토리얼을 열지 않는다.
-    if (_introPlaying ||
-        session == null ||
-        (widget.playtestMode && !session.analytics.consentKnown)) {
-      return;
-    }
-    if (session.onboarding.pending &&
-        session.levels.any((level) => level.id == 1)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _open(
-            1,
-            play: const PlayContext.campaign(guided: true),
-            userInitiated: false,
-          );
-        }
-      });
-    }
-  }
-
   Future<void> _consent(bool value) async {
     final session = _session;
     if (session == null) return;
     await session.analytics.setEnabled(value);
-    if (mounted) {
-      setState(() {});
-      _startTutorial();
-    }
+    if (mounted) setState(() {});
   }
 
   @override
@@ -155,10 +141,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   }) async {
     final session = _session;
     if (_opening || session == null) return;
-    setState(() {
-      _opening = true;
-      _startingTutorial = false;
-    });
+    setState(() => _opening = true);
     session.audio.setGameVisible(true);
     if (userInitiated) session.audio.onUserInteraction();
     final transition =
@@ -199,9 +182,60 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     }
   }
 
+  /// 처음이면 가이드 1번, 아니면 첫 미완료 별문으로 간다.
+  void _play() {
+    final session = _session;
+    if (session == null) return;
+    if (session.onboarding.pending &&
+        session.levels.any((level) => level.id == 1)) {
+      _open(1, play: const PlayContext.campaign(guided: true));
+    } else {
+      _open(session.nextLevelId);
+    }
+  }
+
+  Future<void> _endless() async {
+    final session = _session;
+    if (session == null || _opening) return;
+    final level = await session.endless.currentPuzzle();
+    if (!mounted) return;
+    await _open(level.id, play: PlayContext.endless(level));
+  }
+
+  Future<void> _daily() async {
+    final session = _session;
+    if (session == null || _opening) return;
+    final play = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheet) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(GameSpacing.medium),
+          child: DailyPanel(
+            daily: session.daily,
+            onPlay: () => Navigator.pop(sheet, true),
+          ),
+        ),
+      ),
+    );
+    if (play == true && mounted) {
+      await _open(
+        session.daily.today.level.id,
+        play: PlayContext.daily(session.daily.today),
+      );
+    }
+  }
+
   Future<void> _album() async {
-    if (_session == null) return;
-    await showSpiritAlbum(context, _session!, widget.settings);
+    final session = _session;
+    if (session == null) return;
+    // 메뉴의 점으로 알린 복구 안내는 도감을 열면 확인한 것으로 본다.
+    if (session.collection.backfillPending) {
+      await session.collection.acknowledgeBackfill();
+    }
+    if (!mounted) return;
+    await showSpiritAlbum(context, session, widget.settings);
     if (mounted) setState(() {});
   }
 
@@ -243,8 +277,16 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    if (!_entryResolved) {
+    if (!_introResolved) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    // 레벨과 기록은 인트로가 도는 동안 뒤에서 계속 불러온다.
+    if (_introPlaying) {
+      return IntroScreen(
+        settings: widget.settings,
+        short: _introSeen,
+        onFinished: _introEnded,
+      );
     }
     if (widget.playtestMode &&
         _session != null &&
@@ -281,270 +323,32 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
         ),
       );
     }
-    // 레벨과 기록은 인트로가 도는 동안 뒤에서 계속 불러온다.
-    if (_introPlaying) {
-      return IntroScreen(settings: widget.settings, onFinished: _introFinished);
-    }
-    if (_startingTutorial && !_failed) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-    final t = AppLocalizations.of(context)!;
-    final colors = GameTheme.colorsOf(context);
     final session = _session;
-    return Scaffold(
-      key: const ValueKey('home-screen'),
-      body: ArcadeBackdrop(
-        child: SafeArea(
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: SingleChildScrollView(
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 560),
-                padding: const EdgeInsets.all(GameSpacing.page),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        const Expanded(
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: BrandMark(),
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          tooltip: t.help,
-                          onPressed: _help,
-                          icon: const Icon(Icons.help_outline_rounded),
-                        ),
-                        IconButton(
-                          tooltip: t.settings,
-                          onPressed: session == null
-                              ? null
-                              : () => showExperienceSettings(
-                                  context,
-                                  widget.settings,
-                                  session.audio,
-                                  resumeGame: false,
-                                  analytics: session.analytics,
-                                ),
-                          icon: const Icon(Icons.tune_rounded),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      t.lastEchoTitle,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 38,
-                        fontFamily: GameTypography.canvasFontFamily,
-                        height: 1.15,
-                        color: colors.rewardInk,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      t.homeSubtitle,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: colors.secondaryText,
-                        fontSize: 15,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    JourneyCompanions(
-                      companion: session?.collection.companion,
-                      reduceMotion: prefersReducedMotion(
-                        context,
-                        widget.settings,
-                      ),
-                      onAlbum: session == null ? null : _album,
-                    ),
-                    if (session != null) ...[
-                      Text(
-                        session.recommendedChapter.name.inLocale(t.localeName),
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        t.seasonProgress(session.collection.owned.length),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        t.chapterCollection(
-                          session.recommendedChapter.name.inLocale(
-                            t.localeName,
-                          ),
-                          session.collection
-                              .inChapter(session.recommendedChapter.number)
-                              .length,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      LinearProgressIndicator(
-                        value:
-                            session.completedInChapter(
-                              session.recommendedChapter.number,
-                            ) /
-                            5,
-                      ),
-                      if (session.collection.owned.length == 25)
-                        Text(t.seasonComplete, textAlign: TextAlign.center),
-                    ],
-                    const SizedBox(height: 14),
-                    FilledButton.icon(
-                      key: const ValueKey('home-play'),
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size(48, 62),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 16,
-                        ),
-                      ),
-                      onPressed: session == null || _opening
-                          ? null
-                          : () => _open(session.nextLevelId),
-                      icon: const Icon(Icons.play_arrow_rounded, size: 27),
-                      label: Text(
-                        session == null
-                            ? t.preparingGame
-                            : t.playLevel(session.nextLevelId),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 21),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    if (session != null)
-                      Semantics(
-                        label: t.homeProgress,
-                        child: Wrap(
-                          alignment: WrapAlignment.center,
-                          spacing: 16,
-                          runSpacing: 8,
-                          children: [
-                            Text(
-                              t.completedLevels(
-                                session.completedCount,
-                                session.levels.length,
-                              ),
-                              style: TextStyle(color: colors.secondaryText),
-                            ),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.star_rounded,
-                                  size: 18,
-                                  color: colors.rewardInk,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  t.collectedStars(session.totalStars),
-                                  style: TextStyle(color: colors.rewardInk),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      )
-                    else if (_failed)
-                      Column(
-                        children: [
-                          Text(t.loadError),
-                          TextButton.icon(
-                            key: const ValueKey('retry-load'),
-                            onPressed: _retry,
-                            icon: const Icon(Icons.refresh_rounded),
-                            label: Text(t.retry),
-                          ),
-                        ],
-                      )
-                    else
-                      const LinearProgressIndicator(),
-                    const SizedBox(height: 12),
-                    TextButton.icon(
-                      key: const ValueKey('home-levels'),
-                      onPressed: session == null || _opening
-                          ? null
-                          : _chooseLevel,
-                      icon: const Icon(Icons.route_rounded),
-                      label: Text(t.journeyMap),
-                    ),
-                    if (session != null) ...[
-                      OutlinedButton.icon(
-                        key: const ValueKey('home-album'),
-                        onPressed: _album,
-                        icon: const Icon(Icons.auto_stories_outlined),
-                        label: Text(t.album),
-                      ),
-                      const SizedBox(height: GameSpacing.small),
-                      OutlinedButton.icon(
-                        key: const ValueKey('home-atlas'),
-                        onPressed: _opening ? null : _atlas,
-                        icon: const Icon(Icons.auto_awesome),
-                        label: Text(t.constellationAtlas),
-                      ),
-                      if (session.collection.backfillPending)
-                        ArcadeSurface(
-                          child: Column(
-                            children: [
-                              Text(t.backfillUpdated),
-                              TextButton(
-                                key: const ValueKey('dismiss-backfill'),
-                                onPressed: () async {
-                                  await session.collection
-                                      .acknowledgeBackfill();
-                                  if (mounted) setState(() {});
-                                },
-                                child: Text(t.backfillDismiss),
-                              ),
-                            ],
-                          ),
-                        ),
-                      if (session.collection.pendingIds.isNotEmpty)
-                        TextButton(
-                          onPressed: _album,
-                          child: Text(
-                            t.pendingMemories(
-                              session.collection.pendingIds.length,
-                            ),
-                          ),
-                        ),
-                      CollectionStorageNotice(
-                        session: session,
-                        onChanged: () => setState(() {}),
-                      ),
-                    ],
-                    const SizedBox(height: 18),
-                    if (session != null &&
-                        (session.progress.saveFailed ||
-                            session.onboarding.saveFailed))
-                      Text(t.saveError),
-                    if (session != null)
-                      DailyPanel(
-                        daily: session.daily,
-                        onPlay: _opening
-                            ? null
-                            : () => _open(
-                                session.daily.today.level.id,
-                                play: PlayContext.daily(session.daily.today),
-                              ),
-                      ),
-                    const SizedBox(height: GameSpacing.large),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
+    return HomeView(
+      session: session,
+      failed: _failed,
+      opening: _opening,
+      reduceMotion: prefersReducedMotion(context, widget.settings),
+      onPlay: _play,
+      onLevels: _chooseLevel,
+      onAlbum: _album,
+      onAtlas: _atlas,
+      onDaily: _daily,
+      onEndless: _endless,
+      onHelp: _help,
+      onSettings: () {
+        if (session != null) {
+          showExperienceSettings(
+            context,
+            widget.settings,
+            session.audio,
+            resumeGame: false,
+            analytics: session.analytics,
+          );
+        }
+      },
+      onRetry: _retry,
+      onChanged: () => setState(() {}),
     );
   }
 }

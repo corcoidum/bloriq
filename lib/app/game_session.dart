@@ -5,6 +5,8 @@ import 'package:flutter/widgets.dart';
 
 import '../audio/game_audio.dart';
 import '../domain/puzzle.dart';
+import '../endless/endless_repository.dart';
+import '../progress/player_repository.dart';
 import '../progress/progress_repository.dart';
 import '../tutorial/echo_tutorial.dart';
 import '../daily/daily_repository.dart';
@@ -23,6 +25,8 @@ class GameSession {
     required this.analytics,
     required this.story,
     required this.collection,
+    required this.player,
+    required this.endless,
   }) : levels = List.unmodifiable(levels) {
     if (levels.isEmpty) throw const FormatException('No levels');
     WidgetsBinding.instance.addObserver(audio);
@@ -37,17 +41,17 @@ class GameSession {
   final LocalAnalytics analytics;
   final StoryCatalog story;
   final CollectionRepository collection;
+  final PlayerRepository player;
+  final EndlessRepository endless;
 
   static Future<GameSession> load({
     Future<List<Level>> Function()? loadLevels,
-    void Function(Onboarding)? onOnboardingReady,
     DateTime Function()? clock,
   }) async {
     final progress = await ProgressRepository.load();
     final onboarding = await Onboarding.load(
       returningPlayer: progress.hasAnyProgress || progress.hasHistoricalStorage,
     );
-    onOnboardingReady?.call(onboarding);
     final levels = loadLevels != null
         ? await loadLevels()
         : (jsonDecode(await rootBundle.loadString('assets/levels/levels.json'))
@@ -66,7 +70,9 @@ class GameSession {
         backfill: true,
       );
     }
+    final player = await PlayerRepository.load(levels, progress);
     final daily = await DailyRepository.load(clock: clock);
+    final endless = await EndlessRepository.load(daily.pool);
     final analytics = await LocalAnalytics.load(clock: clock);
     final audio = await GameAudio.load();
     return GameSession(
@@ -78,6 +84,8 @@ class GameSession {
       analytics: analytics,
       story: story,
       collection: collection,
+      player: player,
+      endless: endless,
     );
   }
 
@@ -115,6 +123,8 @@ class GameSession {
   Future<void> dispose() async {
     await progress.flush();
     await collection.flush();
+    await player.flush();
+    await endless.flush();
     analytics.dispose();
     await daily.flush();
     await audio.dispose();

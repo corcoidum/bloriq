@@ -67,6 +67,7 @@ void main() {
       for (var i = 0; i < 2; i++) {
         await tester.pumpWidget(BloriqApp(loadLevels: loadLegacyLevels));
         await waitForHome(tester);
+        await tester.pump(const Duration(milliseconds: 100));
         expect(find.byType(IntroScreen), findsNothing);
         expect(find.byKey(const ValueKey('home-screen')), findsOneWidget);
         expect(
@@ -102,7 +103,9 @@ void main() {
     tester,
   ) async {
     final pending = Completer<List<Level>>();
-    await tester.pumpWidget(BloriqApp(loadLevels: () => pending.future));
+    await tester.pumpWidget(
+      BloriqApp(showIntro: false, loadLevels: () => pending.future),
+    );
     for (var i = 0; i < 20; i++) {
       await tester.pump(const Duration(milliseconds: 20));
     }
@@ -126,6 +129,7 @@ void main() {
     var attempts = 0;
     await tester.pumpWidget(
       BloriqApp(
+        showIntro: false,
         loadLevels: () async {
           if (++attempts == 1) throw const FormatException('bad fixture');
           return loadLegacyLevels();
@@ -186,7 +190,8 @@ void main() {
     await pumpGame(tester, BloriqApp(loadLevels: loadLegacyLevels));
     await _move(tester, 0, 1, 1, 0);
     await _move(tester, 1, 1, 1, 0);
-    await tapVisible(tester, find.byKey(const ValueKey('game-home')));
+    await tester.pump(const Duration(milliseconds: 1600));
+    await tapVisible(tester, find.byKey(const ValueKey('result-home')));
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('1 / 25 completed'), findsOneWidget);
     expect(find.text('3 stars'), findsOneWidget);
@@ -316,7 +321,7 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  for (final mode in [ThemeMode.light, ThemeMode.dark]) {
+  for (final mode in ['dark']) {
     for (final locale in ['en', 'ko']) {
       for (final size in [
         const Size(320, 568),
@@ -324,7 +329,7 @@ void main() {
         const Size(768, 1024),
       ]) {
         testWidgets(
-          '${mode.name} $locale $size: home, level grid, settings, help fit at 200% text',
+          '$mode $locale $size: home, level grid, settings, help fit at 200% text',
           (tester) async {
             tester.view.physicalSize = size;
             tester.view.devicePixelRatio = 1;
@@ -336,7 +341,7 @@ void main() {
               tester.platformDispatcher.clearTextScaleFactorTestValue,
             );
             addTearDown(tester.platformDispatcher.clearLocalesTestValue);
-            final settings = GameSettings(themeMode: mode);
+            final settings = GameSettings();
             await tester.pumpWidget(BloriqApp(settings: settings));
             await waitForHome(tester);
             expect(tester.takeException(), isNull);

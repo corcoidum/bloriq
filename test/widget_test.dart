@@ -38,7 +38,7 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.textContaining('an echo on the diamond opens the gate'),
+      find.textContaining('An echo on the Moonbloom opens the Vine Gate'),
       findsOneWidget,
     );
     await tester.tap(find.text('Close'));
@@ -141,9 +141,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1600));
     await tester.pump();
     expect(find.text('Can you escape in 2 moves?'), findsOneWidget);
-    await tester.ensureVisible(find.text('Restart'));
     await tester.pump();
-    await tester.tap(find.text('Restart'));
+    await tester.tap(find.byTooltip('Try again'));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Moves: 0'), findsOneWidget);
   });
@@ -163,7 +162,7 @@ void main() {
     final level = Level.fromJson(json.last as Map<String, dynamic>);
     final solution = const PuzzleSolver().solve(level)!;
     final controller = PuzzleController(level);
-    await tapVisible(tester, find.text('Levels'));
+    await tapVisible(tester, find.byTooltip('Levels'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     await selectOpenLevel(tester, level.id);
@@ -228,7 +227,7 @@ void main() {
     final block = controller.state.blocks.firstWhere(
       (item) => item.id == firstMove.blockId,
     );
-    await tapVisible(tester, find.text('Levels'));
+    await tapVisible(tester, find.byTooltip('Levels'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     await selectOpenLevel(tester, level.id);
@@ -279,14 +278,14 @@ void main() {
     final controller = PuzzleController(level);
     final solution = const PuzzleSolver().solve(level)!;
 
-    await tapVisible(tester, find.text('Levels'));
+    await tapVisible(tester, find.byTooltip('Levels'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     await selectOpenLevel(tester, level.id);
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump(const Duration(milliseconds: 300));
     expect(
-      find.text('Leave an echo on the diamond to open the gate.'),
+      find.text('Leave an echo on the Moonbloom to open the Vine Gate.'),
       findsOneWidget,
     );
 
@@ -312,7 +311,7 @@ void main() {
     await move(level.startPosition, level.echoGate!);
     expect(find.text('Moves: 0'), findsOneWidget);
     expect(
-      find.text('The gate is closed. Leave an echo on the diamond.'),
+      find.text('The Vine Gate is closed. Leave an echo on the Moonbloom.'),
       findsOneWidget,
     );
 
@@ -348,21 +347,21 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1600));
     await tester.pump();
     expect(find.text('Our star, at last!'), findsOneWidget);
-    await tester.ensureVisible(find.text('Undo'));
-    await tester.pump();
-    await tester.tap(find.text('Undo'));
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.pump(const Duration(milliseconds: 300));
+    // 결과 화면에는 되돌리기가 없으므로 컨트롤러로 문 상태 복원을 확인한다.
+    final finished = tester
+        .widget<GameWidget<BloriqGame>>(find.byType(GameWidget<BloriqGame>))
+        .game!
+        .controller;
+    expect(finished.undo(), isTrue);
     expect(
-      find.text('A block on a closed gate can still leave.'),
-      findsOneWidget,
+      finished.state.blocks.any(
+        (block) => block.position == finished.state.level.echoGate,
+      ),
+      isTrue,
     );
-    await tester.ensureVisible(find.text('Undo'));
-    await tester.pump();
-    await tester.tap(find.text('Undo'));
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('Gate open! Move through on this turn.'), findsOneWidget);
+    expect(finished.state.isGateOpen, isFalse);
+    expect(finished.undo(), isTrue);
+    expect(finished.state.isGateOpen, isTrue);
   });
 
   testWidgets('a position with no legal move suggests undo', (tester) async {
@@ -374,7 +373,7 @@ void main() {
     ) {
       await tester.pump(const Duration(milliseconds: 20));
     }
-    await tapVisible(tester, find.text('Levels'));
+    await tapVisible(tester, find.byTooltip('Levels'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     await selectOpenLevel(tester, 11);

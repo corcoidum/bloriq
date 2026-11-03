@@ -20,15 +20,7 @@ final board = find.byType(GameWidget<BloriqGame>);
 BloriqGame game(WidgetTester tester) =>
     tester.widget<GameWidget<BloriqGame>>(board).game!;
 Future<void> ready(WidgetTester tester) async {
-  for (var i = 0; i < 150 && board.evaluate().isEmpty; i++) {
-    await tester.pump(const Duration(milliseconds: 20));
-    // 첫 실행 인트로는 건너뛰기로 바로 튜토리얼에 들어간다.
-    final skip = find.byKey(const ValueKey('skip-intro'));
-    if (skip.evaluate().isNotEmpty) {
-      await tester.tap(skip);
-      await tester.pump();
-    }
-  }
+  if (board.evaluate().isEmpty) await startFromHome(tester);
   await tester.pump(const Duration(milliseconds: 350));
   expect(board, findsOneWidget);
 }
@@ -168,7 +160,7 @@ void main() {
     },
   );
   testWidgets(
-    'fresh launch plays the intro once, then teaches real Echo in three gestures',
+    'fresh launch plays the intro, lands on home, then teaches real Echo in three gestures',
     (tester) async {
       await tester.pumpWidget(const BloriqApp());
       for (
@@ -180,11 +172,14 @@ void main() {
         await tester.pump(const Duration(milliseconds: 20));
       }
       expect(find.byKey(const ValueKey('intro-screen')), findsOneWidget);
-      expect(board, findsNothing);
-      // 끝까지 보면 건너뛰기 없이도 튜토리얼이 열린다.
+      expect(find.byKey(const ValueKey('skip-intro')), findsOneWidget);
+      // 끝까지 보면 건너뛰기 없이 메인에 도착하고 게임은 저절로 열리지 않는다.
       await tester.pump(const Duration(milliseconds: 4300));
-      await ready(tester);
+      await waitForHome(tester);
       expect(find.byKey(const ValueKey('intro-screen')), findsNothing);
+      expect(board, findsNothing);
+      expect(find.text('Start'), findsOneWidget);
+      await ready(tester);
       expect(
         tester.widget<InkWell>(find.byKey(const ValueKey('game-levels'))).onTap,
         isNull,
@@ -206,30 +201,25 @@ void main() {
       );
       await tester.pumpWidget(const SizedBox());
       await tester.pumpWidget(const BloriqApp());
-      for (var i = 0; i < 30; i++) {
-        await tester.pump(const Duration(milliseconds: 20));
-      }
-      expect(find.byKey(const ValueKey('intro-screen')), findsNothing);
       await waitForHome(tester);
       expect(find.byKey(const ValueKey('home-screen')), findsOneWidget);
       await tester.pumpWidget(const SizedBox());
     },
   );
-  testWidgets('reduced motion fresh launch goes straight to the tutorial', (
+  testWidgets('reduced motion fresh launch goes straight to home', (
     tester,
   ) async {
     await tester.pumpWidget(
       BloriqApp(settings: GameSettings(reduceMotion: true)),
     );
-    for (var i = 0; i < 150 && board.evaluate().isEmpty; i++) {
-      await tester.pump(const Duration(milliseconds: 20));
-    }
-    expect(board, findsOneWidget);
+    await waitForHome(tester);
     expect(find.byKey(const ValueKey('intro-screen')), findsNothing);
+    expect(board, findsNothing);
+    await ready(tester);
     expect(find.byKey(const ValueKey('skip-tutorial')), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
-  testWidgets('skipping the first-run intro opens the tutorial exactly once', (
+  testWidgets('skipping the first intro twice lands on home once', (
     tester,
   ) async {
     await tester.pumpWidget(const BloriqApp());
@@ -245,11 +235,10 @@ void main() {
         .onPressed!;
     skip();
     skip();
-    await ready(tester);
-    expect(find.byKey(const ValueKey('skip-tutorial')), findsOneWidget);
+    await waitForHome(tester);
     await tester.pump(const Duration(seconds: 5));
-    expect(board, findsOneWidget);
-    expect(find.byType(GameScreen), findsOneWidget);
+    expect(find.byKey(const ValueKey('home-screen')), findsOneWidget);
+    expect(find.byType(GameScreen), findsNothing);
     await tester.pumpWidget(const SizedBox());
   });
   testWidgets(

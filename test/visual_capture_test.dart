@@ -73,7 +73,7 @@ void main() {
     }
 
     Future<void> select(int id) async {
-      await tap(find.text('Levels'));
+      await tap(find.byTooltip('Levels'));
       await selectOpenLevel(tester, id);
     }
 
@@ -108,21 +108,20 @@ void main() {
       }
     }
 
-    for (final mode in [ThemeMode.light, ThemeMode.dark]) {
+    for (final mode in ['dark']) {
       SharedPreferences.setMockInitialValues({
         'bloriq.onboarding.v1': 'skipped',
         GameAudio.musicKey: false,
         GameAudio.effectsKey: false,
       });
       final settings = await GameSettings.load();
-      await settings.setThemeMode(mode);
       await tester.pumpWidget(
         RepaintBoundary(
           key: boundary,
           child: BloriqApp(settings: settings),
         ),
       );
-      final prefix = mode.name;
+      final prefix = mode;
       await tester.pump(const Duration(milliseconds: 300));
       await capture('$prefix-intro-reveal');
       await tester.pump(const Duration(milliseconds: 1000));

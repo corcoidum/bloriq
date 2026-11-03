@@ -15,11 +15,6 @@ Future<void> tapVisible(WidgetTester tester, Finder finder) async {
 Future<void> waitForHome(WidgetTester tester) async {
   for (var i = 0; i < 200; i++) {
     await tester.pump(const Duration(milliseconds: 20));
-    if (find.byKey(const ValueKey('skip-tutorial')).evaluate().isNotEmpty) {
-      await tapVisible(tester, find.byKey(const ValueKey('skip-tutorial')));
-      await tapVisible(tester, find.byKey(const ValueKey('game-home')));
-      await tester.pump(const Duration(milliseconds: 350));
-    }
     final skip = find.byKey(const ValueKey('skip-intro'));
     if (skip.evaluate().isNotEmpty) {
       await tester.tap(skip);
@@ -32,6 +27,29 @@ Future<void> waitForHome(WidgetTester tester) async {
     }
   }
   fail('Home did not become ready');
+}
+
+/// 메인의 큰 버튼을 눌러 게임에 들어간다. 첫 실행이면 가이드 1번이 열린다.
+Future<void> startFromHome(WidgetTester tester) async {
+  await waitForHome(tester);
+  await tapVisible(tester, find.byKey(const ValueKey('home-play')));
+  for (
+    var i = 0;
+    i < 100 && find.byType(GameWidget<BloriqGame>).evaluate().isEmpty;
+    i++
+  ) {
+    await tester.pump(const Duration(milliseconds: 20));
+  }
+}
+
+/// 인트로가 나타날 때까지 기다렸다가 건너뛴다.
+Future<void> skipIntro(WidgetTester tester) async {
+  final skip = find.byKey(const ValueKey('skip-intro'));
+  for (var i = 0; i < 100 && skip.evaluate().isEmpty; i++) {
+    await tester.pump(const Duration(milliseconds: 20));
+  }
+  await tester.tap(skip);
+  await tester.pump();
 }
 
 Future<void> selectOpenLevel(WidgetTester tester, int id) async {
