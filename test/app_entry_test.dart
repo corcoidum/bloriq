@@ -190,7 +190,8 @@ void main() {
     await pumpGame(tester, BloriqApp(loadLevels: loadLegacyLevels));
     await _move(tester, 0, 1, 1, 0);
     await _move(tester, 1, 1, 1, 0);
-    await tapVisible(tester, find.byKey(const ValueKey('game-home')));
+    await tester.pump(const Duration(milliseconds: 1600));
+    await tapVisible(tester, find.byKey(const ValueKey('result-home')));
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('1 / 25 completed'), findsOneWidget);
     expect(find.text('3 stars'), findsOneWidget);

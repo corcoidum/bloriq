@@ -6,6 +6,7 @@ import 'dart:ui' as ui;
 
 import 'package:bloriq/design/star_art.dart';
 import 'package:bloriq/domain/puzzle.dart';
+import 'package:bloriq/endless/endless_repository.dart';
 import 'package:bloriq/game/bloriq_game.dart';
 import 'package:bloriq/main.dart';
 import 'package:bloriq/progress/progress_repository.dart';
@@ -172,6 +173,27 @@ void main() {
         if (leave.evaluate().isNotEmpty) await tapVisible(tester, leave);
         await tester.pump(const Duration(milliseconds: 400));
       }
+
+      // 무한 별길: 첫 판과 두 번째 판의 콤보 결과
+      EndlessRepository.runInline = true;
+      await tapVisible(tester, find.byKey(const ValueKey('home-endless')));
+      for (var i = 0; i < 100 && board.evaluate().isEmpty; i++) {
+        await tester.pump(const Duration(milliseconds: 20));
+      }
+      await tester.pump(const Duration(milliseconds: 300));
+      await capture('$locale-endless-1');
+      await solve();
+      await tester.pump(const Duration(milliseconds: 2000));
+      await tapVisible(tester, find.byKey(const ValueKey('result-next')));
+      await tester.pump(const Duration(milliseconds: 300));
+      await capture('$locale-endless-2');
+      await solve();
+      await tester.pump(const Duration(milliseconds: 2000));
+      await capture('$locale-endless-result');
+      await tapVisible(tester, find.byKey(const ValueKey('result-home')));
+      await tester.pump(const Duration(milliseconds: 400));
+      await capture('$locale-home-after');
+      EndlessRepository.runInline = false;
 
       // 수호 정령 + 별자리 완성 결과
       await tapVisible(tester, find.byKey(const ValueKey('home-levels')));

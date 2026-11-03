@@ -79,6 +79,7 @@ void main() {
         find.byKey(const ValueKey('result-reward')),
         find.byTooltip('Try again'),
         find.byTooltip('More'),
+        find.byKey(const ValueKey('result-home')),
       ]) {
         expect(tester.getRect(finder).bottom, lessThanOrEqualTo(size.height));
       }
@@ -173,10 +174,26 @@ void main() {
   ) async {
     await pumpGame(tester, const BloriqApp());
     await _solve(tester);
-    await tapVisible(tester, find.byKey(const ValueKey('game-home')));
+    await tapVisible(tester, find.byKey(const ValueKey('result-home')));
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byKey(const ValueKey('home-player')), findsOneWidget);
     expect(find.textContaining('Lv.1'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('buttons under the result cannot be tapped through it', (
+    tester,
+  ) async {
+    await pumpGame(tester, const BloriqApp());
+    await _solve(tester);
+    final moves = _game(tester).controller.state.moves;
+    addTearDown(tester.view.resetPhysicalSize);
+    await tester.tapAt(
+      tester.getCenter(find.byKey(const ValueKey('game-home'))),
+    );
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byType(VictoryPanel), findsOneWidget);
+    expect(_game(tester).controller.state.moves, moves);
     await tester.pumpWidget(const SizedBox());
   });
 

@@ -120,7 +120,7 @@ void main() {
             .completionCount,
         2,
       );
-      await tapVisible(tester, find.byKey(const ValueKey('game-home')));
+      await tapVisible(tester, find.byKey(const ValueKey('result-home')));
       expect(find.byKey(const ValueKey('home-screen')), findsOneWidget);
       await tester.pumpWidget(const SizedBox());
       expect(

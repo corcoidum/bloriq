@@ -1,7 +1,7 @@
 import '../daily/daily_repository.dart';
 import '../domain/puzzle.dart';
 
-enum PlayMode { campaign, daily, tutorialReplay }
+enum PlayMode { campaign, daily, tutorialReplay, endless }
 
 class PlayContext {
   const PlayContext.campaign({this.guided = false})
@@ -11,6 +11,10 @@ class PlayContext {
   const PlayContext.tutorialReplay(this.level)
     : mode = PlayMode.tutorialReplay,
       guided = true,
+      challenge = null;
+  const PlayContext.endless(Level this.level)
+    : mode = PlayMode.endless,
+      guided = false,
       challenge = null;
   PlayContext.daily(DailyChallenge daily)
     : mode = PlayMode.daily,

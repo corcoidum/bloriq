@@ -226,5 +226,9 @@
   "scoreDetail": "기본 {base} × 별 {stars}배",
   "scoreDetailCombo": "기본 {base} × 별 {stars}배 × 콤보 {combo}배",
   "readMemory": "기억 읽기",
-  "moreActions": "더보기"
+  "moreActions": "더보기",
+  "endlessTitle": "무한 별길",
+  "endlessBest": "무한 별길 · 최고 {count}연속",
+  "endlessRound": "별길 {round}",
+  "comboLabel": "콤보 ×{combo}"
 }

@@ -1,4 +1,3 @@
-import 'package:bloriq/app/game_session.dart';
 import 'package:bloriq/app/home_view.dart';
 import 'package:bloriq/app/intro_screen.dart';
 import 'package:bloriq/main.dart';
@@ -123,6 +122,10 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+      await (await SharedPreferences.getInstance()).setString(
+        'bloriq.onboarding.v1',
+        'skipped',
+      );
       await tester.pumpWidget(const BloriqApp(showIntro: false));
       await waitForHome(tester);
       expect(tester.takeException(), isNull);
@@ -130,6 +133,7 @@ void main() {
       for (final key in [
         'home-hero',
         'home-play',
+        'home-endless',
         'home-levels',
         'home-album',
         'home-atlas',
@@ -158,9 +162,5 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.byKey(const ValueKey('daily-play')), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
-  });
-
-  test('session loading does not need the removed onboarding callback', () {
-    expect(GameSession.load, isA<Function>());
   });
 }

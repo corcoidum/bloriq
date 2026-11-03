@@ -26,6 +26,7 @@ class HomeView extends StatelessWidget {
     required this.onAlbum,
     required this.onAtlas,
     required this.onDaily,
+    required this.onEndless,
     required this.onHelp,
     required this.onSettings,
     required this.onRetry,
@@ -34,7 +35,7 @@ class HomeView extends StatelessWidget {
 
   final GameSession? session;
   final bool failed, opening, reduceMotion;
-  final VoidCallback onPlay, onLevels, onAlbum, onAtlas, onDaily;
+  final VoidCallback onPlay, onLevels, onAlbum, onAtlas, onDaily, onEndless;
   final VoidCallback onHelp, onSettings, onRetry, onChanged;
 
   @override
@@ -147,7 +148,22 @@ class HomeView extends StatelessWidget {
             style: const TextStyle(fontSize: 21),
           ),
         ),
-        const SizedBox(height: GameSpacing.large),
+        if (session != null && !tutorial) ...[
+          const SizedBox(height: GameSpacing.small),
+          OutlinedButton.icon(
+            key: const ValueKey('home-endless'),
+            style: OutlinedButton.styleFrom(minimumSize: const Size(48, 54)),
+            onPressed: opening ? null : onEndless,
+            icon: const Icon(Icons.all_inclusive_rounded),
+            label: Text(
+              session.endless.bestStreak > 0
+                  ? t.endlessBest(session.endless.bestStreak)
+                  : t.endlessTitle,
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+        const SizedBox(height: GameSpacing.medium),
         if (session != null) ...[
           _menu(context, session),
           CollectionStorageNotice(session: session, onChanged: onChanged),

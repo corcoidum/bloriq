@@ -194,6 +194,14 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _endless() async {
+    final session = _session;
+    if (session == null || _opening) return;
+    final level = await session.endless.currentPuzzle();
+    if (!mounted) return;
+    await _open(level.id, play: PlayContext.endless(level));
+  }
+
   Future<void> _daily() async {
     final session = _session;
     if (session == null || _opening) return;
@@ -326,6 +334,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
       onAlbum: _album,
       onAtlas: _atlas,
       onDaily: _daily,
+      onEndless: _endless,
       onHelp: _help,
       onSettings: () {
         if (session != null) {

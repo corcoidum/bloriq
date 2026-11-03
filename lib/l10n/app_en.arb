@@ -508,5 +508,30 @@
     }
   },
   "readMemory": "Read the memory",
-  "moreActions": "More"
+  "moreActions": "More",
+  "endlessTitle": "Endless Path",
+  "endlessBest": "Endless Path · best streak {count}",
+  "@endlessBest": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "endlessRound": "Path {round}",
+  "@endlessRound": {
+    "placeholders": {
+      "round": {
+        "type": "int"
+      }
+    }
+  },
+  "comboLabel": "Combo ×{combo}",
+  "@comboLabel": {
+    "placeholders": {
+      "combo": {
+        "type": "String"
+      }
+    }
+  }
 }

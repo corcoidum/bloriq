@@ -10,7 +10,9 @@ import 'audio/game_audio.dart';
 import 'domain/puzzle.dart';
 import 'design/game_theme.dart';
 import 'game/bloriq_game.dart';
+import 'endless/endless_repository.dart';
 import 'game/board_geometry.dart';
+
 import 'game/device_art.dart';
 import 'game/device_legend.dart';
 import 'game/victory_panel.dart';
@@ -140,7 +142,8 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  late final List<Level> _loaded;
+  late List<Level> _loaded;
+
   final _narrative = NarrativeController();
   SpiritDefinition? _discovery;
   bool _retryingSave = false;
@@ -170,6 +173,9 @@ class _GameScreenState extends State<GameScreen>
   ConstellationEvent? _constellation;
   bool _constellationPending = false;
   DeviceKind? _legendSelected;
+  bool _advancing = false;
+  bool _endlessUnsaved = false;
+
   RunScore? _runScore;
   XpAward? _award;
 
@@ -206,6 +212,33 @@ class _GameScreenState extends State<GameScreen>
     _game = BloriqGame(_controller!);
     widget.session.analytics.addListener(_analyticsChanged);
     _startAttempt();
+    _prepareEndlessRound();
+  }
+
+  bool get _isEndless => widget.play.mode == PlayMode.endless;
+
+  /// 다음 판을 미리 만들고, 처음 만나는 장치는 설명을 켜 둔 채 시작한다.
+  void _prepareEndlessRound() {
+    if (!_isEndless) return;
+    final endless = widget.session.endless;
+    endless.prefetchNext();
+    for (final (_, kind, _) in deviceTiles(_controller!.state.level)) {
+      if (!endless.seenDevice(kind.name)) {
+        endless.markDeviceSeen(kind.name);
+        _legendSelected ??= kind;
+      }
+    }
+  }
+
+  Future<void> _nextEndless() async {
+    if (_advancing) return;
+    _advancing = true;
+    final level = await widget.session.endless.nextPuzzle();
+    _advancing = false;
+    if (!mounted) return;
+    _loaded = [level];
+    _select(0);
+    setState(_prepareEndlessRound);
   }
 
   Map<String, Object?> get _eventContext => {
@@ -262,7 +295,8 @@ class _GameScreenState extends State<GameScreen>
     if (widget.play.mode == PlayMode.daily) {
       return widget.session.daily.bestMoves(widget.play.dailyDate!);
     }
-    if (widget.play.mode == PlayMode.tutorialReplay) return null;
+    if (widget.play.mode == PlayMode.tutorialReplay || _isEndless) return null;
+
     return _progress!.forLevel(level.id, revision: level.revision)?.bestMoves;
   }
 
@@ -354,9 +388,13 @@ class _GameScreenState extends State<GameScreen>
     final score = RunScore.of(
       minimumMoves: state.level.minimumMoves,
       stars: stars,
+      combo: _isEndless ? widget.session.endless.combo : 1,
     );
     _runScore = score;
-    if (widget.play.mode == PlayMode.daily) {
+    if (_isEndless) {
+      // 판이 매번 새로우니 경험치는 언제나 전부 준다.
+      _pendingXp = score.total;
+    } else if (widget.play.mode == PlayMode.daily) {
       // Daily 경험치는 그날 처음 완료했을 때만 준다.
       final done = widget.session.daily.completed(widget.play.dailyDate!);
       _pendingXp = done ? 0 : score.total;
@@ -394,6 +432,7 @@ class _GameScreenState extends State<GameScreen>
     _runScore = null;
     _award = null;
     _pendingXp = 0;
+    _endlessUnsaved = false;
     _constellation = null;
     _constellationPending = false;
     _atlasBefore = _atlasAfter = null;
@@ -476,6 +515,17 @@ class _GameScreenState extends State<GameScreen>
       }
       return;
     }
+    if (_isEndless) {
+      final saved = await widget.session.endless.recordClear();
+      final award = await _grantXp();
+      if (mounted && identical(_controller, controller)) {
+        setState(() {
+          _endlessUnsaved = !saved;
+          _award = award;
+        });
+      }
+      return;
+    }
     if (widget.play.mode != PlayMode.campaign) return;
     final result = await _progress!.recordCompletion(
       levelId: state.level.id,
@@ -505,6 +555,26 @@ class _GameScreenState extends State<GameScreen>
   Future<void> _retryProgressSave() async {
     if (_retryingSave) return;
     setState(() => _retryingSave = true);
+    if (_isEndless) {
+      final saved = await widget.session.endless.retrySave();
+      final playerSaved = await widget.session.player.retrySave();
+      if (mounted) {
+        setState(() {
+          _retryingSave = false;
+          _endlessUnsaved = !saved;
+          final old = _award;
+          if (old != null && playerSaved) {
+            _award = XpAward(
+              gained: old.gained,
+              before: old.before,
+              after: old.after,
+              saved: true,
+            );
+          }
+        });
+      }
+      return;
+    }
     final controller = _controller;
     final result = _completion;
     final saved = await _progress!.retrySave();
@@ -617,7 +687,9 @@ class _GameScreenState extends State<GameScreen>
             moves: state.moves,
             minimumMoves: state.level.minimumMoves,
           ),
-          levelText: widget.play.mode == PlayMode.daily
+          levelText: _isEndless
+              ? t.endlessRound(state.level.id - EndlessRepository.firstId + 1)
+              : widget.play.mode == PlayMode.daily
               ? '${t.dailyEcho} ${widget.play.dailyDate}'
               : t.level(state.level.id),
           movesText: t.moves(state.moves),
@@ -912,9 +984,11 @@ class _GameScreenState extends State<GameScreen>
         ],
         reward: _rewardSlot(t, controller),
         notices: [
-          if (_completion?.saved == false || _award?.saved == false) ...[
+          if (_completion?.saved == false ||
+              _award?.saved == false ||
+              _endlessUnsaved) ...[
             Text(t.saveError, textAlign: TextAlign.center),
-            if (campaign)
+            if (campaign || _isEndless)
               TextButton(
                 key: const ValueKey('retry-progress'),
                 onPressed: _retryingSave ? null : _retryProgressSave,
@@ -935,12 +1009,16 @@ class _GameScreenState extends State<GameScreen>
         next: FilledButton.icon(
           key: const ValueKey('result-next'),
           style: FilledButton.styleFrom(minimumSize: const Size(48, 60)),
-          onPressed: () => !campaign
+          onPressed: () => _isEndless
+              ? _nextEndless()
+              : !campaign
               ? Navigator.pop(context)
               : _select(_index + 1 < _loaded.length ? _index + 1 : 0),
           icon: const Icon(Icons.arrow_forward_rounded),
           label: Text(
-            !campaign
+            _isEndless
+                ? t.next
+                : !campaign
                 ? t.close
                 : _index + 1 < _loaded.length
                 ? t.next
@@ -949,11 +1027,21 @@ class _GameScreenState extends State<GameScreen>
           ),
         ),
         actions: [
-          _resultAction(
-            Icons.replay_rounded,
-            t.tryAgain,
-            _replaying ? null : () => _select(_index),
+          IconButton.filledTonal(
+            key: const ValueKey('result-home'),
+            tooltip: t.home,
+            iconSize: 26,
+            constraints: const BoxConstraints(minWidth: 52, minHeight: 52),
+            onPressed: _replaying ? null : _leaveGame,
+            icon: const Icon(Icons.home_rounded),
           ),
+          // 무한 모드는 같은 판으로 경험치를 다시 벌 수 없게 다시 도전을 두지 않는다.
+          if (!_isEndless)
+            _resultAction(
+              Icons.replay_rounded,
+              t.tryAgain,
+              _replaying ? null : () => _select(_index),
+            ),
           _resultAction(
             Icons.play_circle_outline_rounded,
             t.watchReplay,
@@ -979,7 +1067,7 @@ class _GameScreenState extends State<GameScreen>
       IconButton.filledTonal(
         tooltip: label,
         iconSize: 26,
-        constraints: const BoxConstraints(minWidth: 56, minHeight: 56),
+        constraints: const BoxConstraints(minWidth: 52, minHeight: 52),
         onPressed: onPressed,
         icon: Icon(icon),
       );
@@ -1259,8 +1347,20 @@ class _GameScreenState extends State<GameScreen>
                                               ),
                                               const SizedBox(height: 4),
                                               Text(
-                                                widget.play.mode ==
-                                                        PlayMode.daily
+                                                _isEndless
+                                                    ? t.endlessRound(
+                                                        widget
+                                                                .session
+                                                                .endless
+                                                                .round -
+                                                            (controller
+                                                                    .state
+                                                                    .isComplete
+                                                                ? 1
+                                                                : 0),
+                                                      )
+                                                    : widget.play.mode ==
+                                                          PlayMode.daily
                                                     ? t.dailyEcho
                                                     : t.level(
                                                         _loaded[_index].id,
@@ -1330,6 +1430,17 @@ class _GameScreenState extends State<GameScreen>
                                     label: t.moves(controller.state.moves),
                                     color: colors.echoInk,
                                   ),
+                                  if (_isEndless &&
+                                      widget.session.endless.streak > 0)
+                                    StatPill(
+                                      icon: Icons.bolt_rounded,
+                                      label: t.comboLabel(
+                                        widget.session.endless.combo
+                                            .toStringAsFixed(1),
+                                      ),
+                                      color: colors.rewardInk,
+                                    ),
+
                                   if (_tutorial != null)
                                     TextButton(
                                       key: const ValueKey('skip-tutorial'),
@@ -1476,6 +1587,10 @@ class _GameScreenState extends State<GameScreen>
                                           ? null
                                           : () => setState(() {
                                               _skipCelebration();
+                                              if (_isEndless) {
+                                                widget.session.endless
+                                                    .breakStreak();
+                                              }
                                               _attempt?.restart();
                                               _attempt?.finish(
                                                 'level_end',

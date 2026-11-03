@@ -63,7 +63,8 @@ class VictoryPanel extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        IgnorePointer(
+        // 결과가 떠 있는 동안 아래의 게임 버튼은 눌리지 않는다.
+        AbsorbPointer(
           child: ColoredBox(
             color: colors.background.withValues(alpha: .9 * veil),
           ),
@@ -254,8 +255,10 @@ class VictoryPanel extends StatelessWidget {
         next,
         const SizedBox(height: GameSpacing.small),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: actions,
+          children: [
+            for (final action in actions)
+              Expanded(child: Center(child: action)),
+          ],
         ),
       ],
     );
@@ -321,6 +324,7 @@ class _XpBar extends StatelessWidget {
                 ),
               const SizedBox(width: GameSpacing.small),
               Expanded(
+                flex: 4,
                 child: Text(
                   t.xpGained(award.gained),
                   textAlign: TextAlign.end,

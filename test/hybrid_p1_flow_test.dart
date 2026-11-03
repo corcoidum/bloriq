@@ -126,7 +126,7 @@ void main() {
         challenge.level.minimumMoves,
       );
       expect((await ProgressRepository.load()).hasAnyProgress, false);
-      await tapVisible(tester, find.byKey(const ValueKey('game-home')));
+      await tapVisible(tester, find.byKey(const ValueKey('result-home')));
       await tester.pump(const Duration(milliseconds: 350));
       expect(find.byKey(const ValueKey('home-daily-badge')), findsNothing);
       await tapVisible(tester, find.byKey(const ValueKey('home-daily')));
