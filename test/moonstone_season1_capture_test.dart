@@ -119,7 +119,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 80));
       }
 
-      for (final mode in [ThemeMode.dark, ThemeMode.light]) {
+      for (final mode in ['dark']) {
         for (final locale in ['ko', 'en']) {
           rootBundle.clear();
           SharedPreferences.setMockInitialValues({
@@ -127,7 +127,7 @@ void main() {
             'bloriq.audio.effects': false,
           });
           tester.platformDispatcher.localesTestValue = [Locale(locale)];
-          final settings = GameSettings(themeMode: mode);
+          final settings = GameSettings();
           await tester.pumpWidget(
             RepaintBoundary(
               key: key,
@@ -144,7 +144,7 @@ void main() {
           final t = AppLocalizations.of(
             tester.element(find.byType(GameScreen)),
           )!;
-          final prefix = '${mode.name}-$locale';
+          final prefix = '$mode-$locale';
           await capture('$prefix-tutorial');
           final solution = const PuzzleSolver().solve(
             game().controller.state.level,
@@ -167,7 +167,7 @@ void main() {
             await tester.pump();
             if ([2, 3, 4, 5, 9, 14, 25].contains(id)) {
               await capture('$prefix-stage$id');
-              if (mode == ThemeMode.dark && locale == 'ko') {
+              if (mode == 'dark' && locale == 'ko') {
                 await tester.runAsync(() async {
                   final render = tester.renderObject<RenderRepaintBoundary>(
                     find.byType(StarBoardFrame),
@@ -192,7 +192,7 @@ void main() {
               find.byKey(const ValueKey('skip-story')),
             );
             await tester.pump();
-            if (id % 5 == 0 || mode == ThemeMode.dark && locale == 'ko') {
+            if (id % 5 == 0 || mode == 'dark' && locale == 'ko') {
               await capture('$prefix-discovery-$id');
             }
             await tester.pump(const Duration(milliseconds: 2300));
@@ -235,7 +235,7 @@ void main() {
             );
             expect(shared.story!.portraitAssets.length, 5);
             await capture('$prefix-share-chapter-$number');
-            if (mode == ThemeMode.dark && locale == 'ko') {
+            if (mode == 'dark' && locale == 'ko') {
               final png = await tester.runAsync(
                 () => renderEchoPostcardPng(shared),
               );
@@ -257,7 +257,7 @@ void main() {
               find.byKey(const ValueKey('share-spirit')),
             );
             await capture('$prefix-share-guardian-$number');
-            if (mode == ThemeMode.dark && locale == 'ko') {
+            if (mode == 'dark' && locale == 'ko') {
               final data = tester
                   .widget<EchoPostcardDialog>(find.byType(EchoPostcardDialog))
                   .data;
@@ -289,9 +289,7 @@ void main() {
               key: key,
               child: MaterialApp(
                 debugShowCheckedModeBanner: false,
-                theme: mode == ThemeMode.dark
-                    ? GameTheme.dark
-                    : GameTheme.light,
+                theme: GameTheme.dark,
                 home: Scaffold(
                   body: SafeArea(
                     child: Center(

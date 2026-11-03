@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// 색의 역할은 모든 스테이지에서 고정하고 테마별 명도만 조정한다.
+/// 색의 역할은 모든 스테이지에서 고정한다. 게임은 밤숲 다크 테마 하나만 쓴다.
 @immutable
 class GameColors {
   const GameColors({
@@ -50,30 +50,6 @@ class GameColors {
   final Color outline;
   final Color highlight;
   final Color blockSymbol;
-
-  static const light = GameColors(
-    background: Color(0xFFF6F2E9),
-    surface: Color(0xFFFFFAF2),
-    boardSurface: Color(0xFFB6BCD1),
-    tileTop: Color(0xFFF6F2E9),
-    tileBottom: Color(0xFFE5E6EE),
-    primary: Color(0xFF6C83BE),
-    echo: Color(0xFF9472CC),
-    goal: Color(0xFF8BDBB9),
-    reward: Color(0xFFF0C97E),
-    text: Color(0xFF25314B),
-    secondaryText: Color(0xFF515C75),
-    slate: Color(0xFF687891),
-    cyan: Color(0xFF236A79),
-    error: Color(0xFFB43E52),
-    primaryInk: Color(0xFF3F5590),
-    echoInk: Color(0xFF68429B),
-    goalInk: Color(0xFF22654F),
-    rewardInk: Color(0xFF75500D),
-    outline: Color(0xFF707B9C),
-    highlight: Color(0xFFFFFAF2),
-    blockSymbol: Color(0xFF101827),
-  );
 
   static const dark = GameColors(
     background: Color(0xFF101C38),
@@ -144,13 +120,9 @@ abstract final class GameEffects {
 }
 
 abstract final class GameTheme {
-  static ThemeData get light => _build(Brightness.light, GameColors.light);
   static ThemeData get dark => _build(Brightness.dark, GameColors.dark);
 
-  static GameColors colorsOf(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-      ? GameColors.dark
-      : GameColors.light;
+  static GameColors colorsOf(BuildContext context) => GameColors.dark;
 
   static BoxDecoration surfaceDecoration(GameColors colors, {Color? accent}) =>
       BoxDecoration(
@@ -176,18 +148,12 @@ abstract final class GameTheme {
           seedColor: colors.primary,
           brightness: brightness,
         ).copyWith(
-          primary: brightness == Brightness.dark
-              ? colors.reward
-              : colors.primaryInk,
-          onPrimary: brightness == Brightness.dark
-              ? colors.blockSymbol
-              : colors.surface,
+          primary: colors.reward,
+          onPrimary: colors.blockSymbol,
           secondary: colors.echo,
           onSecondary: colors.blockSymbol,
           tertiary: colors.goalInk,
-          onTertiary: brightness == Brightness.dark
-              ? colors.blockSymbol
-              : colors.surface,
+          onTertiary: colors.blockSymbol,
           surface: colors.surface,
           onSurface: colors.text,
           onSurfaceVariant: colors.secondaryText,

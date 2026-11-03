@@ -28,33 +28,32 @@ void main() {
     expect(IntroBoardPainter.hop(1.6, 1, .12), (0.0, 1.0, 1.0));
   });
 
-  for (final dark in [true, false]) {
-    testWidgets(
-      'every 50ms frame paints without errors (${dark ? 'dark' : 'light'})',
-      (tester) async {
-        final progress = ValueNotifier<double>(0);
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: dark ? GameTheme.dark : GameTheme.light,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: SizedBox(
-                width: 360,
-                height: 320,
-                child: IntroScene(progress: _ValueAnimation(progress)),
-              ),
+  for (final name in ['dark']) {
+    testWidgets('every 50ms frame paints without errors ($name)', (
+      tester,
+    ) async {
+      final progress = ValueNotifier<double>(0);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: GameTheme.dark,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SizedBox(
+              width: 360,
+              height: 320,
+              child: IntroScene(progress: _ValueAnimation(progress)),
             ),
           ),
-        );
-        for (var frame = 0; frame <= 80; frame++) {
-          progress.value = frame / 80;
-          await tester.pump();
-          expect(tester.takeException(), isNull, reason: 'frame $frame');
-        }
-        expect(find.bySemanticsLabel(RegExp('Riq')), findsOneWidget);
-      },
-    );
+        ),
+      );
+      for (var frame = 0; frame <= 80; frame++) {
+        progress.value = frame / 80;
+        await tester.pump();
+        expect(tester.takeException(), isNull, reason: 'frame $frame');
+      }
+      expect(find.bySemanticsLabel(RegExp('Riq')), findsOneWidget);
+    });
   }
 
   testWidgets('sleeping frames still paint when the sleep face is missing', (

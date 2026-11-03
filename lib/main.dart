@@ -94,11 +94,7 @@ class _BloriqAppState extends State<BloriqApp> {
   Widget build(BuildContext context) => MaterialApp(
     title: 'BLORIQ',
     debugShowCheckedModeBanner: false,
-    theme: GameTheme.light,
-    darkTheme: GameTheme.dark,
-    themeMode: _settings?.themeMode ?? ThemeMode.system,
-    // Flutter 위젯과 Flame 보드가 같은 프레임에 같은 팔레트로 바뀐다.
-    themeAnimationDuration: Duration.zero,
+    theme: GameTheme.dark,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     localeResolutionCallback: (locale, supported) =>

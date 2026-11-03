@@ -316,7 +316,7 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  for (final mode in [ThemeMode.light, ThemeMode.dark]) {
+  for (final mode in ['dark']) {
     for (final locale in ['en', 'ko']) {
       for (final size in [
         const Size(320, 568),
@@ -324,7 +324,7 @@ void main() {
         const Size(768, 1024),
       ]) {
         testWidgets(
-          '${mode.name} $locale $size: home, level grid, settings, help fit at 200% text',
+          '$mode $locale $size: home, level grid, settings, help fit at 200% text',
           (tester) async {
             tester.view.physicalSize = size;
             tester.view.devicePixelRatio = 1;
@@ -336,7 +336,7 @@ void main() {
               tester.platformDispatcher.clearTextScaleFactorTestValue,
             );
             addTearDown(tester.platformDispatcher.clearLocalesTestValue);
-            final settings = GameSettings(themeMode: mode);
+            final settings = GameSettings();
             await tester.pumpWidget(BloriqApp(settings: settings));
             await waitForHome(tester);
             expect(tester.takeException(), isNull);

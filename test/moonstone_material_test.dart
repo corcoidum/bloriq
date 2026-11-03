@@ -9,7 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  for (final colors in [GameColors.light, GameColors.dark]) {
+  for (final colors in [GameColors.dark]) {
     for (final shape in [(3, 3), (4, 4), (3, 4)]) {
       test(
         'moonstone ${colors == GameColors.dark ? 'dark' : 'light'} $shape: transparent corners and recessed board inside frame',

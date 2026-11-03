@@ -16,10 +16,10 @@ import 'support/story_session.dart';
 
 void main() {
   for (final chapter in [1, 5]) {
-    for (final dark in [true, false]) {
+    for (final name in ['dark']) {
       for (final language in ['ko', 'en']) {
         testWidgets(
-          'chapter $chapter: 320px 200% text ${dark ? 'dark' : 'light'} $language: album hides unknown memories and keeps actions accessible',
+          'chapter $chapter: 320px 200% text $name $language: album hides unknown memories and keeps actions accessible',
           (tester) async {
             SharedPreferences.setMockInitialValues({
               'bloriq.audio.music': false,
@@ -40,7 +40,7 @@ void main() {
             final settings = GameSettings(reduceMotion: true);
             await tester.pumpWidget(
               MaterialApp(
-                theme: dark ? GameTheme.dark : GameTheme.light,
+                theme: GameTheme.dark,
                 locale: Locale(language),
                 localizationsDelegates: AppLocalizations.localizationsDelegates,
                 supportedLocales: AppLocalizations.supportedLocales,

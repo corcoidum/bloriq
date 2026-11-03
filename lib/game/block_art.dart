@@ -31,9 +31,7 @@ abstract final class BlockArt {
         canvas,
         rect,
         cell * scale,
-        colors == GameColors.dark
-            ? const Color(0xff416795)
-            : const Color(0xff557bae),
+        const Color(0xff416795),
         opacity: opacity,
       );
       canvas.drawCircle(
@@ -166,9 +164,6 @@ abstract final class BlockArt {
           height: cell * BoardGeometry.spriteFraction,
         ),
         opacity: opacity * .72,
-        tint: colors == GameColors.light
-            ? colors.echoInk.withValues(alpha: .85)
-            : null,
       );
       return;
     }
@@ -226,9 +221,6 @@ abstract final class BlockArt {
         canvas,
         image,
         Rect.fromCenter(center: at, width: cell, height: cell),
-        tint: colors == GameColors.light
-            ? colors.rewardInk.withValues(alpha: .65)
-            : null,
       );
       return;
     }

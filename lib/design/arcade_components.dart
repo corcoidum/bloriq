@@ -34,7 +34,6 @@ class ArcadeBackdrop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = GameTheme.colorsOf(context);
-    final dark = Theme.of(context).brightness == Brightness.dark;
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -46,10 +45,6 @@ class ArcadeBackdrop extends StatelessWidget {
               fit: BoxFit.cover,
               alignment: Alignment.topCenter,
               cacheWidth: 1080,
-              color: dark
-                  ? Colors.white
-                  : colors.background.withValues(alpha: .92),
-              colorBlendMode: dark ? BlendMode.modulate : BlendMode.srcOver,
             ),
           ),
         ),

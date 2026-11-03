@@ -107,7 +107,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 80));
     }
 
-    for (final mode in [ThemeMode.dark, ThemeMode.light]) {
+    for (final mode in ['dark']) {
       for (final locale in ['ko', 'en']) {
         rootBundle.clear();
         SharedPreferences.setMockInitialValues({
@@ -115,7 +115,7 @@ void main() {
           'bloriq.audio.effects': false,
         });
         tester.platformDispatcher.localesTestValue = [Locale(locale)];
-        final settings = GameSettings(themeMode: mode);
+        final settings = GameSettings();
         await tester.pumpWidget(
           RepaintBoundary(
             key: key,
@@ -130,7 +130,7 @@ void main() {
         }
         await tester.pump(const Duration(milliseconds: 350));
         final t = AppLocalizations.of(tester.element(find.byType(GameScreen)))!;
-        final prefix = '${mode.name}-$locale';
+        final prefix = '$mode-$locale';
         await capture('$prefix-tutorial');
         final solution = const PuzzleSolver().solve(
           game().controller.state.level,
@@ -179,7 +179,7 @@ void main() {
         );
         expect(find.byType(EchoPostcardDialog), findsOneWidget);
         await capture('$prefix-share-collection');
-        if (mode == ThemeMode.dark && locale == 'ko') {
+        if (mode == 'dark' && locale == 'ko') {
           final data = tester
               .widget<EchoPostcardDialog>(find.byType(EchoPostcardDialog))
               .data;
@@ -192,7 +192,7 @@ void main() {
         await tapVisible(tester, find.byKey(const ValueKey('share-spirit')));
         expect(find.byType(EchoPostcardDialog), findsOneWidget);
         await capture('$prefix-share-discovery');
-        if (mode == ThemeMode.dark && locale == 'ko') {
+        if (mode == 'dark' && locale == 'ko') {
           final data = tester
               .widget<EchoPostcardDialog>(find.byType(EchoPostcardDialog))
               .data;

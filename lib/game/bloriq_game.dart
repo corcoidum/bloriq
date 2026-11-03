@@ -47,7 +47,7 @@ class BloriqGame extends FlameGame {
   String? _dragId;
   Offset _dragOffset = Offset.zero;
   double _hintTime = 0;
-  GameColors _colors = GameColors.light;
+  GameColors _colors = GameColors.dark;
   bool _reduceMotion = false;
   double _celebrationProgress = 1;
   bool _isNewBest = false;
