@@ -73,7 +73,7 @@ void main() {
     }
 
     Future<void> select(int id) async {
-      await tap(find.text('Levels'));
+      await tap(find.byTooltip('Levels'));
       await selectOpenLevel(tester, id);
     }
 

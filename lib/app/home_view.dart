@@ -69,7 +69,6 @@ class HomeView extends StatelessWidget {
 
   Widget _content(BuildContext context) {
     final t = AppLocalizations.of(context)!;
-    final colors = GameTheme.colorsOf(context);
     final session = this.session;
     final tutorial =
         session != null &&
@@ -82,13 +81,7 @@ class HomeView extends StatelessWidget {
           children: [
             Expanded(
               child: session == null
-                  ? const Align(
-                      alignment: Alignment.centerLeft,
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: BrandMark(),
-                      ),
-                    )
+                  ? const SizedBox.shrink()
                   : _PlayerBadge(level: session.player.level),
             ),
             IconButton(
@@ -104,14 +97,10 @@ class HomeView extends StatelessWidget {
           ],
         ),
         const SizedBox(height: GameSpacing.small),
-        Text(
-          t.lastEchoTitle,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 34,
-            fontFamily: GameTypography.canvasFontFamily,
-            height: 1.15,
-            color: colors.rewardInk,
+        const Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: GameWordmark(size: 40),
           ),
         ),
         const Spacer(),

@@ -113,43 +113,25 @@ class _IntroScreenState extends State<IntroScreen>
                   padding: const EdgeInsets.all(GameSpacing.page),
                   child: Column(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: FadeTransition(
-                              opacity: _timeline.drive(
-                                CurveTween(curve: const Interval(.825, 1)),
-                              ),
-                              child: const Align(
-                                alignment: Alignment.centerLeft,
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: BrandMark(),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Flexible(
-                            child: TextButton(
-                              key: const ValueKey('skip-intro'),
-                              onPressed: _finish,
-                              child: Text(t.skipIntro),
-                            ),
-                          ),
-                        ],
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          key: const ValueKey('skip-intro'),
+                          onPressed: _finish,
+                          child: Text(t.skipIntro),
+                        ),
                       ),
                       SizedBox(
                         height: (constraints.maxHeight * .50).clamp(160, 480),
                         child: Center(child: IntroScene(progress: _timeline)),
                       ),
-                      Text(
-                        t.lastEchoTitle,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 30,
-                          fontFamily: GameTypography.canvasFontFamily,
-                          color: GameTheme.colorsOf(context).rewardInk,
+                      FadeTransition(
+                        opacity: _timeline.drive(
+                          CurveTween(curve: const Interval(.825, 1)),
+                        ),
+                        child: const FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: GameWordmark(size: 38),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -244,13 +226,9 @@ class QuickIntro extends StatelessWidget {
                       const SizedBox(height: GameSpacing.medium),
                       Opacity(
                         opacity: logo,
-                        child: Text(
-                          'BLORIQ',
-                          style: GameTypography.brand.copyWith(
-                            fontSize: 38,
-                            letterSpacing: 5,
-                            color: colors.rewardInk,
-                          ),
+                        child: const FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: GameWordmark(size: 38),
                         ),
                       ),
                     ],

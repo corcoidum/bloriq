@@ -156,6 +156,10 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
       await tester.pump(const Duration(milliseconds: 500));
       if (locale == 'ko') await capture('$locale-quick-intro');
+      if (locale == 'ko') {
+        await tester.pump(const Duration(milliseconds: 600));
+        await capture('$locale-quick-intro-logo');
+      }
       await waitForHome(tester);
       await tester.pump(const Duration(milliseconds: 900));
       await capture('$locale-home');
@@ -173,6 +177,24 @@ void main() {
         if (leave.evaluate().isNotEmpty) await tapVisible(tester, leave);
         await tester.pump(const Duration(milliseconds: 400));
       }
+
+      // 작은 폰: 장치가 많은 판도 스크롤 없이 들어간다.
+      tester.view.physicalSize = const Size(360, 640);
+      await tester.pump(const Duration(milliseconds: 300));
+      await tapVisible(tester, find.byKey(const ValueKey('home-levels')));
+      await selectOpenLevel(tester, 9);
+      for (var i = 0; i < 100 && board.evaluate().isEmpty; i++) {
+        await tester.pump(const Duration(milliseconds: 20));
+      }
+      await tester.pump(const Duration(milliseconds: 400));
+      await capture('$locale-small-phone');
+      await tapVisible(tester, find.byKey(const ValueKey('game-home')));
+      final leaveSmall = find.text(locale == 'ko' ? '나가기' : 'Leave');
+      if (leaveSmall.evaluate().isNotEmpty) {
+        await tapVisible(tester, leaveSmall);
+      }
+      tester.view.physicalSize = const Size(393, 852);
+      await tester.pump(const Duration(milliseconds: 400));
 
       // 무한 별길: 첫 판과 두 번째 판의 콤보 결과
       EndlessRepository.runInline = true;

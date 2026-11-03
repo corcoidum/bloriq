@@ -1,3 +1,4 @@
+import 'package:bloriq/design/arcade_components.dart';
 import 'package:bloriq/app/home_view.dart';
 import 'package:bloriq/app/intro_screen.dart';
 import 'package:bloriq/main.dart';
@@ -30,6 +31,22 @@ void main() {
       'bloriq.audio.music': false,
       'bloriq.audio.effects': false,
     });
+  });
+
+  testWidgets('home and intro show the BLORIQ logo instead of an old title', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const BloriqApp());
+    final logo = find.byType(GameWordmark);
+    for (var i = 0; i < 100 && logo.evaluate().isEmpty; i++) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    expect(logo, findsOneWidget);
+    await waitForHome(tester);
+    expect(logo, findsOneWidget);
+    expect(find.text('The Last Echo'), findsNothing);
+    expect(find.text('마지막 잔상'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
   });
 
   testWidgets('first launch shows the full intro and remembers it', (

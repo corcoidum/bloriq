@@ -162,7 +162,7 @@ void main() {
     final level = Level.fromJson(json.last as Map<String, dynamic>);
     final solution = const PuzzleSolver().solve(level)!;
     final controller = PuzzleController(level);
-    await tapVisible(tester, find.text('Levels'));
+    await tapVisible(tester, find.byTooltip('Levels'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     await selectOpenLevel(tester, level.id);
@@ -227,7 +227,7 @@ void main() {
     final block = controller.state.blocks.firstWhere(
       (item) => item.id == firstMove.blockId,
     );
-    await tapVisible(tester, find.text('Levels'));
+    await tapVisible(tester, find.byTooltip('Levels'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     await selectOpenLevel(tester, level.id);
@@ -278,7 +278,7 @@ void main() {
     final controller = PuzzleController(level);
     final solution = const PuzzleSolver().solve(level)!;
 
-    await tapVisible(tester, find.text('Levels'));
+    await tapVisible(tester, find.byTooltip('Levels'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     await selectOpenLevel(tester, level.id);
@@ -373,7 +373,7 @@ void main() {
     ) {
       await tester.pump(const Duration(milliseconds: 20));
     }
-    await tapVisible(tester, find.text('Levels'));
+    await tapVisible(tester, find.byTooltip('Levels'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     await selectOpenLevel(tester, 11);

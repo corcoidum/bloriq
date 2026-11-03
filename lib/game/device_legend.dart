@@ -13,10 +13,12 @@ class DeviceLegend extends StatelessWidget {
     required this.level,
     required this.selected,
     required this.onSelect,
+    this.iconsOnly = false,
   });
   final Level level;
   final DeviceKind? selected;
   final ValueChanged<DeviceKind> onSelect;
+  final bool iconsOnly;
 
   static String name(AppLocalizations t, DeviceKind kind) => switch (kind) {
     DeviceKind.gate => t.deviceGate,
@@ -82,7 +84,7 @@ class DeviceLegend extends StatelessWidget {
                     children: [
                       DeviceIcon(kind: kind),
                       // 장치가 많으면 아이콘만 두어 보드 아래를 한 줄로 유지한다.
-                      if (kinds.length <= 2) ...[
+                      if (!iconsOnly && kinds.length <= 2) ...[
                         const SizedBox(width: GameSpacing.tiny),
                         Flexible(
                           child: Text(

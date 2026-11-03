@@ -122,6 +122,9 @@ class _BloriqAppState extends State<BloriqApp> {
   );
 }
 
+/// 게임 화면 배치 단계. full: 전부 표시, tight: 동행과 긴 안내를 줄임, scroll: 최후 수단.
+enum _GameFit { full, tight, scroll }
+
 class GameScreen extends StatefulWidget {
   const GameScreen({
     super.key,
@@ -156,7 +159,7 @@ class _GameScreenState extends State<GameScreen>
 
   /// 보드 칸의 최소 터치 크기. 고정 배치로 이를 지킬 수 없을 때만 스크롤한다.
   static const _minCell = 48.0;
-  bool _scrollLayout = false;
+  _GameFit _fitFloor = _GameFit.full;
   Object? _layoutKey;
   PuzzleController? _controller;
   BloriqGame? _game;
@@ -1284,7 +1287,6 @@ class _GameScreenState extends State<GameScreen>
                           ? TextDecoration.underline
                           : null,
                     );
-                    // 보드 칸이 48px보다 작아지는 아주 작은 화면이나 가로 화면에서만 스크롤한다.
                     final layoutKey = (
                       constraints.biggest,
                       _loaded[_index].id,
@@ -1292,30 +1294,94 @@ class _GameScreenState extends State<GameScreen>
                     );
                     if (_layoutKey != layoutKey) {
                       _layoutKey = layoutKey;
-                      _scrollLayout = false;
+                      _fitFloor = _GameFit.full;
                     }
+                    final columns = controller.state.level.boardWidth;
                     final rows = controller.state.level.boardHeight;
                     final minBoard =
                         rows * _minCell + BoardGeometry.defaultFrameInset * 2;
-                    if (_widthCell(
-                              constraints.maxWidth - GameSpacing.page * 2,
-                              controller.state.level.boardWidth,
-                            ) >=
-                            _minCell &&
-                        constraints.maxHeight -
-                                _chromeEstimate(
-                                  t,
-                                  constraints,
-                                  _hasNoMoves(controller),
-                                ) <
-                            minBoard) {
-                      // 첫 프레임부터 넘치지 않도록 보드 외 높이를 넉넉히 추정한다.
-                      _scrollLayout = true;
-                    }
-                    final scroll = _scrollLayout;
+                    final fit = _chooseFit(t, constraints, minBoard);
+                    final tight = fit != _GameFit.full;
+                    final scroll = fit == _GameFit.scroll;
                     final boardHeight = math.max(
                       minBoard,
                       constraints.maxHeight * .55,
+                    );
+                    // 보드는 너비에 막혀 더 커지지 않으므로 남는 높이는 아래 버튼을 키워 채운다.
+                    final spare = tight
+                        ? 0.0
+                        : math.max(
+                            0.0,
+                            constraints.maxHeight -
+                                _chromeHeight(t, constraints, fit) -
+                                _widthCell(
+                                      constraints.maxWidth -
+                                          GameSpacing.page * 2,
+                                      columns,
+                                    ) *
+                                    rows -
+                                BoardGeometry.defaultFrameInset * 2,
+                          );
+                    final buttonHeight = 48.0 + math.min(8.0, spare * .1);
+                    final levelLabel = Semantics(
+                      label: t.levels,
+                      button: true,
+                      child: InkWell(
+                        key: const ValueKey('game-levels'),
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: canPickLevel ? _pickLevel : null,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  _isEndless
+                                      ? t.endlessRound(
+                                          widget.session.endless.round -
+                                              (complete ? 1 : 0),
+                                        )
+                                      : widget.play.mode == PlayMode.daily
+                                      ? t.dailyEcho
+                                      : t.level(_loaded[_index].id),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: labelStyle,
+                                ),
+                              ),
+                              if (_isEndless &&
+                                  widget.session.endless.streak > 0)
+                                Flexible(
+                                  child: Text(
+                                    ' · ${t.comboLabel(widget.session.endless.combo.toStringAsFixed(1))}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: labelStyle.copyWith(
+                                      color: colors.rewardInk,
+                                      decoration: TextDecoration.none,
+                                    ),
+                                  ),
+                                ),
+                              if (story?.released == true)
+                                Flexible(
+                                  child: Text(
+                                    ' · ${story!.levelTitle.inLocale(t.localeName)}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: labelStyle.copyWith(
+                                      color: colors.rewardInk,
+                                      decoration: TextDecoration.none,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
                     );
                     return Center(
                       child: ConstrainedBox(
@@ -1388,90 +1454,85 @@ class _GameScreenState extends State<GameScreen>
                                     ],
                                   ),
                                 ),
-                                Semantics(
-                                  label: t.levels,
-                                  button: true,
-                                  child: InkWell(
-                                    key: const ValueKey('game-levels'),
-                                    borderRadius: BorderRadius.circular(12),
-                                    onTap: canPickLevel ? _pickLevel : null,
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 4,
+                                if (tight)
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        flex: 3,
+                                        child: Center(child: levelLabel),
                                       ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            _isEndless
-                                                ? t.endlessRound(
-                                                    widget
-                                                            .session
-                                                            .endless
-                                                            .round -
-                                                        (complete ? 1 : 0),
-                                                  )
-                                                : widget.play.mode ==
-                                                      PlayMode.daily
-                                                ? t.dailyEcho
-                                                : t.level(_loaded[_index].id),
-                                            style: labelStyle,
+                                      const SizedBox(width: 8),
+                                      Flexible(
+                                        flex: 2,
+                                        child: FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                Icons.swipe_rounded,
+                                                size: 16,
+                                                color: colors.echoInk,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                t.moves(controller.state.moves),
+                                                style: GameTypography.label
+                                                    .copyWith(
+                                                      color: colors.echoInk,
+                                                      fontSize: 13,
+                                                    ),
+                                              ),
+                                            ],
                                           ),
-                                          if (_isEndless &&
-                                              widget.session.endless.streak > 0)
-                                            Text(
-                                              ' · ${t.comboLabel(widget.session.endless.combo.toStringAsFixed(1))}',
-                                              style: labelStyle.copyWith(
-                                                color: colors.rewardInk,
-                                                decoration: TextDecoration.none,
-                                              ),
-                                            ),
-                                          if (story?.released == true)
-                                            Flexible(
-                                              child: Text(
-                                                ' · ${story!.levelTitle.inLocale(t.localeName)}',
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: labelStyle.copyWith(
-                                                  color: colors.rewardInk,
-                                                  decoration:
-                                                      TextDecoration.none,
-                                                ),
-                                              ),
-                                            ),
-                                        ],
+                                        ),
                                       ),
+                                    ],
+                                  )
+                                else ...[
+                                  levelLabel,
+                                  SizedBox(height: compact ? 4 : 8),
+                                  SizedBox(
+                                    height: math.max(
+                                      compact ? 38.0 : 46.0,
+                                      46 * _textScale,
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Expanded(
+                                          flex: 3,
+                                          child: JourneyCompanions(
+                                            companion: widget
+                                                .session
+                                                .collection
+                                                .companion,
+                                            narrative: _narrative,
+                                            reduceMotion: _reduceMotion,
+                                            compact: compact,
+                                            inline: true,
+                                            onAlbum: _openAlbum,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Flexible(
+                                          flex: 2,
+                                          child: FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            child: StatPill(
+                                              icon: Icons.swipe_rounded,
+                                              label: t.moves(
+                                                controller.state.moves,
+                                              ),
+                                              color: colors.echoInk,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                ),
-                                SizedBox(height: compact ? 4 : 8),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Expanded(
-                                      flex: 3,
-                                      child: JourneyCompanions(
-                                        companion:
-                                            widget.session.collection.companion,
-                                        narrative: _narrative,
-                                        reduceMotion: _reduceMotion,
-                                        compact: compact,
-                                        inline: true,
-                                        onAlbum: _openAlbum,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Flexible(
-                                      flex: 2,
-                                      child: StatPill(
-                                        icon: Icons.swipe_rounded,
-                                        label: t.moves(controller.state.moves),
-                                        color: colors.echoInk,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                ],
                                 SizedBox(height: compact ? 4 : 8),
                                 if (scroll)
                                   SizedBox(
@@ -1490,6 +1551,7 @@ class _GameScreenState extends State<GameScreen>
                                       minHeight: _hintSlotHeight(
                                         t,
                                         constraints,
+                                        fit,
                                       ),
                                       minWidth: double.infinity,
                                     ),
@@ -1525,6 +1587,7 @@ class _GameScreenState extends State<GameScreen>
                                                     t,
                                                     controller,
                                                     _lastHint ?? hint,
+                                                    fit,
                                                   ),
                                                 ),
                                                 if (_replaying)
@@ -1549,6 +1612,7 @@ class _GameScreenState extends State<GameScreen>
                                                 t,
                                                 controller,
                                                 hint,
+                                                fit,
                                               ),
                                             ),
                                     ),
@@ -1564,10 +1628,13 @@ class _GameScreenState extends State<GameScreen>
                                   Row(
                                     children: [
                                       Expanded(
-                                        flex: compact ? 4 : 11,
+                                        flex: compact ? 1 : 11,
                                         child: FilledButton(
                                           style: FilledButton.styleFrom(
-                                            minimumSize: const Size(48, 48),
+                                            minimumSize: Size(48, buttonHeight),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                            ),
                                           ),
                                           onPressed:
                                               controller.canUndo &&
@@ -1583,10 +1650,13 @@ class _GameScreenState extends State<GameScreen>
                                       ),
                                       const SizedBox(width: 8),
                                       Expanded(
-                                        flex: compact ? 4 : 9,
+                                        flex: compact ? 1 : 9,
                                         child: OutlinedButton(
                                           style: OutlinedButton.styleFrom(
-                                            minimumSize: const Size(48, 48),
+                                            minimumSize: Size(48, buttonHeight),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                            ),
                                           ),
                                           onPressed: _replaying || _celebrating
                                               ? null
@@ -1622,25 +1692,19 @@ class _GameScreenState extends State<GameScreen>
                                       ),
                                       if (compact) ...[
                                         const SizedBox(width: 4),
-                                        Expanded(
-                                          flex: 3,
-                                          child: TextButton(
-                                            style: TextButton.styleFrom(
-                                              minimumSize: const Size(48, 48),
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 6,
-                                                  ),
-                                            ),
-                                            onPressed:
-                                                widget.play.mode ==
-                                                    PlayMode.campaign
-                                                ? _pickLevel
-                                                : null,
-                                            child: _buttonLabel(
-                                              Icons.grid_view_rounded,
-                                              t.levels,
-                                            ),
+                                        IconButton(
+                                          tooltip: t.levels,
+                                          constraints: BoxConstraints(
+                                            minWidth: 48,
+                                            minHeight: buttonHeight,
+                                          ),
+                                          onPressed:
+                                              widget.play.mode ==
+                                                  PlayMode.campaign
+                                              ? _pickLevel
+                                              : null,
+                                          icon: const Icon(
+                                            Icons.grid_view_rounded,
                                           ),
                                         ),
                                       ],
@@ -1664,11 +1728,12 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
-  /// 보드 아래 장치 칩과 안내 문구.
+  /// 보드 아래 장치 칩과 안내 문구. 좁은 화면에서는 두 줄까지만 보여 준다.
   Widget _hintPanel(
     AppLocalizations t,
     PuzzleController controller,
     String hint,
+    _GameFit fit,
   ) => Column(
     mainAxisSize: MainAxisSize.min,
     children: [
@@ -1676,6 +1741,7 @@ class _GameScreenState extends State<GameScreen>
         DeviceLegend(
           level: controller.state.level,
           selected: _legendSelected,
+          iconsOnly: fit != _GameFit.full,
           onSelect: (kind) => setState(
             () => _legendSelected = _legendSelected == kind ? null : kind,
           ),
@@ -1686,9 +1752,12 @@ class _GameScreenState extends State<GameScreen>
                   '${DeviceLegend.rule(t, _legendSelected!)}'
             : hint,
         textAlign: TextAlign.center,
+        maxLines: fit == _GameFit.full ? null : 2,
+        overflow: fit == _GameFit.full ? null : TextOverflow.ellipsis,
         style: _hintStyle,
       ),
-      if (_hasNoMoves(controller)) ...[
+      // 좁은 화면에서는 아래의 되돌리기 버튼으로 충분하다.
+      if (fit == _GameFit.full && _hasNoMoves(controller)) ...[
         const SizedBox(height: 8),
         FilledButton.icon(
           onPressed: () => _undo(controller),
@@ -1719,22 +1788,54 @@ class _GameScreenState extends State<GameScreen>
           BoardGeometry.defaultFrameInset * 2) /
       columns;
 
-  /// 보드를 제외한 머리글·동료·안내·버튼 높이의 보수적 추정치.
-  double _chromeEstimate(
+  double get _textScale => MediaQuery.textScalerOf(context).scale(16) / 16;
+
+  /// 칸이 48px 아래로 내려가지 않는 가장 넓은 배치를 고른다.
+  /// 스크롤은 줄여도 들어가지 않을 때(가로 화면, 아주 큰 글자)만 쓴다.
+  _GameFit _chooseFit(
     AppLocalizations t,
     BoxConstraints constraints,
-    bool noMoves,
+    double minBoard,
+  ) {
+    final room = constraints.maxHeight - minBoard;
+    var fit = room >= _chromeHeight(t, constraints, _GameFit.full)
+        ? _GameFit.full
+        : room >= _chromeHeight(t, constraints, _GameFit.tight)
+        ? _GameFit.tight
+        : _GameFit.scroll;
+    if (fit.index < _fitFloor.index) fit = _fitFloor;
+    // 너비 때문에 칸이 작은 화면은 스크롤해도 칸이 커지지 않는다.
+    if (fit == _GameFit.scroll &&
+        _widthCell(
+              constraints.maxWidth - GameSpacing.page * 2,
+              _controller!.state.level.boardWidth,
+            ) <
+            _minCell) {
+      fit = _GameFit.tight;
+    }
+    return fit;
+  }
+
+  /// 보드를 제외한 머리글·동료·안내·버튼 높이의 보수적 추정치.
+  double _chromeHeight(
+    AppLocalizations t,
+    BoxConstraints constraints,
+    _GameFit fit,
   ) {
     final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
-    return 48 +
-        24 * scale +
-        math.max(50.0, 34 * scale) +
-        _hintSlotHeight(t, constraints) +
-        (noMoves ? 56 : 0) +
-        (_tutorial == null
-            ? math.max(48.0, 22 * scale + 26)
-            : 22 * scale + 24) +
-        56;
+    final compact = constraints.maxHeight < 700;
+    final gap = compact ? 4.0 : 8.0;
+    return (compact ? 8.0 : 20.0) +
+        48 +
+        26 * scale +
+        8 +
+        gap +
+        (fit == _GameFit.full
+            ? gap + math.max(compact ? 38.0 : 46.0, 46 * _textScale)
+            : 0) +
+        (compact ? 12.0 : 20.0) +
+        _hintSlotHeight(t, constraints, fit) +
+        (_tutorial == null ? math.max(48.0, 22 * scale + 26) : 22 * scale + 24);
   }
 
   /// 장치 칩 한 줄의 높이. 장치가 없는 판이나 튜토리얼에서는 칩이 없다.
@@ -1748,7 +1849,11 @@ class _GameScreenState extends State<GameScreen>
 
   /// 이번 판에 나올 수 있는 가장 긴 안내까지 들어가는 칸.
   /// 문구가 바뀌어도 보드가 움직이지 않는다. 다시보기 건너뛰기 버튼도 들어간다.
-  double _hintSlotHeight(AppLocalizations t, BoxConstraints constraints) {
+  double _hintSlotHeight(
+    AppLocalizations t,
+    BoxConstraints constraints,
+    _GameFit fit,
+  ) {
     final level = _controller!.state.level;
     final texts = _tutorial != null
         ? [t.tutorialMove, t.tutorialBlock, t.tutorialFinish]
@@ -1774,6 +1879,8 @@ class _GameScreenState extends State<GameScreen>
         textAlign: TextAlign.center,
         textDirection: Directionality.of(context),
         textScaler: MediaQuery.textScalerOf(context),
+        maxLines: fit == _GameFit.full ? null : 2,
+        ellipsis: fit == _GameFit.full ? null : '…',
       )..layout(maxWidth: math.max(1.0, width));
       tallest = math.max(tallest, painter.height);
       painter.dispose();
@@ -1803,13 +1910,15 @@ class _GameScreenState extends State<GameScreen>
         rows: controller.state.level.boardHeight,
         devicePixelRatio: View.of(context).devicePixelRatio,
       );
-      if (!_scrollLayout &&
+      if (_fitFloor != _GameFit.scroll &&
           geometry.cellSize < _minCell &&
           _widthCell(area.maxWidth, controller.state.level.boardWidth) >=
               _minCell) {
-        // 높이가 부족해 칸이 터치 기준보다 작아지면 다음 프레임에 스크롤 배치로 바꾼다.
+        // 추정보다 칸이 작아지면 다음 프레임에 한 단계 더 줄인다.
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && !_scrollLayout) setState(() => _scrollLayout = true);
+          if (mounted && _fitFloor != _GameFit.scroll) {
+            setState(() => _fitFloor = _GameFit.values[_fitFloor.index + 1]);
+          }
         });
       }
       if (_geometry != null && !_geometry!.sameLayout(geometry)) {
