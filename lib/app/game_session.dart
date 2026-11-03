@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 
 import '../audio/game_audio.dart';
 import '../domain/puzzle.dart';
+import '../progress/player_repository.dart';
 import '../progress/progress_repository.dart';
 import '../tutorial/echo_tutorial.dart';
 import '../daily/daily_repository.dart';
@@ -23,6 +24,7 @@ class GameSession {
     required this.analytics,
     required this.story,
     required this.collection,
+    required this.player,
   }) : levels = List.unmodifiable(levels) {
     if (levels.isEmpty) throw const FormatException('No levels');
     WidgetsBinding.instance.addObserver(audio);
@@ -37,6 +39,7 @@ class GameSession {
   final LocalAnalytics analytics;
   final StoryCatalog story;
   final CollectionRepository collection;
+  final PlayerRepository player;
 
   static Future<GameSession> load({
     Future<List<Level>> Function()? loadLevels,
@@ -64,6 +67,7 @@ class GameSession {
         backfill: true,
       );
     }
+    final player = await PlayerRepository.load(levels, progress);
     final daily = await DailyRepository.load(clock: clock);
     final analytics = await LocalAnalytics.load(clock: clock);
     final audio = await GameAudio.load();
@@ -76,6 +80,7 @@ class GameSession {
       analytics: analytics,
       story: story,
       collection: collection,
+      player: player,
     );
   }
 
@@ -113,6 +118,7 @@ class GameSession {
   Future<void> dispose() async {
     await progress.flush();
     await collection.flush();
+    await player.flush();
     analytics.dispose();
     await daily.flush();
     await audio.dispose();

@@ -83,7 +83,7 @@ void main() {
         await _tap(tester, find.text('Skip celebration'));
         expect(find.text('Skip celebration'), findsNothing);
         expect(find.text('New personal best!'), findsOneWidget);
-        expect(find.text('★★★'), findsOneWidget);
+        expect(find.byIcon(Icons.star_rounded), findsNWidgets(3));
         expect(
           (await ProgressRepository.load()).forLevel(1)!.completionCount,
           1,

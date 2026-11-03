@@ -436,5 +436,77 @@
   "deviceEraser": "Stardust Spring",
   "deviceHold": "Amber Dew",
   "deviceOneWay": "Wind Leaves",
-  "deviceGoalOnly": "Riq's Moss"
+  "deviceGoalOnly": "Riq's Moss",
+  "playerTitle1": "Little Courier",
+  "playerTitle2": "Forest Runner",
+  "playerTitle3": "Moon Guide",
+  "playerTitle4": "Echo Explorer",
+  "playerTitle5": "Star Warden",
+  "playerTitle6": "Last Lantern",
+  "playerLevel": "Lv.{level}",
+  "@playerLevel": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "playerProgress": "Level {level}, {into} of {needed} experience to the next level",
+  "@playerProgress": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      },
+      "into": {
+        "type": "int"
+      },
+      "needed": {
+        "type": "int"
+      }
+    }
+  },
+  "levelUp": "Level up!",
+  "xpGained": "+{count} XP",
+  "@xpGained": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "resultScore": "{count} points",
+  "@resultScore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scoreDetail": "Base {base} × {stars} for stars",
+  "@scoreDetail": {
+    "placeholders": {
+      "base": {
+        "type": "String"
+      },
+      "stars": {
+        "type": "String"
+      }
+    }
+  },
+  "scoreDetailCombo": "Base {base} × {stars} for stars × {combo} combo",
+  "@scoreDetailCombo": {
+    "placeholders": {
+      "base": {
+        "type": "String"
+      },
+      "stars": {
+        "type": "String"
+      },
+      "combo": {
+        "type": "String"
+      }
+    }
+  },
+  "readMemory": "Read the memory",
+  "moreActions": "More"
 }

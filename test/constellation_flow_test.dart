@@ -92,7 +92,7 @@ void main() {
     expect(find.byKey(const ValueKey('victory-constellation')), findsOneWidget);
     expect(find.byKey(const ValueKey('result-constellation')), findsNothing);
 
-    await tapVisible(tester, find.text('Try again'));
+    await tapVisible(tester, find.byTooltip('Try again'));
     await _solve(tester);
     expect(find.byKey(const ValueKey('victory-constellation')), findsNothing);
     expect((await ProgressRepository.load()).forLevel(1)!.completionCount, 2);
@@ -107,6 +107,7 @@ void main() {
       await pumpGame(tester, const BloriqApp(), levelId: 5);
       await _solve(tester);
       expect(find.text('Moonflower shines again'), findsOneWidget);
+      await tapVisible(tester, find.byKey(const ValueKey('result-reward')));
       await tapVisible(
         tester,
         find.byKey(const ValueKey('result-constellation')),

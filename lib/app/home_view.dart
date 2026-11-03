@@ -7,6 +7,7 @@ import '../constellation/constellation_state.dart';
 import '../design/arcade_components.dart';
 import '../design/game_theme.dart';
 import '../l10n/app_localizations.dart';
+import '../progress/player_repository.dart';
 import '../story/companion_view.dart';
 import '../story/spirit_album.dart';
 import 'game_session.dart';
@@ -78,11 +79,16 @@ class HomeView extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Expanded(
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: FittedBox(fit: BoxFit.scaleDown, child: BrandMark()),
-              ),
+            Expanded(
+              child: session == null
+                  ? const Align(
+                      alignment: Alignment.centerLeft,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: BrandMark(),
+                      ),
+                    )
+                  : _PlayerBadge(level: session.player.level),
             ),
             IconButton(
               tooltip: t.help,
@@ -275,6 +281,46 @@ class HomeView extends StatelessWidget {
           onTap: opening ? null : onDaily,
         ),
       ],
+    );
+  }
+}
+
+class _PlayerBadge extends StatelessWidget {
+  const _PlayerBadge({required this.level});
+  final PlayerLevel level;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
+    final colors = GameTheme.colorsOf(context);
+    return Semantics(
+      label:
+          '${level.title(t)}. ${t.playerProgress(level.level, level.into, level.needed)}',
+      excludeSemantics: true,
+      child: Column(
+        key: const ValueKey('home-player'),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              '${t.playerLevel(level.level)}  ${level.title(t)}',
+              style: GameTypography.label.copyWith(color: colors.rewardInk),
+            ),
+          ),
+          const SizedBox(height: GameSpacing.tiny),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              minHeight: 7,
+              value: level.fraction,
+              color: colors.goal,
+              backgroundColor: colors.goal.withValues(alpha: .15),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

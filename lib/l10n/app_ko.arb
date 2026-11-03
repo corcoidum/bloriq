@@ -211,5 +211,20 @@
   "deviceEraser": "별먼지 샘",
   "deviceHold": "호박 이슬",
   "deviceOneWay": "바람 잎길",
-  "deviceGoalOnly": "리크 이끼"
+  "deviceGoalOnly": "리크 이끼",
+  "playerTitle1": "아기 별배달부",
+  "playerTitle2": "숲길 심부름꾼",
+  "playerTitle3": "달빛 안내자",
+  "playerTitle4": "잔상 탐험가",
+  "playerTitle5": "별길 수호자",
+  "playerTitle6": "마지막 등불",
+  "playerLevel": "Lv.{level}",
+  "playerProgress": "레벨 {level}, 다음 레벨까지 {needed} 중 {into}",
+  "levelUp": "레벨 업!",
+  "xpGained": "+{count} XP",
+  "resultScore": "{count}점",
+  "scoreDetail": "기본 {base} × 별 {stars}배",
+  "scoreDetailCombo": "기본 {base} × 별 {stars}배 × 콤보 {combo}배",
+  "readMemory": "기억 읽기",
+  "moreActions": "더보기"
 }

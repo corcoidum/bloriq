@@ -136,7 +136,7 @@ void main() {
           find.byKey(const ValueKey('home-album-badge')),
           launch == 0 ? findsOneWidget : findsNothing,
         );
-        expect(find.byKey(const ValueKey('skip-story')), findsNothing);
+        expect(find.byKey(const ValueKey('result-reward')), findsNothing);
         expect(find.text('0 / 25 completed'), findsOneWidget);
         await tapVisible(tester, find.byKey(const ValueKey('home-album')));
         expect(

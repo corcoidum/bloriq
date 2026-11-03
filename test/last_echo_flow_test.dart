@@ -96,11 +96,13 @@ void main() {
               .completionCount,
           1,
         );
+        await tapVisible(tester, find.byKey(const ValueKey('result-reward')));
         expect(find.byKey(const ValueKey('skip-story')), findsOneWidget);
         if (id == 5) expect(find.text('The Garden’s Promise'), findsOneWidget);
         await tapVisible(tester, find.byKey(const ValueKey('skip-story')));
         if (id < 5) await tapVisible(tester, find.text('Next level'));
       }
+      await tapVisible(tester, find.byTooltip('More'));
       await tapVisible(tester, find.byKey(const ValueKey('result-album')));
       expect(find.byType(SpiritAlbum), findsOneWidget);
       await tapVisible(tester, find.byKey(const ValueKey('spirit-s1-02')));
@@ -108,9 +110,9 @@ void main() {
       expect(session.collection.companion?.id, 's1-02');
       await tapVisible(tester, find.text('Close').last);
       await tapVisible(tester, find.byTooltip('Close'));
-      await tapVisible(tester, find.text('Try again'));
+      await tapVisible(tester, find.byTooltip('Try again'));
       await _solve(tester);
-      expect(find.byKey(const ValueKey('skip-story')), findsNothing);
+      expect(find.byKey(const ValueKey('result-reward')), findsNothing);
       expect(session.collection.owned.length, 5);
       expect(
         session.progress
@@ -158,7 +160,7 @@ void main() {
         await _solve(tester);
         expect(session.collection.owned, isEmpty);
         expect(session.progress.completedCampaignLevelIds, isEmpty);
-        expect(find.byKey(const ValueKey('skip-story')), findsNothing);
+        expect(find.byKey(const ValueKey('result-reward')), findsNothing);
         await tester.pumpWidget(const SizedBox());
         await disposeStorySession(tester, session);
         settings.dispose();

@@ -141,9 +141,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1600));
     await tester.pump();
     expect(find.text('Can you escape in 2 moves?'), findsOneWidget);
-    await tester.ensureVisible(find.text('Restart'));
     await tester.pump();
-    await tester.tap(find.text('Restart'));
+    await tester.tap(find.byTooltip('Try again'));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Moves: 0'), findsOneWidget);
   });
@@ -348,21 +347,21 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1600));
     await tester.pump();
     expect(find.text('Our star, at last!'), findsOneWidget);
-    await tester.ensureVisible(find.text('Undo'));
-    await tester.pump();
-    await tester.tap(find.text('Undo'));
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.pump(const Duration(milliseconds: 300));
+    // 결과 화면에는 되돌리기가 없으므로 컨트롤러로 문 상태 복원을 확인한다.
+    final finished = tester
+        .widget<GameWidget<BloriqGame>>(find.byType(GameWidget<BloriqGame>))
+        .game!
+        .controller;
+    expect(finished.undo(), isTrue);
     expect(
-      find.text('A block on a closed gate can still leave.'),
-      findsOneWidget,
+      finished.state.blocks.any(
+        (block) => block.position == finished.state.level.echoGate,
+      ),
+      isTrue,
     );
-    await tester.ensureVisible(find.text('Undo'));
-    await tester.pump();
-    await tester.tap(find.text('Undo'));
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('Gate open! Move through on this turn.'), findsOneWidget);
+    expect(finished.state.isGateOpen, isFalse);
+    expect(finished.undo(), isTrue);
+    expect(finished.state.isGateOpen, isTrue);
   });
 
   testWidgets('a position with no legal move suggests undo', (tester) async {

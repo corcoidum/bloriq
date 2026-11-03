@@ -152,11 +152,6 @@ void main() {
     final pausedProgress = game.celebrationProgress;
     await tester.pump(const Duration(milliseconds: 500));
     expect(game.celebrationProgress, pausedProgress);
-    expect(
-      find.text('Next level'),
-      findsOneWidget,
-      reason: 'Discovery results allow continuing from the first frame',
-    );
     await tester.pump(const Duration(milliseconds: 1200));
     await tester.pump();
     expect(game.celebrationProgress, 1);
