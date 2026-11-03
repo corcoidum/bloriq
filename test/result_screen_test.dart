@@ -1,3 +1,4 @@
+import 'package:bloriq/design/star_art.dart';
 import 'package:bloriq/domain/puzzle.dart';
 import 'package:bloriq/game/bloriq_game.dart';
 import 'package:bloriq/game/victory_panel.dart';
@@ -194,6 +195,20 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byType(VictoryPanel), findsOneWidget);
     expect(_game(tester).controller.state.moves, moves);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('clearing keeps the board where it was', (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await pumpGame(tester, const BloriqApp());
+    final board = find.byType(StarBoardFrame);
+    final before = tester.getRect(board);
+    await _solve(tester);
+    await tester.pump(const Duration(milliseconds: 1600));
+    expect(tester.getRect(board), before);
     await tester.pumpWidget(const SizedBox());
   });
 

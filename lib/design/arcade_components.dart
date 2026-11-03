@@ -27,6 +27,60 @@ class BrandMark extends StatelessWidget {
   }
 }
 
+/// 매 스테이지 상단 중앙에 고정하는 금빛 게임 로고.
+class GameWordmark extends StatelessWidget {
+  const GameWordmark({super.key, this.size = 32});
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = GameTheme.colorsOf(context);
+    final style = GameTypography.brand.copyWith(
+      fontSize: size,
+      letterSpacing: size * .16,
+      height: 1,
+    );
+    return Semantics(
+      header: true,
+      label: 'BLORIQ',
+      child: ExcludeSemantics(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.auto_awesome, size: size * .42, color: colors.goal),
+            SizedBox(width: size * .18),
+            ShaderMask(
+              blendMode: BlendMode.srcIn,
+              shaderCallback: (bounds) => LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  colors.highlight,
+                  colors.reward,
+                  const Color(0xFFE0A85A),
+                ],
+              ).createShader(bounds),
+              child: Text(
+                'BLORIQ',
+                style: style.copyWith(
+                  shadows: [
+                    Shadow(
+                      color: colors.reward.withValues(alpha: .55),
+                      blurRadius: size * .45,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(width: size * .18),
+            Icon(Icons.auto_awesome, size: size * .42, color: colors.echo),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class ArcadeBackdrop extends StatelessWidget {
   const ArcadeBackdrop({super.key, required this.child});
   final Widget child;

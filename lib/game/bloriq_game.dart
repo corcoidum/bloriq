@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
@@ -45,6 +46,17 @@ class BloriqGame extends FlameGame {
   double _motion = 1;
   Position? _blocked;
   double _blockedTime = 0;
+
+  /// 착지 충격(먼지·파동·보드 흔들림)과 막힌 이동 흔들림. 표시 전용이다.
+  static const _impactDuration = .42;
+  static const _shakeDuration = .36;
+  double _impactTime = 0;
+  Position? _impactAt;
+  Offset _impactDirection = Offset.zero;
+  bool _impactGoal = false;
+  String? _shakeId;
+  Offset _shakeDirection = Offset.zero;
+  double _shakeTime = 0;
   String? _dragId;
   Offset _dragOffset = Offset.zero;
   double _hintTime = 0;
@@ -149,10 +161,37 @@ class BloriqGame extends FlameGame {
     _motion = _reduceMotion ? 1 : 0;
   }
 
-  void flashBlocked(Position position) {
+  void flashBlocked(Position position, {String? blockId}) {
     _dragId = null;
     _blocked = position;
     _blockedTime = .42;
+    final block = controller.state.blocks
+        .where((block) => block.id == blockId)
+        .firstOrNull;
+    if (block == null || _reduceMotion) return;
+    _shakeId = block.id;
+    _shakeDirection = Offset(
+      (position.x - block.position.x).sign.toDouble(),
+      (position.y - block.position.y).sign.toDouble(),
+    );
+    _shakeTime = _shakeDuration;
+  }
+
+  void _land() {
+    final id = _movingId;
+    final from = _from;
+    if (id == null || from == null || _reduceMotion) return;
+    final block = controller.state.blocks
+        .where((block) => block.id == id)
+        .firstOrNull;
+    if (block == null) return;
+    _impactAt = block.position;
+    _impactDirection = Offset(
+      (block.position.x - from.x).toDouble(),
+      (block.position.y - from.y).toDouble(),
+    );
+    _impactGoal = id == Level.goalBlockId;
+    _impactTime = _impactDuration;
   }
 
   void clearEffects() {
@@ -160,6 +199,8 @@ class BloriqGame extends FlameGame {
     _dragId = null;
     _motion = 1;
     _blockedTime = 0;
+    _impactTime = 0;
+    _shakeTime = 0;
     _celebrationProgress = 1;
     _isNewBest = false;
   }
@@ -173,14 +214,18 @@ class BloriqGame extends FlameGame {
         skipReplay();
       }
     } else {
+      final wasMoving = _motion < 1;
       _motion = _reduceMotion
           ? 1
           : math.min(
               1.0,
               _motion + dt * 1000 / GameEffects.moveDuration.inMilliseconds,
             );
+      if (wasMoving && _motion >= 1) _land();
     }
     _blockedTime = math.max(0.0, _blockedTime - dt);
+    _impactTime = math.max(0.0, _impactTime - dt);
+    _shakeTime = math.max(0.0, _shakeTime - dt);
     if (!_reduceMotion) _hintTime += dt;
     // 달문과 꽃판은 상태가 바뀌면 0.2초에 걸쳐 열리고 닫힌다.
     final gateTarget = controller.state.isGateOpen ? 1.0 : 0.0;
@@ -220,6 +265,18 @@ class BloriqGame extends FlameGame {
     final preview = currentPreview;
     final previewTarget = preview?.target;
     final previewState = preview?.nextState;
+
+    // 착지 순간 보드 전체가 이동 방향으로 살짝 밀렸다가 돌아온다.
+    canvas.save();
+    if (_impactTime > 0) {
+      final p = 1 - _impactTime / _impactDuration;
+      if (p < .4) {
+        canvas.translate(
+          _impactDirection.dx * cell * .03 * math.sin(p / .4 * math.pi),
+          _impactDirection.dy * cell * .03 * math.sin(p / .4 * math.pi),
+        );
+      }
+    }
 
     final material = BoardMaterial(_colors);
     material.floor(canvas, layout);
@@ -335,9 +392,40 @@ class BloriqGame extends FlameGame {
     for (final block in state.blocks) {
       final isGoal = block.id == Level.goalBlockId;
       var at = center(block.position);
-      if (block.id == _movingId && _from != null && _motion < 1) {
+      final moving = block.id == _movingId && _from != null && _motion < 1;
+      var along = 1.0, across = 1.0;
+      var axis = Offset.zero;
+      if (moving) {
         final eased = Curves.easeOutCubic.transform(_motion);
-        at = Offset.lerp(center(_from!), at, eased)!;
+        final start = center(_from!);
+        final end = at;
+        at = Offset.lerp(start, end, eased)!;
+        axis = Offset(
+          (block.position.x - _from!.x).toDouble(),
+          (block.position.y - _from!.y).toDouble(),
+        );
+        if (!_reduceMotion) {
+          _drawTrail(canvas, start, end, at, eased, cell, isGoal);
+          // 빠르게 미끄러지는 동안 진행 방향으로 늘어난다.
+          final stretch = .14 * math.sin(_motion * math.pi);
+          along = 1 + stretch;
+          across = 1 - stretch * .5;
+        }
+      } else if (_impactTime > 0 && block.position == _impactAt) {
+        // 착지하면 진행 방향으로 눌렸다가 탄성 있게 돌아온다.
+        final p = 1 - _impactTime / _impactDuration;
+        final squash = p < .55
+            ? math.sin(p / .55 * math.pi)
+            : -.35 * math.sin((p - .55) / .45 * math.pi);
+        axis = _impactDirection;
+        along = 1 - .13 * squash;
+        across = 1 + .09 * squash;
+      }
+      if (block.id == _shakeId && _shakeTime > 0) {
+        // 막힌 방향으로 부딪힌 뒤 튕겨 나오며 잦아든다.
+        final p = 1 - _shakeTime / _shakeDuration;
+        at +=
+            _shakeDirection * cell * .09 * math.sin(p * math.pi * 4) * (1 - p);
       }
       if (block.id == _dragId) {
         final maxDrag = cell * .8;
@@ -383,6 +471,10 @@ class BloriqGame extends FlameGame {
       canvas.save();
       canvas.translate(at.dx, at.dy);
       canvas.rotate(tilt);
+      if (along != 1 || across != 1) {
+        final horizontal = axis.dx != 0;
+        canvas.scale(horizontal ? along : across, horizontal ? across : along);
+      }
       BlockArt.block(
         canvas,
         Offset.zero,
@@ -394,6 +486,7 @@ class BloriqGame extends FlameGame {
       );
       canvas.restore();
     }
+    if (!_reduceMotion) _drawImpact(canvas, layout);
     // 블록이 장치를 덮었을 때만 모서리에 작은 표식을 남긴다.
     for (final (position, kind, direction) in devices) {
       if (!state.blocks.any((block) => block.position == position)) continue;
@@ -457,6 +550,110 @@ class BloriqGame extends FlameGame {
           ..strokeWidth = math.max(3.0, cell * .04),
       );
       paint.style = PaintingStyle.fill;
+    }
+    canvas.restore();
+  }
+
+  /// 출발 칸의 파동, 빛 꼬리, 잔영 블록으로 속도감을 준다.
+  void _drawTrail(
+    Canvas canvas,
+    Offset start,
+    Offset end,
+    Offset at,
+    double eased,
+    double cell,
+    bool isGoal,
+  ) {
+    final fade = 1 - _motion;
+    final color = isGoal ? _colors.goal : _colors.primary;
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(1.5, cell * .04 * fade)
+      ..color = color.withValues(alpha: .5 * fade);
+    canvas.drawCircle(start, cell * (.3 + .22 * _motion), paint);
+    if ((at - start).distance > 1) {
+      canvas.drawLine(
+        start,
+        at,
+        Paint()
+          ..shader = ui.Gradient.linear(start, at, [
+            color.withValues(alpha: 0),
+            color.withValues(alpha: .38 * fade),
+          ])
+          ..strokeWidth = cell * .46
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+    for (var k = 3; k >= 1; k--) {
+      final t = eased - k * .17;
+      if (t <= 0) continue;
+      BlockArt.block(
+        canvas,
+        Offset.lerp(start, end, t)!,
+        cell,
+        _colors,
+        goal: isGoal,
+        scale: 1 - k * .05,
+        opacity: (.34 - k * .08) * fade,
+      );
+    }
+  }
+
+  /// 착지 칸에서 충격 파동과 먼지·별가루가 퍼진다.
+  void _drawImpact(Canvas canvas, BoardGeometry layout) {
+    final at = _impactAt;
+    if (at == null || _impactTime <= 0) return;
+    final cell = layout.cellSize;
+    final p = 1 - _impactTime / _impactDuration;
+    final eased = Curves.easeOutCubic.transform(p);
+    final fade = 1 - p;
+    final c = layout.center(at);
+    final color = _impactGoal ? _colors.goal : _colors.primary;
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(1.5, cell * .05 * fade)
+      ..color = color.withValues(alpha: .6 * fade);
+    canvas.drawCircle(c, cell * (.34 + .36 * eased), paint);
+    paint.style = PaintingStyle.fill;
+    final direction = _impactDirection;
+    final normal = Offset(-direction.dy, direction.dx);
+    final edge = c + direction * cell * .34;
+    for (var i = 0; i < 12; i++) {
+      final side = i.isEven ? 1.0 : -1.0;
+      final spread = (i ~/ 2) / 5;
+      final velocity =
+          normal * side * (.25 + .5 * spread) - direction * (.1 + .3 * spread);
+      canvas.drawCircle(
+        edge + velocity * cell * .9 * eased,
+        cell * (.05 - .025 * spread) * (1 - .5 * p),
+        paint
+          ..color = (i % 3 == 0 ? _colors.reward : color).withValues(
+            alpha: .85 * fade,
+          ),
+      );
+    }
+    if (_impactGoal) {
+      paint
+        ..color = _colors.reward.withValues(alpha: .9 * math.sin(p * math.pi))
+        ..strokeWidth = math.max(1.2, cell * .022)
+        ..strokeCap = StrokeCap.round;
+      for (var i = 0; i < 4; i++) {
+        final angle = i * math.pi / 2 + math.pi / 4;
+        final spot =
+            c +
+            Offset(math.cos(angle), math.sin(angle)) * cell * (.4 + .2 * eased);
+        final radius = cell * .07 * math.sin(p * math.pi);
+        canvas.drawLine(
+          spot - Offset(radius, 0),
+          spot + Offset(radius, 0),
+          paint,
+        );
+        canvas.drawLine(
+          spot - Offset(0, radius),
+          spot + Offset(0, radius),
+          paint,
+        );
+      }
     }
   }
 
