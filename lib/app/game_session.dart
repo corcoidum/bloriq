@@ -40,14 +40,12 @@ class GameSession {
 
   static Future<GameSession> load({
     Future<List<Level>> Function()? loadLevels,
-    void Function(Onboarding)? onOnboardingReady,
     DateTime Function()? clock,
   }) async {
     final progress = await ProgressRepository.load();
     final onboarding = await Onboarding.load(
       returningPlayer: progress.hasAnyProgress || progress.hasHistoricalStorage,
     );
-    onOnboardingReady?.call(onboarding);
     final levels = loadLevels != null
         ? await loadLevels()
         : (jsonDecode(await rootBundle.loadString('assets/levels/levels.json'))

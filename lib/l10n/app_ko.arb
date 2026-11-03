@@ -200,5 +200,10 @@
   "constellationLevelDark": "별문 {number} · 아직 열지 않음",
   "constellationPlay": "도전",
   "constellationBack": "별자리 목록",
-  "viewConstellation": "별자리 보기"
+  "viewConstellation": "별자리 보기",
+  "startGame": "시작하기",
+  "menuMap": "지도",
+  "menuAlbum": "정령",
+  "menuAtlas": "별자리",
+  "menuDaily": "오늘"
 }

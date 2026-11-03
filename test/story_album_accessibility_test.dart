@@ -109,7 +109,7 @@ void main() {
   }
 
   testWidgets(
-    'returning old revision owner gets one summary, current revision stars remain separate',
+    'returning old revision owner sees one album badge, current revision stars remain separate',
     (tester) async {
       SharedPreferences.setMockInitialValues({
         'bloriq.audio.music': false,
@@ -131,11 +131,13 @@ void main() {
         final settings = GameSettings(reduceMotion: true);
         await tester.pumpWidget(BloriqApp(settings: settings));
         await waitForHome(tester);
-        final summary = find.byKey(const ValueKey('dismiss-backfill'));
-        expect(summary, launch == 0 ? findsOneWidget : findsNothing);
+        // 복구 안내는 도감 메뉴의 점으로 알리고, 도감을 열면 확인한 것으로 본다.
+        expect(
+          find.byKey(const ValueKey('home-album-badge')),
+          launch == 0 ? findsOneWidget : findsNothing,
+        );
         expect(find.byKey(const ValueKey('skip-story')), findsNothing);
         expect(find.text('0 / 25 completed'), findsOneWidget);
-        if (launch == 0) await tapVisible(tester, summary);
         await tapVisible(tester, find.byKey(const ValueKey('home-album')));
         expect(
           find.descendant(

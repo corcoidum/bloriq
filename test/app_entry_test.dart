@@ -67,6 +67,7 @@ void main() {
       for (var i = 0; i < 2; i++) {
         await tester.pumpWidget(BloriqApp(loadLevels: loadLegacyLevels));
         await waitForHome(tester);
+        await tester.pump(const Duration(milliseconds: 100));
         expect(find.byType(IntroScreen), findsNothing);
         expect(find.byKey(const ValueKey('home-screen')), findsOneWidget);
         expect(
@@ -102,7 +103,9 @@ void main() {
     tester,
   ) async {
     final pending = Completer<List<Level>>();
-    await tester.pumpWidget(BloriqApp(loadLevels: () => pending.future));
+    await tester.pumpWidget(
+      BloriqApp(showIntro: false, loadLevels: () => pending.future),
+    );
     for (var i = 0; i < 20; i++) {
       await tester.pump(const Duration(milliseconds: 20));
     }
@@ -126,6 +129,7 @@ void main() {
     var attempts = 0;
     await tester.pumpWidget(
       BloriqApp(
+        showIntro: false,
         loadLevels: () async {
           if (++attempts == 1) throw const FormatException('bad fixture');
           return loadLegacyLevels();

@@ -68,6 +68,7 @@ void main() {
     (tester) async {
       final settings = GameSettings(reduceMotion: true);
       await tester.pumpWidget(BloriqApp(settings: settings));
+      await startFromHome(tester);
       await _ready(tester);
       final first = _game(tester).controller.state.level;
       final solution = const PuzzleSolver().solve(first)!;

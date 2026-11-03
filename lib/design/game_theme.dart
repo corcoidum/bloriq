@@ -110,6 +110,7 @@ abstract final class GameSpacing {
 abstract final class GameEffects {
   static const dragThresholdFraction = .24;
   static const introDuration = Duration(seconds: 4);
+  static const quickIntroDuration = Duration(milliseconds: 1500);
   static const moveDuration = Duration(milliseconds: 220);
   static const celebrationDuration = Duration(milliseconds: 1450);
 

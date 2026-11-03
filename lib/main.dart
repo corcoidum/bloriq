@@ -44,7 +44,7 @@ class BloriqApp extends StatefulWidget {
     this.settings,
     this.clock,
     this.playtestMode = const bool.fromEnvironment('PLAYTEST_MODE'),
-    this.firstRunIntro = true,
+    this.showIntro = true,
   });
 
   /// 테스트에서 이전 스테이지 구성과 기기 설정을 주입할 수 있다.
@@ -52,7 +52,7 @@ class BloriqApp extends StatefulWidget {
   final GameSettings? settings;
   final DateTime Function()? clock;
   final bool playtestMode;
-  final bool firstRunIntro;
+  final bool showIntro;
 
   @override
   State<BloriqApp> createState() => _BloriqAppState();
@@ -105,7 +105,7 @@ class _BloriqAppState extends State<BloriqApp> {
             loadLevels: widget.loadLevels,
             clock: widget.clock,
             playtestMode: widget.playtestMode,
-            firstRunIntro: widget.firstRunIntro,
+            showIntro: widget.showIntro,
             settings: _settings!,
             gameBuilder: (session, levelId, play) => GameScreen(
               session: session,

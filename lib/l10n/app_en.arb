@@ -425,5 +425,10 @@
   },
   "constellationPlay": "Play",
   "constellationBack": "All constellations",
-  "viewConstellation": "View constellation"
+  "viewConstellation": "View constellation",
+  "startGame": "Start",
+  "menuMap": "Map",
+  "menuAlbum": "Spirits",
+  "menuAtlas": "Stars",
+  "menuDaily": "Daily"
 }
