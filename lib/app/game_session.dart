@@ -11,6 +11,8 @@ import '../daily/daily_repository.dart';
 import '../analytics/local_analytics.dart';
 import '../story/story_catalog.dart';
 import '../story/collection_repository.dart';
+import '../constellation/constellation_state.dart';
+import '../progression/progression_repository.dart';
 
 /// 홈과 게임은 하나의 기록/오디오 인스턴스를 공유한다.
 class GameSession {
@@ -23,6 +25,7 @@ class GameSession {
     required this.analytics,
     required this.story,
     required this.collection,
+    required this.progression,
   }) : levels = List.unmodifiable(levels) {
     if (levels.isEmpty) throw const FormatException('No levels');
     WidgetsBinding.instance.addObserver(audio);
@@ -37,6 +40,9 @@ class GameSession {
   final LocalAnalytics analytics;
   final StoryCatalog story;
   final CollectionRepository collection;
+
+  /// 별지기 레벨·별가루·권능·유대. 처음 열 때 기존 기록을 한 번 환산한다.
+  final ProgressionRepository progression;
 
   static Future<GameSession> load({
     Future<List<Level>> Function()? loadLevels,
@@ -66,6 +72,29 @@ class GameSession {
         backfill: true,
       );
     }
+    final progression = await ProgressionRepository.load();
+    if (!progress.saveFailed && !progression.backfilled) {
+      final atlas = ConstellationAtlas.derive(levels, progress);
+      await progression.backfill(
+        records: [
+          for (final level in levels)
+            if (progress.forLevel(level.id, revision: level.revision)
+                case final record?)
+              (
+                levelKey: '${level.id}:${level.revision}',
+                bestStars: record.bestStars,
+              ),
+        ],
+        completedChapters: {
+          for (final chapter in atlas.chapters)
+            if (chapter.complete) chapter.definition.chapter,
+        },
+        goldenChapters: {
+          for (final chapter in atlas.chapters)
+            if (chapter.golden) chapter.definition.chapter,
+        },
+      );
+    }
     final daily = await DailyRepository.load(clock: clock);
     final analytics = await LocalAnalytics.load(clock: clock);
     final audio = await GameAudio.load();
@@ -78,6 +107,7 @@ class GameSession {
       analytics: analytics,
       story: story,
       collection: collection,
+      progression: progression,
     );
   }
 
@@ -115,6 +145,7 @@ class GameSession {
   Future<void> dispose() async {
     await progress.flush();
     await collection.flush();
+    await progression.flush();
     analytics.dispose();
     await daily.flush();
     await audio.dispose();

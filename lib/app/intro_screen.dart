@@ -132,13 +132,10 @@ class _IntroScreenState extends State<IntroScreen>
                         height: (constraints.maxHeight * .50).clamp(160, 480),
                         child: Center(child: IntroScene(progress: _timeline)),
                       ),
-                      Text(
-                        t.lastEchoTitle,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 30,
-                          fontFamily: GameTypography.canvasFontFamily,
-                          color: GameTheme.colorsOf(context).rewardInk,
+                      const Center(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: GameWordmark(size: 36),
                         ),
                       ),
                       const SizedBox(height: 8),

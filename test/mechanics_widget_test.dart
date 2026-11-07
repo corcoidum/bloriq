@@ -37,13 +37,10 @@ void main() {
     }
     expect(boardFinder, findsOneWidget);
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.textContaining('Crossed tiles erase the echo'), findsOneWidget);
-    expect(
-      find.textContaining('Pause tiles keep the previous echo'),
-      findsOneWidget,
-    );
-    expect(find.textContaining('arrow tile'), findsOneWidget);
-    expect(find.textContaining('Triangle tiles'), findsOneWidget);
+    expect(find.textContaining('Dandelion tile'), findsOneWidget);
+    expect(find.textContaining('Amber tile'), findsOneWidget);
+    expect(find.textContaining('Stream tile'), findsOneWidget);
+    expect(find.textContaining('Clover tile'), findsOneWidget);
 
     final game = tester.widget<GameWidget<BloriqGame>>(boardFinder).game!;
     final board = tester.getRect(boardFinder);

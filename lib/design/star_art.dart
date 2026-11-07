@@ -77,7 +77,7 @@ abstract final class StarArt {
     if (!_licensesRegistered) {
       _licensesRegistered = true;
       LicenseRegistry.addLicense(() async* {
-        for (final name in ['Jua', 'NanumGothic']) {
+        for (final name in ['Jua', 'NanumGothic', 'GowunDodum']) {
           yield LicenseEntryWithLineBreaks([
             name,
           ], await rootBundle.loadString('assets/fonts/$name-OFL.txt'));

@@ -58,6 +58,20 @@ class BloriqGame extends FlameGame {
   Offset _shakeDirection = Offset.zero;
   double _shakeTime = 0;
 
+  /// 별빛 길이 비추는 다음 한 수. 블록을 움직이면 사라진다.
+  ({Position from, Position to})? hintMove;
+
+  /// 장착한 이동 잔영(moonlight, petal, firefly, meteor, mist).
+  String trailStyle = 'moonlight';
+
+  Color _trailColor(bool isGoal) => switch (trailStyle) {
+    'petal' => const Color(0xfff4a9c4),
+    'firefly' => const Color(0xffffd86b),
+    'meteor' => _colors.reward,
+    'mist' => _colors.echo,
+    _ => isGoal ? _colors.goal : _colors.primary,
+  };
+
   /// 덩굴 문이 열린 정도(0~1). 도메인의 문 상태를 따라 부드럽게 움직인다.
   double _gateOpen = 0;
   bool _gateTarget = false;
@@ -158,6 +172,7 @@ class BloriqGame extends FlameGame {
 
   void animateMove(String id, Position from, Position? oldEcho) {
     _dragId = null;
+    hintMove = null;
     _movingId = id;
     _from = from;
     _oldEcho = oldEcho;
@@ -686,10 +701,53 @@ class BloriqGame extends FlameGame {
       );
       paint.style = PaintingStyle.fill;
     }
+    if (hintMove case final hint? when !isReplaying && !state.isComplete) {
+      _drawHint(canvas, center(hint.from), center(hint.to), cell);
+    }
     if (!_reduceMotion && StarArt.garden.isNotEmpty) {
       _drawFireflies(canvas, layout);
     }
     canvas.restore();
+  }
+
+  /// 별빛 길 화살표: 블록에서 다음 칸까지 금빛 길과 도착 고리.
+  void _drawHint(Canvas canvas, Offset from, Offset to, double cell) {
+    final pulse = _reduceMotion ? 1.0 : .6 + .4 * math.sin(_hintTime * 4);
+    final direction = (to - from) / (to - from).distance;
+    final normal = Offset(-direction.dy, direction.dx);
+    final start = from + direction * cell * .3;
+    final tip = to - direction * cell * .12;
+    final paint = Paint()
+      ..color = _colors.reward.withValues(alpha: .9 * pulse)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(3.0, cell * .07)
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(start, tip, paint);
+    canvas.drawPath(
+      Path()
+        ..moveTo(
+          tip.dx + direction.dx * cell * .08,
+          tip.dy + direction.dy * cell * .08,
+        )
+        ..lineTo(
+          tip.dx - direction.dx * cell * .12 + normal.dx * cell * .12,
+          tip.dy - direction.dy * cell * .12 + normal.dy * cell * .12,
+        )
+        ..lineTo(
+          tip.dx - direction.dx * cell * .12 - normal.dx * cell * .12,
+          tip.dy - direction.dy * cell * .12 - normal.dy * cell * .12,
+        )
+        ..close(),
+      Paint()..color = _colors.reward.withValues(alpha: .95 * pulse),
+    );
+    canvas.drawCircle(
+      to,
+      cell * (.36 + .06 * pulse),
+      Paint()
+        ..color = _colors.reward.withValues(alpha: .55 * pulse)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = math.max(2.0, cell * .035),
+    );
   }
 
   /// 스위치와 문을 잇는 희미한 덩굴 빛줄기. 열리면 빛이 문 쪽으로 흐른다.
@@ -811,7 +869,7 @@ class BloriqGame extends FlameGame {
     bool isGoal,
   ) {
     final fade = 1 - _motion;
-    final color = isGoal ? _colors.goal : _colors.primary;
+    final color = _trailColor(isGoal);
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = math.max(1.5, cell * .04 * fade)
@@ -854,7 +912,9 @@ class BloriqGame extends FlameGame {
     final eased = Curves.easeOutCubic.transform(p);
     final fade = 1 - p;
     final c = layout.center(at);
-    final color = _impactGoal
+    final color = trailStyle != 'moonlight'
+        ? _trailColor(_impactGoal)
+        : _impactGoal
         ? _colors.goal
         : StarArt.garden.isEmpty
         ? _colors.primary

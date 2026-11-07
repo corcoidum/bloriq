@@ -36,6 +36,7 @@ flutter:
     - assets/story/season1.json
     - assets/fonts/Jua-OFL.txt
     - assets/fonts/NanumGothic-OFL.txt
+    - assets/fonts/GowunDodum-OFL.txt
   fonts:
     - family: Jua
       fonts:
@@ -43,3 +44,6 @@ flutter:
     - family: NanumGothic
       fonts:
         - asset: assets/fonts/NanumGothic-Regular.ttf
+    - family: GowunDodum
+      fonts:
+        - asset: assets/fonts/GowunDodum-Regular.ttf

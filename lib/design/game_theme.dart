@@ -114,6 +114,14 @@ abstract final class GameTypography {
     fontSize: 28,
     fontWeight: FontWeight.w400,
   );
+
+  /// 판 아래 설명·결과 팝업 본문용 둥근 손글씨풍 글꼴.
+  static const body = TextStyle(
+    fontFamily: 'GowunDodum',
+    fontFamilyFallback: ['NanumGothic'],
+    fontSize: 15.5,
+    height: 1.4,
+  );
   static const label = TextStyle(
     fontFamily: 'NanumGothic',
     fontSize: 15,
