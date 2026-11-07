@@ -66,30 +66,40 @@ class VictoryConstellation extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
-              key: const ValueKey('victory-constellation'),
-              height: 76,
-              width: 168,
-              child: ConstellationArt(
-                chapter: chapter,
-                guardianAsset: guardianAsset,
-                pendingNode: pending ? node : null,
-                highlightNode: animatingNode ? node : null,
-                spark: animatingNode ? _seg(p, .78, .90) : null,
-                nodeReveal: animatingNode ? _seg(p, .88, .97) : 1,
-                lineReveal: animatingNode ? _seg(p, .90, 1) : 1,
-                silhouetteReveal: event?.chapterCompleted == true
-                    ? _seg(p, .92, 1)
-                    : 1,
-                golden: event?.becameGolden == true
-                    ? _seg(p, .86, 1)
-                    : (chapter.golden ? 1 : 0),
-              ),
-            ),
-            Text(
-              caption,
-              textAlign: TextAlign.center,
-              style: GameTypography.label.copyWith(color: colors.rewardInk),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  key: const ValueKey('victory-constellation'),
+                  height: 40,
+                  width: 84,
+                  child: ConstellationArt(
+                    chapter: chapter,
+                    guardianAsset: guardianAsset,
+                    pendingNode: pending ? node : null,
+                    highlightNode: animatingNode ? node : null,
+                    spark: animatingNode ? _seg(p, .78, .90) : null,
+                    nodeReveal: animatingNode ? _seg(p, .88, .97) : 1,
+                    lineReveal: animatingNode ? _seg(p, .90, 1) : 1,
+                    silhouetteReveal: event?.chapterCompleted == true
+                        ? _seg(p, .92, 1)
+                        : 1,
+                    golden: event?.becameGolden == true
+                        ? _seg(p, .86, 1)
+                        : (chapter.golden ? 1 : 0),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    caption,
+                    style: GameTypography.label.copyWith(
+                      color: colors.rewardInk,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+              ],
             ),
             if (onOpen != null &&
                 (event?.chapterCompleted == true ||

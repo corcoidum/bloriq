@@ -59,7 +59,7 @@ void main() {
     await move(0, 1, 1, 0);
     await move(1, 1, 1, 0);
     expect(find.text('Our star, at last!'), findsOneWidget);
-    expect(find.text('Personal best: 2 moves'), findsOneWidget);
+    expect(_stat(tester, 'result-moves'), '2');
     expect(find.text('New personal best!'), findsOneWidget);
     expect(find.text('★★★'), findsOneWidget);
     final game = tester.widget<GameWidget<BloriqGame>>(boardFinder).game!;
@@ -67,7 +67,7 @@ void main() {
     expect(completed.moves, 2);
     expect(completed.isComplete, isTrue);
 
-    await tapVisible('Watch Echo Replay');
+    await tapVisible('Replay');
     expect(game.isReplaying, isTrue);
     expect(find.text('Skip replay'), findsOneWidget);
     expect(
@@ -88,7 +88,7 @@ void main() {
     expect(game.isReplaying, isFalse);
     expect(game.controller.state, same(completed));
 
-    await tapVisible('Watch Echo Replay');
+    await tapVisible('Replay');
     for (var i = 0; i < 200 && game.isReplaying; i++) {
       await tester.pump(const Duration(milliseconds: 20));
     }
@@ -97,6 +97,11 @@ void main() {
     expect(find.text('Moves: 2'), findsOneWidget);
     expect((await ProgressRepository.load()).forLevel(1)!.completionCount, 1);
 
+    // 포스트카드는 결과 팝업의 더 보기 메뉴 안에 있다.
+    await tester.tap(find.byKey(const ValueKey('result-more')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 400));
     await tapVisible('Echo Postcard');
     await tester.pump(const Duration(milliseconds: 300));
     final dialog = tester.widget<EchoPostcardDialog>(
@@ -117,7 +122,7 @@ void main() {
     await move(0, 0, 1, 0);
     await move(1, 0, 0, 1);
     await move(1, 1, 1, 0);
-    expect(find.text('Personal best: 2 moves'), findsOneWidget);
+    expect(_stat(tester, 'result-best'), '2');
     expect(find.text('New personal best!'), findsNothing);
     expect(find.text('★★☆'), findsOneWidget);
     final progress = (await ProgressRepository.load()).forLevel(1)!;
@@ -130,3 +135,6 @@ void main() {
     expect(find.text('★★★'), findsWidgets);
   });
 }
+
+String? _stat(WidgetTester tester, String key) =>
+    tester.widget<Text>(find.byKey(ValueKey(key))).data;

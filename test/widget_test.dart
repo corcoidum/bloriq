@@ -8,6 +8,7 @@ import 'package:bloriq/domain/puzzle.dart';
 import 'package:bloriq/main.dart';
 import 'package:bloriq/game/bloriq_game.dart';
 import 'package:flame/game.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -92,7 +93,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1600));
     await tester.pump();
     expect(find.text('Our star, at last!'), findsOneWidget);
-    expect(find.text('Solved in the fewest moves!'), findsOneWidget);
+    // 첫 최소 이동 클리어는 기록 갱신 배지 하나로만 칭찬한다.
+    expect(find.text('New personal best!'), findsOneWidget);
+    expect(find.text('Solved in the fewest moves!'), findsNothing);
     await tester.ensureVisible(find.text('Next level'));
     await tester.pump();
     await tester.tap(find.text('Next level'));
@@ -140,7 +143,16 @@ void main() {
     await move(1, 1, 1, 0);
     await tester.pump(const Duration(milliseconds: 1600));
     await tester.pump();
-    expect(find.text('Can you escape in 2 moves?'), findsOneWidget);
+    // 결과 팝업은 이번 이동 수와 최소 이동 수를 큰 숫자로 나란히 보여 준다.
+    expect(
+      tester.widget<Text>(find.byKey(const ValueKey('result-moves'))).data,
+      '4',
+    );
+    expect(
+      tester.widget<Text>(find.byKey(const ValueKey('result-fewest'))).data,
+      '2',
+    );
+    expect(find.text('Solved in the fewest moves!'), findsNothing);
     await tester.ensureVisible(find.text('Restart'));
     await tester.pump();
     await tester.tap(find.text('Restart'));

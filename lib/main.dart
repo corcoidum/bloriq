@@ -1037,8 +1037,19 @@ class _GameScreenState extends State<GameScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(t.completeDetail(state.moves)),
-              if (_bestMoves case final best?) Text(t.bestMoves(best)),
+              _resultStats(t, colors, state),
+              // 기록 갱신 배지가 뜨면 같은 칭찬을 두 번 하지 않는다.
+              if (state.moves == state.level.minimumMoves && !_isNewBest)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    t.optimalComplete,
+                    style: GameTypography.label.copyWith(
+                      color: colors.goalInk,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
               if (_completion?.saved == false) ...[
                 Text(t.saveError),
                 if (widget.play.mode == PlayMode.campaign)
@@ -1058,13 +1069,6 @@ class _GameScreenState extends State<GameScreen>
                       widget.session.story.released.length &&
                   widget.session.story.released.length == 25)
                 Text(t.seasonComplete),
-              const SizedBox(height: GameSpacing.tiny),
-              Text(
-                state.moves == state.level.minimumMoves
-                    ? t.optimalComplete
-                    : t.improveComplete(state.level.minimumMoves),
-                style: TextStyle(color: colors.secondaryText, fontSize: 14),
-              ),
             ],
           ),
         ),
@@ -1073,20 +1077,82 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
+  /// 이번 이동 수·최고 기록·최소 이동 수를 큰 숫자 세 칸으로 보여 준다.
+  Widget _resultStats(
+    AppLocalizations t,
+    GameColors colors,
+    PuzzleState state,
+  ) {
+    Widget stat(String key, String label, int value, Color color) => Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$value',
+            key: ValueKey(key),
+            style: GameTypography.reward.copyWith(
+              fontSize: 28,
+              height: 1.1,
+              color: color,
+            ),
+          ),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GameTypography.body.copyWith(
+              fontSize: 15,
+              color: colors.secondaryText,
+            ),
+          ),
+        ],
+      ),
+    );
+    final best = _bestMoves;
+    return Semantics(
+      container: true,
+      label: [
+        t.completeDetail(state.moves),
+        if (best != null) t.bestMoves(best),
+        state.moves == state.level.minimumMoves
+            ? t.optimalComplete
+            : t.improveComplete(state.level.minimumMoves),
+      ].join(' '),
+      excludeSemantics: true,
+      child: Row(
+        children: [
+          stat('result-moves', t.resultMoves, state.moves, colors.text),
+          // 최고 기록이 이번 기록과 같으면 같은 숫자를 두 번 보이지 않는다.
+          if (best != null && best != state.moves)
+            stat('result-best', t.resultBest, best, colors.rewardInk),
+          stat(
+            'result-fewest',
+            t.resultFewest,
+            state.level.minimumMoves,
+            colors.goalInk,
+          ),
+        ],
+      ),
+    );
+  }
+
   /// 결과 팝업 아래쪽 버튼. 다음 스테이지가 가장 크고 나머지는 작은 버튼으로 둔다.
   Widget _victoryActions(AppLocalizations t, PuzzleController controller) {
     final small = OutlinedButton.styleFrom(
-      visualDensity: VisualDensity.compact,
-      minimumSize: const Size(0, 40),
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      textStyle: GameTypography.label.copyWith(fontSize: 13.5),
+      minimumSize: const Size(0, 46),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      textStyle: GameTypography.label.copyWith(fontSize: 15.5),
     );
+    final friend = _discovery;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         FilledButton.icon(
-          style: FilledButton.styleFrom(minimumSize: const Size(0, 50)),
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(0, 54),
+            textStyle: GameTypography.label.copyWith(fontSize: 18),
+          ),
           onPressed: () => widget.play.mode != PlayMode.campaign
               ? Navigator.pop(context)
               : _select(_index + 1 < _loaded.length ? _index + 1 : 0),
@@ -1100,52 +1166,77 @@ class _GameScreenState extends State<GameScreen>
           ),
         ),
         const SizedBox(height: GameSpacing.small),
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 6,
-          runSpacing: 6,
+        Row(
           children: [
-            OutlinedButton.icon(
-              style: small,
-              onPressed: _replaying ? null : () => _select(_index),
-              icon: const Icon(Icons.replay, size: 18),
-              label: Text(t.tryAgain),
-            ),
-            OutlinedButton.icon(
-              style: small,
-              onPressed: _celebrating ? null : _watchReplay,
-              icon: const Icon(Icons.play_arrow, size: 18),
-              label: Text(t.watchReplay),
-            ),
-            OutlinedButton.icon(
-              style: small,
-              onPressed: _replaying ? null : () => _showPostcard(t, controller),
-              icon: const Icon(Icons.image_outlined, size: 18),
-              label: Text(t.postcard),
-            ),
-            if (_discovery case final friend?) ...[
-              OutlinedButton.icon(
-                key: const ValueKey('result-album'),
+            Expanded(
+              child: OutlinedButton(
                 style: small,
-                onPressed: _openAlbum,
-                icon: const Icon(Icons.auto_stories_outlined, size: 18),
-                label: Text(t.album),
+                onPressed: _replaying ? null : () => _select(_index),
+                child: _buttonLabel(Icons.replay, t.tryAgain),
               ),
-              OutlinedButton.icon(
-                key: const ValueKey('result-discovery-share'),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: OutlinedButton(
                 style: small,
-                onPressed: () => _withModal<void>(
-                  () => showStoryCard(
-                    context,
-                    [friend],
-                    chapter: widget.session.story.chapter(friend.chapter),
-                    reduceMotion: _reduceMotion,
+                onPressed: _celebrating ? null : _watchReplay,
+                child: _buttonLabel(Icons.play_arrow, t.watchReplayShort),
+              ),
+            ),
+            const SizedBox(width: 6),
+            // 포스트카드·정령 도감·발견 카드는 더 보기 메뉴로 접어 둔다.
+            PopupMenuButton<VoidCallback>(
+              key: const ValueKey('result-more'),
+              tooltip: t.moreActions,
+              enabled: !_replaying,
+              onSelected: (action) => action(),
+              itemBuilder: (_) => [
+                PopupMenuItem(
+                  key: const ValueKey('result-postcard'),
+                  value: () => _showPostcard(t, controller),
+                  child: ListTile(
+                    leading: const Icon(Icons.image_outlined),
+                    title: Text(t.postcard),
                   ),
                 ),
-                icon: const Icon(Icons.ios_share_rounded, size: 18),
-                label: Text(t.discoveryCard),
+                if (friend != null) ...[
+                  PopupMenuItem(
+                    key: const ValueKey('result-album'),
+                    value: _openAlbum,
+                    child: ListTile(
+                      leading: const Icon(Icons.auto_stories_outlined),
+                      title: Text(t.album),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    key: const ValueKey('result-discovery-share'),
+                    value: () => _withModal<void>(
+                      () => showStoryCard(
+                        context,
+                        [friend],
+                        chapter: widget.session.story.chapter(friend.chapter),
+                        reduceMotion: _reduceMotion,
+                      ),
+                    ),
+                    child: ListTile(
+                      leading: const Icon(Icons.ios_share_rounded),
+                      title: Text(t.discoveryCard),
+                    ),
+                  ),
+                ],
+              ],
+              child: Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(23),
+                  border: Border.all(
+                    color: GameTheme.colorsOf(context).outline,
+                  ),
+                ),
+                child: const Icon(Icons.more_horiz_rounded),
               ),
-            ],
+            ),
           ],
         ),
       ],
@@ -1844,7 +1935,8 @@ class _GameScreenState extends State<GameScreen>
     final lang = t.localeName;
     final standing = reward.standing;
     final badges = <(IconData, String, Color)>[
-      for (final up in reward.levelsGained)
+      // 한 번에 여러 레벨이 올라도 마지막 레벨 한 줄만 보여 준다.
+      if (reward.levelsGained.lastOrNull case final up?)
         (
           Icons.keyboard_double_arrow_up_rounded,
           t.rewardLevelUp(up.level),
@@ -1910,45 +2002,49 @@ class _GameScreenState extends State<GameScreen>
                 child: Text(
                   t.playerLevel(standing.level),
                   style: GameTypography.reward.copyWith(
-                    fontSize: 15,
+                    fontSize: 16,
                     color: colors.goalInk,
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Expanded(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(5),
                   child: LinearProgressIndicator(
-                    minHeight: 9,
+                    minHeight: 10,
                     value: standing.progress,
                     color: colors.goal,
                     backgroundColor: colors.outline.withValues(alpha: .25),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 14,
+            children: [
               Text(
                 t.rewardXp(reward.xpGained),
                 style: GameTypography.label.copyWith(
-                  fontSize: 13,
+                  fontSize: 16,
                   color: colors.goalInk,
                 ),
               ),
+              if (reward.stardustGained > 0)
+                Text(
+                  '✦ ${t.rewardStardust(reward.stardustGained)}',
+                  style: GameTypography.label.copyWith(
+                    fontSize: 16,
+                    color: colors.rewardInk,
+                  ),
+                ),
             ],
           ),
-          if (reward.stardustGained > 0)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text(
-                '✦ ${t.rewardStardust(reward.stardustGained)}',
-                style: GameTypography.label.copyWith(
-                  fontSize: 13.5,
-                  color: colors.rewardInk,
-                ),
-              ),
-            ),
-          for (final (icon, label, color) in badges)
+          // 특별 보상은 가장 중요한 두 개만 보여 준다(레벨 업·권능이 먼저).
+          for (final (icon, label, color) in badges.take(2))
             Padding(
               padding: const EdgeInsets.only(top: 6),
               child: Row(
@@ -1960,7 +2056,7 @@ class _GameScreenState extends State<GameScreen>
                     child: KeepAllText(
                       label,
                       style: GameTypography.body.copyWith(
-                        fontSize: 14.5,
+                        fontSize: 15.5,
                         color: color,
                       ),
                     ),

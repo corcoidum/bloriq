@@ -249,5 +249,10 @@
   "equipped": "장착 중",
   "bondLevel": "유대 Lv {level}",
   "nextWorldTeaser": "별문이 열렸어요 · 구름바다 등대 — 곧 열려요",
-  "xpToNext": "다음 레벨까지 {xp}"
+  "xpToNext": "다음 레벨까지 {xp}",
+  "resultMoves": "이번 이동",
+  "resultBest": "최고 기록",
+  "resultFewest": "최소 이동",
+  "watchReplayShort": "리플레이",
+  "moreActions": "더 보기"
 }

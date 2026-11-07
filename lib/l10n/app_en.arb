@@ -492,5 +492,10 @@
   "@bondLevel": {"placeholders": {"level": {"type": "int"}}},
   "nextWorldTeaser": "The star gate is open · Cloud-Sea Lighthouse — coming soon",
   "xpToNext": "{xp} XP to next level",
-  "@xpToNext": {"placeholders": {"xp": {"type": "int"}}}
+  "@xpToNext": {"placeholders": {"xp": {"type": "int"}}},
+  "resultMoves": "This run",
+  "resultBest": "Best",
+  "resultFewest": "Fewest",
+  "watchReplayShort": "Replay",
+  "moreActions": "More"
 }
