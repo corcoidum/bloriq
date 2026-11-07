@@ -7,7 +7,7 @@ import 'package:bloriq/game/bloriq_game.dart';
 import 'package:bloriq/main.dart';
 import 'package:bloriq/progress/progress_repository.dart';
 import 'package:bloriq/progression/progression_repository.dart';
-import 'package:bloriq/world2/world2_catalog.dart';
+import 'package:bloriq/world/world_catalog.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -60,23 +60,23 @@ void main() {
   setUp(rootBundle.clear);
 
   test('the lighthouse opens only with all five world 1 constellations', () {
-    expect(World2.isUnlocked({1, 2, 3, 4}), false);
-    expect(World2.isUnlocked({1, 2, 3, 4, 5}), true);
-    expect(World2.isUnlocked({2, 3, 4, 5, 6}), false);
-    expect(World2.globalChapter(1), 6);
-    expect(World2.globalChapter(5), 10);
+    expect(Worlds.isUnlocked(2, {1, 2, 3, 4}), false);
+    expect(Worlds.isUnlocked(2, {1, 2, 3, 4, 5}), true);
+    expect(Worlds.isUnlocked(2, {2, 3, 4, 5, 6}), false);
+    expect(Worlds.globalChapter(2, 1), 6);
+    expect(Worlds.globalChapter(2, 5), 10);
   });
 
   test('the world 2 story has 5 chapters, 25 spirits and constellations', () {
-    final story = World2Story.fromJson(
-      jsonDecode(File(World2.storyAsset).readAsStringSync())
-          as Map<String, dynamic>,
+    final story = WorldStory.parse(
+      File('assets/story/world2.json').readAsStringSync(),
+      2,
     );
     expect(story.chapters.map((c) => c.globalChapter), [6, 7, 8, 9, 10]);
     expect(story.spirits.map((s) => s.levelId).toSet(), hasLength(25));
     expect(story.forLevel(105)!.guardian, true);
     expect(story.forLevel(126), isNull);
-    for (final constellation in World2Constellations.all) {
+    for (final constellation in story.chapters.map((c) => c.stars)) {
       expect(constellation.nodes, hasLength(5));
       for (final (a, b) in constellation.edges) {
         expect(a, inInclusiveRange(0, 4));
@@ -95,7 +95,7 @@ void main() {
     await _seed({1, 2, 3, 4});
     await tester.pumpWidget(const BloriqApp());
     await waitForHome(tester);
-    expect(find.byKey(const ValueKey('world2-entry')), findsNothing);
+    expect(find.byKey(const ValueKey('world-entry')), findsNothing);
   });
 
   testWidgets(
@@ -104,19 +104,19 @@ void main() {
       await _seed({1, 2, 3, 4, 5});
       await tester.pumpWidget(const BloriqApp());
       await waitForHome(tester);
-      final entry = find.byKey(const ValueKey('world2-entry'));
+      final entry = find.byKey(const ValueKey('world-entry'));
       expect(entry, findsOneWidget);
       await tapVisible(tester, entry);
       await tester.pump(const Duration(milliseconds: 400));
 
       // 지도: 첫 스테이지만 열려 있다.
-      final second = find.byKey(const ValueKey('world2-stage-102'));
+      final second = find.byKey(const ValueKey('world-stage-102'));
       expect(tester.widget<InkWell>(second).onTap, isNull);
-      await tapVisible(tester, find.byKey(const ValueKey('world2-continue')));
+      await tapVisible(tester, find.byKey(const ValueKey('world-continue')));
       await tester.pump(const Duration(milliseconds: 400));
 
       final controller = _game(tester).controller;
-      expect(controller.state.level.id, World2.firstLevelId);
+      expect(controller.state.level.id, Worlds.firstLevelId(2));
       // 첫 장은 달꽃 도약만 연다. 나머지 권능은 막대에 나오지 않는다.
       expect(controller.state.powers, {PuzzlePower.moonflowerLeap});
       expect(
@@ -139,7 +139,7 @@ void main() {
       await tester.pump();
 
       final progress = await ProgressRepository.load();
-      final record = progress.forLevel(World2.firstLevelId);
+      final record = progress.forLevel(Worlds.firstLevelId(2));
       expect(record?.bestStars, 3);
       final progression = await ProgressionRepository.load();
       expect(progression.xp, greaterThan(0));

@@ -36,6 +36,7 @@ flutter:
     - assets/art/moon_garden/
     - assets/story/season1.json
     - assets/story/world2.json
+    - assets/worlds/saga.json
     - assets/fonts/Jua-OFL.txt
     - assets/fonts/NanumGothic-OFL.txt
     - assets/fonts/GowunDodum-OFL.txt

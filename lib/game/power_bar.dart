@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../design/game_theme.dart';
 import '../domain/puzzle.dart';
-import '../world2/world2_catalog.dart';
-import '../world2/world2_progress.dart';
+import '../world/world_catalog.dart';
+import '../world/world_progress.dart';
 
-/// 월드 2 보드 위의 작은 권능 막대. 권능을 고른 뒤 블록을 밀면 그 권능으로
+/// 확장 세계 보드 위의 작은 권능 막대. 권능을 고른 뒤 블록을 밀면 그 권능으로
 /// 움직인다. 한 스테이지에 한 번씩이며, 다시 누르면 선택을 취소한다.
 class PowerBar extends StatelessWidget {
   const PowerBar({
@@ -44,7 +44,7 @@ class PowerBar extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        for (final power in World2.boardPowers)
+        for (final power in Worlds.boardPowers)
           if (stage?.contains(power) ?? true)
             Flexible(
               child: Padding(

@@ -18,8 +18,9 @@ import 'journey_panel.dart';
 import 'level_picker.dart';
 import '../constellation/constellation_state.dart';
 import 'play_context.dart';
-import '../world2/world2_map.dart';
-import '../world2/world2_text.dart';
+import '../world/saga_map.dart';
+import '../world/world_map.dart';
+import '../world/world_text.dart';
 import '../daily/daily_panel.dart';
 
 class AppEntry extends StatefulWidget {
@@ -187,20 +188,48 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _openWorld2() async {
+  Future<void> _openWorld(int world) async {
     final session = _session;
-    if (session == null || _opening || _choosing || !session.world2Unlocked) {
+    if (session == null ||
+        _opening ||
+        _choosing ||
+        world < 2 ||
+        !session.worldUnlocked(world)) {
       return;
     }
     _choosing = true;
     try {
-      final id = await showWorld2Map(context, session, widget.settings);
+      final id = await showWorldMap(context, session, world);
       if (id != null && mounted) {
-        await _open(id, play: const PlayContext.world2());
+        await _open(id, play: PlayContext.world(world));
       }
     } finally {
       _choosing = false;
       if (mounted) setState(() {});
+    }
+  }
+
+  /// 빛길 지도에서 고른 세계로 간다. 세계 1은 스테이지 선택을 연다.
+  Future<void> _openSaga() async {
+    final session = _session;
+    if (session == null || session.saga == null || _opening || _choosing) {
+      return;
+    }
+    _choosing = true;
+    int? world;
+    try {
+      world = await showSagaMap(context, session);
+    } finally {
+      _choosing = false;
+    }
+    if (!mounted || world == null) {
+      if (mounted) setState(() {});
+      return;
+    }
+    if (world == 1) {
+      await _chooseLevel();
+    } else {
+      await _openWorld(world);
     }
   }
 
@@ -472,6 +501,48 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     ),
   );
 
+  /// 지금 갈 확장 세계 입구와 빛길 지도 버튼.
+  Widget _worldRow(AppLocalizations t, GameSession session) {
+    final current = session.currentExpansionWorld;
+    final saga = session.saga!;
+    final sagaButton = current == null
+        ? FilledButton.tonalIcon(
+            key: const ValueKey('saga-map'),
+            style: FilledButton.styleFrom(minimumSize: const Size(48, 44)),
+            onPressed: _opening ? null : _openSaga,
+            icon: const Icon(Icons.timeline_rounded),
+            label: Text(WorldText.sagaMap.resolve(t.localeName)),
+          )
+        : IconButton.filledTonal(
+            key: const ValueKey('saga-map'),
+            tooltip: WorldText.sagaMap.resolve(t.localeName),
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 44),
+            onPressed: _opening ? null : _openSaga,
+            icon: const Icon(Icons.timeline_rounded),
+          );
+    if (current == null) return Center(child: sagaButton);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Flexible(
+          child: FilledButton.tonalIcon(
+            key: const ValueKey('world-entry'),
+            style: FilledButton.styleFrom(minimumSize: const Size(48, 44)),
+            onPressed: _opening ? null : () => _openWorld(current),
+            icon: const Icon(Icons.light_rounded),
+            label: Text(
+              WorldText.enter(saga.world(current).title).resolve(t.localeName),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+        const SizedBox(width: 6),
+        sagaButton,
+      ],
+    );
+  }
+
   /// 진행 요약 한 줄: 완료 스테이지, 모은 별, 친구.
   Widget _playerStrip(
     AppLocalizations t,
@@ -602,18 +673,11 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
               if (session != null && session.collection.owned.length == 25)
                 Text(t.seasonComplete, textAlign: TextAlign.center),
               // 다섯 별자리를 모두 완성하면 예고 문구 대신 진짜 입구가 열린다.
-              if (session != null && session.world2Unlocked)
+              // 빛길 지도는 늘 곁에 두어 "다음엔 뭐가 있지?"에 답한다.
+              if (session != null && session.saga != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
-                  child: FilledButton.tonalIcon(
-                    key: const ValueKey('world2-entry'),
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size(48, 44),
-                    ),
-                    onPressed: _opening ? null : _openWorld2,
-                    icon: const Icon(Icons.light_rounded),
-                    label: Text(World2Text.enter.resolve(t.localeName)),
-                  ),
+                  child: _worldRow(t, session),
                 )
               else if (session != null &&
                   session.progression.completedChapters.length >= 5)

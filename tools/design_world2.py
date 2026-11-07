@@ -2,7 +2,8 @@
 
 각 슬롯의 목표(최소 이동 수, 판 크기, 기믹, 강조 권능, 권능 필수 여부)에 맞춰
 무작위 판에서 출발해 언덕 오르기로 다듬는다. 결과는 tools/validate_levels.py 의
-check_world2 와 tools/level_audit.py --world2 로 다시 검증한다.
+check_world 와 tools/level_audit.py --world 2 로 다시 검증한다.
+새 세계는 이 파일을 design_worldN.py 로 복사해 SLOTS·id·world 번호만 바꾼다(docs/SAGA.md).
 
     python3 -m tools.design_world2            # 전체 25개 생성 → assets/levels/world2.json
     python3 -m tools.design_world2 --only 7   # 7번째 슬롯만 다시 생성해 교체

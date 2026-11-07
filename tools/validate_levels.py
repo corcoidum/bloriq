@@ -5,12 +5,13 @@ import json
 from pathlib import Path
 from typing import Any
 
-LEVELS_FILE = Path(__file__).resolve().parents[1] / 'assets/levels/levels.json'
-WORLD2_FILE = Path(__file__).resolve().parents[1] / 'assets/levels/world2.json'
+ROOT = Path(__file__).resolve().parents[1]
+LEVELS_FILE = ROOT / 'assets/levels/levels.json'
+SAGA_FILE = ROOT / 'assets/worlds/saga.json'
 Position = tuple[int, int]
 Move = tuple[str, Position, Position] | tuple[str, Position, Position, str]
 
-# 월드 2 권능. lib/domain/puzzle.dart 의 PuzzlePower 순서·규칙과 같다.
+# 확장 세계 권능. lib/domain/puzzle.dart 의 PuzzlePower 순서·규칙과 같다.
 LEAP, SWAP, SEAL, WIND = 'moonflower_leap', 'light_swap', 'seal', 'wind'
 POWERS = (LEAP, SWAP, SEAL, WIND)
 DIRECTIONS = ((1, 0), (-1, 0), (0, 1), (0, -1))
@@ -230,10 +231,26 @@ def power_profile(level: dict, max_states: int = 2_000_000) -> dict:
             'requiredPowers': required, 'solution': best}
 
 
-def check_world2(levels: list[dict]) -> None:
-    assert [level['id'] for level in levels] == list(range(101, 101 + len(levels)))
+def first_level_id(world: int) -> int:
+    """lib/world/world_catalog.dart 의 Worlds.firstLevelId 와 같다."""
+    return (world - 1) * 100 + 1
+
+
+def expansion_worlds() -> list[tuple[int, Path]]:
+    """saga.json 에서 공개된 확장 세계(세계 2부터)의 번호와 레벨 파일."""
+    if not SAGA_FILE.exists():
+        return []
+    saga = json.loads(SAGA_FILE.read_text(encoding='utf-8'))
+    return [(world['number'], ROOT / world['levels']) for world in saga['worlds']
+            if world['status'] == 'playable' and world['number'] >= 2]
+
+
+def check_world(levels: list[dict], world: int) -> None:
+    first = first_level_id(world)
+    assert len(levels) == 25, f'World {world} needs 25 stages'
+    assert [level['id'] for level in levels] == list(range(first, first + len(levels)))
     for level in levels:
-        assert level.get('world') == 2
+        assert level.get('world') == world
         assert 4 <= level['boardWidth'] <= 5 and 4 <= level['boardHeight'] <= 5
         profile = power_profile(level)
         for key in ('minimumMoves', 'bareHandedMoves', 'requiredPowers'):
@@ -258,10 +275,10 @@ def check_world2(levels: list[dict]) -> None:
                 f"Level {level['id']}: {kind} has no effect on optimum")
         bare = profile['bareHandedMoves']
         types = ', '.join(rule['type'] for rule in level['specialRules']) or 'basic'
-        print(f"World2 {level['id']}: minimum={profile['minimumMoves']}, bare={bare}, "
+        print(f"World{world} {level['id']}: minimum={profile['minimumMoves']}, bare={bare}, "
               f"powers={','.join(powers)}, required={','.join(profile['requiredPowers']) or '-'}, "
               f"featured={featured}, {types}")
-    print(f'{len(levels)}/{len(levels)} world 2 levels valid; recorded power profiles match BFS.')
+    print(f'{len(levels)}/{len(levels)} world {world} levels valid; recorded power profiles match BFS.')
 
 
 def main() -> None:
@@ -283,8 +300,8 @@ def main() -> None:
         types = ', '.join(rule['type'] for rule in level['specialRules']) or 'basic'
         print(f"Level {level['id']}: minimum={len(moves)}, {types}")
     print(f'{len(levels)}/{len(levels)} levels valid and solvable; recorded minima match BFS.')
-    if WORLD2_FILE.exists():
-        check_world2(json.loads(WORLD2_FILE.read_text(encoding='utf-8')))
+    for world, path in expansion_worlds():
+        check_world(json.loads(path.read_text(encoding='utf-8')), world)
 
 
 if __name__ == '__main__':

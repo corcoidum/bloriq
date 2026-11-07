@@ -41,10 +41,11 @@ import 'constellation/constellation_atlas.dart';
 import 'constellation/constellation_state.dart';
 import 'constellation/victory_constellation.dart';
 import 'game/power_bar.dart';
-import 'world2/world2_progress.dart';
-import 'world2/world2_text.dart';
-import 'world2/world2_catalog.dart';
-import 'world2/world2_map.dart';
+import 'world/saga_map.dart';
+import 'world/world_catalog.dart';
+import 'world/world_map.dart';
+import 'world/world_progress.dart';
+import 'world/world_text.dart';
 
 void main() => runApp(const BloriqApp());
 
@@ -189,21 +190,23 @@ class _GameScreenState extends State<GameScreen>
   bool _starlightUsed = false;
   bool _starlightFreeUsed = false;
 
-  /// 월드 2: 권능 막대에서 고른 권능. 다음 밀기가 이 권능으로 움직인다.
+  /// 확장 세계: 권능 막대에서 고른 권능. 다음 밀기가 이 권능으로 움직인다.
   PuzzlePower? _armedPower;
 
-  /// 월드 2 별자리를 저장 전에 떠 둔다.
-  World2Atlas? _world2Before;
+  /// 확장 세계 별자리를 저장 전에 떠 둔다.
+  WorldAtlas? _worldBefore;
 
-  bool get _world2 => widget.play.world == 2;
+  /// 세계 2부터는 [LoadedWorld] 데이터와 권능 막대를 쓴다.
+  bool get _expansion => widget.play.world >= 2;
+  LoadedWorld? get _world => widget.session.world(widget.play.world);
 
-  /// 월드 2에서 쓸 수 있는 권능(성장 기록 기준). 월드 1은 늘 비어 있다.
-  Set<PuzzlePower> get _ownedPowers => _world2
+  /// 확장 세계에서 쓸 수 있는 권능(성장 기록 기준). 세계 1은 늘 비어 있다.
+  Set<PuzzlePower> get _ownedPowers => _expansion
       ? ownedBoardPowers(widget.session.progression.hasPower)
       : const {};
 
   /// 이 스테이지에서 실제로 쓸 수 있는 권능: 가진 권능 중 스테이지가 여는 것.
-  Set<PuzzlePower> _stagePowers(Level level) => level.world == 2
+  Set<PuzzlePower> _stagePowers(Level level) => level.world >= 2
       ? _ownedPowers.intersection(level.availablePowers)
       : const {};
 
@@ -230,8 +233,8 @@ class _GameScreenState extends State<GameScreen>
     WidgetsBinding.instance.addObserver(this);
     _loaded = widget.play.level != null
         ? [widget.play.level!]
-        : _world2
-        ? widget.session.world2Levels
+        : _expansion
+        ? _world!.levels
         : widget.session.levels;
     if (widget.play.guided) {
       _tutorial = EchoTutorial();
@@ -349,7 +352,9 @@ class _GameScreenState extends State<GameScreen>
     _atlasBefore = widget.play.mode == PlayMode.campaign
         ? ConstellationAtlas.derive(widget.session.levels, _progress!)
         : null;
-    _world2Before = _world2 ? widget.session.world2Atlas : null;
+    _worldBefore = _expansion
+        ? widget.session.worldAtlas(widget.play.world)
+        : null;
     _armedPower = null;
     final chapter = _atlasBefore?.forLevel(state.level.id);
     final lightsStar = chapter != null && !chapter.isLit(state.level.id);
@@ -492,7 +497,7 @@ class _GameScreenState extends State<GameScreen>
         ?.bestStars;
     final usedStarlight = _starlightUsed;
     final usedPower = controller.usedPower;
-    final world2Before = _world2Before;
+    final worldBefore = _worldBefore;
     final result = await _progress!.recordCompletion(
       levelId: state.level.id,
       revision: state.level.revision,
@@ -518,12 +523,12 @@ class _GameScreenState extends State<GameScreen>
     final event = _constellation;
     final chapter = _atlasAfter?.forLevel(state.level.id);
     final companion = widget.session.collection.companion;
-    final world2After = world2Before == null
+    final worldAfter = worldBefore == null
         ? null
-        : widget.session.world2Atlas;
-    final world2Event = world2Before == null || world2After == null
+        : widget.session.worldAtlas(worldBefore.world);
+    final worldEvent = worldBefore == null || worldAfter == null
         ? null
-        : World2Atlas.diff(world2Before, world2After, state.level.id);
+        : WorldAtlas.diff(worldBefore, worldAfter, state.level.id);
     final reward = await widget.session.progression.recordClear(
       levelKey: '${state.level.id}:${state.level.revision}',
       stars: starRating(
@@ -534,18 +539,18 @@ class _GameScreenState extends State<GameScreen>
       usedStarlightPath: usedStarlight,
       companionId: companion?.id,
       companionFamily: companion?.family,
-      constellationCompletedChapter: world2Event != null
-          ? world2Event.completed
+      constellationCompletedChapter: worldEvent != null
+          ? worldEvent.completed
           : event?.chapterCompleted == true
           ? chapter?.definition.chapter
           : null,
-      constellationGoldenChapter: world2Event != null
-          ? world2Event.golden
+      constellationGoldenChapter: worldEvent != null
+          ? worldEvent.golden
           : event?.becameGolden == true
           ? chapter?.definition.chapter
           : null,
-      bareHandedClear: state.level.world == 2
-          ? isWorld2BareHanded(
+      bareHandedClear: state.level.world >= 2
+          ? isBareHandedClear(
               level: state.level,
               moves: state.moves,
               usedPower: usedPower,
@@ -598,7 +603,7 @@ class _GameScreenState extends State<GameScreen>
     if (move.power case final power?) {
       messenger.showSnackBar(
         SnackBar(
-          content: Text(World2Text.hintPower(power).resolve(t.localeName)),
+          content: Text(WorldText.hintPower(power).resolve(t.localeName)),
         ),
       );
     }
@@ -927,8 +932,8 @@ class _GameScreenState extends State<GameScreen>
 
   Future<void> _pickLevel() async {
     final id = await _withModal<int>(
-      () => _world2
-          ? showWorld2Map(context, widget.session, widget.settings)
+      () => _expansion
+          ? showWorldMap(context, widget.session, widget.play.world)
           : showLevelPicker(
               context,
               widget.session,
@@ -940,9 +945,9 @@ class _GameScreenState extends State<GameScreen>
     if (id != null && mounted && index >= 0) _select(index);
   }
 
-  /// 화면에 보이는 스테이지 번호. 월드 2는 1..25로 센다.
+  /// 화면에 보이는 스테이지 번호. 확장 세계는 세계 안에서 1..25로 센다.
   int _displayNumber(Level level) =>
-      level.world == 2 ? level.id - World2.firstLevelId + 1 : level.id;
+      level.world >= 2 ? Worlds.stageNumber(level.id) : level.id;
 
   Future<void> _openJourney() async {
     final id = await _withModal<int>(
@@ -1144,22 +1149,42 @@ class _GameScreenState extends State<GameScreen>
       textStyle: GameTypography.label.copyWith(fontSize: 15.5),
     );
     final friend = _discovery;
+    // 확장 세계의 마지막 스테이지까지 모두 마치면 처음으로 돌아가는 대신
+    // 빛길 지도에서 다음 이야기를 보여 준다.
+    final worldFinished =
+        _expansion &&
+        widget.play.mode == PlayMode.campaign &&
+        _index + 1 == _loaded.length &&
+        widget.session.saga != null &&
+        Worlds.isComplete(
+          widget.play.world,
+          widget.session.progression.completedChapters,
+        );
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         FilledButton.icon(
+          key: const ValueKey('result-next'),
           style: FilledButton.styleFrom(
             minimumSize: const Size(0, 54),
             textStyle: GameTypography.label.copyWith(fontSize: 18),
           ),
           onPressed: () => widget.play.mode != PlayMode.campaign
               ? Navigator.pop(context)
+              : worldFinished
+              ? _withModal<int>(
+                  () => showSagaMap(context, widget.session, selectable: false),
+                )
               : _select(_index + 1 < _loaded.length ? _index + 1 : 0),
-          icon: const Icon(Icons.arrow_forward),
+          icon: Icon(
+            worldFinished ? Icons.auto_awesome_rounded : Icons.arrow_forward,
+          ),
           label: Text(
             widget.play.mode != PlayMode.campaign
                 ? t.close
+                : worldFinished
+                ? WorldText.nextStory.resolve(t.localeName)
                 : _index + 1 < _loaded.length
                 ? t.next
                 : t.firstLevel,
@@ -1259,7 +1284,7 @@ class _GameScreenState extends State<GameScreen>
     }
     if (_hasNoMoves(controller)) return [note(t.noMoves)];
     if (_armedPower case final power?) {
-      return [note(World2Text.armed(power).resolve(t.localeName))];
+      return [note(WorldText.armed(power).resolve(t.localeName))];
     }
     final gate = state.level.echoGate == null
         ? null
@@ -1491,9 +1516,10 @@ class _GameScreenState extends State<GameScreen>
                                                   ),
                                             style: labelStyle,
                                           ),
-                                          if (widget.session.world2Story
-                                                  ?.forLevel(_loaded[_index].id)
-                                              case final spirit? when _world2)
+                                          if (_world?.story.forLevel(
+                                                _loaded[_index].id,
+                                              )
+                                              case final spirit?)
                                             Flexible(
                                               child: Text(
                                                 ' · ${spirit.levelTitle.inLocale(t.localeName)}',
@@ -1577,7 +1603,7 @@ class _GameScreenState extends State<GameScreen>
                                   ),
                                 ),
                                 SizedBox(height: compact ? 4 : 8),
-                                if (_world2 && _ownedPowers.isNotEmpty) ...[
+                                if (_expansion && _ownedPowers.isNotEmpty) ...[
                                   PowerBar(
                                     owned: _ownedPowers,
                                     stage:

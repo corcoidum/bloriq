@@ -10,13 +10,14 @@ class PlayContext {
       challenge = null,
       world = 1;
 
-  /// 구름바다 등대 캠페인. 기록은 월드 1과 같은 저장소에 레벨 101..125로 남는다.
-  const PlayContext.world2()
-    : mode = PlayMode.campaign,
+  /// 확장 세계 캠페인. 기록은 세계 1과 같은 저장소에 남는다
+  /// (세계 2 = 레벨 101..125, 세계 3 = 201..225 …).
+  const PlayContext.world(this.world)
+    : assert(world >= 2),
+      mode = PlayMode.campaign,
       guided = false,
       level = null,
-      challenge = null,
-      world = 2;
+      challenge = null;
   const PlayContext.tutorialReplay(this.level)
     : mode = PlayMode.tutorialReplay,
       guided = true,
@@ -33,7 +34,7 @@ class PlayContext {
   final Level? level;
   final DailyChallenge? challenge;
 
-  /// 1 = 달빛 숲, 2 = 구름바다 등대.
+  /// 세계 번호. 1 = 달빛 숲, 2 = 구름바다 등대 … (assets/worlds/saga.json).
   final int world;
   String? get dailyDate => challenge?.date;
 }

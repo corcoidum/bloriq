@@ -3,17 +3,16 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:bloriq/domain/puzzle.dart';
-import 'package:bloriq/world2/world2_catalog.dart';
-import 'package:bloriq/world2/world2_progress.dart';
+import 'package:bloriq/world/world_catalog.dart';
+import 'package:bloriq/world/world_progress.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// tools/validate_levels.py (check_world2) 가 기록한 권능 프로필을 Dart
+/// tools/validate_levels.py (check_world) 가 기록한 권능 프로필을 Dart
 /// solver 가 그대로 재현하는지 확인한다. 두 solver 가 같은 규칙을 쓴다는 증거다.
 void main() {
-  final levels = World2.parseLevels(
-    File(World2.levelsAsset).readAsStringSync(),
-  );
-  final raw = jsonDecode(File(World2.levelsAsset).readAsStringSync()) as List;
+  const asset = 'assets/levels/world2.json';
+  final levels = Worlds.parseLevels(File(asset).readAsStringSync(), 2);
+  final raw = jsonDecode(File(asset).readAsStringSync()) as List;
   const solver = PuzzleSolver(maxStates: 2000000);
 
   test('25 stages on 4x4–5x5 boards with a rising curve', () {
@@ -141,7 +140,7 @@ void main() {
   test('bare-handed star needs no powers and the bare optimum', () {
     final bareLevel = levels.firstWhere((l) => l.bareHandedMoves != null);
     expect(
-      isWorld2BareHanded(
+      isBareHandedClear(
         level: bareLevel,
         moves: bareLevel.bareHandedMoves!,
         usedPower: false,
@@ -150,7 +149,7 @@ void main() {
       true,
     );
     expect(
-      isWorld2BareHanded(
+      isBareHandedClear(
         level: bareLevel,
         moves: bareLevel.bareHandedMoves!,
         usedPower: true,
@@ -160,7 +159,7 @@ void main() {
     );
     final required = levels.firstWhere((l) => l.bareHandedMoves == null);
     expect(
-      isWorld2BareHanded(
+      isBareHandedClear(
         level: required,
         moves: 99,
         usedPower: false,

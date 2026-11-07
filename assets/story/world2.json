@@ -9,15 +9,6 @@
     "ko": "다섯 별자리가 모두 빛나자 별문 너머로 구름바다가 열렸어. 아스테르가 속삭였어. \"등대에 불을 켤 수 있는 건 처음부터 너뿐이었어.\"",
     "en": "When all five constellations shone, the cloud sea opened beyond the star gate. Aster whispered, \"From the start, only you could light the lighthouse.\""
   },
-  "unlockRequirement": {
-    "world1Chapters": [
-      1,
-      2,
-      3,
-      4,
-      5
-    ]
-  },
   "chapters": [
     {
       "number": 1,
@@ -35,6 +26,21 @@
       "constellation": {
         "ko": "구름다리자리",
         "en": "The Cloud Bridge"
+      },
+      "stars": {
+        "nodes": [
+          [0.12, 0.72],
+          [0.28, 0.4],
+          [0.5, 0.26],
+          [0.72, 0.4],
+          [0.88, 0.72]
+        ],
+        "edges": [
+          [0, 1],
+          [1, 2],
+          [2, 3],
+          [3, 4]
+        ]
       },
       "intro": {
         "ko": "아스테르가 말했어. 등대는 구름바다 건너에 있다고. 끊긴 계단 사이로 바위가 떠 있었어.",
@@ -66,6 +72,23 @@
         "ko": "쌍등불자리",
         "en": "The Twin Lanterns"
       },
+      "stars": {
+        "nodes": [
+          [0.22, 0.24],
+          [0.22, 0.7],
+          [0.78, 0.24],
+          [0.78, 0.7],
+          [0.5, 0.46]
+        ],
+        "edges": [
+          [0, 1],
+          [2, 3],
+          [0, 4],
+          [4, 3],
+          [1, 4],
+          [4, 2]
+        ]
+      },
       "intro": {
         "ko": "항구의 배들은 모두 자기 그림자와 자리를 바꾼 채 멈춰 있었어.",
         "en": "Every boat in the harbor had traded places with its own shadow and stopped."
@@ -95,6 +118,23 @@
       "constellation": {
         "ko": "자물쇠별자리",
         "en": "The Keystone"
+      },
+      "stars": {
+        "nodes": [
+          [0.32, 0.4],
+          [0.5, 0.16],
+          [0.68, 0.4],
+          [0.66, 0.78],
+          [0.34, 0.78]
+        ],
+        "edges": [
+          [0, 1],
+          [1, 2],
+          [2, 3],
+          [3, 4],
+          [4, 0],
+          [0, 2]
+        ]
       },
       "intro": {
         "ko": "등대 안쪽 계단은 한 번에 한 칸만 열렸다가 금세 다시 잠겼어.",
@@ -126,6 +166,22 @@
         "ko": "돛자리",
         "en": "The Sail"
       },
+      "stars": {
+        "nodes": [
+          [0.4, 0.82],
+          [0.4, 0.16],
+          [0.8, 0.62],
+          [0.18, 0.82],
+          [0.82, 0.84]
+        ],
+        "edges": [
+          [0, 1],
+          [1, 2],
+          [2, 0],
+          [3, 0],
+          [0, 4]
+        ]
+      },
       "intro": {
         "ko": "등대 꼭대기 아래 갑판에서는 바람이 한 방향으로만 불었어.",
         "en": "On the deck below the lamp room, the wind blew in only one direction."
@@ -155,6 +211,23 @@
       "constellation": {
         "ko": "큰등대자리",
         "en": "The Great Beacon"
+      },
+      "stars": {
+        "nodes": [
+          [0.32, 0.86],
+          [0.68, 0.86],
+          [0.62, 0.4],
+          [0.38, 0.4],
+          [0.5, 0.12]
+        ],
+        "edges": [
+          [0, 1],
+          [1, 2],
+          [2, 3],
+          [3, 0],
+          [3, 4],
+          [4, 2]
+        ]
       },
       "intro": {
         "ko": "꼭대기의 큰 등불 안에는 작은 별 모양 자리 하나가 비어 있었어. 리크와 꼭 같은 모양으로.",

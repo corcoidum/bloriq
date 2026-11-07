@@ -5,35 +5,36 @@ import '../constellation/constellation_painter.dart';
 import '../design/game_theme.dart';
 import '../design/keep_all_text.dart';
 import '../game/power_bar.dart';
-import '../settings/game_settings.dart';
-import 'world2_catalog.dart';
-import 'world2_progress.dart';
-import 'world2_text.dart';
+import '../world/saga.dart';
+import 'world_catalog.dart';
+import 'world_progress.dart';
+import 'world_text.dart';
 
-/// 구름바다 등대 지도. 고른 스테이지 id를 돌려준다(닫으면 null).
-Future<int?> showWorld2Map(
+/// 확장 세계 지도. 고른 스테이지 id를 돌려준다(닫으면 null).
+Future<int?> showWorldMap(
   BuildContext context,
   GameSession session,
-  GameSettings settings,
+  int world,
 ) => Navigator.of(context).push<int>(
   MaterialPageRoute(
     fullscreenDialog: true,
-    builder: (_) => World2Map(session: session),
+    builder: (_) => WorldMap(session: session, world: world),
   ),
 );
 
-class World2Map extends StatefulWidget {
-  const World2Map({super.key, required this.session});
+class WorldMap extends StatefulWidget {
+  const WorldMap({super.key, required this.session, required this.world});
   final GameSession session;
+  final int world;
 
   @override
-  State<World2Map> createState() => _World2MapState();
+  State<WorldMap> createState() => _WorldMapState();
 }
 
-class _World2MapState extends State<World2Map> {
-  late final World2Atlas _atlas = widget.session.world2Atlas!;
+class _WorldMapState extends State<WorldMap> {
+  late final WorldAtlas _atlas = widget.session.worldAtlas(widget.world)!;
   late final PageController _pages = PageController(
-    initialPage: World2.chapterOf(_atlas.nextLevelId) - 1,
+    initialPage: Worlds.chapterOf(_atlas.nextLevelId) - 1,
   );
 
   @override
@@ -46,7 +47,8 @@ class _World2MapState extends State<World2Map> {
   Widget build(BuildContext context) {
     final colors = GameTheme.colorsOf(context);
     final lang = Localizations.localeOf(context).languageCode;
-    final story = widget.session.world2Story!;
+    final story = widget.session.world(widget.world)!.story;
+    final next = widget.session.saga?.next(widget.world);
     return Scaffold(
       backgroundColor: colors.background,
       appBar: AppBar(
@@ -56,8 +58,8 @@ class _World2MapState extends State<World2Map> {
           style: GameTypography.reward.copyWith(color: colors.rewardInk),
         ),
         leading: IconButton(
-          key: const ValueKey('world2-close'),
-          tooltip: World2Text.close.resolve(lang),
+          key: const ValueKey('world-close'),
+          tooltip: WorldText.close.resolve(lang),
           icon: const Icon(Icons.close_rounded),
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -85,19 +87,25 @@ class _World2MapState extends State<World2Map> {
                 ],
               ),
             ),
+            // 세계를 다 마치면 다음 세계를 한 줄로 예고한다.
+            if (_atlas.complete && next != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                child: _NextStory(world: next, lang: lang),
+              ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
               child: FilledButton.icon(
-                key: const ValueKey('world2-continue'),
+                key: const ValueKey('world-continue'),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
                 ),
                 onPressed: () => Navigator.of(context).pop(_atlas.nextLevelId),
                 icon: const Icon(Icons.play_arrow_rounded),
                 label: Text(
-                  '${World2Text.play.resolve(lang)} · '
-                  '${World2Text.stage.resolve(lang)} '
-                  '${_atlas.nextLevelId - World2.firstLevelId + 1}',
+                  '${WorldText.play.resolve(lang)} · '
+                  '${WorldText.stage.resolve(lang)} '
+                  '${Worlds.stageNumber(_atlas.nextLevelId)}',
                 ),
               ),
             ),
@@ -110,7 +118,7 @@ class _World2MapState extends State<World2Map> {
 
 class _ChapterPage extends StatelessWidget {
   const _ChapterPage({required this.chapter, required this.lang});
-  final World2ChapterView chapter;
+  final WorldChapterView chapter;
   final String lang;
 
   @override
@@ -170,7 +178,7 @@ class _ChapterPage extends StatelessWidget {
           ),
           KeepAllText(
             !chapter.unlocked
-                ? World2Text.chapterLocked.resolve(lang)
+                ? WorldText.chapterLocked.resolve(lang)
                 : chapter.complete
                 ? '${info.endingTitle.inLocale(lang)} — '
                       '${info.ending.inLocale(lang)}'
@@ -189,29 +197,29 @@ class _ChapterPage extends StatelessWidget {
 
 class _StageTile extends StatelessWidget {
   const _StageTile({required this.stage, required this.lang});
-  final World2StageView stage;
+  final WorldStageView stage;
   final String lang;
 
   @override
   Widget build(BuildContext context) {
     final colors = GameTheme.colorsOf(context);
-    final number = stage.level.id - World2.firstLevelId + 1;
+    final number = Worlds.stageNumber(stage.level.id);
     final spirit = stage.spirit;
     final title = stage.cleared
         ? '${spirit.levelTitle.inLocale(lang)} · ${spirit.name.inLocale(lang)}'
         : stage.unlocked
         ? spirit.levelTitle.inLocale(lang)
-        : World2Text.lockedStage.resolve(lang);
+        : WorldText.lockedStage.resolve(lang);
     final tag = stage.level.requiredPowers.isNotEmpty
-        ? World2Text.requiresPower.resolve(lang)
-        : World2Text.bareHandedPossible.resolve(lang);
+        ? WorldText.requiresPower.resolve(lang)
+        : WorldText.bareHandedPossible.resolve(lang);
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Material(
         color: colors.surface,
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
-          key: ValueKey('world2-stage-${stage.level.id}'),
+          key: ValueKey('world-stage-${stage.level.id}'),
           borderRadius: BorderRadius.circular(14),
           onTap: stage.unlocked
               ? () => Navigator.of(context).pop(stage.level.id)
@@ -278,6 +286,46 @@ class _StageTile extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// 다 마친 세계 지도 아래에 붙는 다음 이야기 예고.
+class _NextStory extends StatelessWidget {
+  const _NextStory({required this.world, required this.lang});
+  final SagaWorld world;
+  final String lang;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = GameTheme.colorsOf(context);
+    final status = world.playable
+        ? world.subtitle.inLocale(lang)
+        : WorldText.comingSoon.resolve(lang);
+    return Container(
+      key: const ValueKey('world-next-story'),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: colors.reward.withValues(alpha: .12),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colors.reward.withValues(alpha: .4)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            '${WorldText.nextStory.resolve(lang)} · '
+            '${world.title.inLocale(lang)} · $status',
+            textAlign: TextAlign.center,
+            style: GameTypography.label.copyWith(color: colors.rewardInk),
+          ),
+          const SizedBox(height: 2),
+          KeepAllText(
+            world.teaser.inLocale(lang),
+            textAlign: TextAlign.center,
+            style: GameTypography.body.copyWith(fontSize: 13.5),
+          ),
+        ],
       ),
     );
   }
