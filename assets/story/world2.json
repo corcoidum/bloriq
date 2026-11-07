@@ -1,0 +1,1000 @@
+{
+  "version": 1,
+  "worldId": "w2",
+  "title": {
+    "ko": "구름바다 등대",
+    "en": "Cloud-Sea Lighthouse"
+  },
+  "prologue": {
+    "ko": "다섯 별자리가 모두 빛나자 별문 너머로 구름바다가 열렸어. 아스테르가 속삭였어. \"등대에 불을 켤 수 있는 건 처음부터 너뿐이었어.\"",
+    "en": "When all five constellations shone, the cloud sea opened beyond the star gate. Aster whispered, \"From the start, only you could light the lighthouse.\""
+  },
+  "unlockRequirement": {
+    "world1Chapters": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ]
+  },
+  "chapters": [
+    {
+      "number": 1,
+      "globalChapter": 6,
+      "power": "moonflower_leap",
+      "family": "mist",
+      "name": {
+        "ko": "구름 계단",
+        "en": "Cloud Stairs"
+      },
+      "familyName": {
+        "ko": "안개",
+        "en": "Mist"
+      },
+      "constellation": {
+        "ko": "구름다리자리",
+        "en": "The Cloud Bridge"
+      },
+      "intro": {
+        "ko": "아스테르가 말했어. 등대는 구름바다 건너에 있다고. 끊긴 계단 사이로 바위가 떠 있었어.",
+        "en": "Aster said the lighthouse stood beyond the cloud sea. Rocks floated between the broken stairs."
+      },
+      "endingTitle": {
+        "ko": "끊긴 계단의 다리",
+        "en": "A Bridge for Broken Stairs"
+      },
+      "ending": {
+        "ko": "안개 정령들은 계단을 일부러 끊어 두었어. 등대에 함부로 닿지 못하게. 그런데 리크의 발자국에는 계단이 먼저 길을 내주었어.",
+        "en": "The mist spirits had broken the stairs on purpose, so no one could reach the lighthouse. Yet the stairs made way for RIQ’s footprints."
+      }
+    },
+    {
+      "number": 2,
+      "globalChapter": 7,
+      "power": "light_swap",
+      "family": "tide",
+      "name": {
+        "ko": "안개 항구",
+        "en": "Misty Harbor"
+      },
+      "familyName": {
+        "ko": "물결",
+        "en": "Tide"
+      },
+      "constellation": {
+        "ko": "쌍등불자리",
+        "en": "The Twin Lanterns"
+      },
+      "intro": {
+        "ko": "항구의 배들은 모두 자기 그림자와 자리를 바꾼 채 멈춰 있었어.",
+        "en": "Every boat in the harbor had traded places with its own shadow and stopped."
+      },
+      "endingTitle": {
+        "ko": "그림자와 바꾼 자리",
+        "en": "The Place Traded with a Shadow"
+      },
+      "ending": {
+        "ko": "항구지기는 배를 지키려고 그림자를 대신 띄웠어. 진짜 배들은 빛이 돌아오기를 기다리고 있었어.",
+        "en": "The harbor keeper sent the shadows out to sea to keep the boats safe. The real boats were waiting for the light."
+      }
+    },
+    {
+      "number": 3,
+      "globalChapter": 8,
+      "power": "seal",
+      "family": "key",
+      "name": {
+        "ko": "잠긴 나선계단",
+        "en": "The Locked Spiral"
+      },
+      "familyName": {
+        "ko": "열쇠",
+        "en": "Key"
+      },
+      "constellation": {
+        "ko": "자물쇠별자리",
+        "en": "The Keystone"
+      },
+      "intro": {
+        "ko": "등대 안쪽 계단은 한 번에 한 칸만 열렸다가 금세 다시 잠겼어.",
+        "en": "Inside the lighthouse, the spiral stair opened one step at a time and quickly locked again."
+      },
+      "endingTitle": {
+        "ko": "한 턴 더 붙잡은 문",
+        "en": "The Door Held One Turn Longer"
+      },
+      "ending": {
+        "ko": "자물쇠들은 누군가를 가두려던 게 아니었어. 꺼져 가는 불씨가 새어 나가지 않게 붙잡고 있었어.",
+        "en": "The locks were never meant to trap anyone. They were holding in a fading ember so it would not escape."
+      }
+    },
+    {
+      "number": 4,
+      "globalChapter": 9,
+      "power": "wind",
+      "family": "gale",
+      "name": {
+        "ko": "폭풍의 갑판",
+        "en": "The Storm Deck"
+      },
+      "familyName": {
+        "ko": "돌풍",
+        "en": "Gale"
+      },
+      "constellation": {
+        "ko": "돛자리",
+        "en": "The Sail"
+      },
+      "intro": {
+        "ko": "등대 꼭대기 아래 갑판에서는 바람이 한 방향으로만 불었어.",
+        "en": "On the deck below the lamp room, the wind blew in only one direction."
+      },
+      "endingTitle": {
+        "ko": "바람이 돌아온 방향",
+        "en": "Where the Wind Came Home"
+      },
+      "ending": {
+        "ko": "폭풍은 등대를 부수려던 게 아니었어. 꺼진 등불을 다시 켤 첫 별을 데려오려고 계속 불고 있었던 거야.",
+        "en": "The storm was not trying to break the lighthouse. It kept blowing to bring back the first star that could relight the lamp."
+      }
+    },
+    {
+      "number": 5,
+      "globalChapter": 10,
+      "power": null,
+      "family": "beacon",
+      "name": {
+        "ko": "등불의 꼭대기",
+        "en": "The Lantern Crown"
+      },
+      "familyName": {
+        "ko": "등불",
+        "en": "Beacon"
+      },
+      "constellation": {
+        "ko": "큰등대자리",
+        "en": "The Great Beacon"
+      },
+      "intro": {
+        "ko": "꼭대기의 큰 등불 안에는 작은 별 모양 자리 하나가 비어 있었어. 리크와 꼭 같은 모양으로.",
+        "en": "Inside the great lamp at the top was one small, empty star-shaped socket — exactly RIQ’s shape."
+      },
+      "endingTitle": {
+        "ko": "첫 불씨의 귀환",
+        "en": "The First Spark Returns"
+      },
+      "ending": {
+        "ko": "리크는 잊힌 별이 남긴 발자국이 아니었어. 등대의 첫 불씨였어. 친구들이 건넨 다섯 권능이 리크를 여기까지 데려왔고, 구름바다에 다시 빛길이 놓였어.",
+        "en": "RIQ was not just a footprint left by a forgotten star. RIQ was the lighthouse’s first spark. The five powers the friends gave carried RIQ here, and a road of light spread across the cloud sea again."
+      }
+    }
+  ],
+  "spirits": [
+    {
+      "id": "s2-01",
+      "levelId": 101,
+      "chapter": 1,
+      "family": "mist",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "float",
+      "name": {
+        "ko": "뭉게",
+        "en": "Munge"
+      },
+      "levelTitle": {
+        "ko": "구름 계단 첫 칸",
+        "en": "The First Cloud Step"
+      },
+      "appearance": {
+        "ko": "솜뭉치처럼 둥근 몸과 물방울 눈",
+        "en": "A round cotton-puff body with dewdrop eyes"
+      },
+      "personality": {
+        "ko": "느긋하고 잘 웃어요.",
+        "en": "Easygoing and quick to laugh."
+      },
+      "memory": {
+        "ko": "계단이 끊긴 건 길을 잃게 하려는 게 아니었어.",
+        "en": "The stairs were not broken to make anyone lost."
+      },
+      "quote": {
+        "ko": "한 칸쯤은 건너뛰어도 괜찮아.",
+        "en": "It is fine to skip a step."
+      }
+    },
+    {
+      "id": "s2-02",
+      "levelId": 102,
+      "chapter": 1,
+      "family": "mist",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "이슬",
+        "en": "Isle"
+      },
+      "levelTitle": {
+        "ko": "이슬 맺힌 난간",
+        "en": "The Dewy Railing"
+      },
+      "appearance": {
+        "ko": "투명한 이슬 날개와 반짝이는 꼬리",
+        "en": "Clear dew wings and a sparkling tail"
+      },
+      "personality": {
+        "ko": "수줍지만 꼼꼼해요.",
+        "en": "Shy but careful."
+      },
+      "memory": {
+        "ko": "난간마다 리크의 이름이 이슬로 적혀 있었어.",
+        "en": "RIQ’s name was written in dew on every railing."
+      },
+      "quote": {
+        "ko": "조심조심, 그래도 앞으로.",
+        "en": "Carefully, but forward."
+      }
+    },
+    {
+      "id": "s2-03",
+      "levelId": 103,
+      "chapter": 1,
+      "family": "mist",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "wave",
+      "name": {
+        "ko": "포롱",
+        "en": "Porong"
+      },
+      "levelTitle": {
+        "ko": "떠 있는 바위섬",
+        "en": "The Floating Rock Isle"
+      },
+      "appearance": {
+        "ko": "바위에 앉은 작은 새 모양 구름",
+        "en": "A tiny bird-shaped cloud perched on a rock"
+      },
+      "personality": {
+        "ko": "장난스럽고 용감해요.",
+        "en": "Playful and brave."
+      },
+      "memory": {
+        "ko": "바위를 뛰어넘는 법은 달꽃이 가르쳐 줬어.",
+        "en": "The moonflower taught us how to leap the rocks."
+      },
+      "quote": {
+        "ko": "폴짝! 바위는 발판이야.",
+        "en": "Hop! Rocks are stepping stones."
+      }
+    },
+    {
+      "id": "s2-04",
+      "levelId": 104,
+      "chapter": 1,
+      "family": "mist",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "tilt",
+      "name": {
+        "ko": "안개솜",
+        "en": "Mistuft"
+      },
+      "levelTitle": {
+        "ko": "흐린 층계참",
+        "en": "The Hazy Landing"
+      },
+      "appearance": {
+        "ko": "길게 늘어진 안개 목도리",
+        "en": "A long trailing scarf of mist"
+      },
+      "personality": {
+        "ko": "걱정이 많지만 다정해요.",
+        "en": "A worrier, but kind."
+      },
+      "memory": {
+        "ko": "안개는 등대를 숨기려고 일부러 짙어졌어.",
+        "en": "The mist thickened on purpose to hide the lighthouse."
+      },
+      "quote": {
+        "ko": "길이 안 보여도 발밑은 있어.",
+        "en": "Even when the road is hidden, the ground is there."
+      }
+    },
+    {
+      "id": "s2-05",
+      "levelId": 105,
+      "chapter": 1,
+      "family": "mist",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "bow",
+      "name": {
+        "ko": "하늘결",
+        "en": "Skyveil"
+      },
+      "levelTitle": {
+        "ko": "계단지기의 다리",
+        "en": "The Stairkeeper’s Bridge"
+      },
+      "appearance": {
+        "ko": "은빛 구름 갈기와 별 모양 이마",
+        "en": "A silver cloud mane and a star-shaped brow"
+      },
+      "personality": {
+        "ko": "듬직하고 말수가 적어요.",
+        "en": "Steady and quiet."
+      },
+      "memory": {
+        "ko": "내가 계단을 끊었어. 하지만 리크라면 건너올 줄 알았어.",
+        "en": "I broke the stairs. But I knew RIQ would find a way across."
+      },
+      "quote": {
+        "ko": "다리는 마음이 먼저 놓는 거야.",
+        "en": "A heart lays the bridge before stones do."
+      }
+    },
+    {
+      "id": "s2-06",
+      "levelId": 106,
+      "chapter": 2,
+      "family": "tide",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "wave",
+      "name": {
+        "ko": "물비",
+        "en": "Mulbi"
+      },
+      "levelTitle": {
+        "ko": "항구의 첫 부표",
+        "en": "The First Buoy"
+      },
+      "appearance": {
+        "ko": "부표 모자를 쓴 물방울",
+        "en": "A water drop wearing a buoy hat"
+      },
+      "personality": {
+        "ko": "명랑하고 수다스러워요.",
+        "en": "Cheerful and chatty."
+      },
+      "memory": {
+        "ko": "배들이 그림자와 자리를 바꾸고 잠들었어.",
+        "en": "The boats swapped places with their shadows and fell asleep."
+      },
+      "quote": {
+        "ko": "바꿔 보면 보이는 게 있어.",
+        "en": "Some things only show when you swap."
+      }
+    },
+    {
+      "id": "s2-07",
+      "levelId": 107,
+      "chapter": 2,
+      "family": "tide",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "달그림",
+        "en": "Moonshade"
+      },
+      "levelTitle": {
+        "ko": "그림자 선착장",
+        "en": "The Shadow Pier"
+      },
+      "appearance": {
+        "ko": "반은 빛, 반은 그림자인 몸",
+        "en": "A body half light, half shadow"
+      },
+      "personality": {
+        "ko": "차분하고 생각이 깊어요.",
+        "en": "Calm and thoughtful."
+      },
+      "memory": {
+        "ko": "내 그림자가 나 대신 바다를 지켜 줬어.",
+        "en": "My shadow kept watch over the sea in my place."
+      },
+      "quote": {
+        "ko": "잔상도 나의 한 조각이야.",
+        "en": "An echo is a piece of me too."
+      }
+    },
+    {
+      "id": "s2-08",
+      "levelId": 108,
+      "chapter": 2,
+      "family": "tide",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "tilt",
+      "name": {
+        "ko": "조약",
+        "en": "Pebbo"
+      },
+      "levelTitle": {
+        "ko": "조약돌 방파제",
+        "en": "The Pebble Breakwater"
+      },
+      "appearance": {
+        "ko": "매끈한 조약돌 등껍질",
+        "en": "A smooth pebble shell"
+      },
+      "personality": {
+        "ko": "고집이 세지만 의리 있어요.",
+        "en": "Stubborn but loyal."
+      },
+      "memory": {
+        "ko": "방파제는 파도보다 그림자를 먼저 막았어.",
+        "en": "The breakwater held back shadows before waves."
+      },
+      "quote": {
+        "ko": "자리를 지키는 것도 용기야.",
+        "en": "Holding your place is courage too."
+      }
+    },
+    {
+      "id": "s2-09",
+      "levelId": 109,
+      "chapter": 2,
+      "family": "tide",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "float",
+      "name": {
+        "ko": "너울",
+        "en": "Swell"
+      },
+      "levelTitle": {
+        "ko": "물결 등불",
+        "en": "The Wave Lantern"
+      },
+      "appearance": {
+        "ko": "물결무늬 꼬리 등불",
+        "en": "A lantern tail with wave patterns"
+      },
+      "personality": {
+        "ko": "장난꾸러기예요.",
+        "en": "A little rascal."
+      },
+      "memory": {
+        "ko": "등불 둘이 서로 자리를 바꾸며 신호를 보냈어.",
+        "en": "Two lanterns traded places to send a signal."
+      },
+      "quote": {
+        "ko": "반짝, 바꿨다, 반짝!",
+        "en": "Blink, swap, blink!"
+      }
+    },
+    {
+      "id": "s2-10",
+      "levelId": 110,
+      "chapter": 2,
+      "family": "tide",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "bow",
+      "name": {
+        "ko": "해미",
+        "en": "Haemi"
+      },
+      "levelTitle": {
+        "ko": "항구지기의 등대선",
+        "en": "The Harbor Keeper’s Lightship"
+      },
+      "appearance": {
+        "ko": "등대선 돛을 두른 바다 정령",
+        "en": "A sea spirit wrapped in a lightship sail"
+      },
+      "personality": {
+        "ko": "따뜻하고 단호해요.",
+        "en": "Warm and firm."
+      },
+      "memory": {
+        "ko": "배를 숨긴 건 나야. 그림자만 바다에 내보냈어.",
+        "en": "I hid the boats. I only let the shadows out to sea."
+      },
+      "quote": {
+        "ko": "돌아올 곳이 있으면 떠날 수 있어.",
+        "en": "With a place to return to, you can set out."
+      }
+    },
+    {
+      "id": "s2-11",
+      "levelId": 111,
+      "chapter": 3,
+      "family": "key",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "tilt",
+      "name": {
+        "ko": "딸깍",
+        "en": "Clicky"
+      },
+      "levelTitle": {
+        "ko": "첫 번째 자물쇠",
+        "en": "The First Lock"
+      },
+      "appearance": {
+        "ko": "열쇠 구멍 배꼽의 작은 상자",
+        "en": "A tiny box with a keyhole belly button"
+      },
+      "personality": {
+        "ko": "성실하고 규칙을 좋아해요.",
+        "en": "Diligent and fond of rules."
+      },
+      "memory": {
+        "ko": "자물쇠는 한 턴만 열리고 다시 잠겼어.",
+        "en": "The locks opened for one turn and locked again."
+      },
+      "quote": {
+        "ko": "한 번 더, 꼭 붙잡아.",
+        "en": "Hold it, just once more."
+      }
+    },
+    {
+      "id": "s2-12",
+      "levelId": 112,
+      "chapter": 3,
+      "family": "key",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "봉봉",
+        "en": "Bonbon"
+      },
+      "levelTitle": {
+        "ko": "밀랍 봉인 층",
+        "en": "The Wax Seal Floor"
+      },
+      "appearance": {
+        "ko": "밀랍 봉인 같은 둥근 볼",
+        "en": "Round cheeks like wax seals"
+      },
+      "personality": {
+        "ko": "다정하고 느려요.",
+        "en": "Gentle and unhurried."
+      },
+      "memory": {
+        "ko": "봉인은 불씨가 새지 않게 막는 마개였어.",
+        "en": "The seals were stoppers that kept the ember in."
+      },
+      "quote": {
+        "ko": "꾹 누르면 오래 남아.",
+        "en": "Press it gently and it lasts."
+      }
+    },
+    {
+      "id": "s2-13",
+      "levelId": 113,
+      "chapter": 3,
+      "family": "key",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "float",
+      "name": {
+        "ko": "나선",
+        "en": "Spira"
+      },
+      "levelTitle": {
+        "ko": "나선 난간",
+        "en": "The Spiral Rail"
+      },
+      "appearance": {
+        "ko": "나선으로 말린 꼬리",
+        "en": "A tail curled into a spiral"
+      },
+      "personality": {
+        "ko": "어지러울 만큼 신나 있어요.",
+        "en": "Excited enough to be dizzy."
+      },
+      "memory": {
+        "ko": "계단은 돌고 돌아 같은 문 앞에 다시 섰어.",
+        "en": "The stair wound round and round to the same door."
+      },
+      "quote": {
+        "ko": "돌아가도 결국 위로 가.",
+        "en": "Going around still goes up."
+      }
+    },
+    {
+      "id": "s2-14",
+      "levelId": 114,
+      "chapter": 3,
+      "family": "key",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "wave",
+      "name": {
+        "ko": "쇠별",
+        "en": "Ironstar"
+      },
+      "levelTitle": {
+        "ko": "녹슨 열쇠 방",
+        "en": "The Rusty Key Room"
+      },
+      "appearance": {
+        "ko": "녹슨 열쇠 날개와 별 눈",
+        "en": "Rusty key wings and starry eyes"
+      },
+      "personality": {
+        "ko": "투덜대지만 손재주가 좋아요.",
+        "en": "Grumbly but handy."
+      },
+      "memory": {
+        "ko": "열쇠는 모두 리크의 별 모양으로 깎여 있었어.",
+        "en": "Every key was cut in the shape of RIQ’s star."
+      },
+      "quote": {
+        "ko": "맞는 열쇠는 늘 가까이 있어.",
+        "en": "The right key is always close by."
+      }
+    },
+    {
+      "id": "s2-15",
+      "levelId": 115,
+      "chapter": 3,
+      "family": "key",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "bow",
+      "name": {
+        "ko": "노을지기",
+        "en": "Duskwarden"
+      },
+      "levelTitle": {
+        "ko": "봉인지기의 문",
+        "en": "The Sealkeeper’s Door"
+      },
+      "appearance": {
+        "ko": "노을빛 망토와 큰 자물쇠 목걸이",
+        "en": "A sunset cloak and a great lock pendant"
+      },
+      "personality": {
+        "ko": "엄격하지만 속이 깊어요.",
+        "en": "Strict, with a deep heart."
+      },
+      "memory": {
+        "ko": "불씨를 붙잡아 둔 건 나야. 주인이 돌아올 때까지.",
+        "en": "I held the ember here — until its owner returned."
+      },
+      "quote": {
+        "ko": "기다림도 지키는 일이야.",
+        "en": "Waiting is a way of protecting."
+      }
+    },
+    {
+      "id": "s2-16",
+      "levelId": 116,
+      "chapter": 4,
+      "family": "gale",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "float",
+      "name": {
+        "ko": "휘리",
+        "en": "Whirly"
+      },
+      "levelTitle": {
+        "ko": "갑판 첫 바람",
+        "en": "The First Deck Gust"
+      },
+      "appearance": {
+        "ko": "바람개비 귀를 가진 작은 정령",
+        "en": "A small spirit with pinwheel ears"
+      },
+      "personality": {
+        "ko": "쉬지 않고 돌아다녀요.",
+        "en": "Never stops moving."
+      },
+      "memory": {
+        "ko": "바람은 한 방향으로만 불며 누군가를 부르고 있었어.",
+        "en": "The wind blew one way, calling for someone."
+      },
+      "quote": {
+        "ko": "멈출 때까지 가 보자!",
+        "en": "Let’s go until we stop!"
+      }
+    },
+    {
+      "id": "s2-17",
+      "levelId": 117,
+      "chapter": 4,
+      "family": "gale",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "wave",
+      "name": {
+        "ko": "돛폭",
+        "en": "Sailo"
+      },
+      "levelTitle": {
+        "ko": "찢긴 돛",
+        "en": "The Torn Sail"
+      },
+      "appearance": {
+        "ko": "돛천 몸에 꿰맨 별 자국",
+        "en": "A sailcloth body with a stitched star"
+      },
+      "personality": {
+        "ko": "씩씩하고 낙천적이에요.",
+        "en": "Spirited and hopeful."
+      },
+      "memory": {
+        "ko": "찢긴 돛도 바람을 받으면 길이 됐어.",
+        "en": "Even a torn sail became a road with the wind."
+      },
+      "quote": {
+        "ko": "찢어져도 바람은 받을 수 있어.",
+        "en": "Torn, but still catching wind."
+      }
+    },
+    {
+      "id": "s2-18",
+      "levelId": 118,
+      "chapter": 4,
+      "family": "gale",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "tilt",
+      "name": {
+        "ko": "풍향",
+        "en": "Vane"
+      },
+      "levelTitle": {
+        "ko": "풍향계 꼭대기",
+        "en": "The Weathervane Top"
+      },
+      "appearance": {
+        "ko": "화살표 꼬리의 닭 모양 풍향계",
+        "en": "A rooster weathervane with an arrow tail"
+      },
+      "personality": {
+        "ko": "고지식하지만 정직해요.",
+        "en": "Rigid, but honest."
+      },
+      "memory": {
+        "ko": "풍향계는 늘 꼭대기를 가리키고 있었어.",
+        "en": "The weathervane always pointed to the top."
+      },
+      "quote": {
+        "ko": "방향을 알면 무섭지 않아.",
+        "en": "Knowing the way makes it less scary."
+      }
+    },
+    {
+      "id": "s2-19",
+      "levelId": 119,
+      "chapter": 4,
+      "family": "gale",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "소나기",
+        "en": "Shower"
+      },
+      "levelTitle": {
+        "ko": "빗줄기 회랑",
+        "en": "The Rain Corridor"
+      },
+      "appearance": {
+        "ko": "빗줄기 수염과 우산 모자",
+        "en": "Rain-streak whiskers and an umbrella hat"
+      },
+      "personality": {
+        "ko": "감정이 풍부해요.",
+        "en": "Full of feelings."
+      },
+      "memory": {
+        "ko": "폭풍은 울고 있었던 게 아니라 부르고 있었어.",
+        "en": "The storm was not crying. It was calling."
+      },
+      "quote": {
+        "ko": "실컷 내리면 맑아져.",
+        "en": "After a good rain, it clears."
+      }
+    },
+    {
+      "id": "s2-20",
+      "levelId": 120,
+      "chapter": 4,
+      "family": "gale",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "bow",
+      "name": {
+        "ko": "마루바람",
+        "en": "Galecrest"
+      },
+      "levelTitle": {
+        "ko": "폭풍지기의 키",
+        "en": "The Stormkeeper’s Helm"
+      },
+      "appearance": {
+        "ko": "폭풍 구름 갈기와 나침반 심장",
+        "en": "A storm-cloud mane and a compass heart"
+      },
+      "personality": {
+        "ko": "거칠지만 다정해요.",
+        "en": "Rough, yet kind."
+      },
+      "memory": {
+        "ko": "첫 별을 데려오려고 나는 멈추지 않고 불었어.",
+        "en": "I blew without rest to bring the first star home."
+      },
+      "quote": {
+        "ko": "네가 오니 바람이 잔잔해졌어.",
+        "en": "The wind calmed when you came."
+      }
+    },
+    {
+      "id": "s2-21",
+      "levelId": 121,
+      "chapter": 5,
+      "family": "beacon",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "float",
+      "name": {
+        "ko": "불티",
+        "en": "Ember"
+      },
+      "levelTitle": {
+        "ko": "꺼진 등불 방",
+        "en": "The Dark Lamp Room"
+      },
+      "appearance": {
+        "ko": "작은 불씨 꼬리를 단 정령",
+        "en": "A spirit with a tiny ember tail"
+      },
+      "personality": {
+        "ko": "조심성 많고 따뜻해요.",
+        "en": "Cautious and warm."
+      },
+      "memory": {
+        "ko": "큰 등불 안에 별 모양 자리가 비어 있었어.",
+        "en": "A star-shaped socket sat empty inside the great lamp."
+      },
+      "quote": {
+        "ko": "작은 불도 어둠은 무서워해.",
+        "en": "Even darkness fears a small flame."
+      }
+    },
+    {
+      "id": "s2-22",
+      "levelId": 122,
+      "chapter": 5,
+      "family": "beacon",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "tilt",
+      "name": {
+        "ko": "렌즈",
+        "en": "Lenzo"
+      },
+      "levelTitle": {
+        "ko": "렌즈 회랑",
+        "en": "The Lens Gallery"
+      },
+      "appearance": {
+        "ko": "물결 렌즈 안경을 쓴 정령",
+        "en": "A spirit wearing rippled lens glasses"
+      },
+      "personality": {
+        "ko": "똑똑하고 꼼꼼해요.",
+        "en": "Clever and precise."
+      },
+      "memory": {
+        "ko": "렌즈는 다섯 권능의 빛을 한곳에 모으게 만들어졌어.",
+        "en": "The lenses were made to gather the light of five powers."
+      },
+      "quote": {
+        "ko": "모으면 멀리 가.",
+        "en": "Gathered light goes far."
+      }
+    },
+    {
+      "id": "s2-23",
+      "levelId": 123,
+      "chapter": 5,
+      "family": "beacon",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "wave",
+      "name": {
+        "ko": "별종",
+        "en": "Chime"
+      },
+      "levelTitle": {
+        "ko": "등대 종루",
+        "en": "The Lighthouse Belfry"
+      },
+      "appearance": {
+        "ko": "작은 종 모양 몸과 별 추",
+        "en": "A little bell body with a star clapper"
+      },
+      "personality": {
+        "ko": "노래를 좋아해요.",
+        "en": "Loves to sing."
+      },
+      "memory": {
+        "ko": "종은 리크가 올 때만 울리도록 묶여 있었어.",
+        "en": "The bell was tied to ring only when RIQ came."
+      },
+      "quote": {
+        "ko": "딩—, 왔구나!",
+        "en": "Ding — you’re here!"
+      }
+    },
+    {
+      "id": "s2-24",
+      "levelId": 124,
+      "chapter": 5,
+      "family": "beacon",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "아스타",
+        "en": "Asta"
+      },
+      "levelTitle": {
+        "ko": "기록의 등불",
+        "en": "The Lamp of Records"
+      },
+      "appearance": {
+        "ko": "아스테르를 닮은 작은 별 정령",
+        "en": "A small star spirit resembling Aster"
+      },
+      "personality": {
+        "ko": "아스테르의 동생처럼 굴어요.",
+        "en": "Acts like Aster’s little sibling."
+      },
+      "memory": {
+        "ko": "가장 오래된 기록: 첫 불씨는 발자국이 되어 돌아온다.",
+        "en": "The oldest record: the first spark returns as a footprint."
+      },
+      "quote": {
+        "ko": "기록은 잊지 않아.",
+        "en": "Records never forget."
+      }
+    },
+    {
+      "id": "s2-25",
+      "levelId": 125,
+      "chapter": 5,
+      "family": "beacon",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "bow",
+      "name": {
+        "ko": "등대지기 노아",
+        "en": "Noa the Keeper"
+      },
+      "levelTitle": {
+        "ko": "첫 불씨의 자리",
+        "en": "The Seat of the First Spark"
+      },
+      "appearance": {
+        "ko": "등대 모양 지팡이와 별빛 외투",
+        "en": "A lighthouse staff and a starlight coat"
+      },
+      "personality": {
+        "ko": "오래 기다린 만큼 다정해요.",
+        "en": "As gentle as the wait was long."
+      },
+      "memory": {
+        "ko": "네가 돌아왔구나, 첫 불씨야. 이제 함께 빛을 켜자.",
+        "en": "You came back, first spark. Let us light it together."
+      },
+      "quote": {
+        "ko": "빛은 혼자가 아니라 함께 켜는 거야.",
+        "en": "Light is lit together, never alone."
+      }
+    }
+  ]
+}

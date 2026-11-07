@@ -18,6 +18,8 @@ import 'journey_panel.dart';
 import 'level_picker.dart';
 import '../constellation/constellation_state.dart';
 import 'play_context.dart';
+import '../world2/world2_map.dart';
+import '../world2/world2_text.dart';
 import '../daily/daily_panel.dart';
 
 class AppEntry extends StatefulWidget {
@@ -182,6 +184,23 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     } finally {
       session.audio.setGameVisible(false);
       if (mounted) setState(() => _opening = false);
+    }
+  }
+
+  Future<void> _openWorld2() async {
+    final session = _session;
+    if (session == null || _opening || _choosing || !session.world2Unlocked) {
+      return;
+    }
+    _choosing = true;
+    try {
+      final id = await showWorld2Map(context, session, widget.settings);
+      if (id != null && mounted) {
+        await _open(id, play: const PlayContext.world2());
+      }
+    } finally {
+      _choosing = false;
+      if (mounted) setState(() {});
     }
   }
 
@@ -582,7 +601,21 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
               ),
               if (session != null && session.collection.owned.length == 25)
                 Text(t.seasonComplete, textAlign: TextAlign.center),
-              if (session != null &&
+              // 다섯 별자리를 모두 완성하면 예고 문구 대신 진짜 입구가 열린다.
+              if (session != null && session.world2Unlocked)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: FilledButton.tonalIcon(
+                    key: const ValueKey('world2-entry'),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(48, 44),
+                    ),
+                    onPressed: _opening ? null : _openWorld2,
+                    icon: const Icon(Icons.light_rounded),
+                    label: Text(World2Text.enter.resolve(t.localeName)),
+                  ),
+                )
+              else if (session != null &&
                   session.progression.completedChapters.length >= 5)
                 KeepAllText(
                   t.nextWorldTeaser,

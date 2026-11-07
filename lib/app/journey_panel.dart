@@ -12,6 +12,7 @@ import '../story/companion_view.dart';
 import '../story/story_catalog.dart';
 import '../progression/progression_rules.dart';
 import 'game_session.dart';
+import '../world2/world2_text.dart';
 
 enum JourneyTab { status, constellations, companions, rewards }
 
@@ -712,7 +713,9 @@ class _RewardsTab extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: KeepAllText(
-                t.nextWorldTeaser,
+                session.world2Unlocked
+                    ? World2Text.opened.resolve(lang)
+                    : t.nextWorldTeaser,
                 textAlign: TextAlign.center,
                 style: GameTypography.body.copyWith(color: colors.goalInk),
               ),

@@ -40,6 +40,11 @@ import 'story/story_share.dart';
 import 'constellation/constellation_atlas.dart';
 import 'constellation/constellation_state.dart';
 import 'constellation/victory_constellation.dart';
+import 'game/power_bar.dart';
+import 'world2/world2_progress.dart';
+import 'world2/world2_text.dart';
+import 'world2/world2_catalog.dart';
+import 'world2/world2_map.dart';
 
 void main() => runApp(const BloriqApp());
 
@@ -184,6 +189,27 @@ class _GameScreenState extends State<GameScreen>
   bool _starlightUsed = false;
   bool _starlightFreeUsed = false;
 
+  /// 월드 2: 권능 막대에서 고른 권능. 다음 밀기가 이 권능으로 움직인다.
+  PuzzlePower? _armedPower;
+
+  /// 월드 2 별자리를 저장 전에 떠 둔다.
+  World2Atlas? _world2Before;
+
+  bool get _world2 => widget.play.world == 2;
+
+  /// 월드 2에서 쓸 수 있는 권능(성장 기록 기준). 월드 1은 늘 비어 있다.
+  Set<PuzzlePower> get _ownedPowers => _world2
+      ? ownedBoardPowers(widget.session.progression.hasPower)
+      : const {};
+
+  /// 이 스테이지에서 실제로 쓸 수 있는 권능: 가진 권능 중 스테이지가 여는 것.
+  Set<PuzzlePower> _stagePowers(Level level) => level.world == 2
+      ? _ownedPowers.intersection(level.availablePowers)
+      : const {};
+
+  PuzzleController _newController(Level level) =>
+      PuzzleController(level, powers: _stagePowers(level));
+
   /// 저장 전 별자리. 저장이 성공한 뒤 [_atlasAfter]와 비교해 연출을 고른다.
   ConstellationAtlas? _atlasBefore, _atlasAfter;
   ConstellationEvent? _constellation;
@@ -202,9 +228,11 @@ class _GameScreenState extends State<GameScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _loaded = widget.play.level == null
-        ? widget.session.levels
-        : [widget.play.level!];
+    _loaded = widget.play.level != null
+        ? [widget.play.level!]
+        : _world2
+        ? widget.session.world2Levels
+        : widget.session.levels;
     if (widget.play.guided) {
       _tutorial = EchoTutorial();
       if (widget.play.mode == PlayMode.campaign) {
@@ -215,7 +243,7 @@ class _GameScreenState extends State<GameScreen>
     if (_index < 0) _index = 0;
     _audio = widget.session.audio;
     _progress = widget.session.progress;
-    _controller = PuzzleController(_loaded[_index]);
+    _controller = _newController(_loaded[_index]);
     _game = BloriqGame(_controller!)
       ..trailStyle = widget.session.progression.equippedTrail;
     widget.session.analytics.addListener(_analyticsChanged);
@@ -321,6 +349,8 @@ class _GameScreenState extends State<GameScreen>
     _atlasBefore = widget.play.mode == PlayMode.campaign
         ? ConstellationAtlas.derive(widget.session.levels, _progress!)
         : null;
+    _world2Before = _world2 ? widget.session.world2Atlas : null;
+    _armedPower = null;
     final chapter = _atlasBefore?.forLevel(state.level.id);
     final lightsStar = chapter != null && !chapter.isLit(state.level.id);
     final completesChapter =
@@ -386,7 +416,7 @@ class _GameScreenState extends State<GameScreen>
     _stopReplay();
     setState(() {
       _index = index;
-      _controller = PuzzleController(_loaded[index]);
+      _controller = _newController(_loaded[index]);
       _game = BloriqGame(_controller!)
         ..trailStyle = widget.session.progression.equippedTrail;
       _dragBlock = null;
@@ -461,6 +491,8 @@ class _GameScreenState extends State<GameScreen>
         .forLevel(state.level.id, revision: state.level.revision)
         ?.bestStars;
     final usedStarlight = _starlightUsed;
+    final usedPower = controller.usedPower;
+    final world2Before = _world2Before;
     final result = await _progress!.recordCompletion(
       levelId: state.level.id,
       revision: state.level.revision,
@@ -486,6 +518,12 @@ class _GameScreenState extends State<GameScreen>
     final event = _constellation;
     final chapter = _atlasAfter?.forLevel(state.level.id);
     final companion = widget.session.collection.companion;
+    final world2After = world2Before == null
+        ? null
+        : widget.session.world2Atlas;
+    final world2Event = world2Before == null || world2After == null
+        ? null
+        : World2Atlas.diff(world2Before, world2After, state.level.id);
     final reward = await widget.session.progression.recordClear(
       levelKey: '${state.level.id}:${state.level.revision}',
       stars: starRating(
@@ -496,11 +534,23 @@ class _GameScreenState extends State<GameScreen>
       usedStarlightPath: usedStarlight,
       companionId: companion?.id,
       companionFamily: companion?.family,
-      constellationCompletedChapter: event?.chapterCompleted == true
+      constellationCompletedChapter: world2Event != null
+          ? world2Event.completed
+          : event?.chapterCompleted == true
           ? chapter?.definition.chapter
           : null,
-      constellationGoldenChapter: event?.becameGolden == true
+      constellationGoldenChapter: world2Event != null
+          ? world2Event.golden
+          : event?.becameGolden == true
           ? chapter?.definition.chapter
+          : null,
+      bareHandedClear: state.level.world == 2
+          ? isWorld2BareHanded(
+              level: state.level,
+              moves: state.moves,
+              usedPower: usedPower,
+              usedStarlightPath: usedStarlight,
+            )
           : null,
     );
     if (!mounted ||
@@ -514,6 +564,7 @@ class _GameScreenState extends State<GameScreen>
 
   void _resetAssist() {
     _reward = null;
+    _armedPower = null;
     _starlightUsed = false;
     _starlightFreeUsed = false;
     _game?.hintMove = null;
@@ -544,6 +595,13 @@ class _GameScreenState extends State<GameScreen>
     final from = controller.state.blocks
         .firstWhere((block) => block.id == move.blockId)
         .position;
+    if (move.power case final power?) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(World2Text.hintPower(power).resolve(t.localeName)),
+        ),
+      );
+    }
     setState(() {
       if (quote.source == StarlightPathSource.free) _starlightFreeUsed = true;
       if (!_starlightUsed) {
@@ -650,7 +708,7 @@ class _GameScreenState extends State<GameScreen>
           ),
           levelText: widget.play.mode == PlayMode.daily
               ? '${t.dailyEcho} ${widget.play.dailyDate}'
-              : t.level(state.level.id),
+              : t.level(_displayNumber(state.level)),
           movesText: t.moves(state.moves),
           bestText: t.bestMoves(best),
         ),
@@ -728,8 +786,13 @@ class _GameScreenState extends State<GameScreen>
           return;
         }
         final before = controller.state;
-        final moved = controller.move(block.id, target);
-        _tutorial?.observe(before, target, moved);
+        final power = _armedPower;
+        // 권능을 고른 상태면 이번 밀기는 그 권능으로 움직인다(한 스테이지 한 번).
+        final moved = power != null
+            ? controller.usePower(power, block.id, Position(dx, dy))
+            : controller.move(block.id, target);
+        if (power == null) _tutorial?.observe(before, target, moved);
+        if (moved && power != null) _armedPower = null;
         if (moved) {
           _attempt?.moved(echo: controller.state.echo != null);
           if (widget.play.mode == PlayMode.daily) {
@@ -778,13 +841,15 @@ class _GameScreenState extends State<GameScreen>
 
   bool _hasNoMoves(PuzzleController controller) {
     final state = controller.state;
+    // 남은 권능으로 움직일 수 있으면 막힌 것이 아니다.
     return !state.isComplete &&
         controller.canUndo &&
-        !state.blocks.any(
-          (block) => block.position.neighbors.any(
-            (target) => MoveValidator.canMove(state, block.id, target),
-          ),
-        );
+        PuzzleSolver.successors(state).isEmpty;
+  }
+
+  void _togglePower(PuzzlePower power) {
+    if (_replaying || _celebrating || _modalOpen) return;
+    setState(() => _armedPower = _armedPower == power ? null : power);
   }
 
   void _undo(PuzzleController controller) {
@@ -794,6 +859,7 @@ class _GameScreenState extends State<GameScreen>
     _skipCelebration();
     setState(() {
       controller.undo();
+      _armedPower = null;
       _narrative.react(CompanionReaction.idle);
       _attempt?.undo();
       _game!.clearEffects();
@@ -861,24 +927,33 @@ class _GameScreenState extends State<GameScreen>
 
   Future<void> _pickLevel() async {
     final id = await _withModal<int>(
-      () => showLevelPicker(
-        context,
-        widget.session,
-        widget.settings,
-        currentLevelId: _loaded[_index].id,
-      ),
+      () => _world2
+          ? showWorld2Map(context, widget.session, widget.settings)
+          : showLevelPicker(
+              context,
+              widget.session,
+              widget.settings,
+              currentLevelId: _loaded[_index].id,
+            ),
     );
-    if (id != null && mounted) {
-      _select(_loaded.indexWhere((level) => level.id == id));
-    }
+    final index = _loaded.indexWhere((level) => level.id == id);
+    if (id != null && mounted && index >= 0) _select(index);
   }
+
+  /// 화면에 보이는 스테이지 번호. 월드 2는 1..25로 센다.
+  int _displayNumber(Level level) =>
+      level.world == 2 ? level.id - World2.firstLevelId + 1 : level.id;
 
   Future<void> _openJourney() async {
     final id = await _withModal<int>(
       () => showJourneyPanel(context, widget.session, widget.settings),
     );
-    if (id != null && mounted && widget.play.mode == PlayMode.campaign) {
-      _select(_loaded.indexWhere((level) => level.id == id));
+    final index = _loaded.indexWhere((level) => level.id == id);
+    if (id != null &&
+        mounted &&
+        widget.play.mode == PlayMode.campaign &&
+        index >= 0) {
+      _select(index);
     }
   }
 
@@ -1092,6 +1167,9 @@ class _GameScreenState extends State<GameScreen>
       ];
     }
     if (_hasNoMoves(controller)) return [note(t.noMoves)];
+    if (_armedPower case final power?) {
+      return [note(World2Text.armed(power).resolve(t.localeName))];
+    }
     final gate = state.level.echoGate == null
         ? null
         : _gateBlocked
@@ -1315,9 +1393,28 @@ class _GameScreenState extends State<GameScreen>
                                           Text(
                                             widget.play.mode == PlayMode.daily
                                                 ? t.dailyEcho
-                                                : t.level(_loaded[_index].id),
+                                                : t.level(
+                                                    _displayNumber(
+                                                      _loaded[_index],
+                                                    ),
+                                                  ),
                                             style: labelStyle,
                                           ),
+                                          if (widget.session.world2Story
+                                                  ?.forLevel(_loaded[_index].id)
+                                              case final spirit? when _world2)
+                                            Flexible(
+                                              child: Text(
+                                                ' · ${spirit.levelTitle.inLocale(t.localeName)}',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: labelStyle.copyWith(
+                                                  color: colors.rewardInk,
+                                                  decoration:
+                                                      TextDecoration.none,
+                                                ),
+                                              ),
+                                            ),
                                           if (story?.released == true)
                                             Flexible(
                                               child: Text(
@@ -1389,6 +1486,21 @@ class _GameScreenState extends State<GameScreen>
                                   ),
                                 ),
                                 SizedBox(height: compact ? 4 : 8),
+                                if (_world2 && _ownedPowers.isNotEmpty) ...[
+                                  PowerBar(
+                                    owned: _ownedPowers,
+                                    stage:
+                                        controller.state.level.availablePowers,
+                                    remaining: controller.state.powers,
+                                    armed: _armedPower,
+                                    enabled:
+                                        !controller.state.isComplete &&
+                                        !_replaying &&
+                                        !_celebrating,
+                                    onToggle: _togglePower,
+                                  ),
+                                  SizedBox(height: compact ? 4 : 6),
+                                ],
                                 // 결과는 보드 위 팝업으로 띄우므로 판 크기는 끝까지 그대로다.
                                 if (scroll)
                                   SizedBox(

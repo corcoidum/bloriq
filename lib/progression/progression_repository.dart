@@ -312,7 +312,8 @@ class ProgressionRepository {
   /// [stars] 는 판정된 별 수이며 [usedStarlightPath] 이면 2별로 깎는다.
   /// [previousBestStars] 가 null 이면 첫 클리어. 장 별자리가 이번에 완성되면
   /// [constellationCompletedChapter], 황금이 되면 [constellationGoldenChapter]
-  /// 를 넘긴다(같은 장은 한 번만 지급된다).
+  /// 를 넘긴다(같은 장은 한 번만 지급된다). 월드 2는 맨손 판정이 달라
+  /// (권능 미사용 + 맨손 최소 수) [bareHandedClear] 로 직접 넘긴다.
   Future<ClearReward> recordClear({
     required String levelKey,
     required int stars,
@@ -323,17 +324,20 @@ class ProgressionRepository {
     String? companionFamily,
     int? constellationCompletedChapter,
     int? constellationGoldenChapter,
+    bool? bareHandedClear,
   }) async {
     final awarded = capAssistedStars(
       stars,
       usedStarlightPath: usedStarlightPath,
     );
     final firstClear = previousBestStars == null;
-    final bare = isBareHanded(
-      stars: awarded,
-      usedHint: usedHint,
-      usedStarlightPath: usedStarlightPath,
-    );
+    final bare =
+        bareHandedClear ??
+        isBareHanded(
+          stars: awarded,
+          usedHint: usedHint,
+          usedStarlightPath: usedStarlightPath,
+        );
     if (!_writable) {
       return _reward(starsAwarded: awarded, firstClear: firstClear, bare: bare);
     }

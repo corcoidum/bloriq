@@ -13,6 +13,8 @@ import '../story/story_catalog.dart';
 import '../story/collection_repository.dart';
 import '../constellation/constellation_state.dart';
 import '../progression/progression_repository.dart';
+import '../world2/world2_catalog.dart';
+import '../world2/world2_progress.dart';
 
 /// 홈과 게임은 하나의 기록/오디오 인스턴스를 공유한다.
 class GameSession {
@@ -26,7 +28,10 @@ class GameSession {
     required this.story,
     required this.collection,
     required this.progression,
-  }) : levels = List.unmodifiable(levels) {
+    List<Level> world2Levels = const [],
+    this.world2Story,
+  }) : levels = List.unmodifiable(levels),
+       world2Levels = List.unmodifiable(world2Levels) {
     if (levels.isEmpty) throw const FormatException('No levels');
     WidgetsBinding.instance.addObserver(audio);
     audio.setGameVisible(false);
@@ -43,6 +48,20 @@ class GameSession {
 
   /// 별지기 레벨·별가루·권능·유대. 처음 열 때 기존 기록을 한 번 환산한다.
   final ProgressionRepository progression;
+
+  /// 구름바다 등대(월드 2). 에셋을 읽지 못하면 비어 있고 입구도 숨긴다.
+  final List<Level> world2Levels;
+  final World2Story? world2Story;
+
+  /// 월드 1 다섯 별자리를 모두 완성했고 월드 2 데이터가 준비됐는지.
+  bool get world2Unlocked =>
+      world2Story != null &&
+      world2Levels.isNotEmpty &&
+      World2.isUnlocked(progression.completedChapters);
+
+  World2Atlas? get world2Atlas => world2Story == null || world2Levels.isEmpty
+      ? null
+      : World2Atlas.derive(world2Levels, world2Story!, progress);
 
   static Future<GameSession> load({
     Future<List<Level>> Function()? loadLevels,
@@ -98,6 +117,17 @@ class GameSession {
     final daily = await DailyRepository.load(clock: clock);
     final analytics = await LocalAnalytics.load(clock: clock);
     final audio = await GameAudio.load();
+    var world2Levels = const <Level>[];
+    World2Story? world2Story;
+    try {
+      world2Levels = await World2.loadLevels();
+      world2Story = await World2Story.load();
+    } on Object catch (error) {
+      // 월드 2가 깨져도 월드 1은 그대로 플레이할 수 있어야 한다.
+      debugPrint('World 2 unavailable: $error');
+      world2Levels = const [];
+      world2Story = null;
+    }
     return GameSession(
       levels: levels,
       progress: progress,
@@ -108,6 +138,8 @@ class GameSession {
       story: story,
       collection: collection,
       progression: progression,
+      world2Levels: world2Levels,
+      world2Story: world2Story,
     );
   }
 
