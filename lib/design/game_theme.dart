@@ -114,6 +114,14 @@ abstract final class GameTypography {
     fontSize: 28,
     fontWeight: FontWeight.w400,
   );
+
+  /// 판 아래 설명·결과 팝업 본문용 둥근 손글씨풍 글꼴.
+  static const body = TextStyle(
+    fontFamily: 'GowunDodum',
+    fontFamilyFallback: ['NanumGothic'],
+    fontSize: 15.5,
+    height: 1.4,
+  );
   static const label = TextStyle(
     fontFamily: 'NanumGothic',
     fontSize: 15,
@@ -136,6 +144,9 @@ abstract final class GameEffects {
   static const introDuration = Duration(seconds: 4);
   static const moveDuration = Duration(milliseconds: 220);
   static const celebrationDuration = Duration(milliseconds: 1450);
+
+  /// 별자리 완성은 수호 정령 발견과 같은 길이를 쓴다. 새 별은 기본 축하 안에 켜진다.
+  static const constellationCompleteDuration = Duration(milliseconds: 2200);
   static const panelDuration = Duration(milliseconds: 200);
   static const particleCount = 16;
 }

@@ -100,6 +100,10 @@ void main() {
         await tapVisible(tester, find.byKey(const ValueKey('skip-story')));
         if (id < 5) await tapVisible(tester, find.text('Next level'));
       }
+      // 정령 도감은 결과 팝업의 더 보기 메뉴 안에 있다.
+      await tapVisible(tester, find.byKey(const ValueKey('result-more')));
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
       await tapVisible(tester, find.byKey(const ValueKey('result-album')));
       expect(find.byType(SpiritAlbum), findsOneWidget);
       await tapVisible(tester, find.byKey(const ValueKey('spirit-s1-02')));

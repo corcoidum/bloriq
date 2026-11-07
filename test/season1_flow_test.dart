@@ -74,6 +74,10 @@ void main() {
         if (id < 25) await tapVisible(tester, find.text('Next level'));
       }
       expect(find.text('Every light in Season 1 is home.'), findsOneWidget);
+      // 정령 도감은 결과 팝업의 더 보기 메뉴 안에 있다.
+      await tapVisible(tester, find.byKey(const ValueKey('result-more')));
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
       await tapVisible(tester, find.byKey(const ValueKey('result-album')));
       await tapVisible(tester, find.byKey(const ValueKey('album-chapter-5')));
       await tapVisible(tester, find.byKey(const ValueKey('spirit-s1-25')));
