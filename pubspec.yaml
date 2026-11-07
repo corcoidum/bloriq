@@ -32,6 +32,7 @@ flutter:
     - assets/art/star_courier/
     - assets/art/last_echo/
     - assets/art/season1/
+    - assets/art/moon_garden/
     - assets/story/season1.json
     - assets/fonts/Jua-OFL.txt
     - assets/fonts/NanumGothic-OFL.txt

@@ -35,6 +35,7 @@
 - 공통 토큰은 `lib/design/game_theme.dart`, 로컬 설정은 `lib/settings/`, 연출은 `lib/game/`에 있습니다. 퍼즐 규칙과 스테이지 데이터는 변경하지 않았으며 새 production dependency는 없습니다.
 - 게임 화면은 스크롤 없이 한 화면에 고정됩니다. 상단 중앙에 금빛 BLORIQ 로고, 그 아래 스테이지 이름을 두고 보드가 남은 높이를 채웁니다. 보드 칸이 48px보다 작아지는 아주 작은 화면이나 가로 화면에서만 스크롤 배치로 바뀝니다.
 - 블록 이동은 출발 파동·빛 꼬리·잔영, 늘어남/눌림, 착지 파동·별가루·보드 흔들림으로 표현하고, 막힌 이동은 블록이 부딪혀 튕깁니다. 모션 줄이기에서는 모두 생략합니다.
+- 게임판은 "달빛 숲 정원" 일러스트입니다. 이끼 판석 바닥·고목 테두리, 이끼 바위·그루터기 장애물, 룬석 블록, 민트 이끼 방석 위의 리크, 보랏빛 리크 실루엣 잔상, 민들레(×)·호박석(Ⅱ)·물길(화살표)·클로버(▶) 칸, 달 수정 스위치와 덩굴 문을 씁니다. 문이 열리면 덩굴이 양옆으로 젖혀지고 스위치에서 문까지 빛이 흐릅니다. 반딧불·별문 빛살·물결도 움직이며 모션 줄이기에서는 멈춥니다. 에셋 출처와 제작 방법은 [assets/art/moon_garden/README.md](assets/art/moon_garden/README.md)를 참고하세요.
 - 앱 아이콘은 리크 캐릭터입니다. `python3 tools/generate_app_icon.py`(Pillow 필요)로 Android legacy/adaptive 아이콘과 웹 아이콘을 다시 만듭니다.
 
 [Light/Dark 및 개선 전후 화면 비교](docs/design-comparison.html)와 [디자인 QA 결과](docs/DESIGN_QA.md)를 참고하세요. 문서의 화면은 Flutter widget renderer로 생성한 검증 이미지이며 실기기 성능 측정 자료는 아닙니다.

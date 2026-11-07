@@ -25,6 +25,25 @@ abstract final class StarArt {
   static const runeStone = 'assets/art/last_echo/rune_stone.png';
   static const lunabel = 'assets/art/last_echo/lunabel.png';
 
+  /// 달빛 숲 정원 보드 그림. 하나가 없으면 그 요소만 기존 코드 그림으로 그린다.
+  static const gardenSprites = [
+    'floor_1',
+    'floor_2',
+    'floor_3',
+    'floor_4',
+    'plank',
+    'rock',
+    'stump',
+    'riq_cushion',
+    'tile_dandelion',
+    'tile_amber',
+    'tile_stream',
+    'tile_clover',
+    'switch_crystal',
+    'gate_closed',
+  ];
+  static final Map<String, ui.Image> garden = {};
+
   /// riq.png 안의 두 눈 중심(정규화)과 반지름. 잠든 얼굴 그림이 없을 때 쓴다.
   static const riqEyes = [Offset(.380, .582), Offset(.645, .585)];
   static const riqEyeRadius = Size(.040, .042);
@@ -116,6 +135,11 @@ abstract final class StarArt {
     riqHappyImage ??= await optional(riqHappy);
     riqSurprisedImage ??= await optional(riqSurprised);
     riqSleepImage ??= await optional(riqSleep);
+    for (final name in gardenSprites) {
+      if (garden.containsKey(name)) continue;
+      final image = await optional('assets/art/moon_garden/$name.png');
+      if (image != null) garden[name] = image;
+    }
     revision.value++;
   }
 
