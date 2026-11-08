@@ -161,6 +161,9 @@ abstract final class TrailIds {
   static const mist = 'mist';
   static const aurora = 'aurora';
   static const starfall = 'starfall';
+
+  /// 별바다 항해 25판 이정표.
+  static const tide = 'tide';
 }
 
 const defaultTrailId = TrailIds.moonlight;
@@ -173,6 +176,7 @@ const trails = <TrailDefinition>[
   TrailDefinition(TrailIds.mist, ProgressionText('안개', 'Mist')),
   TrailDefinition(TrailIds.aurora, ProgressionText('오로라', 'Aurora')),
   TrailDefinition(TrailIds.starfall, ProgressionText('별비', 'Starfall')),
+  TrailDefinition(TrailIds.tide, ProgressionText('물결', 'Tide')),
 ];
 
 TrailDefinition? trailById(String? id) {
@@ -229,6 +233,19 @@ const titles = <TitleDefinition>[
   TitleDefinition(
     'barehand_legend',
     ProgressionText('맨손 전설', 'Bare-Handed Legend'),
+  ),
+  // 별바다 항해 이정표 칭호
+  TitleDefinition(
+    'voyage_sailor',
+    ProgressionText('별바다 견습 항해사', 'Starsea Deckhand'),
+  ),
+  TitleDefinition(
+    'voyage_captain',
+    ProgressionText('별바다 선장', 'Starsea Captain'),
+  ),
+  TitleDefinition(
+    'voyage_endless',
+    ProgressionText('끝없는 항해자', 'Endless Voyager'),
   ),
 ];
 

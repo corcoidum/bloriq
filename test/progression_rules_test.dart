@@ -1,3 +1,4 @@
+import 'package:bloriq/endless/endless_rules.dart';
 import 'package:bloriq/progression/progression_rules.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -104,15 +105,21 @@ void main() {
       }
       expect(trailUnlocks, [TrailIds.petal, TrailIds.firefly, TrailIds.meteor]);
       expect(trailUnlocks.every((id) => trailById(id) != null), true);
-      // 레벨 트랙과 별 모으기 업적이 함께 모든 칭호를 나눠 준다.
+      // 레벨 트랙, 별 모으기 업적, 별바다 항해 이정표가 함께 모든 칭호를 나눠 준다.
       final achievementTitles = {
         for (final achievement in achievements)
           for (final reward in achievement.rewards)
             if (reward case TitleUnlock(:final titleId)) titleId,
       };
+      final voyageTitles = {
+        for (final milestone in voyageMilestones)
+          for (final reward in milestone.rewards)
+            if (reward case TitleUnlock(:final titleId)) titleId,
+      };
       expect({
         ...titleUnlocks,
         ...achievementTitles,
+        ...voyageTitles,
       }, titles.map((t) => t.id).toSet());
       expect(charges, greaterThan(0));
     });
@@ -126,9 +133,10 @@ void main() {
         'mist',
         'aurora',
         'starfall',
+        'tide',
       ]);
       expect(defaultTrailId, 'moonlight');
-      expect(titles.length, 13);
+      expect(titles.length, 16);
       for (final text in [
         ...trails.map((t) => t.name),
         ...titles.map((t) => t.name),

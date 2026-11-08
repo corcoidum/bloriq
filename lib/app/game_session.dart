@@ -17,6 +17,9 @@ import '../game/assist.dart';
 import '../world/saga.dart';
 import '../world/world_catalog.dart';
 import '../world/world_progress.dart';
+import '../endless/endless_pool.dart';
+import '../endless/endless_repository.dart';
+import '../endless/endless_rules.dart';
 
 /// 홈과 게임은 하나의 기록/오디오 인스턴스를 공유한다.
 class GameSession {
@@ -30,6 +33,7 @@ class GameSession {
     required this.story,
     required this.collection,
     required this.progression,
+    required this.endless,
     this.saga,
     Iterable<LoadedWorld> worlds = const [],
   }) : levels = List.unmodifiable(levels),
@@ -52,6 +56,17 @@ class GameSession {
 
   /// 별지기 레벨·별가루·권능·유대. 처음 열 때 기존 기록을 한 번 환산한다.
   final ProgressionRepository progression;
+
+  /// 별바다 항해(끝없는 모드) 기록과 진행 중인 항해.
+  final EndlessRepository endless;
+  Future<EndlessPool>? _endlessPool;
+
+  /// 끝없는 모드 판 묶음. 처음 항해를 열 때 한 번 읽는다.
+  Future<EndlessPool> get endlessPool => _endlessPool ??= EndlessPool.load();
+
+  /// 세계 1의 첫 별자리를 완성하면 별바다 항해가 열린다.
+  bool get endlessUnlocked =>
+      progression.completedChapters.contains(EndlessRules.unlockChapter);
 
   /// 판마다 얼마나 막혀 있는지(앱을 켜 둔 동안만). 막히면 도움을 권한다.
   final StruggleTracker struggle = StruggleTracker();
@@ -150,6 +165,7 @@ class GameSession {
     final daily = await DailyRepository.load(clock: clock);
     final analytics = await LocalAnalytics.load(clock: clock);
     final audio = await GameAudio.load();
+    final endless = await EndlessRepository.load(clock: clock);
     Saga? saga;
     final worlds = <LoadedWorld>[];
     try {
@@ -176,6 +192,7 @@ class GameSession {
       story: story,
       collection: collection,
       progression: progression,
+      endless: endless,
       saga: saga,
       worlds: worlds,
     );
@@ -218,6 +235,7 @@ class GameSession {
     await progression.flush();
     analytics.dispose();
     await daily.flush();
+    await endless.flush();
     await audio.dispose();
   }
 }

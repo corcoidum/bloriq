@@ -18,6 +18,8 @@ import 'journey_panel.dart';
 import 'level_picker.dart';
 import '../constellation/constellation_state.dart';
 import 'play_context.dart';
+import '../endless/endless_rules.dart';
+import '../endless/endless_screen.dart';
 import '../world/saga_map.dart';
 import '../world/world_map.dart';
 import '../world/world_text.dart';
@@ -196,6 +198,40 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
           if (mounted) await _openWorld(world);
         }),
       );
+    }
+  }
+
+  /// 별바다 항해(끝없는 모드). 잠겨 있으면 여는 조건을 알려 준다.
+  Future<void> _openEndless() async {
+    final session = _session;
+    if (session == null || _opening || _choosing) return;
+    final lang = AppLocalizations.of(context)!.localeName;
+    if (!session.endlessUnlocked) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(EndlessText.locked.resolve(lang))),
+      );
+      return;
+    }
+    setState(() => _opening = true);
+    session.audio.setGameVisible(true);
+    session.audio.onUserInteraction();
+    final transition = prefersReducedMotion(context, widget.settings)
+        ? Duration.zero
+        : GameEffects.panelDuration;
+    try {
+      await Navigator.of(context).push<void>(
+        PageRouteBuilder<void>(
+          transitionDuration: transition,
+          reverseTransitionDuration: transition,
+          pageBuilder: (_, animation, secondaryAnimation) =>
+              EndlessScreen(session: session, settings: widget.settings),
+          transitionsBuilder: (_, animation, secondaryAnimation, child) =>
+              FadeTransition(opacity: animation, child: child),
+        ),
+      );
+    } finally {
+      session.audio.setGameVisible(false);
+      if (mounted) setState(() => _opening = false);
     }
   }
 
@@ -435,6 +471,10 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                           style: const TextStyle(fontSize: 20),
                         ),
                       ),
+                      if (session != null) ...[
+                        const SizedBox(height: GameSpacing.small),
+                        _voyageButton(t, colors, session),
+                      ],
                       const SizedBox(height: GameSpacing.small),
                       _menuGrid(t, colors, session),
                       if (session != null) ...[
@@ -511,6 +551,81 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
       ],
     ),
   );
+
+  /// 별바다 항해 입구. 최고 기록이나 이어서 할 항해를 함께 보여 준다.
+  Widget _voyageButton(
+    AppLocalizations t,
+    GameColors colors,
+    GameSession session,
+  ) {
+    final lang = t.localeName;
+    final unlocked = session.endlessUnlocked;
+    final saved = session.endless.savedRun;
+    final detail = !unlocked
+        ? EndlessText.locked.resolve(lang)
+        : saved != null
+        ? '${EndlessText.resume.resolve(lang)} · '
+              '${EndlessText.depth(saved.depth).resolve(lang)}'
+        : session.endless.voyages > 0
+        ? EndlessText.bestLine(
+            session.endless.bestScore,
+            session.endless.bestDepth,
+          ).resolve(lang)
+        : EndlessText.tagline.resolve(lang);
+    return Material(
+      color: colors.cyan.withValues(alpha: unlocked ? .16 : .06),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(
+          color: colors.cyan.withValues(alpha: unlocked ? .55 : .2),
+        ),
+      ),
+      child: InkWell(
+        key: const ValueKey('home-voyage'),
+        borderRadius: BorderRadius.circular(18),
+        onTap: _opening ? null : _openEndless,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          child: Row(
+            children: [
+              Icon(
+                unlocked ? Icons.sailing_rounded : Icons.lock_outline_rounded,
+                color: unlocked ? colors.cyan : colors.secondaryText,
+                size: 28,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      EndlessText.title.resolve(lang),
+                      style: GameTypography.label.copyWith(
+                        fontSize: 17,
+                        color: unlocked ? colors.text : colors.secondaryText,
+                      ),
+                    ),
+                    Text(
+                      detail,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTypography.body.copyWith(
+                        fontSize: 14,
+                        color: colors.secondaryText,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (unlocked)
+                Icon(Icons.chevron_right_rounded, color: colors.cyan),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   /// 지금 갈 확장 세계 입구와 빛길 지도 버튼.
   Widget _worldRow(AppLocalizations t, GameSession session) {

@@ -598,6 +598,35 @@ class ProgressionRepository {
 
   // ---- 내부 -------------------------------------------------------------------
 
+  /// 별바다 항해 한 번을 마쳤을 때. [rewards] 는 이번에 처음 넘은 이정표 보상이다.
+  Future<ClearReward> recordVoyage({
+    required int xp,
+    required int stardust,
+    List<TrackReward> rewards = const [],
+  }) async {
+    if (!_writable) {
+      return _reward(starsAwarded: 0, firstClear: false, bare: false);
+    }
+    _xp += xp;
+    _stardust += stardust;
+    final newTrails = <String>[];
+    for (final reward in rewards) {
+      _apply(reward, newTrails);
+    }
+    final levels = _claimLevelRewards(newTrails);
+    final saved = await retrySave();
+    return _reward(
+      starsAwarded: 0,
+      firstClear: false,
+      bare: false,
+      xpGained: xp,
+      clearStardust: stardust,
+      levels: levels,
+      newTrails: newTrails,
+      saved: saved,
+    );
+  }
+
   /// 현재 레벨까지 아직 받지 않은 레벨 보상을 모두 적용한다.
   List<LevelUp> _claimLevelRewards(List<String> newTrails) {
     final current = level;

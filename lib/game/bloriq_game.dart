@@ -61,7 +61,7 @@ class BloriqGame extends FlameGame {
   /// 별빛 길이 비추는 다음 한 수. 블록을 움직이면 사라진다.
   ({Position from, Position to})? hintMove;
 
-  /// 장착한 이동 잔영(moonlight, petal, firefly, meteor, mist, aurora, starfall).
+  /// 장착한 이동 잔영(moonlight, petal, firefly, meteor, mist, aurora, starfall, tide).
   String trailStyle = 'moonlight';
 
   Color _trailColor(bool isGoal) => switch (trailStyle) {
@@ -71,6 +71,7 @@ class BloriqGame extends FlameGame {
     'mist' => _colors.echo,
     'aurora' => const Color(0xff7ef0d0),
     'starfall' => const Color(0xfffff0b3),
+    'tide' => const Color(0xff6fd3ff),
     _ => isGoal ? _colors.goal : _colors.primary,
   };
 
