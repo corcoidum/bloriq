@@ -11,18 +11,15 @@ double contrast(Color foreground, Color background) {
 }
 
 void main() {
-  test('requested core palettes remain fixed', () {
-    expect(GameColors.light.background, const Color(0xFFF7F9FE));
-    expect(GameColors.light.primary, const Color(0xFF6B8DFF));
-    expect(GameColors.light.echo, const Color(0xFFA78BFA));
-    expect(GameColors.light.goal, const Color(0xFF27BCA0));
-    expect(GameColors.light.reward, const Color(0xFFF7C86C));
-    expect(GameColors.dark.background, const Color(0xFF101827));
-    expect(GameColors.dark.boardSurface, const Color(0xFF243249));
-    expect(GameColors.dark.primary, const Color(0xFF85A4FF));
-    expect(GameColors.dark.echo, const Color(0xFFB6A0FF));
-    expect(GameColors.dark.goal, const Color(0xFF45D7B4));
-    expect(GameColors.dark.reward, const Color(0xFFFFD47B));
+  test('forest themes preserve mint, Echo and gold semantic roles', () {
+    for (final colors in [GameColors.light, GameColors.dark]) {
+      expect(colors.goal.g, greaterThan(colors.goal.r));
+      expect(colors.echo.b, greaterThan(colors.echo.g));
+      expect(colors.reward.r, greaterThan(colors.reward.b));
+    }
+    expect(GameColors.dark.background.computeLuminance(), lessThan(.03));
+    expect(GameColors.light.background.computeLuminance(), greaterThan(.8));
+    expect(GameTypography.canvasFontFamily, 'Jua');
   });
 
   test('body and semantic text maintain at least 4.5:1 contrast', () {

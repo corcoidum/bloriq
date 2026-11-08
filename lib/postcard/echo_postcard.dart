@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../design/game_theme.dart';
+import '../design/star_art.dart';
+import '../game/block_art.dart';
 
 /// 카드에는 게임 결과만 전달한다. 퍼즐 좌표나 이동 이력은 받지 않는다.
 class EchoPostcardData {
@@ -17,6 +19,7 @@ class EchoPostcardData {
     required this.levelText,
     required this.movesText,
     required this.bestText,
+    this.story,
   }) : assert(levelId > 0),
        assert(moves >= 0),
        assert(bestMoves >= 0),
@@ -29,6 +32,22 @@ class EchoPostcardData {
   final String levelText;
   final String movesText;
   final String bestText;
+  final StoryCardContent? story;
+}
+
+class StoryCardContent {
+  const StoryCardContent({
+    required this.title,
+    required this.detail,
+    required this.quote,
+    required this.portraitAssets,
+    this.portraitAnchors = const [],
+    this.portraitScales = const [],
+  });
+  final String title, detail, quote;
+  final List<String> portraitAssets;
+  final List<Offset> portraitAnchors;
+  final List<double> portraitScales;
 }
 
 /// 동일한 결과에 동일한 이미지를 만든다. 실제 이동 좌표는 사용하지 않는다.
@@ -44,6 +63,11 @@ class EchoPostcardPainter extends CustomPainter {
     canvas.scale(size.width / 1080, size.height / 1080);
     final bounds = const Rect.fromLTWH(0, 0, 1080, 1080);
     canvas.drawRect(bounds, Paint()..color = colors.background);
+    if (data.story case final story?) {
+      _paintStory(canvas, story);
+      canvas.restore();
+      return;
+    }
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         const Rect.fromLTWH(45, 45, 990, 990),
@@ -70,53 +94,16 @@ class EchoPostcardPainter extends CustomPainter {
       0,
     );
 
-    // 난수 seed는 결과 요약에만 의존한다. 경로나 블록 좌표는 재현되지 않는다.
-    final random = math.Random(
-      (data.levelId * 73856093) ^
-          (data.moves * 19349663) ^
-          (data.stars * 83492791),
-    );
-    final artColors = [
-      colors.goal,
-      colors.primary,
-      colors.reward,
-      colors.echo,
-      colors.cyan,
-    ];
     final art = const Rect.fromLTWH(105, 252, 870, 420);
     canvas.save();
     canvas.clipRRect(RRect.fromRectAndRadius(art, const Radius.circular(48)));
     canvas.drawRect(art, Paint()..color = colors.tileBottom);
-    for (var i = 0; i < 17; i++) {
-      final x = art.left + random.nextDouble() * art.width;
-      final y = art.top + random.nextDouble() * art.height;
-      final r = 40 + random.nextDouble() * 95;
-      final color = artColors[random.nextInt(artColors.length)];
-      if (i.isEven) {
-        canvas.drawCircle(
-          Offset(x, y),
-          r,
-          Paint()..color = color.withValues(alpha: .46),
-        );
-        canvas.drawCircle(
-          Offset(x, y),
-          r * .63,
-          Paint()..color = color.withValues(alpha: .30),
-        );
-      } else {
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            Rect.fromCenter(
-              center: Offset(x, y),
-              width: r * 2,
-              height: r * 1.65,
-            ),
-            Radius.circular(r * .35),
-          ),
-          Paint()..color = color.withValues(alpha: .53),
-        );
-      }
+    if (StarArt.forestImage case final image?) {
+      paintImage(canvas: canvas, rect: art, image: image, fit: BoxFit.cover);
     }
+    BlockArt.echo(canvas, const Offset(255, 470), 220, colors);
+    BlockArt.block(canvas, const Offset(520, 470), 330, colors);
+    BlockArt.exit(canvas, const Offset(790, 470), 230, colors);
     canvas.restore();
 
     for (var i = 0; i < 3; i++) {
@@ -164,6 +151,98 @@ class EchoPostcardPainter extends CustomPainter {
       2,
     );
     canvas.restore();
+  }
+
+  void _paintStory(Canvas canvas, StoryCardContent story) {
+    final rect = const Rect.fromLTWH(54, 54, 972, 972);
+    canvas.save();
+    canvas.clipRRect(RRect.fromRectAndRadius(rect, const Radius.circular(48)));
+    canvas.drawRect(rect, Paint()..color = colors.surface);
+    if (StarArt.forestImage case final image?) {
+      paintImage(
+        canvas: canvas,
+        rect: const Rect.fromLTWH(54, 54, 972, 640),
+        image: image,
+        fit: BoxFit.cover,
+      );
+    }
+    canvas.restore();
+    _text(
+      canvas,
+      'BLORIQ',
+      const Offset(100, 100),
+      40,
+      colors.rewardInk,
+      FontWeight.w700,
+      3,
+    );
+    final assets = story.portraitAssets;
+    final count = assets.length;
+    for (var i = 0; i < count; i++) {
+      final image = StarArt.portraits[assets[i]];
+      if (image == null) continue;
+      final columns = count <= 2 ? count : 3;
+      final width = count <= 2 ? 380.0 : 250.0;
+      final rows = (count / columns).ceil();
+      final x = (1080 - columns * width) / 2 + i % columns * width;
+      final y = count <= 2 ? 245.0 : 205.0 + (i ~/ columns) * (390 / rows);
+      final anchor = story.portraitAnchors.length > i
+          ? story.portraitAnchors[i]
+          : const Offset(.5, .5);
+      final scale = story.portraitScales.length > i
+          ? story.portraitScales[i]
+          : 1.0;
+      StarArt.draw(
+        canvas,
+        image,
+        Rect.fromCenter(
+          center: Offset(
+            x + width / 2 + (.5 - anchor.dx) * width * scale,
+            y + width / 2 + (.5 - anchor.dy) * width * scale,
+          ),
+          width: width * scale,
+          height: width * scale,
+        ),
+      );
+    }
+    double wrapped(
+      String value,
+      double y,
+      double size,
+      Color color, {
+      double maxHeight = 1000,
+    }) {
+      TextPainter layout(double fontSize) => TextPainter(
+        text: TextSpan(
+          text: value,
+          style: TextStyle(
+            fontFamily: 'NanumGothic',
+            fontSize: fontSize,
+            color: color,
+            height: 1.35,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout(maxWidth: 870);
+      var painter = layout(size);
+      while (painter.height > maxHeight && size > 20) {
+        painter.dispose();
+        size -= 1;
+        painter = layout(size);
+      }
+      painter.paint(canvas, Offset(105, y));
+      final height = painter.height;
+      painter.dispose();
+      return height;
+    }
+
+    var cursor = 710.0;
+    cursor += wrapped(story.title, cursor, 44, colors.text, maxHeight: 60) + 12;
+    cursor +=
+        wrapped(story.detail, cursor, 29, colors.secondaryText, maxHeight: 45) +
+        16;
+    wrapped(story.quote, cursor, 29, colors.text, maxHeight: 948 - cursor);
+    wrapped('Every Move Leaves an Echo.', 970, 20, colors.secondaryText);
   }
 
   void _text(
@@ -220,6 +299,11 @@ Future<Uint8List> renderEchoPostcardPng(
   EchoPostcardData data, {
   GameColors colors = GameColors.light,
 }) async {
+  if (data.story case final story?) {
+    for (final path in story.portraitAssets) {
+      await StarArt.loadPortrait(path);
+    }
+  }
   final recorder = ui.PictureRecorder();
   final canvas = Canvas(recorder);
   EchoPostcardPainter(
@@ -261,9 +345,11 @@ class EchoPostcardDialog extends StatefulWidget {
     required this.closeLabel,
     required this.errorLabel,
     this.share = shareEchoPostcard,
+    this.onShareTap,
   });
 
   final EchoPostcardData data;
+  final VoidCallback? onShareTap;
   final String title;
   final String shareLabel;
   final String closeLabel;
@@ -280,6 +366,7 @@ class _EchoPostcardDialogState extends State<EchoPostcardDialog> {
 
   Future<void> _share() async {
     if (_sharing) return;
+    widget.onShareTap?.call();
     final box = context.findRenderObject() as RenderBox?;
     final origin = box == null
         ? null
@@ -303,6 +390,7 @@ class _EchoPostcardDialogState extends State<EchoPostcardDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
+    icon: const Icon(Icons.auto_awesome_outlined),
     title: Text(widget.title),
     content: SingleChildScrollView(
       child: Column(
@@ -310,9 +398,9 @@ class _EchoPostcardDialogState extends State<EchoPostcardDialog> {
         children: [
           Semantics(
             image: true,
-            label:
-                '${widget.data.levelText}, ${widget.data.movesText}, '
-                '${widget.data.bestText}, ${widget.data.stars}/3',
+            label: widget.data.story == null
+                ? '${widget.data.levelText}, ${widget.data.movesText}, ${widget.data.bestText}, ${widget.data.stars}/3'
+                : '${widget.data.story!.title}, ${widget.data.story!.detail}, ${widget.data.story!.quote}',
             child: AspectRatio(
               aspectRatio: 1,
               child: CustomPaint(

@@ -57,20 +57,26 @@ void main() {
     expect(again.forLevel(2), isNull);
   });
 
-  test('손상된 JSON은 실행을 막지 않고 새 기록을 저장할 수 있다', () async {
+  test('손상된 JSON은 실행을 막지 않고 원문을 보호한다', () async {
     SharedPreferences.setMockInitialValues({
       ProgressRepository.storageKey: '{bad',
     });
     final repository = await ProgressRepository.load();
     expect(repository.forLevel(1), isNull);
     await repository.recordCompletion(levelId: 2, moves: 4, minimumMoves: 4);
-    expect((await ProgressRepository.load()).forLevel(2)!.bestMoves, 4);
+    expect(repository.saveFailed, isTrue);
+    expect(
+      (await SharedPreferences.getInstance()).getString(
+        ProgressRepository.storageKey,
+      ),
+      '{bad',
+    );
   });
 
   test('잘못된 개별 레코드는 건너뛰고 정상 레코드는 유지한다', () async {
     SharedPreferences.setMockInitialValues({
       ProgressRepository.storageKey: jsonEncode({
-        'version': 1,
+        'version': ProgressRepository.schemaVersion,
         'levels': [
           {'levelId': 1, 'bestMoves': 4, 'bestStars': 3, 'completionCount': 2},
           {
@@ -90,7 +96,10 @@ void main() {
   });
 
   test('미래 버전의 저장 데이터는 덮어쓰지 않는다', () async {
-    final raw = jsonEncode({'version': 2, 'levels': []});
+    final raw = jsonEncode({
+      'version': ProgressRepository.schemaVersion + 1,
+      'levels': [],
+    });
     SharedPreferences.setMockInitialValues({
       ProgressRepository.storageKey: raw,
     });

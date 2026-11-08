@@ -17,23 +17,23 @@
       }
     }
   },
-  "instruction": "Slide the green block to the star.",
+  "instruction": "Slide RIQ, marked in mint, to the star gate.",
   "echoInstruction": "An echo disappears after your next move.",
   "gateInstruction": "Leave an echo on the diamond to open the gate.",
   "gateOpen": "Gate open! Move through on this turn.",
   "gateClosed": "The gate is closed. Leave an echo on the diamond.",
   "gateOccupied": "A block on a closed gate can still leave.",
   "noMoves": "No moves left. Undo and try another way.",
-  "boardLabel": "Drag blocks one square at a time to move the green block to the star.",
+  "boardLabel": "Slide RIQ and the rune stones one square at a time. Guide mint-marked RIQ to the star gate.",
   "soundOn": "Turn sound effects off",
   "soundOff": "Turn sound effects on",
   "help": "How to play",
-  "helpBody": "Slide one block one square at a time. Move the green block to the star.\n\nThe square a block leaves behind becomes an echo. It blocks movement until another valid move finishes.\n\nOn diamond stages, an echo on the diamond opens the gate for the next move. A block on a closed gate can still leave.\n\nUse Undo to try a different move.\n\nSpecial tiles have rules shown beneath the board: × erases the echo, Ⅱ keeps it, arrows restrict the exit direction, and ▶ admits only the green block.",
+  "helpBody": "Slide one block one square at a time. Move the mint-marked RIQ to the star.\n\nThe square a block leaves behind becomes an echo. It blocks movement until another valid move finishes.\n\nOn diamond stages, an echo on the diamond opens the gate for the next move. A block on a closed gate can still leave.\n\nUse Undo to try a different move.\n\nSpecial tiles have rules shown beneath the board: × erases the echo, Ⅱ keeps it, arrows restrict the exit direction, and ▶ admits only the mint-marked RIQ.",
   "undo": "Undo",
   "undoLastMove": "Undo last move",
   "restart": "Restart",
   "levels": "Levels",
-  "complete": "You escaped!",
+  "complete": "Our star, at last!",
   "completeDetail": "Moves: {count}.",
   "@completeDetail": {
     "placeholders": {
@@ -82,19 +82,416 @@
   },
   "musicOn": "Turn music off",
   "musicOff": "Turn music on",
-  "eraserRule": "Crossed tiles erase the echo when a block leaves.",
-  "holdRule": "Pause tiles keep the previous echo when a block leaves.",
-  "oneWayRule": "A block on an arrow tile can leave only in the arrow’s direction.",
-  "goalOnlyRule": "Triangle tiles admit only the green block.",
+  "eraserRule": "Dandelion tile: leaving it scatters the echo.",
+  "holdRule": "Amber tile: leaving it keeps the previous echo.",
+  "oneWayRule": "Stream tile: a block can leave only the way the water flows.",
+  "goalOnlyRule": "Clover tile: only RIQ may step in.",
   "settings": "Settings",
-  "appearance": "Appearance",
-  "themeSystem": "System",
-  "themeLight": "Light",
-  "themeDark": "Dark",
   "reduceMotion": "Reduce motion",
   "reduceMotionDescription": "Use quiet, instant transitions. System reduced motion is always respected.",
   "soundEffects": "Sound effects",
   "backgroundMusic": "Background music",
   "settingsSaveError": "Settings could not be saved. Your choice still applies for this session.",
-  "skipCelebration": "Skip celebration"
+  "skipCelebration": "Skip celebration",
+  "home": "Home",
+  "homeTagline": "Every little step leaves an Echo.",
+  "playLevel": "Continue · Gate {number}",
+  "completedLevels": "{count} / {total} completed",
+  "collectedStars": "{count} stars",
+  "skipIntro": "Skip intro",
+  "replayIntro": "Watch intro again",
+  "introLabel": "Riq wakes up, leaves a purple Echo, reaches the star gate and lights a constellation.",
+  "preparingGame": "Getting your puzzles ready…",
+  "retry": "Try loading again",
+  "motionSection": "Motion",
+  "audioSection": "Audio",
+  "leaveGameTitle": "Return home?",
+  "leaveGameBody": "This unfinished board and its Undo history will reset. Your completed levels and stars are saved.",
+  "leaveGame": "Return home",
+  "keepPlaying": "Keep playing",
+  "chooseLevel": "Choose your next move",
+  "currentLevel": "Current level",
+  "homeProgress": "Your progress",
+  "introSection": "Opening sequence",
+  "@playLevel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "@completedLevels": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@collectedStars": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tutorialMove": "Slide right. Move a block. Leave an Echo.",
+  "tutorialBlock": "Try sliding back left. Your last move becomes your next obstacle.",
+  "tutorialFinish": "Slide right to the star. The old Echo changes after your next move.",
+  "skipTutorial": "Skip tutorial",
+  "replayTutorial": "Practice Echo again",
+  "dailyEcho": "Daily Echo",
+  "dailyTarget": "Perfect target: {count} moves",
+  "dailyPerfect": "Perfect Echo achieved!",
+  "dailyStreak": "Consecutive days played: {count}",
+  "dailyDone": "Completed",
+  "dailyPlayed": "Played",
+  "dailyQuiet": "No play recorded",
+  "dailyPlay": "Play Daily Echo",
+  "dailyReplay": "Replay today’s Echo",
+  "playtestTitle": "Optional playtest records",
+  "playtestConsent": "Record playtest data on this device",
+  "playtestPrivacy": "Optional. Records puzzle results and timings on this device, without names, contacts or move paths. Nothing is uploaded automatically. Share a JSON file only when you choose Export. You can stop or delete records anytime.",
+  "playWithoutRecording": "Play without recording",
+  "exportTestData": "Export test data",
+  "deleteTestData": "Delete test records",
+  "deleteTestDataBody": "Delete all playtest records and stop recording? Your puzzle progress and Daily history will remain.",
+  "playtestError": "Could not save or share test records. Your game is still available.",
+  "playtestCount": "Recorded events: {count}",
+  "chapterSummary": "Chapter {number} · {completed}/{total} completed · {stars} stars",
+  "@dailyTarget": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@dailyStreak": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@playtestCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@chapterSummary": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "stars": {
+        "type": "int"
+      }
+    }
+  },
+  "storyTitle": "A Little Star Home",
+  "storyInvite": "Time to find our star!",
+  "courierName": "RIQ",
+  "homeSubtitle": "Find friends sleeping beyond the star gates. Bring their memories home.",
+  "credits": "Fonts & open source",
+  "riqName": "RIQ",
+  "lastEchoTitle": "The Last Echo",
+  "gardenName": "Crescent Garden",
+  "album": "Spirit Album",
+  "journeyMap": "Journey Map",
+  "unknownSpirit": "A sleeping friend",
+  "unknownMemory": "Open the star gate to discover this friend and its memory.",
+  "equipCompanion": "Walk together",
+  "equippedCompanion": "Your companion",
+  "recoveredMemory": "A memory restored",
+  "readMemory": "Read the memory",
+  "skipMemory": "Read later",
+  "discoveryCard": "Spirit discovery card",
+  "collectionCard": "Crescent Garden collection card",
+  "collectionError": "The album could not be saved. Friends can be restored from completed stages.",
+  "collectionFuture": "This album was saved by a newer version. Its data is protected; puzzles remain playable.",
+  "collectionCorrupt": "The album could not be read. Keep a backup and restore it from completed stages.",
+  "restoreAlbum": "Restore from progress",
+  "retrySave": "Retry saving",
+  "backfillDismiss": "Got it",
+  "familyForest": "Forest spirit",
+  "familyStarlight": "Starlight spirit",
+  "familyLetter": "Letter spirit",
+  "familyCloud": "Cloud spirit",
+  "familyMemory": "Memory spirit",
+  "guardianEndingTitle": "The Garden’s Promise",
+  "guardianEnding": "The friends had not vanished. They were sleeping inside the star gates. Who kept them safe?",
+  "futureStoryNote": "Stages 6–25 remain playable. Their friends and stories are still being prepared.",
+  "storySoon": "Story coming later · Puzzles available",
+  "dailyWalk": "A little walk today",
+  "riqIdle": "Shall we visit that star gate?",
+  "riqEcho": "Look! A little light stayed behind!",
+  "riqBlocked": "An Echo is in the way. Shall we try another path?",
+  "riqGate": "The path is open!",
+  "riqWelcome": "A new friend is awake!",
+  "journeySeason": "Footprints of a Forgotten Star",
+  "gardenProgress": "Garden memories {count}/5",
+  "@gardenProgress": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "newFriend": "Meet {name}!",
+  "@newFriend": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "newGuardian": "Guardian {name}!",
+  "@newGuardian": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "backfillSummary": "Restored {count} friends and their memories from your progress.",
+  "@backfillSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pendingMemories": "{count} memories waiting to be read",
+  "@pendingMemories": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "foundAtStage": "Found at star gate {level}",
+  "@foundAtStage": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "seasonComplete": "Every light in Season 1 is home.",
+  "backfillUpdated": "Your star-gate progress restored new friends and memories to the album.",
+  "seasonProgress": "Season 1 friends {count}/25",
+  "@seasonProgress": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chapterFriends": "Friends {count}/5",
+  "@chapterFriends": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chapterCollection": "{name} · friends {count}/5",
+  "@chapterCollection": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chapterCard": "{name} collection card",
+  "@chapterCard": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "constellationAtlas": "Constellation Atlas",
+  "constellationName1": "Moonflower",
+  "constellationName2": "Five Lights",
+  "constellationName3": "Sealed Letter",
+  "constellationName4": "Wind Ring",
+  "constellationName5": "First Star",
+  "constellationLit": "{lit} of {total} stars lit",
+  "@constellationLit": {
+    "placeholders": {
+      "lit": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "constellationBestStars": "Best stars {stars}/{max}",
+  "@constellationBestStars": {
+    "placeholders": {
+      "stars": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "constellationDormant": "Still asleep",
+  "constellationRestored": "Restored",
+  "constellationGolden": "Golden",
+  "constellationSummary": "{name} constellation. {lit} of {total} stars lit. Best stars {stars} of {max}. {status}.",
+  "@constellationSummary": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "lit": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "stars": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "constellationNewStar": "A star in {name} woke up",
+  "@constellationNewStar": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "constellationCompleteTitle": "{name} shines again",
+  "@constellationCompleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "constellationGoldenTitle": "{name} turned golden",
+  "@constellationGoldenTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "constellationPending": "This star lights up once your progress is saved.",
+  "constellationNewVersion": "Cleared in an earlier version. Stars count once you clear this one.",
+  "constellationLevelStars": "Gate {number} · {stars} of 3 stars",
+  "@constellationLevelStars": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "stars": {
+        "type": "int"
+      }
+    }
+  },
+  "constellationLevelDark": "Gate {number} · not cleared yet",
+  "@constellationLevelDark": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "constellationPlay": "Play",
+  "constellationBack": "All constellations",
+  "viewConstellation": "View constellation",
+  "journey": "Journey",
+  "journeyStatus": "Status",
+  "journeyConstellations": "Stars",
+  "journeyCompanions": "Friends",
+  "journeyRewards": "Rewards",
+  "journeyMenu": "Menu",
+  "journeyCleared": "{count} / {total} stages",
+  "@journeyCleared": {"placeholders": {"count": {"type": "int"}, "total": {"type": "int"}}},
+  "journeyStarCount": "Stars {count} / {total}",
+  "@journeyStarCount": {"placeholders": {"count": {"type": "int"}, "total": {"type": "int"}}},
+  "journeyFriends": "Friends {count} / {total}",
+  "@journeyFriends": {"placeholders": {"count": {"type": "int"}, "total": {"type": "int"}}},
+  "journeyStreak": "{days}-day streak",
+  "@journeyStreak": {"placeholders": {"days": {"type": "int"}}},
+  "companionEquip": "Travel together",
+  "companionEquipped": "Traveling with you",
+  "companionUnknown": "A friend not met yet",
+  "journeyPageHint": "Swipe to see more",
+  "playerLevel": "Lv {level}",
+  "@playerLevel": {"placeholders": {"level": {"type": "int"}}},
+  "stardustCount": "Stardust {count}",
+  "@stardustCount": {"placeholders": {"count": {"type": "int"}}},
+  "rewardXp": "+{xp} XP",
+  "@rewardXp": {"placeholders": {"xp": {"type": "int"}}},
+  "rewardStardust": "+{count} stardust",
+  "@rewardStardust": {"placeholders": {"count": {"type": "int"}}},
+  "rewardLevelUp": "Level up! Lv {level}",
+  "@rewardLevelUp": {"placeholders": {"level": {"type": "int"}}},
+  "rewardPower": "New power: {name}",
+  "@rewardPower": {"placeholders": {"name": {"type": "String"}}},
+  "rewardBond": "Bond with {name} Lv {level}",
+  "@rewardBond": {"placeholders": {"name": {"type": "String"}, "level": {"type": "int"}}},
+  "rewardBareHanded": "Bare-handed star! No hints, fewest moves",
+  "rewardTrail": "New move trail: {name}",
+  "@rewardTrail": {"placeholders": {"name": {"type": "String"}}},
+  "rewardTitle": "New title: {name}",
+  "@rewardTitle": {"placeholders": {"name": {"type": "String"}}},
+  "rewardCharge": "Starlight path pass +{count}",
+  "@rewardCharge": {"placeholders": {"count": {"type": "int"}}},
+  "starlightPath": "Starlight path",
+  "starlightFree": "Free",
+  "starlightPass": "Pass",
+  "starlightShort": "Not enough stardust",
+  "starlightNoMove": "No path from here. Try undoing.",
+  "starlightCapped": "Using the starlight path caps this clear at 2 stars",
+  "minimumMovesChip": "Best {count}",
+  "@minimumMovesChip": {"placeholders": {"count": {"type": "int"}}},
+  "rewardsPowers": "Constellation powers",
+  "rewardsTrack": "Level rewards",
+  "rewardsTrails": "Move trails",
+  "rewardsTitles": "Titles",
+  "powerLocked": "Wakes when {constellation} is complete",
+  "@powerLocked": {"placeholders": {"constellation": {"type": "String"}}},
+  "powerWorld2": "Usable in the Cloud-Sea Lighthouse",
+  "powerActive": "Ready to use",
+  "trackClaimed": "Claimed",
+  "equip": "Equip",
+  "equipped": "Equipped",
+  "bondLevel": "Bond Lv {level}",
+  "@bondLevel": {"placeholders": {"level": {"type": "int"}}},
+  "nextWorldTeaser": "The star gate is open · Cloud-Sea Lighthouse — coming soon",
+  "xpToNext": "{xp} XP to next level",
+  "@xpToNext": {"placeholders": {"xp": {"type": "int"}}},
+  "resultMoves": "This run",
+  "resultBest": "Best",
+  "resultFewest": "Fewest",
+  "watchReplayShort": "Replay",
+  "moreActions": "More"
 }

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>BLORIQ · Arcade Experience</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#101827;color:#f0f4ff;font:16px/1.65 system-ui,sans-serif}main{max-width:1160px;margin:auto;padding:40px 24px 72px}h1{letter-spacing:.1em;margin:0}h2{margin-top:48px}p{color:#a8b7cd;max-width:760px}a{color:#85a4ff}button{min-height:48px;border:1px solid #6e819e;border-radius:14px;background:#1a2638;color:#f0f4ff;font:inherit;padding:8px 20px;cursor:pointer}button[aria-pressed=true]{background:#85a4ff;color:#101827;border-color:#85a4ff}nav{display:flex;gap:12px;flex-wrap:wrap;margin:24px 0}.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px}figure{margin:0;background:#1a2638;border:1px solid #33465f;padding:16px;border-radius:24px}figure img{display:block;width:100%;max-width:390px;height:auto;margin:auto;border-radius:16px}figcaption{color:#a8b7cd;text-align:center;margin-top:12px}input{width:100%;accent-color:#b6a0ff;min-height:48px}label{display:block}.frame{max-width:420px;margin:24px auto}.tag{color:#45d7b4;font-size:14px;font-weight:700}footer{margin-top:40px;color:#a8b7cd;font-size:14px}
+  </style>
+</head>
+<body>
+<main>
+  <span class="tag">LOCAL IMPLEMENTATION · 2026.10.29</span>
+  <h1>BLORIQ</h1>
+  <p>한 번의 이동, 다음 수를 바꾸는 잔상. 4초 인트로와 홈, 통일된 아케이드 화면을 확인하세요. 아래 이미지는 Flutter 위젯 렌더러로 생성했습니다.</p>
+  <nav aria-label="테마">
+    <button type="button" data-theme="dark" aria-pressed="true">Dark</button>
+    <button type="button" data-theme="light" aria-pressed="false">Light</button>
+  </nav>
+  <h2>시작과 플레이</h2>
+  <div class="gallery">
+    <figure><img data-shot="home-ko" alt="한국어 홈: 진행 요약과 플레이 버튼"><figcaption>홈 · 진행 요약과 다음 도전</figcaption></figure>
+    <figure><img data-shot="stage-1" alt="게임판과 이동 수 배지"><figcaption>게임 · 입체 블록과 정돈된 HUD</figcaption></figure>
+    <figure><img data-shot="victory-new-best" alt="별 평가와 최고 기록 결과 패널"><figcaption>완료 · 별과 최고 기록</figcaption></figure>
+  </div>
+  <h2>선택과 설정</h2>
+  <div class="gallery">
+    <figure><img data-shot="levels-ko" alt="최고 별과 현재 단계가 표시된 스테이지 그리드"><figcaption>스테이지 · 전체 25개 선택 가능</figcaption></figure>
+    <figure><img data-shot="settings-ko" alt="화면 모션 오디오 인트로 설정"><figcaption>설정 · 테마, 모션, 오디오, 인트로</figcaption></figure>
+    <figure><img data-shot="help-ko" alt="게임 규칙 도움말"><figcaption>도움말 · 기존 규칙 유지</figcaption></figure>
+  </div>
+  <h2>4초 오프닝 스토리보드</h2>
+  <p>격자 등장 → Mint 블록 이동 → Purple Echo → Gold 출구의 파동 → 로고. 실제 앱에서는 연속 애니메이션으로 재생되며 언제든 건너뛸 수 있습니다.</p>
+  <label for="timeline">인트로 프레임: <output id="time-label">1.3초 · 잔상을 남기는 첫 이동</output></label>
+  <input id="timeline" type="range" min="0" max="4" step="1" value="1">
+  <figure class="frame"><img id="intro" alt="인트로 주요 프레임"><figcaption id="intro-caption">1.3초 · 잔상을 남기는 첫 이동</figcaption></figure>
+  <h2>게임 화면 개선 전후</h2>
+  <div class="gallery">
+    <figure><img id="before" alt="변경 전 게임 화면"><figcaption>기존 · 37841b2</figcaption></figure>
+    <figure><img data-shot="stage-1" alt="변경 후 게임 화면"><figcaption>현재 · 홈 이동, 정보 배지, 공통 소재감</figcaption></figure>
+  </div>
+  <footer>실기기 프레임 성능과 음향 확인은 별도입니다. <a href="ARCADE_EXPERIENCE_QA.md">검증 범위와 실행 안내</a></footer>
+</main>
+<script>
+  let theme = 'dark';
+  const frames = [
+    ['intro-reveal','0.3초 · 격자와 블록 등장'],
+    ['intro-echo','1.3초 · 잔상을 남기는 첫 이동'],
+    ['intro-exit','2.2초 · 출구에 도달하는 두 번째 이동'],
+    ['intro-burst','2.9초 · 파동과 입자'],
+    ['intro-logo','3.7초 · 로고와 홈으로 연결']
+  ];
+  function render(){
+    document.querySelectorAll('[data-shot]').forEach(img=>img.src=`screenshots/arcade/${theme}-${img.dataset.shot}.png`);
+    document.getElementById('before').src=`screenshots/${theme}-stage-1.png`;
+    const [file,caption]=frames[Number(document.getElementById('timeline').value)];
+    document.getElementById('intro').src=`screenshots/arcade/${theme}-${file}.png`;
+    document.getElementById('intro-caption').textContent=caption;
+    document.getElementById('time-label').textContent=caption;
+    document.querySelectorAll('[data-theme]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.theme===theme)));
+  }
+  document.querySelectorAll('[data-theme]').forEach(button=>button.addEventListener('click',()=>{theme=button.dataset.theme;render()}));
+  document.getElementById('timeline').addEventListener('input',render);
+  render();
+</script>
+</body>
+</html>

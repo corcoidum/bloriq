@@ -1,3 +1,5 @@
+import 'support/start_game.dart';
+
 import 'package:bloriq/domain/puzzle.dart';
 import 'package:bloriq/game/bloriq_game.dart';
 import 'package:bloriq/main.dart';
@@ -28,20 +30,17 @@ void main() {
       oneWays: {const Position(2, 1): const Position(1, 0)},
       goalOnlyTiles: {const Position(3, 1)},
     );
-    await tester.pumpWidget(BloriqApp(loadLevels: () async => [level]));
+    await pumpGame(tester, BloriqApp(loadLevels: () async => [level]));
     final boardFinder = find.byType(GameWidget<BloriqGame>);
     for (var i = 0; i < 100 && boardFinder.evaluate().isEmpty; i++) {
       await tester.pump(const Duration(milliseconds: 20));
     }
     expect(boardFinder, findsOneWidget);
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.textContaining('Crossed tiles erase the echo'), findsOneWidget);
-    expect(
-      find.textContaining('Pause tiles keep the previous echo'),
-      findsOneWidget,
-    );
-    expect(find.textContaining('arrow tile'), findsOneWidget);
-    expect(find.textContaining('Triangle tiles'), findsOneWidget);
+    expect(find.textContaining('Dandelion tile'), findsOneWidget);
+    expect(find.textContaining('Amber tile'), findsOneWidget);
+    expect(find.textContaining('Stream tile'), findsOneWidget);
+    expect(find.textContaining('Clover tile'), findsOneWidget);
 
     final game = tester.widget<GameWidget<BloriqGame>>(boardFinder).game!;
     final board = tester.getRect(boardFinder);

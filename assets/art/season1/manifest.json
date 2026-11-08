@@ -1,0 +1,659 @@
+{
+  "generation": "OpenAI built-in ImageGen; original PNGs retained without pixel edits",
+  "references": [
+    "assets/art/last_echo/lulu.png",
+    "assets/art/last_echo/lunabel.png"
+  ],
+  "portraits": [
+    {
+      "id": "s1-01",
+      "name": "Mori",
+      "asset": "assets/art/star_courier/courier.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        129,
+        97,
+        1118,
+        1184
+      ],
+      "portraitScale": 0.89983,
+      "portraitAnchor": [
+        0.49721,
+        0.51077
+      ],
+      "sha256": "52907b8e5812430333a3c50e38d510f7e4dc5b454e1eaf93959c32b32b6d9787",
+      "designSummary": "Mint body, two sprout leaves and small triangular ears. Wiggles sprout leaves. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-02",
+      "name": "Pomi",
+      "asset": "assets/art/last_echo/pomi.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        171,
+        112,
+        1097,
+        1157
+      ],
+      "portraitScale": 0.936,
+      "portraitAnchor": [
+        0.50558,
+        0.50598
+      ],
+      "sha256": "abacd111f4cc5fca00b5b1f5fea3c1958c49b486cbd06e6cca2df2f8346316c9",
+      "designSummary": "Cream-peach body, pink flowerbud and petal feet. Waves a tiny hand. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-03",
+      "name": "Doto",
+      "asset": "assets/art/last_echo/doto.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        206,
+        200,
+        1051,
+        1132
+      ],
+      "portraitScale": 1.04948,
+      "portraitAnchor": [
+        0.5012,
+        0.5311
+      ],
+      "sha256": "f79aa54abafe6a7c9fd992d38c4a1e806451c8bddebe499da16f62b4fd82054e",
+      "designSummary": "Acorn cap, round ears and a stubby tail. Gives a thoughtful nod. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-04",
+      "name": "Lulu",
+      "asset": "assets/art/last_echo/lulu.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        135,
+        253,
+        1124,
+        1053
+      ],
+      "portraitScale": 0.989,
+      "portraitAnchor": [
+        0.50199,
+        0.52073
+      ],
+      "sha256": "10ebcd68fcfcde98db1a1bbdb99059e744eb1e6fbeac43ff9c0f258fd25a9e08",
+      "designSummary": "Round dew ornament and little teal leaf wings. Opens little leaf wings. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-05",
+      "name": "Lunabel",
+      "asset": "assets/art/last_echo/lunabel.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        140,
+        171,
+        1127,
+        1087
+      ],
+      "portraitScale": 0.991,
+      "portraitAnchor": [
+        0.50518,
+        0.50159
+      ],
+      "sha256": "0816355b727a496cc9eed88d9bb56d7652dd24f12fe8653eef1ddc42ded6603f",
+      "designSummary": "Round forest guardian with a moonflower and leaf crown. Spreads leaves to welcome friends. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-06",
+      "name": "Lumi",
+      "asset": "assets/art/season1/lumi.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        220,
+        182,
+        1037,
+        1089
+      ],
+      "portraitScale": 1.07841,
+      "portraitAnchor": [
+        0.5012,
+        0.50678
+      ],
+      "sha256": "bba98aa39cded2d801fcde1f2eac9f3ce18117fa7dd946a406703c051f8cf4cc",
+      "designSummary": "Small round body with little star antenna. Gentle sway. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-07",
+      "name": "Pico",
+      "asset": "assets/art/season1/pico.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        147,
+        309,
+        1119,
+        1123
+      ],
+      "portraitScale": 1.0063,
+      "portraitAnchor": [
+        0.50478,
+        0.57097
+      ],
+      "sha256": "fb2c81e1379aea51ad9de2147dbb2e7ee4c78ef99b7f4cd718430a90e0a592c2",
+      "designSummary": "Small round body with star cheek mark. Curious tilt. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-08",
+      "name": "Tori",
+      "asset": "assets/art/season1/tori.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        191,
+        262,
+        1060,
+        1099
+      ],
+      "portraitScale": 1.12557,
+      "portraitAnchor": [
+        0.4988,
+        0.54266
+      ],
+      "sha256": "77e16627c68b9922393ca02d8fd75ff635d276e0a3d6d1da1f49d6bd22b553c3",
+      "designSummary": "Small round body with crescent ears. Little wave. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-09",
+      "name": "Mio",
+      "asset": "assets/art/season1/mio.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        253,
+        241,
+        1124,
+        1076
+      ],
+      "portraitScale": 1.12299,
+      "portraitAnchor": [
+        0.54904,
+        0.52512
+      ],
+      "sha256": "77d3db320655f67bd6e6a3bc218b89b80f2cfa35943e63b9c535da2a437e586f",
+      "designSummary": "Small round body with sparkling ribbon tail. Short float. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-10",
+      "name": "Lumen",
+      "asset": "assets/art/season1/lumen.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        251,
+        275,
+        1019,
+        1063
+      ],
+      "portraitScale": 1.24127,
+      "portraitAnchor": [
+        0.50638,
+        0.53349
+      ],
+      "sha256": "5d198bec7cffbc3c9a21809abe5d3c8d539574010ac89db9ca60394f51d9f7bb",
+      "designSummary": "Small round body with small five-star crown. Welcoming bow. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-11",
+      "name": "Pepi",
+      "asset": "assets/art/season1/pepi.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        236,
+        290,
+        1058,
+        1063
+      ],
+      "portraitScale": 1.18993,
+      "portraitAnchor": [
+        0.51595,
+        0.53947
+      ],
+      "sha256": "40e12c84af5523de312d4e7d065dd3698c5bfa04a0f44d7a91d9826acdda5801",
+      "designSummary": "Small round body with folded paper ears. Gentle sway. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-12",
+      "name": "Ribon",
+      "asset": "assets/art/season1/ribon.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        155,
+        332,
+        1117,
+        1065
+      ],
+      "portraitScale": 1.01676,
+      "portraitAnchor": [
+        0.50718,
+        0.55702
+      ],
+      "sha256": "d145b00ded7dd746d2b1864da00bdcbdcf3e47a2806278a4b935a4b0b5aad2c7",
+      "designSummary": "Small round body with ribbon tail. Curious tilt. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-13",
+      "name": "Coco",
+      "asset": "assets/art/season1/coco.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        234,
+        289,
+        995,
+        1056
+      ],
+      "portraitScale": 1.27525,
+      "portraitAnchor": [
+        0.49003,
+        0.53628
+      ],
+      "sha256": "838d55f6a1d2ecd84f5392ca11b518d9df262852bbebebee12ef3453ab023009",
+      "designSummary": "Small round body with envelope chest patch. Little wave. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-14",
+      "name": "Noti",
+      "asset": "assets/art/season1/noti.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        142,
+        402,
+        1116,
+        1052
+      ],
+      "portraitScale": 1.00423,
+      "portraitAnchor": [
+        0.50159,
+        0.57974
+      ],
+      "sha256": "daa959c087dc63ab545f5ef48caf4219bb7954f56c48ecd05c8f33ffa7c1ef81",
+      "designSummary": "Small round body with small paper wings. Short float. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-15",
+      "name": "Ello",
+      "asset": "assets/art/season1/ello.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        202,
+        317,
+        1061,
+        1031
+      ],
+      "portraitScale": 1.13867,
+      "portraitAnchor": [
+        0.50359,
+        0.53748
+      ],
+      "sha256": "dfabc4d56fee4f65df24f5a9697cf64bb688da6d3f43b543e6e8a95ffb86cc2b",
+      "designSummary": "Small round body with letter-seal mark. Welcoming bow. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-16",
+      "name": "Poff",
+      "asset": "assets/art/season1/poff.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        162,
+        204,
+        1111,
+        1097
+      ],
+      "portraitScale": 1.03068,
+      "portraitAnchor": [
+        0.50758,
+        0.51874
+      ],
+      "sha256": "2af3bfcf7d5ae7a3a1018403c9346a294ba3618f2fb939183e68fc5aee005ed7",
+      "designSummary": "Small round body with fluffy cloud cap. Gentle sway. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-17",
+      "name": "Suu",
+      "asset": "assets/art/season1/suu.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        231,
+        309,
+        1076,
+        1040
+      ],
+      "portraitScale": 1.15754,
+      "portraitAnchor": [
+        0.52113,
+        0.53788
+      ],
+      "sha256": "d987c996381a51a0474ea8b2a47a2204b289ca148a43afa107aa061dfe50e2b6",
+      "designSummary": "Small round body with short wind tail. Curious tilt. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-18",
+      "name": "Momo",
+      "asset": "assets/art/season1/momo.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        195,
+        353,
+        1070,
+        959
+      ],
+      "portraitScale": 1.11785,
+      "portraitAnchor": [
+        0.50439,
+        0.52313
+      ],
+      "sha256": "fd1e72362af2205cdd56e11a25251eab1de543d7cd1f33dcfcf9be50290cbd12",
+      "designSummary": "Small round body with puffy cloud cheeks. Little wave. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-19",
+      "name": "Wiri",
+      "asset": "assets/art/season1/wiri.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        201,
+        274,
+        1090,
+        1098
+      ],
+      "portraitScale": 1.10025,
+      "portraitAnchor": [
+        0.51475,
+        0.54705
+      ],
+      "sha256": "d5126421624bcdd13b0431f02764135b4e2f5f64fdb09bc05f95e5f309d919c2",
+      "designSummary": "Small round body with feather-like ears. Short float. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-20",
+      "name": "Hamo",
+      "asset": "assets/art/season1/hamo.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        172,
+        255,
+        1083,
+        1086
+      ],
+      "portraitScale": 1.07368,
+      "portraitAnchor": [
+        0.5004,
+        0.53469
+      ],
+      "sha256": "32255261560911c1bf3b01511119f2b3cf4dc8a9e33a233f0271f76f0d8a50c1",
+      "designSummary": "Small round body with wind-ring pattern. Welcoming bow. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-21",
+      "name": "Miru",
+      "asset": "assets/art/season1/miru.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        262,
+        428,
+        995,
+        1057
+      ],
+      "portraitScale": 1.33441,
+      "portraitAnchor": [
+        0.5012,
+        0.59211
+      ],
+      "sha256": "e5454dd3e4cbddfd827b16a97c0db3b11c650c944c62246f4dd2137ec0428076",
+      "designSummary": "Small round body with small crystal. Gentle sway. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-22",
+      "name": "Veil",
+      "asset": "assets/art/season1/veil.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        205,
+        334,
+        1124,
+        1076
+      ],
+      "portraitScale": 1.06433,
+      "portraitAnchor": [
+        0.5299,
+        0.5622
+      ],
+      "sha256": "2e82d73f3c34858007d14f6679b6b41e3ea8936ddb5acb3a07575a3ef93dc21c",
+      "designSummary": "Small round body with rounded violet tail. Curious tilt. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-23",
+      "name": "Or",
+      "asset": "assets/art/season1/or.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        151,
+        248,
+        1107,
+        1092
+      ],
+      "portraitScale": 1.02314,
+      "portraitAnchor": [
+        0.50159,
+        0.53429
+      ],
+      "sha256": "e630e92d282175e657d87a2e9284456b233e7dcef7a696ae55d3f4e4a8e9c90b",
+      "designSummary": "Small round body with constellation ear marks. Little wave. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-24",
+      "name": "Luche",
+      "asset": "assets/art/season1/luche.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        237,
+        267,
+        1048,
+        1066
+      ],
+      "portraitScale": 1.20607,
+      "portraitAnchor": [
+        0.51236,
+        0.5315
+      ],
+      "sha256": "15b2311629b336f03bda2ec0db4f88a5c0249dc281529361299d8ab1a3907fa4",
+      "designSummary": "Small round body with dewdrop crystal. Short float. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    },
+    {
+      "id": "s1-25",
+      "name": "Aster",
+      "asset": "assets/art/season1/aster.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "visibleBounds": [
+        259,
+        287,
+        1002,
+        1078
+      ],
+      "portraitScale": 1.23656,
+      "portraitAnchor": [
+        0.50279,
+        0.54426
+      ],
+      "sha256": "b0efa701866482bf9eb82d8a12c22f1baa4b9acd5fdfeadd107af92dbf7310be",
+      "designSummary": "Small round body with little star crown with three crystals. Welcoming bow. Original matte gouache/paper family, navy eyes, transparent RGBA, isolated front silhouette, no scene/UI/text/platform."
+    }
+  ]
+}

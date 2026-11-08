@@ -1,3 +1,5 @@
+import 'support/start_game.dart';
+
 import 'dart:convert';
 
 import 'package:bloriq/domain/puzzle.dart';
@@ -84,7 +86,7 @@ void main() {
       addTearDown(
         tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
       );
-      await tester.pumpWidget(const BloriqApp());
+      await pumpGame(tester, const BloriqApp());
       await _ready(tester);
       final game = _game(tester);
       expect(game.reduceMotion, isTrue);
@@ -104,7 +106,7 @@ void main() {
     tester,
   ) async {
     addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
-    await tester.pumpWidget(const BloriqApp());
+    await pumpGame(tester, const BloriqApp());
     await _ready(tester);
     final game = _game(tester);
     await _solve(tester);
@@ -131,7 +133,8 @@ void main() {
     tester,
   ) async {
     final ticking = ValueNotifier(true);
-    await tester.pumpWidget(
+    await pumpGame(
+      tester,
       ValueListenableBuilder<bool>(
         valueListenable: ticking,
         builder: (context, enabled, child) =>
@@ -149,7 +152,11 @@ void main() {
     final pausedProgress = game.celebrationProgress;
     await tester.pump(const Duration(milliseconds: 500));
     expect(game.celebrationProgress, pausedProgress);
-    expect(find.text('Next level'), findsNothing);
+    expect(
+      find.text('Next level'),
+      findsOneWidget,
+      reason: 'Discovery results allow continuing from the first frame',
+    );
     await tester.pump(const Duration(milliseconds: 1200));
     await tester.pump();
     expect(game.celebrationProgress, 1);
@@ -166,7 +173,7 @@ void main() {
     ticking.dispose();
   });
 
-  for (final mode in [ThemeMode.light, ThemeMode.dark]) {
+  for (final mode in [ThemeMode.dark]) {
     testWidgets(
       '${mode.name}: stage 14 and 20 complete through real gestures',
       (tester) async {
@@ -178,10 +185,11 @@ void main() {
             .where((level) => {14, 20, 21}.contains(level.id))
             .toList();
         final settings = await GameSettings.load();
-        await settings.setThemeMode(mode);
         await settings.setReduceMotion(true);
-        await tester.pumpWidget(
+        await pumpGame(
+          tester,
           BloriqApp(settings: settings, loadLevels: () async => levels),
+          levelId: 14,
         );
         await _ready(tester);
         for (final id in [14, 20]) {

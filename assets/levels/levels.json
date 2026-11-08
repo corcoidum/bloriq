@@ -22,12 +22,12 @@
     "boardWidth": 3,
     "boardHeight": 3,
     "startPosition": {
-      "x": 1,
-      "y": 2
+      "x": 0,
+      "y": 1
     },
     "exitPosition": {
       "x": 2,
-      "y": 0
+      "y": 1
     },
     "blocks": [
       {
@@ -38,23 +38,18 @@
     ],
     "obstacles": [
       {
-        "x": 2,
-        "y": 1
-      }
-    ],
-    "specialRules": [
+        "x": 0,
+        "y": 0
+      },
       {
-        "type": "echoEraser",
-        "positions": [
-          {
-            "x": 1,
-            "y": 1
-          }
-        ]
+        "x": 0,
+        "y": 2
       }
     ],
+    "specialRules": [],
     "minimumMoves": 4,
-    "difficulty": "beginner"
+    "difficulty": "beginner",
+    "revision": 2
   },
   {
     "id": 3,
@@ -94,19 +89,10 @@
         "y": 2
       }
     ],
-    "specialRules": [
-      {
-        "type": "goalOnly",
-        "positions": [
-          {
-            "x": 1,
-            "y": 0
-          }
-        ]
-      }
-    ],
-    "minimumMoves": 5,
-    "difficulty": "beginner"
+    "specialRules": [],
+    "minimumMoves": 4,
+    "difficulty": "beginner",
+    "revision": 2
   },
   {
     "id": 4,
@@ -138,60 +124,53 @@
         "y": 2
       }
     ],
-    "specialRules": [
-      {
-        "type": "echoHold",
-        "positions": [
-          {
-            "x": 2,
-            "y": 2
-          }
-        ]
-      }
-    ],
-    "minimumMoves": 6,
-    "difficulty": "beginner"
+    "specialRules": [],
+    "minimumMoves": 5,
+    "difficulty": "beginner",
+    "revision": 2
   },
   {
     "id": 5,
-    "boardWidth": 3,
-    "boardHeight": 3,
+    "boardWidth": 4,
+    "boardHeight": 4,
     "startPosition": {
       "x": 1,
-      "y": 2
+      "y": 0
     },
     "exitPosition": {
-      "x": 0,
-      "y": 1
+      "x": 1,
+      "y": 3
     },
     "blocks": [
       {
         "id": "b1",
-        "x": 2,
+        "x": 0,
+        "y": 2
+      },
+      {
+        "id": "b2",
+        "x": 1,
         "y": 2
       }
     ],
     "obstacles": [
       {
-        "x": 0,
+        "x": 3,
         "y": 2
-      }
-    ],
-    "specialRules": [
+      },
       {
-        "type": "oneWay",
-        "tiles": [
-          {
-            "x": 1,
-            "y": 2,
-            "dx": 1,
-            "dy": 0
-          }
-        ]
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 3
       }
     ],
+    "specialRules": [],
     "minimumMoves": 6,
-    "difficulty": "beginner"
+    "difficulty": "beginner",
+    "revision": 2
   },
   {
     "id": 6,

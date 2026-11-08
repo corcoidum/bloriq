@@ -1,5 +1,5 @@
+import 'dart:ui' as ui;
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flame/game.dart';
@@ -11,21 +11,62 @@ import 'audio/game_audio.dart';
 import 'domain/puzzle.dart';
 import 'design/game_theme.dart';
 import 'game/bloriq_game.dart';
+import 'game/mechanic_legend.dart';
+import 'design/keep_all_text.dart';
+import 'game/board_geometry.dart';
 import 'game/victory_panel.dart';
 import 'l10n/app_localizations.dart';
 import 'postcard/echo_postcard.dart';
 import 'progress/progress_repository.dart';
 import 'settings/game_settings.dart';
-import 'settings/settings_dialog.dart';
+import 'app/app_entry.dart';
+import 'app/game_session.dart';
+import 'app/experience_dialogs.dart';
+import 'app/journey_panel.dart';
+import 'progression/progression_repository.dart';
+import 'progression/progression_rules.dart';
+import 'app/level_picker.dart';
+import 'design/arcade_components.dart';
+import 'design/star_art.dart';
+import 'app/play_context.dart';
+import 'tutorial/echo_tutorial.dart';
+import 'analytics/local_analytics.dart';
+import 'story/narrative_controller.dart';
+import 'story/companion_view.dart';
+import 'story/story_catalog.dart';
+import 'story/spirit_album.dart';
+import 'story/discovery_panel.dart';
+import 'story/story_share.dart';
+import 'constellation/constellation_atlas.dart';
+import 'constellation/constellation_state.dart';
+import 'constellation/victory_constellation.dart';
+import 'game/assist.dart';
+import 'game/power_bar.dart';
+import 'world/saga.dart';
+import 'world/saga_map.dart';
+import 'world/world_catalog.dart';
+import 'world/world_map.dart';
+import 'world/world_progress.dart';
+import 'world/world_text.dart';
 
 void main() => runApp(const BloriqApp());
 
 class BloriqApp extends StatefulWidget {
-  const BloriqApp({super.key, this.loadLevels, this.settings});
+  const BloriqApp({
+    super.key,
+    this.loadLevels,
+    this.settings,
+    this.clock,
+    this.playtestMode = const bool.fromEnvironment('PLAYTEST_MODE'),
+    this.firstRunIntro = true,
+  });
 
   /// 테스트에서 이전 스테이지 구성과 기기 설정을 주입할 수 있다.
   final Future<List<Level>> Function()? loadLevels;
   final GameSettings? settings;
+  final DateTime Function()? clock;
+  final bool playtestMode;
+  final bool firstRunIntro;
 
   @override
   State<BloriqApp> createState() => _BloriqAppState();
@@ -37,6 +78,7 @@ class _BloriqAppState extends State<BloriqApp> {
   @override
   void initState() {
     super.initState();
+    unawaited(StarArt.load());
     if (widget.settings case final settings?) {
       _settings = settings..addListener(_settingsChanged);
     } else {
@@ -66,10 +108,10 @@ class _BloriqAppState extends State<BloriqApp> {
   Widget build(BuildContext context) => MaterialApp(
     title: 'BLORIQ',
     debugShowCheckedModeBanner: false,
-    theme: GameTheme.light,
+    // 밤하늘 게임이라 늘 다크 테마만 쓴다(기기 설정이 라이트여도 같다).
+    theme: GameTheme.dark,
     darkTheme: GameTheme.dark,
-    themeMode: _settings?.themeMode ?? ThemeMode.system,
-    // Flutter 위젯과 Flame 보드가 같은 프레임에 같은 팔레트로 바뀐다.
+    themeMode: ThemeMode.dark,
     themeAnimationDuration: Duration.zero,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
@@ -77,14 +119,34 @@ class _BloriqAppState extends State<BloriqApp> {
         locale?.languageCode == 'ko' ? const Locale('ko') : const Locale('en'),
     home: _settings == null
         ? const Scaffold(body: Center(child: CircularProgressIndicator()))
-        : GameScreen(loadLevels: widget.loadLevels, settings: _settings!),
+        : AppEntry(
+            loadLevels: widget.loadLevels,
+            clock: widget.clock,
+            playtestMode: widget.playtestMode,
+            firstRunIntro: widget.firstRunIntro,
+            settings: _settings!,
+            gameBuilder: (session, levelId, play) => GameScreen(
+              session: session,
+              play: play,
+              initialLevelId: levelId,
+              settings: _settings!,
+            ),
+          ),
   );
 }
 
 class GameScreen extends StatefulWidget {
-  const GameScreen({super.key, this.loadLevels, required this.settings});
+  const GameScreen({
+    super.key,
+    required this.session,
+    required this.initialLevelId,
+    this.play = const PlayContext.campaign(),
+    required this.settings,
+  });
 
-  final Future<List<Level>> Function()? loadLevels;
+  final GameSession session;
+  final PlayContext play;
+  final int initialLevelId;
   final GameSettings settings;
 
   @override
@@ -93,8 +155,22 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  late final Future<List<Level>> _levels = _loadLevels();
-  List<Level> _loaded = [];
+  late final List<Level> _loaded;
+  final _narrative = NarrativeController();
+  SpiritDefinition? _discovery;
+  bool _storyHidden = false;
+  bool _retryingSave = false;
+  bool _allowPop = false;
+  bool _leaving = false;
+  EchoTutorial? _tutorial;
+  AttemptRecorder? _attempt;
+  bool _modalOpen = false;
+  BoardGeometry? _geometry;
+
+  /// 보드 칸의 최소 터치 크기. 고정 배치로 이를 지킬 수 없을 때만 스크롤한다.
+  static const _minCell = 48.0;
+  bool _scrollLayout = false;
+  Object? _layoutKey;
   PuzzleController? _controller;
   BloriqGame? _game;
   int _index = 0;
@@ -108,6 +184,50 @@ class _GameScreenState extends State<GameScreen>
   bool _replaying = false;
   bool _reduceMotion = false;
   bool _isNewBest = false;
+
+  /// 이번 클리어로 받은 경험치·별가루·권능·유대. 결과 팝업에 보여 준다.
+  ClearReward? _reward;
+
+  /// 이번 시도에서 별빛 길을 썼는지(2별 상한), 무료 사용을 이미 했는지.
+  bool _starlightUsed = false;
+
+  /// 이번 클리어로 지금 세계의 다섯 별자리가 모두 완성됐는지.
+  bool _worldCleared = false;
+
+  /// 풀이 따라 하기 중: 매 수마다 다음 최단 수를 비춘다. 깨면 별 1개.
+  bool _guided = false;
+
+  /// 막힘 도움을 권할 시각에 화면을 다시 그린다.
+  Timer? _stuckTimer;
+  bool _starlightFreeUsed = false;
+
+  /// 확장 세계: 권능 막대에서 고른 권능. 다음 밀기가 이 권능으로 움직인다.
+  PuzzlePower? _armedPower;
+
+  /// 확장 세계 별자리를 저장 전에 떠 둔다.
+  WorldAtlas? _worldBefore;
+
+  /// 세계 2부터는 [LoadedWorld] 데이터와 권능 막대를 쓴다.
+  bool get _expansion => widget.play.world >= 2;
+  LoadedWorld? get _world => widget.session.world(widget.play.world);
+
+  /// 확장 세계에서 쓸 수 있는 권능(성장 기록 기준). 세계 1은 늘 비어 있다.
+  Set<PuzzlePower> get _ownedPowers => _expansion
+      ? ownedBoardPowers(widget.session.progression.hasPower)
+      : const {};
+
+  /// 이 스테이지에서 실제로 쓸 수 있는 권능: 가진 권능 중 스테이지가 여는 것.
+  Set<PuzzlePower> _stagePowers(Level level) => level.world >= 2
+      ? _ownedPowers.intersection(level.availablePowers)
+      : const {};
+
+  PuzzleController _newController(Level level) =>
+      PuzzleController(level, powers: _stagePowers(level));
+
+  /// 저장 전 별자리. 저장이 성공한 뒤 [_atlasAfter]와 비교해 연출을 고른다.
+  ConstellationAtlas? _atlasBefore, _atlasAfter;
+  ConstellationEvent? _constellation;
+  bool _constellationPending = false;
   Timer? _victoryFallback;
   late final AnimationController _victory = AnimationController(
     vsync: this,
@@ -122,11 +242,108 @@ class _GameScreenState extends State<GameScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _loaded = widget.play.level != null
+        ? [widget.play.level!]
+        : _expansion
+        ? _world!.levels
+        : widget.session.levels;
+    if (widget.play.guided) {
+      _tutorial = EchoTutorial();
+      if (widget.play.mode == PlayMode.campaign) {
+        unawaited(widget.session.onboarding.mark('inProgress'));
+      }
+    }
+    _index = _loaded.indexWhere((level) => level.id == widget.initialLevelId);
+    if (_index < 0) _index = 0;
+    _audio = widget.session.audio;
+    _progress = widget.session.progress;
+    _controller = _newController(_loaded[_index]);
+    _game = BloriqGame(_controller!)
+      ..trailStyle = widget.session.progression.equippedTrail;
+    widget.session.analytics.addListener(_analyticsChanged);
+    _startAttempt();
+    _trackOpened();
+  }
+
+  /// 캠페인 판을 열면 막힘 기록을 시작하고, 도움을 권할 시각에 다시 그린다.
+  void _trackOpened() {
+    _stuckTimer?.cancel();
+    if (widget.play.mode != PlayMode.campaign || _tutorial != null) return;
+    final struggle = widget.session.struggle;
+    final id = _controller!.state.level.id;
+    struggle.opened(id);
+    final left = struggle.untilStuck(id);
+    if (left != null && left > Duration.zero) {
+      _stuckTimer = Timer(left, () {
+        if (mounted) setState(() {});
+      });
+    }
+  }
+
+  bool _offerHelp(PuzzleController controller) =>
+      widget.play.mode == PlayMode.campaign &&
+      _tutorial == null &&
+      !_guided &&
+      !_replaying &&
+      !controller.state.isComplete &&
+      widget.session.struggle.isStuck(controller.state.level.id);
+
+  Map<String, Object?> get _eventContext => {
+    'mode': widget.play.mode.name,
+    'levelId': _controller!.state.level.id,
+    'revision': _controller!.state.level.revision,
+    if (_attempt != null) 'runId': _attempt!.runId,
+    if (widget.play.dailyDate != null) 'date': widget.play.dailyDate,
+    if (widget.play.challenge != null)
+      'poolVersion': widget.play.challenge!.poolVersion,
+  };
+  void _startAttempt() {
+    if (!widget.session.analytics.enabled) return;
+    _attempt = AttemptRecorder(widget.session.analytics, _eventContext);
+    if (_modalOpen) _attempt?.pause();
+    if (_tutorial != null) {
+      widget.session.analytics.record('tutorial_start', {
+        ..._eventContext,
+        'replay': widget.play.mode == PlayMode.tutorialReplay,
+        'reason': _tutorial!.step == 0 ? 'entry' : 'consent_midrun',
+      });
+    }
+    if (widget.play.mode == PlayMode.daily) {
+      widget.session.analytics.record('daily_open', _eventContext);
+    }
+  }
+
+  void _analyticsChanged() {
+    if (widget.session.analytics.enabled) {
+      if (_attempt == null) _startAttempt();
+    } else {
+      _attempt = null;
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _attempt?.foreground(state == AppLifecycleState.resumed);
+  }
+
+  @override
+  void didChangeMetrics() {
+    // 창/DPR 변경은 보드 크기가 같아도 진행 중 포인터의 기준을 무효화한다.
+    _cancelDrag();
   }
 
   @override
   void didChangeAccessibilityFeatures() {
     if (mounted) setState(() {});
+  }
+
+  int? get _bestMoves {
+    final level = _controller!.state.level;
+    if (widget.play.mode == PlayMode.daily) {
+      return widget.session.daily.bestMoves(widget.play.dailyDate!);
+    }
+    if (widget.play.mode == PlayMode.tutorialReplay) return null;
+    return _progress!.forLevel(level.id, revision: level.revision)?.bestMoves;
   }
 
   void _updateVictory() {
@@ -144,10 +361,52 @@ class _GameScreenState extends State<GameScreen>
 
   void _beginCompletion(PuzzleController controller) {
     final state = controller.state;
-    final previous = _progress!.forLevel(state.level.id);
-    _isNewBest = previous == null || state.moves < previous.bestMoves;
+    final previous = widget.play.mode == PlayMode.campaign
+        ? _progress!.forLevel(state.level.id, revision: state.level.revision)
+        : null;
+    _isNewBest = widget.play.mode == PlayMode.daily
+        ? (widget.session.daily.bestMoves(widget.play.dailyDate!) == null ||
+              state.moves <
+                  widget.session.daily.bestMoves(widget.play.dailyDate!)!)
+        : widget.play.mode == PlayMode.campaign &&
+              (previous == null || state.moves < previous.bestMoves);
+    _attempt?.finish(
+      widget.play.mode == PlayMode.daily ? 'daily_complete' : 'level_complete',
+      state.moves,
+    );
+    if (_tutorial?.complete == true) {
+      widget.session.analytics.record('tutorial_complete', {
+        ..._eventContext,
+        'replay': widget.play.mode == PlayMode.tutorialReplay,
+      });
+    }
+    // 기록이 메모리에서 바뀌기 전에 별자리 상태를 떠 둔다.
+    _constellation = null;
+    _constellationPending = false;
+    _atlasAfter = null;
+    _atlasBefore = widget.play.mode == PlayMode.campaign
+        ? ConstellationAtlas.derive(widget.session.levels, _progress!)
+        : null;
+    _worldBefore = _expansion
+        ? widget.session.worldAtlas(widget.play.world)
+        : null;
+    _armedPower = null;
+    final chapter = _atlasBefore?.forLevel(state.level.id);
+    final lightsStar = chapter != null && !chapter.isLit(state.level.id);
+    final completesChapter =
+        lightsStar && chapter.litCount == chapter.levels.length - 1;
     // 저장과 별 평가는 애니메이션 타이머/Canvas 성공 여부에 의존하지 않는다.
     unawaited(_recordCompletion(controller));
+    _narrative.react(CompanionReaction.complete);
+    final friend = widget.session.story.forLevel(state.level.id);
+    final newGuardian =
+        friend?.released == true &&
+        friend!.guardian &&
+        widget.play.mode == PlayMode.campaign &&
+        !widget.session.collection.owns(friend.id);
+    _victory.duration = completesChapter || newGuardian
+        ? GameEffects.constellationCompleteDuration
+        : GameEffects.celebrationDuration;
     _victoryFallback?.cancel();
     if (_reduceMotion) {
       _victory.value = 1;
@@ -158,50 +417,67 @@ class _GameScreenState extends State<GameScreen>
     final game = _game;
     // ticker나 Canvas가 멈춰도 결과 버튼은 독립 타이머로 복구한다.
     _victoryFallback = Timer(
-      GameEffects.celebrationDuration + const Duration(milliseconds: 200),
+      _victory.duration! + const Duration(milliseconds: 200),
       () {
         if (mounted && identical(_game, game)) _skipCelebration();
       },
     );
   }
 
-  Future<List<Level>> _loadLevels() async {
-    _progress = await ProgressRepository.load();
-    final audio = await GameAudio.load();
-    if (mounted) {
-      _audio = audio;
-      WidgetsBinding.instance.addObserver(audio);
-    } else {
-      audio.dispose();
+  void _acknowledgeDiscovery() {
+    if (_discovery case final friend?) {
+      unawaited(widget.session.collection.acknowledge(friend.id));
     }
-    final injected = widget.loadLevels;
-    if (injected != null) {
-      final levels = await injected();
-      if (levels.isEmpty) throw const FormatException('No levels');
-      return levels;
-    }
-    final json = jsonDecode(
-      await rootBundle.loadString('assets/levels/levels.json'),
-    ) as List<dynamic>;
-    final levels = json
-        .map((item) => Level.fromJson(item as Map<String, dynamic>))
-        .toList();
-    if (levels.isEmpty) throw const FormatException('No levels');
-    return levels;
+  }
+
+  Future<void> _openAlbum() async {
+    await _withModal<void>(
+      () => showSpiritAlbum(context, widget.session, widget.settings),
+    );
+    if (mounted) setState(() {});
   }
 
   void _select(int index) {
+    _acknowledgeDiscovery();
+    _resetAssist();
+    _discovery = null;
+    _storyHidden = false;
+    _constellation = null;
+    _constellationPending = false;
+    _atlasBefore = _atlasAfter = null;
+    _narrative.react(CompanionReaction.idle);
+    _attempt?.finish(
+      'level_end',
+      _controller!.state.moves,
+      reason: 'stage_change',
+    );
+    _tutorial = null;
     _skipCelebration();
     _stopReplay();
     setState(() {
       _index = index;
-      _controller = PuzzleController(_loaded[index]);
-      _game = BloriqGame(_controller!);
+      _controller = _newController(_loaded[index]);
+      _game = BloriqGame(_controller!)
+        ..trailStyle = widget.session.progression.equippedTrail;
       _dragBlock = null;
       _dragStart = null;
       _gateBlocked = false;
       _completion = null;
+      _attempt = null;
+      _startAttempt();
     });
+    _trackOpened();
+  }
+
+  /// 결과 화면 "다음"이 고를 판. 확장 세계는 아직 잠긴 판 대신
+  /// 열려 있는 못 깬 판으로 간다(장 안에서는 순서가 자유롭다).
+  int _nextIndex() {
+    final next = _index + 1 < _loaded.length ? _index + 1 : 0;
+    if (!_expansion) return next;
+    final atlas = widget.session.worldAtlas(widget.play.world);
+    if (atlas == null || atlas.isUnlocked(_loaded[next].id)) return next;
+    final index = _loaded.indexWhere((level) => level.id == atlas.nextLevelId);
+    return index < 0 ? next : index;
   }
 
   void _stopReplay() {
@@ -211,12 +487,15 @@ class _GameScreenState extends State<GameScreen>
 
   @override
   void dispose() {
+    _stuckTimer?.cancel();
+    _attempt?.finish('level_end', _controller!.state.moves, reason: 'leave');
+    _narrative.dispose();
+    widget.session.analytics.removeListener(_analyticsChanged);
     _victoryFallback?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _victory.removeListener(_updateVictory);
     _victory.dispose();
     _stopReplay();
-    _audio?.dispose();
     super.dispose();
   }
 
@@ -236,22 +515,336 @@ class _GameScreenState extends State<GameScreen>
 
   Future<void> _recordCompletion(PuzzleController controller) async {
     final state = controller.state;
+    if (_tutorial?.complete == true) {
+      _tutorial = null;
+      if (widget.play.mode == PlayMode.campaign) {
+        unawaited(widget.session.onboarding.mark('complete'));
+      }
+    }
+    if (widget.play.mode == PlayMode.daily) {
+      final result = await widget.session.daily.recordCompletion(
+        widget.play.challenge!,
+        state.moves,
+      );
+      final reward = result.saved
+          ? await widget.session.progression.recordDailyClear(
+              widget.session.daily.streak,
+            )
+          : null;
+      if (mounted && identical(_controller, controller)) {
+        setState(() {
+          _completion = result;
+          _reward = reward;
+        });
+      }
+      return;
+    }
+    if (widget.play.mode != PlayMode.campaign) return;
+    widget.session.struggle.cleared(state.level.id);
+    _stuckTimer?.cancel();
+    final previousStars = _progress!
+        .forLevel(state.level.id, revision: state.level.revision)
+        ?.bestStars;
+    final guided = _guided;
+    final usedStarlight = _starlightUsed || guided;
+    final starCap = assistedStarCap(
+      followedSolution: guided,
+      usedHint: _starlightUsed,
+    );
+    final usedPower = controller.usedPower;
+    final worldBefore = _worldBefore;
+    final worldWasComplete = Worlds.isComplete(
+      widget.play.world,
+      widget.session.progression.completedChapters,
+    );
     final result = await _progress!.recordCompletion(
       levelId: state.level.id,
+      revision: state.level.revision,
       moves: state.moves,
       minimumMoves: state.level.minimumMoves,
+      maxStars: starCap,
+    );
+    final added = result.saved
+        ? await widget.session.collection.reconcile(
+            _progress!.completedCampaignLevelIds,
+          )
+        : <SpiritDefinition>[];
+    if (!mounted ||
+        !identical(_controller, controller) ||
+        !identical(controller.state, state)) {
+      return;
+    }
+    setState(() {
+      _completion = result;
+      _discovery = added.where((f) => f.levelId == state.level.id).firstOrNull;
+      _updateConstellation(state.level.id, saved: result.saved);
+    });
+    if (!result.saved) return;
+    final event = _constellation;
+    final chapter = _atlasAfter?.forLevel(state.level.id);
+    final companion = widget.session.collection.companion;
+    final worldAfter = worldBefore == null
+        ? null
+        : widget.session.worldAtlas(worldBefore.world);
+    final worldEvent = worldBefore == null || worldAfter == null
+        ? null
+        : WorldAtlas.diff(worldBefore, worldAfter, state.level.id);
+    final reward = await widget.session.progression.recordClear(
+      levelKey: '${state.level.id}:${state.level.revision}',
+      stars: math.min(
+        starRating(moves: state.moves, minimumMoves: state.level.minimumMoves),
+        starCap,
+      ),
+      previousBestStars: previousStars,
+      usedStarlightPath: usedStarlight,
+      companionId: companion?.id,
+      companionFamily: companion?.family,
+      constellationCompletedChapter: worldEvent != null
+          ? worldEvent.completed
+          : event?.chapterCompleted == true
+          ? chapter?.definition.chapter
+          : null,
+      constellationGoldenChapter: worldEvent != null
+          ? worldEvent.golden
+          : event?.becameGolden == true
+          ? chapter?.definition.chapter
+          : null,
+      bareHandedClear: state.level.world >= 2
+          ? isBareHandedClear(
+              level: state.level,
+              moves: state.moves,
+              usedPower: usedPower,
+              usedStarlightPath: usedStarlight,
+            )
+          : null,
     );
     if (!mounted ||
         !identical(_controller, controller) ||
         !identical(controller.state, state)) {
       return;
     }
-    setState(() => _completion = result);
+    _game?.trailStyle = widget.session.progression.equippedTrail;
+    setState(() {
+      _reward = reward;
+      _worldCleared =
+          !worldWasComplete &&
+          Worlds.isComplete(
+            widget.play.world,
+            widget.session.progression.completedChapters,
+          );
+    });
+  }
+
+  void _resetAssist() {
+    _reward = null;
+    _armedPower = null;
+    _starlightUsed = false;
+    _starlightFreeUsed = false;
+    _guided = false;
+    _worldCleared = false;
+    _game?.hintMove = null;
+  }
+
+  /// 판을 처음 상태로 되돌린다. [countStruggle]이면 막힘 기록에 다시 시작을 센다.
+  void _restartBoard(PuzzleController controller, {bool countStruggle = true}) {
+    _skipCelebration();
+    _attempt?.restart();
+    _attempt?.finish('level_end', controller.state.moves, reason: 'restart');
+    _acknowledgeDiscovery();
+    _discovery = null;
+    _storyHidden = false;
+    _narrative.react(CompanionReaction.idle);
+    if (countStruggle && widget.play.mode == PlayMode.campaign) {
+      widget.session.struggle.restarted(controller.state.level.id);
+    }
+    controller.restart();
+    _resetAssist();
+    _attempt = null;
+    _startAttempt();
+    _game!.clearEffects();
+    _gateBlocked = false;
+    _completion = null;
+  }
+
+  /// 풀이 따라 하기: 지금 상태의 다음 최단 수를 비추고, 권능 수면 권능을 골라 둔다.
+  void _refreshGuide() {
+    if (!_guided) return;
+    final state = _controller!.state;
+    final move = state.isComplete
+        ? null
+        : const PuzzleSolver().solveFromState(state)?.firstOrNull;
+    if (move == null) {
+      _game?.hintMove = null;
+      return;
+    }
+    final from = state.blocks
+        .firstWhere((block) => block.id == move.blockId)
+        .position;
+    _armedPower = move.power;
+    _game?.hintMove = (from: from, to: move.target);
+  }
+
+  /// 막혔을 때의 도움: 열쇠 한 줄(무료) → 별빛 길 → 풀이 따라 하기.
+  Future<void> _openHelp(
+    AppLocalizations t,
+    PuzzleController controller,
+  ) async {
+    final level = controller.state.level;
+    final solution =
+        const PuzzleSolver(maxStates: 2000000)
+            .solve(level, powers: _stagePowers(level)) ??
+        const <PuzzleMove>[];
+    final lang = t.localeName;
+    final choice = await _withModal<_HelpChoice>(
+      () => showModalBottomSheet<_HelpChoice>(
+        context: context,
+        showDragHandle: true,
+        isScrollControlled: true,
+        builder: (context) => _HelpSheet(
+          keyHint: keyHint(level, solution).resolve(lang),
+          lang: lang,
+        ),
+      ),
+    );
+    if (!mounted || !identical(controller, _controller)) return;
+    switch (choice) {
+      case _HelpChoice.starlight:
+        await _useStarlight(t);
+      case _HelpChoice.guide:
+        setState(() {
+          _restartBoard(controller, countStruggle: false);
+          _guided = true;
+          _refreshGuide();
+        });
+      case null:
+        break;
+    }
+  }
+
+  /// 별빛 길: 지금 상태에서 가장 짧은 다음 한 수를 보드에 비춘다.
+  Future<void> _useStarlight(AppLocalizations t) async {
+    final controller = _controller!;
+    if (controller.state.isComplete || _replaying || _modalOpen) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final solution = const PuzzleSolver().solveFromState(controller.state);
+    if (solution == null || solution.isEmpty) {
+      messenger.showSnackBar(SnackBar(content: Text(t.starlightNoMove)));
+      return;
+    }
+    final companion = widget.session.collection.companion;
+    final quote = await widget.session.progression.useStarlightPath(
+      freeUsedThisAttempt: _starlightFreeUsed,
+      companionId: companion?.id,
+      companionFamily: companion?.family,
+    );
+    if (!mounted || !identical(_controller, controller)) return;
+    if (quote == null) {
+      messenger.showSnackBar(SnackBar(content: Text(t.starlightShort)));
+      return;
+    }
+    final move = solution.first;
+    final from = controller.state.blocks
+        .firstWhere((block) => block.id == move.blockId)
+        .position;
+    if (move.power case final power?) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(WorldText.hintPower(power).resolve(t.localeName)),
+        ),
+      );
+    }
+    setState(() {
+      if (quote.source == StarlightPathSource.free) _starlightFreeUsed = true;
+      if (!_starlightUsed) {
+        messenger.showSnackBar(SnackBar(content: Text(t.starlightCapped)));
+      }
+      _starlightUsed = true;
+      _game!.hintMove = (from: from, to: move.target);
+    });
+  }
+
+  Future<void> _retryProgressSave() async {
+    if (_retryingSave) return;
+    setState(() => _retryingSave = true);
+    final controller = _controller;
+    final result = _completion;
+    final saved = await _progress!.retrySave();
+    final added = saved
+        ? await widget.session.collection.reconcile(
+            _progress!.completedCampaignLevelIds,
+          )
+        : <SpiritDefinition>[];
+    if (!mounted) return;
+    setState(() {
+      _retryingSave = false;
+      if (identical(controller, _controller) && result != null) {
+        _completion = CompletionResult(
+          progress: result.progress,
+          stars: result.stars,
+          isNewBest: result.isNewBest,
+          saved: saved,
+        );
+        _discovery ??= added
+            .where((f) => f.levelId == controller!.state.level.id)
+            .firstOrNull;
+        _updateConstellation(controller!.state.level.id, saved: saved);
+      }
+    });
+  }
+
+  /// 저장 결과로만 별을 켠다. 실패하면 점선 고리로 대기 상태를 보여 준다.
+  void _updateConstellation(int levelId, {required bool saved}) {
+    final before = _atlasBefore;
+    if (before == null) return;
+    if (!saved) {
+      _constellationPending = before.forLevel(levelId)?.isLit(levelId) == false;
+      return;
+    }
+    final after = ConstellationAtlas.derive(widget.session.levels, _progress!);
+    _atlasAfter = after;
+    _constellationPending = false;
+    _constellation = ConstellationAtlas.diff(before, after, levelId);
+  }
+
+  Widget? _constellationView(PuzzleController controller) {
+    final levelId = controller.state.level.id;
+    final event = _constellation;
+    final atlas = _constellationPending ? _atlasBefore : _atlasAfter;
+    final chapter = atlas?.forLevel(levelId);
+    if (chapter == null ||
+        (!_constellationPending && (event == null || event.isEmpty))) {
+      return null;
+    }
+    return VictoryConstellation(
+      chapter: chapter,
+      levelId: levelId,
+      progress: _victory.value,
+      reduceMotion: _reduceMotion,
+      guardianAsset: guardianAssetFor(widget.session, chapter),
+      event: _constellationPending ? null : event,
+      pending: _constellationPending,
+      onOpen: () => _openAtlas(chapter.chapter),
+    );
+  }
+
+  Future<void> _openAtlas(int chapter) async {
+    final id = await _withModal<int>(
+      () => showConstellationAtlas(
+        context,
+        widget.session,
+        widget.settings,
+        initialChapter: chapter,
+      ),
+    );
+    if (!mounted || id == null) return;
+    final index = _loaded.indexWhere((level) => level.id == id);
+    if (index >= 0) _select(index);
   }
 
   void _showPostcard(AppLocalizations t, PuzzleController controller) {
+    widget.session.analytics.record('postcard_open', _eventContext);
     final state = controller.state;
-    final best = _progress!.forLevel(state.level.id)?.bestMoves ?? state.moves;
+    final best = _bestMoves ?? state.moves;
     showDialog<void>(
       context: context,
       animationStyle: _reduceMotion ? AnimationStyle.noAnimation : null,
@@ -264,9 +857,15 @@ class _GameScreenState extends State<GameScreen>
             moves: state.moves,
             minimumMoves: state.level.minimumMoves,
           ),
-          levelText: t.level(state.level.id),
+          levelText: widget.play.mode == PlayMode.daily
+              ? '${t.dailyEcho} ${widget.play.dailyDate}'
+              : t.level(_displayNumber(state.level)),
           movesText: t.moves(state.moves),
           bestText: t.bestMoves(best),
+        ),
+        onShareTap: () => widget.session.analytics.record(
+          'postcard_share_tap',
+          _eventContext,
         ),
         title: t.postcard,
         shareLabel: t.shareImage,
@@ -276,24 +875,12 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
-  Position? _cell(Offset offset, double width, double height) {
-    final level = _controller!.state.level;
-    if (offset.dx < 0 ||
-        offset.dy < 0 ||
-        offset.dx >= width ||
-        offset.dy >= height) {
-      return null;
-    }
-    return Position(
-      (offset.dx / width * level.boardWidth).floor(),
-      (offset.dy / height * level.boardHeight).floor(),
-    );
-  }
+  Position? _cell(Offset offset) => _geometry?.positionAt(offset);
 
-  void _start(DragStartDetails details, double width, double height) {
+  void _start(DragStartDetails details) {
     final controller = _controller!;
     if (controller.state.isComplete || _replaying) return;
-    final cell = _cell(details.localPosition, width, height);
+    final cell = _cell(details.localPosition);
     _dragStart = details.localPosition;
     _dragEnd = details.localPosition;
     _dragBlock = null;
@@ -315,6 +902,10 @@ class _GameScreenState extends State<GameScreen>
           ? Offset(delta.dx, 0)
           : Offset(0, delta.dy);
       _game!.setDrag(_dragBlock, aligned);
+      _narrative.react(
+        CompanionReaction.look,
+        direction: aligned.dx.sign.toInt(),
+      );
     }
   }
 
@@ -325,11 +916,11 @@ class _GameScreenState extends State<GameScreen>
     _dragEnd = null;
   }
 
-  void _end(double width) {
+  void _end() {
     final controller = _controller!;
     if (_dragBlock != null && _dragStart != null && _dragEnd != null) {
       final delta = _dragEnd! - _dragStart!;
-      final threshold = width / controller.state.level.boardWidth * .24;
+      final threshold = _geometry!.dragThreshold;
       if (math.max(delta.dx.abs(), delta.dy.abs()) >= threshold) {
         final block = controller.state.blocks.firstWhere(
           (item) => item.id == _dragBlock,
@@ -340,9 +931,34 @@ class _GameScreenState extends State<GameScreen>
         final dx = delta.dx.abs() >= delta.dy.abs() ? delta.dx.sign.toInt() : 0;
         final dy = dx == 0 ? delta.dy.sign.toInt() : 0;
         final target = Position(from.x + dx, from.y + dy);
-        if (controller.move(block.id, target)) {
+        if (_tutorial != null && !_tutorial!.accepts(block.id, target)) {
+          _cancelDrag();
+          setState(() {});
+          return;
+        }
+        final before = controller.state;
+        final power = _armedPower;
+        // 권능을 고른 상태면 이번 밀기는 그 권능으로 움직인다(한 스테이지 한 번).
+        final moved = power != null
+            ? controller.usePower(power, block.id, Position(dx, dy))
+            : controller.move(block.id, target);
+        if (power == null) _tutorial?.observe(before, target, moved);
+        if (moved && power != null) _armedPower = null;
+        if (moved) {
+          _attempt?.moved(echo: controller.state.echo != null);
+          if (widget.play.mode == PlayMode.daily) {
+            unawaited(widget.session.daily.markPlayed(widget.play.challenge!));
+          }
           _gateBlocked = false;
+          _narrative.react(
+            !gateWasOpen && controller.state.isGateOpen
+                ? CompanionReaction.gate
+                : controller.state.echo == from
+                ? CompanionReaction.echo
+                : CompanionReaction.idle,
+          );
           _game!.animateMove(block.id, from, previousEcho);
+          _refreshGuide();
           if (controller.state.isComplete) _beginCompletion(controller);
           final effect = controller.state.isComplete
               ? SoundEffect.complete
@@ -352,13 +968,19 @@ class _GameScreenState extends State<GameScreen>
               ? SoundEffect.echo
               : SoundEffect.move;
           _audio?.play(effect);
-          HapticFeedback.selectionClick();
+          HapticFeedback.lightImpact();
         } else {
+          _narrative.react(
+            target == controller.state.echo
+                ? CompanionReaction.blocked
+                : CompanionReaction.look,
+          );
           _audio?.play(SoundEffect.blocked);
           _gateBlocked =
               target == controller.state.level.echoGate &&
               !controller.state.isGateOpen;
-          _game!.flashBlocked(target);
+          _game!.flashBlocked(target, blockId: block.id);
+          HapticFeedback.mediumImpact();
         }
       }
     }
@@ -371,58 +993,172 @@ class _GameScreenState extends State<GameScreen>
 
   bool _hasNoMoves(PuzzleController controller) {
     final state = controller.state;
+    // 남은 권능으로 움직일 수 있으면 막힌 것이 아니다.
     return !state.isComplete &&
         controller.canUndo &&
-        !state.blocks.any(
-          (block) => block.position.neighbors.any(
-            (target) => MoveValidator.canMove(state, block.id, target),
-          ),
-        );
+        PuzzleSolver.successors(state).isEmpty;
+  }
+
+  void _togglePower(PuzzlePower power) {
+    if (_replaying || _celebrating || _modalOpen) return;
+    setState(() => _armedPower = _armedPower == power ? null : power);
   }
 
   void _undo(PuzzleController controller) {
+    _acknowledgeDiscovery();
+    _discovery = null;
+    _storyHidden = false;
     _skipCelebration();
     setState(() {
       controller.undo();
+      _armedPower = null;
+      _narrative.react(CompanionReaction.idle);
+      _attempt?.undo();
       _game!.clearEffects();
       _gateBlocked = false;
       _completion = null;
+      _refreshGuide();
     });
   }
 
-  Future<void> _showSettings() async {
+  Future<T?> _withModal<T>(Future<T?> Function() action) async {
+    if (_modalOpen || !mounted) return null;
+    _modalOpen = true;
     _cancelDrag();
-    await showDialog<void>(
-      context: context,
-      animationStyle: _reduceMotion ? AnimationStyle.noAnimation : null,
-      builder: (_) => SettingsDialog(settings: widget.settings, audio: _audio!),
+    _attempt?.pause();
+    try {
+      return await action();
+    } finally {
+      _modalOpen = false;
+      _attempt?.resume();
+    }
+  }
+
+  Future<void> _showSettings() async {
+    await _withModal<void>(
+      () => showExperienceSettings(
+        context,
+        widget.settings,
+        _audio!,
+        resumeGame: true,
+        analytics: widget.session.analytics,
+      ),
     );
     if (mounted) setState(() {});
   }
 
-  void _showHelp(AppLocalizations t) {
-    showDialog<void>(
-      context: context,
-      animationStyle: _reduceMotion ? AnimationStyle.noAnimation : null,
-      builder: (context) => AlertDialog(
-        title: Text(t.help),
-        content: SingleChildScrollView(child: Text(t.helpBody)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(t.close),
+  Future<void> _showHelp(AppLocalizations t) async {
+    await _withModal<void>(() async {
+      final replay = await showGameHelp(context, widget.settings);
+      if (replay == true && mounted) {
+        await Navigator.of(context).push<void>(
+          MaterialPageRoute(
+            builder: (_) => GameScreen(
+              session: widget.session,
+              initialLevelId: 1,
+              settings: widget.settings,
+              play: PlayContext.tutorialReplay(
+                widget.session.levels.firstWhere((level) => level.id == 1),
+              ),
+            ),
           ),
-        ],
-      ),
+        );
+      }
+    });
+  }
+
+  void _skipTutorial() {
+    widget.session.analytics.record('tutorial_skip', {
+      ..._eventContext,
+      'replay': widget.play.mode == PlayMode.tutorialReplay,
+    });
+    if (widget.play.mode == PlayMode.campaign) {
+      unawaited(widget.session.onboarding.mark('skipped'));
+    }
+    setState(() => _tutorial = null);
+  }
+
+  Future<void> _pickLevel() async {
+    final id = await _withModal<int>(
+      () => _expansion
+          ? showWorldMap(context, widget.session, widget.play.world)
+          : showLevelPicker(
+              context,
+              widget.session,
+              widget.settings,
+              currentLevelId: _loaded[_index].id,
+            ),
     );
+    final index = _loaded.indexWhere((level) => level.id == id);
+    if (id != null && mounted && index >= 0) _select(index);
+  }
+
+  /// 화면에 보이는 스테이지 번호. 확장 세계는 세계 안에서 1..25로 센다.
+  int _displayNumber(Level level) =>
+      level.world >= 2 ? Worlds.stageNumber(level.id) : level.id;
+
+  Future<void> _openJourney() async {
+    final id = await _withModal<int>(
+      () => showJourneyPanel(context, widget.session, widget.settings),
+    );
+    final index = _loaded.indexWhere((level) => level.id == id);
+    if (id != null &&
+        mounted &&
+        widget.play.mode == PlayMode.campaign &&
+        index >= 0) {
+      _select(index);
+    }
+  }
+
+  bool get _dirty =>
+      _controller != null &&
+      _controller!.state.moves > 0 &&
+      !_controller!.state.isComplete;
+
+  Future<void> _leaveGame() async {
+    if (_leaving) return;
+    _leaving = true;
+    _cancelDrag();
+    final t = AppLocalizations.of(context)!;
+    final leave =
+        !_dirty ||
+        await showDialog<bool>(
+              context: context,
+              animationStyle: _reduceMotion ? AnimationStyle.noAnimation : null,
+              builder: (dialogContext) => AlertDialog(
+                title: Text(t.leaveGameTitle),
+                content: Text(t.leaveGameBody),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext, false),
+                    child: Text(t.keepPlaying),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(dialogContext, true),
+                    child: Text(t.leaveGame),
+                  ),
+                ],
+              ),
+            ) ==
+            true;
+    if (!mounted) return;
+    if (leave) {
+      _acknowledgeDiscovery();
+      setState(() => _allowPop = true);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) Navigator.pop(context);
+      });
+    } else {
+      _leaving = false;
+    }
   }
 
   Widget _buildVictory(AppLocalizations t, PuzzleController controller) {
     final state = controller.state;
     final colors = GameTheme.colorsOf(context);
-    final stars = starRating(
-      moves: state.moves,
-      minimumMoves: state.level.minimumMoves,
+    final stars = math.min(
+      starRating(moves: state.moves, minimumMoves: state.level.minimumMoves),
+      assistedStarCap(followedSolution: _guided, usedHint: _starlightUsed),
     );
     return AnimatedBuilder(
       key: const ValueKey('complete'),
@@ -433,385 +1169,1448 @@ class _GameScreenState extends State<GameScreen>
         isNewBest: _isNewBest,
         reduceMotion: _reduceMotion,
         onSkip: _skipCelebration,
-        result: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(t.completeDetail(state.moves)),
-            if (_progress!.forLevel(state.level.id) case final best?)
-              Text(t.bestMoves(best.bestMoves)),
-            if (_completion?.saved == false) Text(t.saveError),
-            const SizedBox(height: GameSpacing.small),
-            Text(
-              state.moves == state.level.minimumMoves
-                  ? t.optimalComplete
-                  : t.improveComplete(state.level.minimumMoves),
-              textAlign: TextAlign.center,
-              style: TextStyle(color: colors.secondaryText),
-            ),
-            const SizedBox(height: GameSpacing.medium),
-            FilledButton.icon(
-              onPressed: () =>
-                  _select(_index + 1 < _loaded.length ? _index + 1 : 0),
-              icon: const Icon(Icons.arrow_forward),
-              label: Text(_index + 1 < _loaded.length ? t.next : t.firstLevel),
-            ),
-            const SizedBox(height: GameSpacing.small),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: GameSpacing.small,
-              runSpacing: GameSpacing.small,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: _replaying ? null : () => _select(_index),
-                  icon: const Icon(Icons.replay),
-                  label: Text(t.tryAgain),
+        discovery: _discovery != null && !_storyHidden
+            ? DiscoveryPanel(
+                spirit: _discovery!,
+                chapter: widget.session.story.chapter(_discovery!.chapter),
+                progress: _victory.value,
+                reduceMotion: _reduceMotion,
+                onSkip: () {
+                  _skipCelebration();
+                  _acknowledgeDiscovery();
+                  setState(() => _storyHidden = true);
+                },
+              )
+            : null,
+        constellation: _constellationView(controller),
+        reward: _rewardView(t),
+        result: DefaultTextStyle.merge(
+          style: GameTypography.body.copyWith(color: colors.text),
+          textAlign: TextAlign.center,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _resultStats(t, colors, state),
+              // 기록 갱신 배지가 뜨면 같은 칭찬을 두 번 하지 않는다.
+              if (state.moves == state.level.minimumMoves && !_isNewBest)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    t.optimalComplete,
+                    style: GameTypography.label.copyWith(
+                      color: colors.goalInk,
+                      fontSize: 15,
+                    ),
+                  ),
                 ),
-                OutlinedButton.icon(
-                  onPressed: _celebrating
-                      ? null
-                      : _replaying
-                      ? () {
-                          _stopReplay();
-                          setState(() {});
-                        }
-                      : _watchReplay,
-                  icon: Icon(_replaying ? Icons.skip_next : Icons.play_arrow),
-                  label: Text(_replaying ? t.skipReplay : t.watchReplay),
-                ),
-                OutlinedButton.icon(
-                  onPressed: _replaying
-                      ? null
-                      : () => _showPostcard(t, controller),
-                  icon: const Icon(Icons.image_outlined),
-                  label: Text(t.postcard),
-                ),
+              if (_completion?.saved == false) ...[
+                Text(t.saveError),
+                if (widget.play.mode == PlayMode.campaign)
+                  TextButton(
+                    key: const ValueKey('retry-progress'),
+                    onPressed: _retryingSave ? null : _retryProgressSave,
+                    child: Text(t.retrySave),
+                  ),
               ],
-            ),
-          ],
+              if (widget.play.mode == PlayMode.campaign)
+                CollectionStorageNotice(
+                  session: widget.session,
+                  onChanged: () => setState(() {}),
+                ),
+              if (_worldFinished case final finished?)
+                _worldClearCard(t, colors, finished)
+              else if (widget.play.mode == PlayMode.campaign &&
+                  widget.session.collection.owned.length ==
+                      widget.session.story.released.length &&
+                  widget.session.story.released.length == 25)
+                Text(t.seasonComplete),
+            ],
+          ),
         ),
+        actions: _victoryActions(t, controller),
       ),
     );
   }
 
-  String _hint(AppLocalizations t, PuzzleController controller) {
+  /// 이번 이동 수·최고 기록·최소 이동 수를 큰 숫자 세 칸으로 보여 준다.
+  Widget _resultStats(
+    AppLocalizations t,
+    GameColors colors,
+    PuzzleState state,
+  ) {
+    Widget stat(String key, String label, int value, Color color) => Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$value',
+            key: ValueKey(key),
+            style: GameTypography.reward.copyWith(
+              fontSize: 28,
+              height: 1.1,
+              color: color,
+            ),
+          ),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GameTypography.body.copyWith(
+              fontSize: 15,
+              color: colors.secondaryText,
+            ),
+          ),
+        ],
+      ),
+    );
+    final best = _bestMoves;
+    return Semantics(
+      container: true,
+      label: [
+        t.completeDetail(state.moves),
+        if (best != null) t.bestMoves(best),
+        state.moves == state.level.minimumMoves
+            ? t.optimalComplete
+            : t.improveComplete(state.level.minimumMoves),
+      ].join(' '),
+      excludeSemantics: true,
+      child: Row(
+        children: [
+          stat('result-moves', t.resultMoves, state.moves, colors.text),
+          // 최고 기록이 이번 기록과 같으면 같은 숫자를 두 번 보이지 않는다.
+          if (best != null && best != state.moves)
+            stat('result-best', t.resultBest, best, colors.rewardInk),
+          stat(
+            'result-fewest',
+            t.resultFewest,
+            state.level.minimumMoves,
+            colors.goalInk,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 세계를 다 마친 결과인지. 이번 클리어로 마지막 별자리가 완성됐거나,
+  /// 이미 마친 세계의 마지막 판을 깼을 때다. [next]는 바로 갈 수 있는 다음 세계
+  /// (아직 준비 중이거나 데이터가 없으면 null).
+  ({SagaWorld world, SagaWorld? next})? get _worldFinished {
+    final saga = widget.session.saga;
+    if (saga == null || widget.play.mode != PlayMode.campaign) return null;
+    final number = widget.play.world;
+    final complete = Worlds.isComplete(
+      number,
+      widget.session.progression.completedChapters,
+    );
+    if (!_worldCleared && !(complete && _index + 1 == _loaded.length)) {
+      return null;
+    }
+    final next = saga.next(number);
+    return (
+      world: saga.world(number),
+      next: next != null && widget.session.worldUnlocked(next.number)
+          ? next
+          : null,
+    );
+  }
+
+  /// 결과 팝업 안의 "세계 완료" 카드: 다음에 어디로 가는지 분명히 알려 준다.
+  Widget _worldClearCard(
+    AppLocalizations t,
+    GameColors colors,
+    ({SagaWorld world, SagaWorld? next}) finished,
+  ) {
+    final lang = t.localeName;
+    final upcoming = widget.session.saga?.next(finished.world.number);
+    final detail = finished.next != null
+        ? WorldText.gateOpened(finished.next!.title).resolve(lang)
+        : upcoming != null
+        ? '${WorldText.nextStory.resolve(lang)} · '
+              '${upcoming.title.inLocale(lang)} · '
+              '${WorldText.comingSoon.resolve(lang)}'
+        : null;
+    return Container(
+      key: const ValueKey('world-clear'),
+      margin: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: colors.reward.withValues(alpha: .16),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.reward.withValues(alpha: .6)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            WorldText.worldCleared(finished.world.title).resolve(lang),
+            textAlign: TextAlign.center,
+            style: GameTypography.reward.copyWith(
+              fontSize: 19,
+              color: colors.rewardInk,
+            ),
+          ),
+          if (detail != null)
+            KeepAllText(
+              detail,
+              textAlign: TextAlign.center,
+              style: GameTypography.body.copyWith(fontSize: 15),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// 결과 화면을 닫고 홈에서 다음 세계 지도를 바로 연다.
+  void _goToWorld(int world) {
+    _acknowledgeDiscovery();
+    setState(() => _allowPop = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Navigator.pop(context, OpenWorld(world));
+    });
+  }
+
+  /// 결과 팝업 아래쪽 버튼. 다음 스테이지가 가장 크고 나머지는 작은 버튼으로 둔다.
+  Widget _victoryActions(AppLocalizations t, PuzzleController controller) {
+    final small = OutlinedButton.styleFrom(
+      minimumSize: const Size(0, 46),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      textStyle: GameTypography.label.copyWith(fontSize: 15.5),
+    );
+    final friend = _discovery;
+    // 세계를 다 마쳤으면 "첫 스테이지로" 대신 다음 세계(열렸으면 그 지도,
+    // 아직 준비 중이면 빛길 지도의 예고)로 안내한다.
+    final finished = _worldFinished;
+    final worldFinished = finished != null;
+    final nextWorld = finished?.next;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        FilledButton.icon(
+          key: const ValueKey('result-next'),
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(0, 54),
+            textStyle: GameTypography.label.copyWith(fontSize: 18),
+          ),
+          onPressed: () => widget.play.mode != PlayMode.campaign
+              ? Navigator.pop(context)
+              : nextWorld != null
+              ? _goToWorld(nextWorld.number)
+              : worldFinished
+              ? _withModal<int>(
+                  () => showSagaMap(context, widget.session, selectable: false),
+                )
+              : _select(_nextIndex()),
+          icon: Icon(
+            nextWorld != null
+                ? Icons.light_rounded
+                : worldFinished
+                ? Icons.auto_awesome_rounded
+                : Icons.arrow_forward,
+          ),
+          label: Text(
+            widget.play.mode != PlayMode.campaign
+                ? t.close
+                : nextWorld != null
+                ? WorldText.enter(nextWorld.title).resolve(t.localeName)
+                : worldFinished
+                ? WorldText.nextStory.resolve(t.localeName)
+                : _index + 1 < _loaded.length
+                ? t.next
+                : t.firstLevel,
+          ),
+        ),
+        const SizedBox(height: GameSpacing.small),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                style: small,
+                onPressed: _replaying ? null : () => _select(_index),
+                child: _buttonLabel(Icons.replay, t.tryAgain),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: OutlinedButton(
+                style: small,
+                onPressed: _celebrating ? null : _watchReplay,
+                child: _buttonLabel(Icons.play_arrow, t.watchReplayShort),
+              ),
+            ),
+            const SizedBox(width: 6),
+            // 포스트카드·정령 도감·발견 카드는 더 보기 메뉴로 접어 둔다.
+            PopupMenuButton<VoidCallback>(
+              key: const ValueKey('result-more'),
+              tooltip: t.moreActions,
+              enabled: !_replaying,
+              onSelected: (action) => action(),
+              itemBuilder: (_) => [
+                PopupMenuItem(
+                  key: const ValueKey('result-postcard'),
+                  value: () => _showPostcard(t, controller),
+                  child: ListTile(
+                    leading: const Icon(Icons.image_outlined),
+                    title: Text(t.postcard),
+                  ),
+                ),
+                if (friend != null) ...[
+                  PopupMenuItem(
+                    key: const ValueKey('result-album'),
+                    value: _openAlbum,
+                    child: ListTile(
+                      leading: const Icon(Icons.auto_stories_outlined),
+                      title: Text(t.album),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    key: const ValueKey('result-discovery-share'),
+                    value: () => _withModal<void>(
+                      () => showStoryCard(
+                        context,
+                        [friend],
+                        chapter: widget.session.story.chapter(friend.chapter),
+                        reduceMotion: _reduceMotion,
+                      ),
+                    ),
+                    child: ListTile(
+                      leading: const Icon(Icons.ios_share_rounded),
+                      title: Text(t.discoveryCard),
+                    ),
+                  ),
+                ],
+              ],
+              child: Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(23),
+                  border: Border.all(
+                    color: GameTheme.colorsOf(context).outline,
+                  ),
+                ),
+                child: const Icon(Icons.more_horiz_rounded),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// 판 아래에 계속 보여 줄 설명. 기믹이 있으면 기믹마다 한 줄씩 나눈다.
+  List<LegendItem> _legend(AppLocalizations t, PuzzleController controller) {
     final state = controller.state;
+    LegendItem note(String text) => LegendItem(LegendKind.note, text);
     // This detects only states with no legal move, not every unsolvable state.
-    if (_hasNoMoves(controller)) return t.noMoves;
-    final mechanics = <String>[
-      if (state.level.echoErasers.isNotEmpty) t.eraserRule,
-      if (state.level.echoHolds.isNotEmpty) t.holdRule,
-      if (state.level.oneWays.isNotEmpty) t.oneWayRule,
-      if (state.level.goalOnlyTiles.isNotEmpty) t.goalOnlyRule,
+    if (_tutorial case final tutorial?) {
+      return [
+        note(switch (tutorial.step) {
+          0 => t.tutorialMove,
+          1 => t.tutorialBlock,
+          _ => t.tutorialFinish,
+        }),
+      ];
+    }
+    if (_hasNoMoves(controller)) return [note(t.noMoves)];
+    if (_armedPower case final power?) {
+      return [note(WorldText.armed(power).resolve(t.localeName))];
+    }
+    final gate = state.level.echoGate == null
+        ? null
+        : _gateBlocked
+        ? t.gateClosed
+        : state.isGateOpen
+        ? t.gateOpen
+        : state.blocks.any((block) => block.position == state.level.echoGate)
+        ? t.gateOccupied
+        : t.gateInstruction;
+    final mechanics = [
+      if (state.level.echoErasers.isNotEmpty)
+        LegendItem(LegendKind.eraser, t.eraserRule),
+      if (state.level.echoHolds.isNotEmpty)
+        LegendItem(LegendKind.hold, t.holdRule),
+      if (state.level.oneWays.isNotEmpty)
+        LegendItem(LegendKind.oneWay, t.oneWayRule),
+      if (state.level.goalOnlyTiles.isNotEmpty)
+        LegendItem(LegendKind.goalOnly, t.goalOnlyRule),
+      if (gate != null) LegendItem(LegendKind.gate, gate),
     ];
-    if (mechanics.isNotEmpty) {
-      // 팝업 없이 현재 스테이지의 규칙을 보드 아래에 계속 표시한다.
-      if (state.level.echoGate != null) {
-        final gateHint = _gateBlocked
-            ? t.gateClosed
-            : state.isGateOpen
-            ? t.gateOpen
-            : state.blocks.any(
-                (block) => block.position == state.level.echoGate,
-              )
-            ? t.gateOccupied
-            : t.gateInstruction;
-        mechanics.add(gateHint);
-      }
-      return mechanics.join('\n');
-    }
-    if (state.level.echoGate == null) {
-      return state.echo == null ? t.instruction : t.echoInstruction;
-    }
-    if (_gateBlocked) return t.gateClosed;
-    if (state.isGateOpen) return t.gateOpen;
-    if (state.blocks.any((block) => block.position == state.level.echoGate)) {
-      return t.gateOccupied;
-    }
-    return t.gateInstruction;
+    if (mechanics.isNotEmpty) return mechanics;
+    return [note(state.echo == null ? t.instruction : t.echoInstruction)];
   }
 
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
     final colors = GameTheme.colorsOf(context);
-    _reduceMotion =
-        widget.settings.reduceMotion ||
-        MediaQuery.disableAnimationsOf(context) ||
-        MediaQuery.accessibleNavigationOf(context) ||
-        WidgetsBinding
-            .instance
-            .platformDispatcher
-            .accessibilityFeatures
-            .reduceMotion;
+    _reduceMotion = prefersReducedMotion(context, widget.settings);
     if (_reduceMotion && _celebrating) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _reduceMotion && _celebrating) _skipCelebration();
       });
     }
-    return Scaffold(
-      body: SafeArea(
-        child: FutureBuilder<List<Level>>(
-          future: _levels,
-          builder: (context, snapshot) {
-            if (snapshot.hasError) return Center(child: Text(t.loadError));
-            if (!snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (_controller == null) {
-              _loaded = snapshot.data!;
-              _controller = PuzzleController(_loaded[_index]);
-              _game = BloriqGame(_controller!);
-            }
-            _game!.configureAppearance(
-              colors: colors,
-              reduceMotion: _reduceMotion,
-            );
-            final controller = _controller!;
-            final hint = _hint(t, controller);
-            return LayoutBuilder(
-              builder: (context, constraints) {
-                final width = math.max(
-                  1.0,
-                  math.min(
-                    constraints.maxWidth - GameSpacing.page * 2,
-                    math.min(
-                      GameSpacing.maxBoardWidth,
-                      constraints.maxHeight *
-                          .46 *
-                          controller.state.level.boardWidth /
-                          controller.state.level.boardHeight,
-                    ),
-                  ),
-                );
-                final height =
-                    width *
-                    controller.state.level.boardHeight /
-                    controller.state.level.boardWidth;
-                return Center(
-                  child: SingleChildScrollView(
-                    child: Container(
-                      constraints: const BoxConstraints(maxWidth: 560),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: GameSpacing.page,
-                        vertical: GameSpacing.medium,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Wrap(
-                            alignment: WrapAlignment.spaceBetween,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            spacing: GameSpacing.small,
-                            children: [
-                              Text(
-                                'BLORIQ',
-                                style: GameTypography.brand.copyWith(
-                                  color: colors.text,
-                                ),
-                              ),
-                              Wrap(
-                                children: [
-                                  IconButton(
-                                    tooltip: t.settings,
-                                    onPressed: _showSettings,
-                                    icon: const Icon(Icons.tune_rounded),
-                                  ),
-                                  IconButton(
-                                    tooltip: t.help,
-                                    onPressed: () => _showHelp(t),
-                                    icon: const Icon(Icons.help_outline),
-                                  ),
-                                  IconButton(
-                                    tooltip: _audio!.effectsEnabled
-                                        ? t.soundOn
-                                        : t.soundOff,
-                                    onPressed: () => setState(() {
-                                      _audio!.onUserInteraction();
-                                      _audio!.setEffectsEnabled(
-                                        !_audio!.effectsEnabled,
-                                      );
-                                    }),
-                                    icon: Icon(
-                                      _audio!.effectsEnabled
-                                          ? Icons.volume_up_outlined
-                                          : Icons.volume_off_outlined,
-                                    ),
-                                  ),
-                                  IconButton(
-                                    tooltip: _audio!.musicEnabled
-                                        ? t.musicOn
-                                        : t.musicOff,
-                                    onPressed: () => setState(
-                                      () => _audio!.setMusicEnabled(
-                                        !_audio!.musicEnabled,
-                                      ),
-                                    ),
-                                    icon: Icon(
-                                      _audio!.musicEnabled
-                                          ? Icons.music_note
-                                          : Icons.music_off,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+    _game!.configureAppearance(colors: colors, reduceMotion: _reduceMotion);
+    final controller = _controller!;
+    final legend = _legend(t, controller);
+    final hint = legend.map((item) => item.text).join('\n');
+    _game!.tutorialTarget = _tutorial?.target;
+    return PopScope<void>(
+      canPop: _allowPop || !_dirty,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) unawaited(_leaveGame());
+        if (didPop &&
+            _tutorial != null &&
+            widget.play.mode == PlayMode.campaign) {
+          widget.session.analytics.record('tutorial_skip', {
+            ..._eventContext,
+            'reason': 'leave',
+          });
+          unawaited(widget.session.onboarding.mark('skipped'));
+        }
+      },
+      child: Scaffold(
+        body: ArcadeBackdrop(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              SafeArea(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // 스크롤 없이 한 화면에 고정한다. 보드는 남은 높이를 모두 쓴다.
+                    final compact = constraints.maxHeight < 700;
+                    final complete = controller.state.isComplete;
+                    final story = widget.play.mode == PlayMode.campaign
+                        ? widget.session.story.forLevel(_loaded[_index].id)
+                        : null;
+                    final canPickLevel =
+                        widget.play.mode == PlayMode.campaign &&
+                        _tutorial == null;
+                    final labelStyle = TextStyle(
+                      color: colors.echoInk,
+                      fontSize: 15,
+                      decoration: canPickLevel
+                          ? TextDecoration.underline
+                          : null,
+                    );
+                    // 보드 칸이 48px보다 작아지는 아주 작은 화면이나 가로 화면에서만 스크롤한다.
+                    final layoutKey = (
+                      constraints.biggest,
+                      _loaded[_index].id,
+                      MediaQuery.textScalerOf(context).scale(1),
+                    );
+                    if (_layoutKey != layoutKey) {
+                      _layoutKey = layoutKey;
+                      _scrollLayout = false;
+                    }
+                    final rows = controller.state.level.boardHeight;
+                    final minBoard =
+                        rows * _minCell + BoardGeometry.defaultFrameInset * 2;
+                    if (!complete &&
+                        _widthCell(
+                              constraints.maxWidth - GameSpacing.page * 2,
+                              controller.state.level.boardWidth,
+                            ) >=
+                            _minCell &&
+                        constraints.maxHeight -
+                                _chromeEstimate(
+                                  constraints,
+                                  hint,
+                                  _hasNoMoves(controller),
+                                  assistRow: _guided || _offerHelp(controller),
+                                ) <
+                            minBoard) {
+                      // 첫 프레임부터 넘치지 않도록 보드 외 높이를 넉넉히 추정한다.
+                      _scrollLayout = true;
+                    }
+                    final scroll = _scrollLayout;
+                    final boardHeight = math.max(
+                      minBoard,
+                      constraints.maxHeight * .55,
+                    );
+                    return Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 560),
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            GameSpacing.page,
+                            compact ? 2 : 8,
+                            GameSpacing.page,
+                            compact ? 6 : 12,
                           ),
-                          const SizedBox(height: 8),
-                          Wrap(
-                            alignment: WrapAlignment.spaceBetween,
-                            spacing: GameSpacing.large,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              Text(
-                                t.level(_index + 1),
-                                style: Theme.of(context).textTheme.titleLarge
-                                    ?.copyWith(fontWeight: FontWeight.bold),
-                              ),
-                              Text(t.moves(controller.state.moves)),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            width: width,
-                            height: height,
-                            child: Semantics(
-                              label: t.boardLabel,
-                              child: GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                dragStartBehavior: DragStartBehavior.down,
-                                // 축별 recognizer가 바깥 스크롤보다 보드 드래그를 우선한다.
-                                // 작은 화면에서도 위/아래 이동이 페이지 스크롤로 바뀌지 않는다.
-                                onHorizontalDragStart: (d) =>
-                                    _start(d, width, height),
-                                onHorizontalDragUpdate: _update,
-                                onHorizontalDragEnd: (_) => _end(width),
-                                onHorizontalDragCancel: _cancelDrag,
-                                onVerticalDragStart: (d) =>
-                                    _start(d, width, height),
-                                onVerticalDragUpdate: _update,
-                                onVerticalDragEnd: (_) => _end(width),
-                                onVerticalDragCancel: _cancelDrag,
-                                // Pointer 취소가 pan 종료로 전달되더라도 이동을 확정하지 않는다.
-                                child: Listener(
-                                  onPointerDown: (_) =>
-                                      _audio?.onUserInteraction(),
-                                  onPointerCancel: (_) => _cancelDrag(),
-                                  child: GameWidget(game: _game!),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          AnimatedSwitcher(
-                            duration: _reduceMotion
-                                ? Duration.zero
-                                : GameEffects.panelDuration,
-                            // 사라지는 결과 패널의 버튼이 연속 터치를 받지 않게 한다.
-                            layoutBuilder: (current, previous) => Stack(
-                              alignment: Alignment.topCenter,
+                          child: _scrollable(
+                            scroll,
+                            Column(
+                              mainAxisSize: scroll
+                                  ? MainAxisSize.min
+                                  : MainAxisSize.max,
                               children: [
-                                for (final child in previous)
-                                  IgnorePointer(
-                                    child: ExcludeSemantics(child: child),
-                                  ),
-                                ?current,
-                              ],
-                            ),
-                            child: controller.state.isComplete
-                                ? _buildVictory(t, controller)
-                                : Column(
-                                    key: ValueKey(hint),
+                                SizedBox(
+                                  height: 48,
+                                  child: Stack(
+                                    alignment: Alignment.center,
                                     children: [
-                                      Text(
-                                        hint,
-                                        textAlign: TextAlign.center,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyLarge,
-                                      ),
-                                      if (_hasNoMoves(controller)) ...[
-                                        const SizedBox(height: 8),
-                                        FilledButton.icon(
-                                          onPressed: () => _undo(controller),
-                                          icon: const Icon(Icons.undo),
-                                          label: Text(t.undoLastMove),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 92,
                                         ),
-                                      ],
+                                        child: FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: GameWordmark(
+                                            size: compact ? 28 : 32,
+                                          ),
+                                        ),
+                                      ),
+                                      Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton(
+                                              key: const ValueKey('game-home'),
+                                              tooltip: t.home,
+                                              visualDensity:
+                                                  VisualDensity.compact,
+                                              onPressed: _leaveGame,
+                                              icon: const Icon(
+                                                Icons.home_outlined,
+                                              ),
+                                            ),
+                                            IconButton(
+                                              key: const ValueKey(
+                                                'game-journey',
+                                              ),
+                                              tooltip: t.journeyMenu,
+                                              visualDensity:
+                                                  VisualDensity.compact,
+                                              onPressed: _tutorial == null
+                                                  ? _openJourney
+                                                  : null,
+                                              icon: const Icon(
+                                                Icons.menu_book_rounded,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Align(
+                                        alignment: Alignment.centerRight,
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton(
+                                              tooltip: t.help,
+                                              visualDensity:
+                                                  VisualDensity.compact,
+                                              onPressed: () => _showHelp(t),
+                                              icon: const Icon(
+                                                Icons.help_outline_rounded,
+                                              ),
+                                            ),
+                                            IconButton(
+                                              tooltip: t.settings,
+                                              visualDensity:
+                                                  VisualDensity.compact,
+                                              onPressed: _showSettings,
+                                              icon: const Icon(
+                                                Icons.tune_rounded,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                     ],
                                   ),
-                          ),
-                          const SizedBox(height: 12),
-                          Wrap(
-                            alignment: WrapAlignment.center,
-                            spacing: 8,
-                            children: [
-                              OutlinedButton.icon(
-                                onPressed:
-                                    controller.canUndo &&
-                                        !_replaying &&
-                                        !_celebrating
-                                    ? () => _undo(controller)
-                                    : null,
-                                icon: const Icon(Icons.undo),
-                                label: Text(t.undo),
-                              ),
-                              OutlinedButton.icon(
-                                onPressed: _replaying || _celebrating
-                                    ? null
-                                    : () => setState(() {
-                                        _skipCelebration();
-                                        controller.restart();
-                                        _game!.clearEffects();
-                                        _gateBlocked = false;
-                                        _completion = null;
-                                      }),
-                                icon: const Icon(Icons.refresh),
-                                label: Text(t.restart),
-                              ),
-                              PopupMenuButton<int>(
-                                popUpAnimationStyle: _reduceMotion
-                                    ? AnimationStyle.noAnimation
-                                    : null,
-                                tooltip: t.levels,
-                                onSelected: _select,
-                                itemBuilder: (_) => [
-                                  for (var i = 0; i < _loaded.length; i++)
-                                    PopupMenuItem(
-                                      value: i,
-                                      child: Wrap(
-                                        alignment: WrapAlignment.spaceBetween,
-                                        crossAxisAlignment:
-                                            WrapCrossAlignment.center,
-                                        spacing: GameSpacing.small,
+                                ),
+                                Semantics(
+                                  label: t.levels,
+                                  button: true,
+                                  child: InkWell(
+                                    key: const ValueKey('game-levels'),
+                                    borderRadius: BorderRadius.circular(12),
+                                    onTap: canPickLevel ? _pickLevel : null,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 4,
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Text(t.level(i + 1)),
-                                          if (_progress!.forLevel(_loaded[i].id)
-                                              case final best?)
-                                            Text(
-                                              '★' * best.bestStars,
-                                              style: TextStyle(
-                                                color: colors.rewardInk,
+                                          Text(
+                                            widget.play.mode == PlayMode.daily
+                                                ? t.dailyEcho
+                                                : t.level(
+                                                    _displayNumber(
+                                                      _loaded[_index],
+                                                    ),
+                                                  ),
+                                            style: labelStyle,
+                                          ),
+                                          if (_world?.story.forLevel(
+                                                _loaded[_index].id,
+                                              )
+                                              case final spirit?)
+                                            Flexible(
+                                              child: Text(
+                                                ' · ${spirit.levelTitle.inLocale(t.localeName)}',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: labelStyle.copyWith(
+                                                  color: colors.rewardInk,
+                                                  decoration:
+                                                      TextDecoration.none,
+                                                ),
+                                              ),
+                                            ),
+                                          if (story?.released == true)
+                                            Flexible(
+                                              child: Text(
+                                                ' · ${story!.levelTitle.inLocale(t.localeName)}',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: labelStyle.copyWith(
+                                                  color: colors.rewardInk,
+                                                  decoration:
+                                                      TextDecoration.none,
+                                                ),
                                               ),
                                             ),
                                         ],
                                       ),
                                     ),
-                                ],
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Text(t.levels),
+                                  ),
                                 ),
-                              ),
-                            ],
+                                SizedBox(height: compact ? 4 : 8),
+                                // 정수 높이로 고정해 아래 보드가 픽셀 경계에 놓이게 한다.
+                                SizedBox(
+                                  height: math
+                                      .max(
+                                        50.0,
+                                        24 +
+                                            MediaQuery.textScalerOf(context)
+                                                    .scale(15) *
+                                                1.6,
+                                      )
+                                      .ceilToDouble(),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      ...[
+                                        Expanded(
+                                          flex: 3,
+                                          child: JourneyCompanions(
+                                            companion: widget
+                                                .session
+                                                .collection
+                                                .companion,
+                                            narrative: _narrative,
+                                            reduceMotion: _reduceMotion,
+                                            compact: compact,
+                                            inline: true,
+                                            onAlbum: _openAlbum,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                      ],
+                                      Flexible(
+                                        flex: 2,
+                                        child: StatPill(
+                                          icon: Icons.swipe_rounded,
+                                          label: _abilities.showMinimumMoves
+                                              ? '${t.moves(controller.state.moves)} · '
+                                                    '${t.minimumMovesChip(controller.state.level.minimumMoves)}'
+                                              : t.moves(controller.state.moves),
+                                          color: colors.echoInk,
+                                        ),
+                                      ),
+                                      if (_tutorial == null &&
+                                          widget.play.mode !=
+                                              PlayMode.tutorialReplay) ...[
+                                        const SizedBox(width: 6),
+                                        _starlightButton(t, colors, controller),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(height: compact ? 4 : 8),
+                                if (_expansion && _ownedPowers.isNotEmpty) ...[
+                                  PowerBar(
+                                    owned: _ownedPowers,
+                                    stage:
+                                        controller.state.level.availablePowers,
+                                    remaining: controller.state.powers,
+                                    armed: _armedPower,
+                                    enabled:
+                                        !controller.state.isComplete &&
+                                        !_replaying &&
+                                        !_celebrating,
+                                    onToggle: _togglePower,
+                                  ),
+                                  SizedBox(height: compact ? 4 : 6),
+                                ],
+                                // 결과는 보드 위 팝업으로 띄우므로 판 크기는 끝까지 그대로다.
+                                if (scroll)
+                                  SizedBox(
+                                    height: boardHeight,
+                                    child: _buildBoard(t),
+                                  )
+                                else
+                                  Expanded(child: _buildBoard(t)),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: compact ? 6 : 10,
+                                  ),
+                                  child: AnimatedSwitcher(
+                                    duration: _reduceMotion || _tutorial != null
+                                        ? Duration.zero
+                                        : GameEffects.panelDuration,
+                                    layoutBuilder: (current, previous) => Stack(
+                                      alignment: Alignment.topCenter,
+                                      children: [
+                                        for (final child in previous)
+                                          IgnorePointer(
+                                            child: ExcludeSemantics(
+                                              child: child,
+                                            ),
+                                          ),
+                                        ?current,
+                                      ],
+                                    ),
+                                    child: Column(
+                                      key: ValueKey(hint),
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        MechanicLegend(items: legend),
+                                        if (_guided &&
+                                            !controller.state.isComplete) ...[
+                                          const SizedBox(height: 6),
+                                          _guideBanner(t, colors),
+                                        ] else if (_offerHelp(controller)) ...[
+                                          const SizedBox(height: 6),
+                                          FilledButton.tonalIcon(
+                                            key: const ValueKey('stuck-help'),
+                                            onPressed: () =>
+                                                _openHelp(t, controller),
+                                            icon: const Icon(
+                                              Icons.lightbulb_rounded,
+                                            ),
+                                            label: Text(
+                                              AssistText.offer.resolve(
+                                                t.localeName,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                        if (_hasNoMoves(controller)) ...[
+                                          const SizedBox(height: 8),
+                                          FilledButton.icon(
+                                            onPressed: () => _undo(controller),
+                                            icon: const Icon(Icons.undo),
+                                            label: Text(t.undoLastMove),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                if (_tutorial != null)
+                                  TextButton(
+                                    key: const ValueKey('skip-tutorial'),
+                                    onPressed: _skipTutorial,
+                                    child: Text(t.skipTutorial),
+                                  ),
+                                if (_tutorial == null)
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        flex: compact ? 4 : 11,
+                                        child: FilledButton(
+                                          style: FilledButton.styleFrom(
+                                            minimumSize: const Size(48, 48),
+                                          ),
+                                          onPressed:
+                                              controller.canUndo &&
+                                                  !_replaying &&
+                                                  !_celebrating
+                                              ? () => _undo(controller)
+                                              : null,
+                                          child: _buttonLabel(
+                                            Icons.undo_rounded,
+                                            t.undo,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        flex: compact ? 4 : 9,
+                                        child: OutlinedButton(
+                                          style: OutlinedButton.styleFrom(
+                                            minimumSize: const Size(48, 48),
+                                          ),
+                                          onPressed: _replaying || _celebrating
+                                              ? null
+                                              : () => setState(
+                                                  () =>
+                                                      _restartBoard(controller),
+                                                ),
+                                          child: _buttonLabel(
+                                            Icons.refresh_rounded,
+                                            t.restart,
+                                          ),
+                                        ),
+                                      ),
+                                      if (compact) ...[
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          flex: 3,
+                                          child: TextButton(
+                                            style: TextButton.styleFrom(
+                                              minimumSize: const Size(48, 48),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 6,
+                                                  ),
+                                            ),
+                                            onPressed:
+                                                widget.play.mode ==
+                                                    PlayMode.campaign
+                                                ? _pickLevel
+                                                : null,
+                                            child: _buttonLabel(
+                                              Icons.grid_view_rounded,
+                                              t.levels,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                              ],
+                            ),
                           ),
-                        ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              if (controller.state.isComplete && !_replaying)
+                // 머리글(BLORIQ·홈·메뉴)과 아래 버튼은 그대로 두고 보드 영역만 덮는다.
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  top: _overlayInsets.top,
+                  bottom: _overlayInsets.bottom,
+                  child: _victoryOverlay(t, controller),
+                ),
+              if (controller.state.isComplete && _replaying)
+                Positioned(
+                  top: MediaQuery.paddingOf(context).top + 8,
+                  left: 0,
+                  right: 0,
+                  child: Center(child: _replayBanner(t)),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 결과 팝업이 덮는 범위. 위 머리글과 아래 버튼 줄은 계속 누를 수 있다.
+  EdgeInsets get _overlayInsets {
+    final padding = MediaQuery.paddingOf(context);
+    final compact = MediaQuery.sizeOf(context).height - padding.vertical < 700;
+    return EdgeInsets.only(
+      top: padding.top + (compact ? 2 : 8) + 48,
+      bottom: _tutorial == null
+          ? padding.bottom + (compact ? 6 : 12) + 48
+          : padding.bottom,
+    );
+  }
+
+  /// 보드 위 결과 팝업. 뒤 화면은 반투명 남색과 약한 흐림으로 비친다.
+  Widget _victoryOverlay(AppLocalizations t, PuzzleController controller) {
+    final colors = GameTheme.colorsOf(context);
+    return AnimatedBuilder(
+      animation: _victory,
+      builder: (context, child) {
+        final dim = _reduceMotion || _discovery != null
+            ? 1.0
+            : ((_victory.value - .2) / .2).clamp(0.0, 1.0);
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            // 팝업이 떠 있는 동안 보드를 누르지 못하게 막는다.
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {},
+              onPanStart: (_) {},
+              child: ClipRect(
+                child: BackdropFilter(
+                  filter: ui.ImageFilter.blur(sigmaX: 3 * dim, sigmaY: 3 * dim),
+                  child: ColoredBox(
+                    color: colors.background.withValues(alpha: .5 * dim),
+                  ),
+                ),
+              ),
+            ),
+            ?child,
+          ],
+        );
+      },
+      child: SafeArea(
+        top: false,
+        bottom: false,
+        child: LayoutBuilder(
+          builder: (context, area) => Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: GameSpacing.page,
+                vertical: GameSpacing.small,
+              ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: 400,
+                  maxHeight: math.max(
+                    1,
+                    area.maxHeight - GameSpacing.small * 2,
+                  ),
+                ),
+                // 내용이 길어도 스크롤 없이 화면 안에 맞춰 줄인다.
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: SizedBox(
+                    width: math.min(400, area.maxWidth - GameSpacing.page * 2),
+                    child: _buildVictory(t, controller),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 리플레이 중에는 팝업을 접고 위쪽에 작은 띠만 남긴다.
+  Widget _replayBanner(AppLocalizations t) {
+    final colors = GameTheme.colorsOf(context);
+    return Container(
+      padding: const EdgeInsets.only(left: 16, right: 4),
+      decoration: BoxDecoration(
+        color: colors.surface.withValues(alpha: .92),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: colors.reward.withValues(alpha: .5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.play_circle_outline, size: 18, color: colors.rewardInk),
+          const SizedBox(width: 6),
+          Text(
+            t.watchReplay,
+            style: GameTypography.label.copyWith(fontSize: 14),
+          ),
+          TextButton.icon(
+            onPressed: () {
+              _stopReplay();
+              setState(() {});
+            },
+            icon: const Icon(Icons.skip_next, size: 18),
+            label: Text(t.skipReplay),
+          ),
+        ],
+      ),
+    );
+  }
+
+  FamilyAbilities get _abilities {
+    final companion = widget.session.collection.companion;
+    return widget.session.progression.abilitiesFor(
+      companionId: companion?.id,
+      companionFamily: companion?.family,
+    );
+  }
+
+  /// 이동 수 옆의 별빛 길 버튼. 무료·사용권·별가루 비용을 함께 보여 준다.
+  /// 풀이 따라 하기 중임을 알리는 띠. "직접 풀기"는 판을 처음부터 다시 연다.
+  Widget _guideBanner(AppLocalizations t, GameColors colors) => Container(
+    key: const ValueKey('guide-banner'),
+    padding: const EdgeInsets.fromLTRB(12, 2, 4, 2),
+    decoration: BoxDecoration(
+      color: colors.reward.withValues(alpha: .14),
+      borderRadius: BorderRadius.circular(14),
+    ),
+    child: Row(
+      children: [
+        Icon(Icons.auto_awesome_rounded, size: 18, color: colors.rewardInk),
+        const SizedBox(width: 6),
+        Expanded(
+          child: KeepAllText(
+            AssistText.guiding.resolve(t.localeName),
+            style: GameTypography.body.copyWith(fontSize: 14),
+          ),
+        ),
+        TextButton(
+          key: const ValueKey('guide-stop'),
+          onPressed: () =>
+              setState(() => _restartBoard(_controller!, countStruggle: false)),
+          child: Text(AssistText.stopGuide.resolve(t.localeName)),
+        ),
+      ],
+    ),
+  );
+
+  Widget _starlightButton(
+    AppLocalizations t,
+    GameColors colors,
+    PuzzleController controller,
+  ) {
+    final companion = widget.session.collection.companion;
+    final quote = widget.session.progression.quoteStarlightPath(
+      freeUsedThisAttempt: _starlightFreeUsed,
+      companionId: companion?.id,
+      companionFamily: companion?.family,
+    );
+    final price = switch (quote.source) {
+      StarlightPathSource.free => t.starlightFree,
+      StarlightPathSource.charge => t.starlightPass,
+      StarlightPathSource.stardust => '${quote.cost}',
+    };
+    final enabled =
+        !controller.state.isComplete && !_replaying && !_celebrating;
+    return Tooltip(
+      message: t.starlightPath,
+      child: Material(
+        color: colors.reward.withValues(alpha: .14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(color: colors.reward.withValues(alpha: .5)),
+        ),
+        child: InkWell(
+          key: const ValueKey('starlight-path'),
+          borderRadius: BorderRadius.circular(14),
+          onTap: enabled ? () => _useStarlight(t) : null,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.auto_awesome, size: 20, color: colors.rewardInk),
+                Text(
+                  price,
+                  style: GameTypography.label.copyWith(
+                    fontSize: 11,
+                    color: colors.rewardInk,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 결과 팝업의 성장 보상: 경험치 막대, 별가루, 레벨 업, 권능, 유대, 맨손 별.
+  Widget? _rewardView(AppLocalizations t) {
+    final reward = _reward;
+    if (reward == null || (!reward.saved && reward.xpGained == 0)) return null;
+    final colors = GameTheme.colorsOf(context);
+    final lang = t.localeName;
+    final standing = reward.standing;
+    final badges = <(IconData, String, Color)>[
+      // 별 모으기 업적이 가장 큰 소식이라 맨 앞에 둔다.
+      for (final achievement in reward.achievements)
+        (
+          Icons.emoji_events_rounded,
+          achievementReached(achievement.name).resolve(lang),
+          colors.rewardInk,
+        ),
+      // 한 번에 여러 레벨이 올라도 마지막 레벨 한 줄만 보여 준다.
+      if (reward.levelsGained.lastOrNull case final up?)
+        (
+          Icons.keyboard_double_arrow_up_rounded,
+          t.rewardLevelUp(up.level),
+          colors.goalInk,
+        ),
+      if (reward.newPower case final power?)
+        (
+          Icons.auto_awesome,
+          t.rewardPower(power.name.resolve(lang)),
+          colors.rewardInk,
+        ),
+      for (final trail in reward.newTrails)
+        if (trailById(trail) case final definition?)
+          (
+            Icons.blur_on_rounded,
+            t.rewardTrail(definition.name.resolve(lang)),
+            colors.echoInk,
+          ),
+      for (final title in reward.newTitles)
+        if (titleById(title) case final definition?)
+          (
+            Icons.workspace_premium_rounded,
+            t.rewardTitle(definition.name.resolve(lang)),
+            colors.rewardInk,
+          ),
+      if (reward.newStarlightCharges > 0)
+        (
+          Icons.confirmation_number_outlined,
+          t.rewardCharge(reward.newStarlightCharges),
+          colors.rewardInk,
+        ),
+      if (reward.bondLevelUp case final level?)
+        if (widget.session.collection.companion case final friend?)
+          (
+            Icons.favorite_rounded,
+            t.rewardBond(friend.name.inLocale(lang), level),
+            colors.echoInk,
+          ),
+      if (reward.newBareHanded)
+        (Icons.back_hand_rounded, t.rewardBareHanded, colors.goalInk),
+    ];
+    final bondLine = reward.bondLevelUp == 2
+        ? widget.session.collection.companion?.bondLine?.inLocale(lang)
+        : null;
+    return Container(
+      margin: const EdgeInsets.only(bottom: GameSpacing.small),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: colors.reward.withValues(alpha: .08),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: colors.goal.withValues(alpha: .2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  t.playerLevel(standing.level),
+                  style: GameTypography.reward.copyWith(
+                    fontSize: 16,
+                    color: colors.goalInk,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: LinearProgressIndicator(
+                    minHeight: 10,
+                    value: standing.progress,
+                    color: colors.goal,
+                    backgroundColor: colors.outline.withValues(alpha: .25),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 14,
+            children: [
+              Text(
+                t.rewardXp(reward.xpGained),
+                style: GameTypography.label.copyWith(
+                  fontSize: 16,
+                  color: colors.goalInk,
+                ),
+              ),
+              if (reward.stardustGained > 0)
+                Text(
+                  '✦ ${t.rewardStardust(reward.stardustGained)}',
+                  style: GameTypography.label.copyWith(
+                    fontSize: 16,
+                    color: colors.rewardInk,
+                  ),
+                ),
+            ],
+          ),
+          // 특별 보상은 가장 중요한 두 개만 보여 준다(레벨 업·권능이 먼저).
+          for (final (icon, label, color) in badges.take(2))
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 18, color: color),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: KeepAllText(
+                      label,
+                      style: GameTypography.body.copyWith(
+                        fontSize: 15.5,
+                        color: color,
                       ),
                     ),
                   ),
-                );
-              },
-            );
-          },
+                ],
+              ),
+            ),
+          if (bondLine != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: KeepAllText(
+                '“$bondLine”',
+                textAlign: TextAlign.center,
+                style: GameTypography.body.copyWith(
+                  fontSize: 14,
+                  color: colors.secondaryText,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// 큰 글자에서도 넘치지 않도록 버튼 글자는 말줄임으로 줄인다.
+  Widget _buttonLabel(IconData icon, String label) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, size: 20),
+      const SizedBox(width: 6),
+      Flexible(
+        child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+      ),
+    ],
+  );
+
+  double _widthCell(double width, int columns) =>
+      (math.min(
+            width,
+            GameSpacing.maxBoardWidth + BoardGeometry.defaultFrameInset * 2,
+          ) -
+          BoardGeometry.defaultFrameInset * 2) /
+      columns;
+
+  /// 보드를 제외한 머리글·동료·안내·버튼 높이의 보수적 추정치.
+  double _chromeEstimate(
+    BoxConstraints constraints,
+    String hint,
+    bool noMoves, {
+    bool assistRow = false,
+  }) {
+    final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
+    final width = math.min(constraints.maxWidth, 560.0) - GameSpacing.page * 2;
+    final hintLines = hint
+        .split('\n')
+        .fold<int>(
+          0,
+          (lines, line) =>
+              lines +
+              math.max(1, (line.length * 16 * scale * .8 / width).ceil()),
+        );
+    return 48 +
+        24 * scale +
+        math.max(50.0, 34 * scale) +
+        hintLines * math.max(38.0, 24 * scale) +
+        (noMoves ? 56 : 0) +
+        (assistRow ? math.max(54.0, 22 * scale + 30) : 0) +
+        (_tutorial == null
+            ? math.max(48.0, 22 * scale + 26)
+            : 22 * scale + 24) +
+        56;
+  }
+
+  Widget _scrollable(bool scroll, Widget child) =>
+      scroll ? SingleChildScrollView(child: child) : child;
+
+  /// 남은 공간에 맞춰 보드 크기를 정한다. Flame과 터치가 같은 좌표계를 쓴다.
+  Widget _buildBoard(AppLocalizations t) => LayoutBuilder(
+    builder: (context, area) {
+      final controller = _controller!;
+      final geometry = BoardGeometry.fit(
+        available: Size(
+          math.max(
+            1.0,
+            math.min(
+              area.maxWidth,
+              GameSpacing.maxBoardWidth + BoardGeometry.defaultFrameInset * 2,
+            ),
+          ),
+          math.max(1.0, area.maxHeight),
+        ),
+        columns: controller.state.level.boardWidth,
+        rows: controller.state.level.boardHeight,
+        devicePixelRatio: View.of(context).devicePixelRatio,
+      );
+      if (!_scrollLayout &&
+          !(controller.state.isComplete && !_replaying) &&
+          geometry.cellSize < _minCell &&
+          _widthCell(area.maxWidth, controller.state.level.boardWidth) >=
+              _minCell) {
+        // 높이가 부족해 칸이 터치 기준보다 작아지면 다음 프레임에 스크롤 배치로 바꾼다.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && !_scrollLayout) setState(() => _scrollLayout = true);
+        });
+      }
+      if (_geometry != null && !_geometry!.sameLayout(geometry)) {
+        _cancelDrag();
+      }
+      _geometry = geometry;
+      _game!.configureGeometry(geometry);
+      // 정수 좌표에 두어 보드 영역과 Flame 좌표가 정확히 일치하게 한다.
+      final outer = geometry.outerSize;
+      return Padding(
+        padding: EdgeInsets.only(
+          left: math
+              .max(0.0, (area.maxWidth - outer.width) / 2)
+              .floorToDouble(),
+          top: math
+              .max(0.0, (area.maxHeight - outer.height) / 2)
+              .floorToDouble(),
+        ),
+        child: Align(
+          alignment: Alignment.topLeft,
+          child: StarBoardFrame(
+            geometry: geometry,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(GameSpacing.radius),
+              child: SizedBox(
+                width: geometry.canvasSize.width,
+                height: geometry.canvasSize.height,
+                child: Semantics(
+                  label: t.boardLabel,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    dragStartBehavior: DragStartBehavior.down,
+                    onHorizontalDragStart: (d) => _start(d),
+                    onHorizontalDragUpdate: _update,
+                    onHorizontalDragEnd: (_) => _end(),
+                    onHorizontalDragCancel: _cancelDrag,
+                    onVerticalDragStart: (d) => _start(d),
+                    onVerticalDragUpdate: _update,
+                    onVerticalDragEnd: (_) => _end(),
+                    onVerticalDragCancel: _cancelDrag,
+                    child: Listener(
+                      onPointerDown: (_) => _audio?.onUserInteraction(),
+                      onPointerCancel: (_) => _cancelDrag(),
+                      child: GameWidget(game: _game!),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+enum _HelpChoice { starlight, guide }
+
+/// 막혔을 때 여는 도움 시트. 열쇠 한 줄은 바로 보여 주고,
+/// 별빛 길과 풀이 따라 하기는 고른 쪽을 돌려준다.
+class _HelpSheet extends StatelessWidget {
+  const _HelpSheet({required this.keyHint, required this.lang});
+  final String keyHint;
+  final String lang;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = GameTheme.colorsOf(context);
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              AssistText.title.resolve(lang),
+              textAlign: TextAlign.center,
+              style: GameTypography.reward.copyWith(
+                fontSize: 22,
+                color: colors.rewardInk,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              key: const ValueKey('help-key'),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: colors.reward.withValues(alpha: .12),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: colors.reward.withValues(alpha: .4)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.key_rounded,
+                        size: 20,
+                        color: colors.rewardInk,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        AssistText.keyTitle.resolve(lang),
+                        style: GameTypography.label.copyWith(
+                          color: colors.rewardInk,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  KeepAllText(
+                    keyHint,
+                    style: GameTypography.body.copyWith(fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 6),
+            KeepAllText(
+              AssistText.selfNote.resolve(lang),
+              textAlign: TextAlign.center,
+              style: GameTypography.body.copyWith(
+                fontSize: 13.5,
+                color: colors.secondaryText,
+              ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              key: const ValueKey('help-starlight'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
+              onPressed: () => Navigator.pop(context, _HelpChoice.starlight),
+              icon: const Icon(Icons.flare_rounded),
+              label: Text(AssistText.starlight.resolve(lang)),
+            ),
+            const SizedBox(height: 8),
+            FilledButton.icon(
+              key: const ValueKey('help-guide'),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
+              onPressed: () => Navigator.pop(context, _HelpChoice.guide),
+              icon: const Icon(Icons.auto_awesome_rounded),
+              label: Text(AssistText.guide.resolve(lang)),
+            ),
+            const SizedBox(height: 4),
+            KeepAllText(
+              AssistText.guideNote.resolve(lang),
+              textAlign: TextAlign.center,
+              style: GameTypography.body.copyWith(
+                fontSize: 13,
+                color: colors.secondaryText,
+              ),
+            ),
+          ],
         ),
       ),
     );

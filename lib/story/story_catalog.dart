@@ -1,0 +1,157 @@
+import 'dart:convert';
+
+import 'package:flutter/services.dart';
+
+class StoryText {
+  const StoryText(this.ko, this.en);
+  factory StoryText.fromJson(Map<String, dynamic> data) {
+    final ko = data['ko'], en = data['en'];
+    if (ko is! String || ko.isEmpty || en is! String || en.isEmpty) {
+      throw const FormatException('Both story locales required');
+    }
+    return StoryText(ko, en);
+  }
+
+  /// Parses an optional localized text; a missing field yields null.
+  static StoryText? maybeFromJson(Object? data) =>
+      data == null ? null : StoryText.fromJson(data as Map<String, dynamic>);
+  final String ko, en;
+  String inLocale(String locale) => locale.startsWith('ko') ? ko : en;
+}
+
+class SpiritDefinition {
+  SpiritDefinition.fromJson(Map<String, dynamic> data)
+    : id = data['id'] as String,
+      memoryId = data['memoryId'] as String,
+      levelId = data['levelId'] as int,
+      chapter = data['chapter'] as int,
+      family = data['family'] as String,
+      guardian = data['guardian'] as bool,
+      released = data['released'] as bool,
+      asset = data['asset'] as String?,
+      name = StoryText.fromJson(data['name']),
+      levelTitle = StoryText.fromJson(data['levelTitle']),
+      appearance = StoryText.fromJson(data['appearance']),
+      personality = StoryText.fromJson(data['personality']),
+      motion = StoryText.fromJson(data['motion']),
+      motionKind = data['motionKind'] as String? ?? 'sway',
+      portraitScale = (data['portraitScale'] as num?)?.toDouble() ?? 1,
+      portraitAnchor = Offset(
+        (data['portraitAnchor']?[0] as num?)?.toDouble() ?? .5,
+        (data['portraitAnchor']?[1] as num?)?.toDouble() ?? .5,
+      ),
+      memory = StoryText.fromJson(data['memory']),
+      description = StoryText.fromJson(data['description']),
+      quote = StoryText.fromJson(data['quote']),
+      bondLine = StoryText.maybeFromJson(data['bondLine']),
+      bondEpisode = StoryText.maybeFromJson(data['bondEpisode']);
+  final String id, memoryId, family, motionKind;
+  final int levelId, chapter;
+  final bool guardian, released;
+  final String? asset;
+  final double portraitScale;
+  final Offset portraitAnchor;
+  final StoryText name,
+      levelTitle,
+      appearance,
+      personality,
+      motion,
+      memory,
+      description,
+      quote;
+
+  /// Companion bond Lv2 line the spirit says to RIQ. Null in older data.
+  final StoryText? bondLine;
+
+  /// Companion bond Lv5 promise episode. Null in older data.
+  final StoryText? bondEpisode;
+}
+
+class StoryChapter {
+  StoryChapter.fromJson(Map<String, dynamic> data)
+    : number = data['number'] as int,
+      name = StoryText.fromJson(data['name']),
+      familyName = StoryText.fromJson(data['familyName']),
+      endingTitle = StoryText.fromJson(data['endingTitle']),
+      ending = StoryText.fromJson(data['ending']),
+      released = data['released'] as bool;
+  final int number;
+  final StoryText name, familyName, endingTitle, ending;
+  final bool released;
+}
+
+class StoryCatalog {
+  StoryCatalog.fromJson(Map<String, dynamic> data)
+    : spirits = List.unmodifiable(
+        (data['spirits'] as List).map((e) => SpiritDefinition.fromJson(e)),
+      ),
+      chapters = List.unmodifiable(
+        (data['chapters'] as List).map((e) => StoryChapter.fromJson(e)),
+      ) {
+    if (data['version'] != 1 ||
+        spirits.length != 25 ||
+        chapters.length != 5 ||
+        spirits.map((s) => s.id).toSet().length != 25 ||
+        spirits.map((s) => s.memoryId).toSet().length != 25 ||
+        spirits.map((s) => s.levelId).toSet().length != 25) {
+      throw const FormatException('Invalid season catalog');
+    }
+    for (var i = 0; i < chapters.length; i++) {
+      if (chapters[i].number != i + 1) {
+        throw const FormatException('Chapter order');
+      }
+    }
+    for (var index = 0; index < spirits.length; index++) {
+      final s = spirits[index];
+      if (s.id != 's1-${(index + 1).toString().padLeft(2, '0')}' ||
+          s.levelId != index + 1 ||
+          s.chapter != index ~/ 5 + 1 ||
+          s.guardian != ((index + 1) % 5 == 0) ||
+          !{
+            'forest',
+            'starlight',
+            'letter',
+            'cloud',
+            'memory',
+          }.contains(s.family) ||
+          s.memoryId != 's1-memory-${(index + 1).toString().padLeft(2, '0')}' ||
+          s.family !=
+              ['forest', 'starlight', 'letter', 'cloud', 'memory'][index ~/
+                  5] ||
+          !{'sway', 'tilt', 'wave', 'float', 'bow'}.contains(s.motionKind) ||
+          !s.portraitScale.isFinite ||
+          s.portraitScale <= 0 ||
+          s.portraitScale > 2 ||
+          !s.portraitAnchor.dx.isFinite ||
+          !s.portraitAnchor.dy.isFinite ||
+          s.portraitAnchor.dx < 0 ||
+          s.portraitAnchor.dx > 1 ||
+          s.portraitAnchor.dy < 0 ||
+          s.portraitAnchor.dy > 1 ||
+          (s.released && (s.asset == null || s.asset!.isEmpty))) {
+        throw const FormatException('Unstable spirit mapping');
+      }
+    }
+  }
+  final List<SpiritDefinition> spirits;
+  final List<StoryChapter> chapters;
+  List<SpiritDefinition> get released =>
+      spirits.where((s) => s.released).toList(growable: false);
+  StoryChapter chapter(int number) =>
+      chapters.firstWhere((c) => c.number == number);
+  StoryChapter chapterForLevel(int id) => chapter(forLevel(id)?.chapter ?? 1);
+  List<SpiritDefinition> inChapter(int number) =>
+      released.where((s) => s.chapter == number).toList(growable: false);
+  SpiritDefinition? forLevel(int id) =>
+      spirits.where((s) => s.levelId == id).firstOrNull;
+  SpiritDefinition? byId(String? id) =>
+      spirits.where((s) => s.id == id).firstOrNull;
+  // 50KB가 넘는 글은 loadString이 별도 isolate에서 풀므로 바이트를 직접 해석한다.
+  static Future<StoryCatalog> load() async {
+    final bytes = await rootBundle.load('assets/story/season1.json');
+    return StoryCatalog.fromJson(
+      jsonDecode(utf8.decode(bytes.buffer.asUint8List()))
+          as Map<String, dynamic>,
+    );
+  }
+}
