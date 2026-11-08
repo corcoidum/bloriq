@@ -11,6 +11,10 @@ class StoryText {
     }
     return StoryText(ko, en);
   }
+
+  /// Parses an optional localized text; a missing field yields null.
+  static StoryText? maybeFromJson(Object? data) =>
+      data == null ? null : StoryText.fromJson(data as Map<String, dynamic>);
   final String ko, en;
   String inLocale(String locale) => locale.startsWith('ko') ? ko : en;
 }
@@ -38,7 +42,9 @@ class SpiritDefinition {
       ),
       memory = StoryText.fromJson(data['memory']),
       description = StoryText.fromJson(data['description']),
-      quote = StoryText.fromJson(data['quote']);
+      quote = StoryText.fromJson(data['quote']),
+      bondLine = StoryText.maybeFromJson(data['bondLine']),
+      bondEpisode = StoryText.maybeFromJson(data['bondEpisode']);
   final String id, memoryId, family, motionKind;
   final int levelId, chapter;
   final bool guardian, released;
@@ -53,6 +59,12 @@ class SpiritDefinition {
       memory,
       description,
       quote;
+
+  /// Companion bond Lv2 line the spirit says to RIQ. Null in older data.
+  final StoryText? bondLine;
+
+  /// Companion bond Lv5 promise episode. Null in older data.
+  final StoryText? bondEpisode;
 }
 
 class StoryChapter {
@@ -134,8 +146,12 @@ class StoryCatalog {
       spirits.where((s) => s.levelId == id).firstOrNull;
   SpiritDefinition? byId(String? id) =>
       spirits.where((s) => s.id == id).firstOrNull;
-  static Future<StoryCatalog> load() async => StoryCatalog.fromJson(
-    jsonDecode(await rootBundle.loadString('assets/story/season1.json'))
-        as Map<String, dynamic>,
-  );
+  // 50KB가 넘는 글은 loadString이 별도 isolate에서 풀므로 바이트를 직접 해석한다.
+  static Future<StoryCatalog> load() async {
+    final bytes = await rootBundle.load('assets/story/season1.json');
+    return StoryCatalog.fromJson(
+      jsonDecode(utf8.decode(bytes.buffer.asUint8List()))
+          as Map<String, dynamic>,
+    );
+  }
 }

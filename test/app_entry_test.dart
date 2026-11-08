@@ -316,7 +316,7 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  for (final mode in [ThemeMode.light, ThemeMode.dark]) {
+  for (final mode in [ThemeMode.dark]) {
     for (final locale in ['en', 'ko']) {
       for (final size in [
         const Size(320, 568),
@@ -336,7 +336,7 @@ void main() {
               tester.platformDispatcher.clearTextScaleFactorTestValue,
             );
             addTearDown(tester.platformDispatcher.clearLocalesTestValue);
-            final settings = GameSettings(themeMode: mode);
+            final settings = GameSettings();
             await tester.pumpWidget(BloriqApp(settings: settings));
             await waitForHome(tester);
             expect(tester.takeException(), isNull);

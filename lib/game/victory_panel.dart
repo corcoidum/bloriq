@@ -3,9 +3,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../design/game_theme.dart';
-import '../design/star_art.dart';
 import '../l10n/app_localizations.dart';
 
+/// 보드 위 가운데에 뜨는 결과 팝업 카드.
 /// 연출은 표시만 담당한다. 별 계산과 기록 저장은 호출자가 즉시 완료한다.
 class VictoryPanel extends StatelessWidget {
   const VictoryPanel({
@@ -16,7 +16,10 @@ class VictoryPanel extends StatelessWidget {
     required this.reduceMotion,
     required this.onSkip,
     required this.result,
+    required this.actions,
     this.discovery,
+    this.constellation,
+    this.reward,
   });
 
   final double progress;
@@ -25,7 +28,18 @@ class VictoryPanel extends StatelessWidget {
   final bool reduceMotion;
   final VoidCallback onSkip;
   final Widget result;
+
+  /// 카드 아래에 늘 보이는 버튼 묶음. 발견 이야기 중에도 바로 넘어갈 수 있다.
+  final Widget actions;
+
+  /// 새 친구 발견 이야기. 결과 위에 함께 보여 주고, 넘기면 접힌다.
   final Widget? discovery;
+
+  /// 새로 켜진 별자리. 같은 결과 패널 안에 표시한다.
+  final Widget? constellation;
+
+  /// 경험치·별가루·레벨 업 같은 성장 보상.
+  final Widget? reward;
 
   @override
   Widget build(BuildContext context) {
@@ -34,16 +48,70 @@ class VictoryPanel extends StatelessWidget {
     final panel = reduceMotion || discovery != null
         ? 1.0
         : ((progress - .78) / .22).clamp(0.0, 1.0);
+    // 리크가 별문에 들어간 뒤 카드가 가운데에서 튀어 오르듯 나타난다.
+    final appear = reduceMotion || discovery != null
+        ? 1.0
+        : ((progress - .26) / .2).clamp(0.0, 1.0);
+    final card = Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color.lerp(colors.surface, colors.highlight, .06)!,
+            colors.surface,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: colors.reward.withValues(alpha: .6),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: colors.reward.withValues(alpha: .22),
+            blurRadius: 30,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: .35),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: _content(context, t, colors, panel),
+    );
+    return Opacity(
+      opacity: appear,
+      child: Transform.scale(
+        scale: reduceMotion
+            ? 1
+            : .82 + .18 * Curves.easeOutBack.transform(appear),
+        child: card,
+      ),
+    );
+  }
+
+  Widget _content(
+    BuildContext context,
+    AppLocalizations t,
+    GameColors colors,
+    double panel,
+  ) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (discovery == null) const Center(child: CourierPortrait(height: 64)),
         Semantics(
           liveRegion: true,
           child: Text(
             t.complete,
-            style: Theme.of(context).textTheme.titleLarge
-                ?.copyWith(color: colors.goalInk, fontWeight: FontWeight.w800),
+            textAlign: TextAlign.center,
+            style: GameTypography.reward.copyWith(
+              color: colors.goalInk,
+              fontSize: 28,
+            ),
           ),
         ),
         const SizedBox(height: GameSpacing.small),
@@ -51,13 +119,15 @@ class VictoryPanel extends StatelessWidget {
           label: t.starsLabel(stars),
           excludeSemantics: true,
           child: SizedBox(
-            height: math.max(44, MediaQuery.textScalerOf(context).scale(34)),
+            height: math.max(52, MediaQuery.textScalerOf(context).scale(44)),
             child: progress >= 1 || reduceMotion
                 ? Center(
                     child: Text(
                       '${'★' * stars}${'☆' * (3 - stars)}',
                       style: GameTypography.reward.copyWith(
                         color: colors.rewardInk,
+                        fontSize: 40,
+                        height: 1.1,
                       ),
                     ),
                   )
@@ -77,7 +147,7 @@ class VictoryPanel extends StatelessWidget {
                             earned && reveal > 0
                                 ? Icons.star_rounded
                                 : Icons.star_outline_rounded,
-                            size: 36,
+                            size: 46,
                             color: earned && reveal > 0
                                 ? colors.reward
                                 : colors.outline,
@@ -100,24 +170,21 @@ class VictoryPanel extends StatelessWidget {
             opacity: panel,
             child: Transform.translate(
               offset: Offset(0, reduceMotion ? 0 : 8 * (1 - panel)),
-              child: Container(
+              child: SizedBox(
                 width: double.infinity,
-                padding: const EdgeInsets.all(GameSpacing.page),
-                decoration: GameTheme.surfaceDecoration(
-                  colors,
-                  accent: isNewBest ? colors.reward : colors.goal,
-                ),
                 child: Column(
                   children: [
+                    result,
                     if (isNewBest) ...[
+                      const SizedBox(height: GameSpacing.tiny),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
+                          horizontal: 10,
+                          vertical: 4,
                         ),
                         decoration: BoxDecoration(
                           color: colors.reward.withValues(alpha: .14),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -129,25 +196,29 @@ class VictoryPanel extends StatelessWidget {
                               child: Icon(
                                 Icons.auto_awesome,
                                 color: colors.rewardInk,
-                                size: 20,
+                                size: 18,
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 6),
                             Flexible(
                               child: Text(
                                 t.newBest,
                                 style: GameTypography.label.copyWith(
                                   color: colors.rewardInk,
+                                  fontSize: 15,
                                 ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: GameSpacing.small),
                     ],
+                    const SizedBox(height: GameSpacing.small),
+                    ?reward,
                     ?discovery,
-                    result,
+                    ?constellation,
+                    const SizedBox(height: GameSpacing.medium),
+                    actions,
                   ],
                 ),
               ),

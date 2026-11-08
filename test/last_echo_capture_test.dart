@@ -107,7 +107,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 80));
     }
 
-    for (final mode in [ThemeMode.dark, ThemeMode.light]) {
+    for (final mode in [ThemeMode.dark]) {
       for (final locale in ['ko', 'en']) {
         rootBundle.clear();
         SharedPreferences.setMockInitialValues({
@@ -115,7 +115,7 @@ void main() {
           'bloriq.audio.effects': false,
         });
         tester.platformDispatcher.localesTestValue = [Locale(locale)];
-        final settings = GameSettings(themeMode: mode);
+        final settings = GameSettings();
         await tester.pumpWidget(
           RepaintBoundary(
             key: key,

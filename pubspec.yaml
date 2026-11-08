@@ -28,13 +28,20 @@ flutter:
   assets:
     - assets/levels/levels.json
     - assets/levels/daily_pool_v1.json
+    - assets/levels/world2.json
+    - assets/levels/endless_pool_v1.json
     - assets/audio/
     - assets/art/star_courier/
     - assets/art/last_echo/
     - assets/art/season1/
+    - assets/art/moon_garden/
     - assets/story/season1.json
+    - assets/story/world2.json
+    - assets/worlds/saga.json
     - assets/fonts/Jua-OFL.txt
     - assets/fonts/NanumGothic-OFL.txt
+    - assets/fonts/GowunDodum-OFL.txt
+    - assets/fonts/GamjaFlower-OFL.txt
   fonts:
     - family: Jua
       fonts:
@@ -42,3 +49,10 @@ flutter:
     - family: NanumGothic
       fonts:
         - asset: assets/fonts/NanumGothic-Regular.ttf
+    - family: GowunDodum
+      fonts:
+        - asset: assets/fonts/GowunDodum-Regular.ttf
+    # 감자꽃(OFL): 상용 한글 2350자 + 게임 문구만 남긴 서브셋. 없는 글자는 고운돋움.
+    - family: GamjaFlower
+      fonts:
+        - asset: assets/fonts/GamjaFlower-Subset.ttf

@@ -1,0 +1,1906 @@
+[
+  {
+    "id": 101,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 3,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 2,
+        "y": 2
+      },
+      {
+        "id": "b2",
+        "x": 3,
+        "y": 2
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 3
+      }
+    ],
+    "specialRules": [],
+    "minimumMoves": 7,
+    "bareHandedMoves": 8,
+    "availablePowers": [
+      "moonflower_leap"
+    ],
+    "requiredPowers": [],
+    "featuredPower": "moonflower_leap",
+    "difficulty": "world2-easy",
+    "learningIntent": "바위를 뛰어넘으면 돌아가는 길이 짧아진다",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 102,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 3,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 2,
+        "y": 3
+      },
+      {
+        "id": "b2",
+        "x": 3,
+        "y": 2
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 0
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 1,
+            "y": 1
+          },
+          {
+            "x": 3,
+            "y": 1
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 10,
+    "bareHandedMoves": 11,
+    "availablePowers": [
+      "moonflower_leap"
+    ],
+    "requiredPowers": [],
+    "featuredPower": "moonflower_leap",
+    "difficulty": "world2-easy",
+    "learningIntent": "Hold 와 도약 중 무엇이 먼저인지",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 103,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 5,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 2,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 1,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 3,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 0,
+        "y": 3
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 1
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 2,
+            "y": 2
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 11,
+    "bareHandedMoves": 33,
+    "availablePowers": [
+      "moonflower_leap"
+    ],
+    "requiredPowers": [],
+    "featuredPower": "moonflower_leap",
+    "difficulty": "world2-easy",
+    "learningIntent": "전용 칸 너머로 착지하기",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 104,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 5,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 4,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 1,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 3,
+        "y": 3
+      },
+      {
+        "id": "b2",
+        "x": 0,
+        "y": 1
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 3
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoEraser",
+        "positions": [
+          {
+            "x": 4,
+            "y": 1
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 12,
+    "bareHandedMoves": null,
+    "availablePowers": [
+      "moonflower_leap"
+    ],
+    "requiredPowers": [
+      "moonflower_leap"
+    ],
+    "featuredPower": "moonflower_leap",
+    "difficulty": "world2-easy",
+    "learningIntent": "도약한 자리도 잔상이 된다",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 105,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 3,
+      "y": 4
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 3,
+        "y": 3
+      },
+      {
+        "id": "b2",
+        "x": 4,
+        "y": 3
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 4
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 3
+      }
+    ],
+    "specialRules": [],
+    "minimumMoves": 12,
+    "bareHandedMoves": null,
+    "availablePowers": [
+      "moonflower_leap"
+    ],
+    "requiredPowers": [
+      "moonflower_leap"
+    ],
+    "featuredPower": "moonflower_leap",
+    "difficulty": "world2-easy",
+    "learningIntent": "수호 정령: 도약 없이는 닿지 않는 섬",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 106,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 0,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 1,
+        "y": 3
+      },
+      {
+        "id": "b2",
+        "x": 3,
+        "y": 3
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 1
+      }
+    ],
+    "specialRules": [],
+    "minimumMoves": 8,
+    "bareHandedMoves": 9,
+    "availablePowers": [
+      "light_swap"
+    ],
+    "requiredPowers": [],
+    "featuredPower": "light_swap",
+    "difficulty": "world2-medium",
+    "learningIntent": "잔상 자리로 블록을 불러오기",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 107,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 5,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 1,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 2,
+        "y": 1
+      },
+      {
+        "id": "b2",
+        "x": 2,
+        "y": 0
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 3
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 4,
+            "y": 2
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 11,
+    "bareHandedMoves": 14,
+    "availablePowers": [
+      "light_swap"
+    ],
+    "requiredPowers": [],
+    "featuredPower": "light_swap",
+    "difficulty": "world2-medium",
+    "learningIntent": "Hold 로 남긴 잔상과 교대",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 108,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 5,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 0,
+      "y": 2
+    },
+    "exitPosition": {
+      "x": 4,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 0,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 0,
+        "y": 1
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 1
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 1,
+            "y": 0
+          },
+          {
+            "x": 0,
+            "y": 3
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 13,
+    "bareHandedMoves": null,
+    "availablePowers": [
+      "light_swap"
+    ],
+    "requiredPowers": [
+      "light_swap"
+    ],
+    "featuredPower": "light_swap",
+    "difficulty": "world2-medium",
+    "learningIntent": "리크만 갈 수 있는 길에서 잔상과 바꾸기",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 109,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 5,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 3,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 4,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 3,
+        "y": 1
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 2
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoEraser",
+        "positions": [
+          {
+            "x": 0,
+            "y": 1
+          },
+          {
+            "x": 0,
+            "y": 2
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 13,
+    "bareHandedMoves": 21,
+    "availablePowers": [
+      "light_swap"
+    ],
+    "requiredPowers": [],
+    "featuredPower": "light_swap",
+    "difficulty": "world2-medium",
+    "learningIntent": "지우개로 잔상을 고르고 교대",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 110,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 0,
+      "y": 4
+    },
+    "exitPosition": {
+      "x": 1,
+      "y": 2
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 1,
+        "y": 4
+      },
+      {
+        "id": "b2",
+        "x": 4,
+        "y": 3
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 4
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 3,
+          "y": 2
+        },
+        "gate": {
+          "x": 4,
+          "y": 2
+        }
+      }
+    ],
+    "minimumMoves": 15,
+    "bareHandedMoves": null,
+    "availablePowers": [
+      "light_swap"
+    ],
+    "requiredPowers": [
+      "light_swap"
+    ],
+    "featuredPower": "light_swap",
+    "difficulty": "world2-medium",
+    "learningIntent": "수호 정령: 문 앞 잔상과 자리를 바꾼다",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 111,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 1,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 2,
+        "y": 1
+      },
+      {
+        "id": "b2",
+        "x": 3,
+        "y": 2
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 2
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 0,
+          "y": 2
+        },
+        "gate": {
+          "x": 2,
+          "y": 3
+        }
+      }
+    ],
+    "minimumMoves": 10,
+    "bareHandedMoves": 11,
+    "availablePowers": [
+      "seal"
+    ],
+    "requiredPowers": [],
+    "featuredPower": "seal",
+    "difficulty": "world2-hard",
+    "learningIntent": "봉인으로 문을 한 턴 더 열어 두기",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 112,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 5,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 2,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 4,
+      "y": 1
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 3,
+        "y": 3
+      },
+      {
+        "id": "b2",
+        "x": 1,
+        "y": 3
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 1
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 0,
+          "y": 2
+        },
+        "gate": {
+          "x": 0,
+          "y": 3
+        }
+      }
+    ],
+    "minimumMoves": 15,
+    "bareHandedMoves": null,
+    "availablePowers": [
+      "seal"
+    ],
+    "requiredPowers": [
+      "seal"
+    ],
+    "featuredPower": "seal",
+    "difficulty": "world2-hard",
+    "learningIntent": "두 번 지나가야 하는 문",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 113,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 5,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 0,
+      "y": 2
+    },
+    "exitPosition": {
+      "x": 4,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 4,
+        "y": 2
+      },
+      {
+        "id": "b2",
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 3
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 0,
+          "y": 3
+        },
+        "gate": {
+          "x": 3,
+          "y": 2
+        }
+      },
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 0,
+            "y": 1
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 16,
+    "bareHandedMoves": 17,
+    "availablePowers": [
+      "seal"
+    ],
+    "requiredPowers": [],
+    "featuredPower": "seal",
+    "difficulty": "world2-hard",
+    "learningIntent": "봉인과 전용 칸의 순서",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 114,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 3,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 2,
+        "y": 3
+      },
+      {
+        "id": "b2",
+        "x": 2,
+        "y": 0
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 2
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 3,
+          "y": 3
+        },
+        "gate": {
+          "x": 0,
+          "y": 3
+        }
+      },
+      {
+        "type": "echoEraser",
+        "positions": [
+          {
+            "x": 2,
+            "y": 1
+          },
+          {
+            "x": 3,
+            "y": 1
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 13,
+    "bareHandedMoves": 17,
+    "availablePowers": [
+      "seal"
+    ],
+    "requiredPowers": [],
+    "featuredPower": "seal",
+    "difficulty": "world2-hard",
+    "learningIntent": "지우개를 피해 잔상 붙잡기",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 115,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 5,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 0,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 3,
+      "y": 1
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 0,
+        "y": 2
+      },
+      {
+        "id": "b2",
+        "x": 4,
+        "y": 2
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 2
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 4,
+          "y": 3
+        },
+        "gate": {
+          "x": 1,
+          "y": 2
+        }
+      },
+      {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 4,
+            "y": 0
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 17,
+    "bareHandedMoves": null,
+    "availablePowers": [
+      "seal"
+    ],
+    "requiredPowers": [
+      "seal"
+    ],
+    "featuredPower": "seal",
+    "difficulty": "world2-hard",
+    "learningIntent": "수호 정령: Hold 와 봉인의 이중 잠금",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 116,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 5,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 1,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 3,
+      "y": 2
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 1,
+        "y": 1
+      },
+      {
+        "id": "b2",
+        "x": 4,
+        "y": 1
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 2
+      }
+    ],
+    "specialRules": [],
+    "minimumMoves": 11,
+    "bareHandedMoves": 13,
+    "availablePowers": [
+      "wind"
+    ],
+    "requiredPowers": [],
+    "featuredPower": "wind",
+    "difficulty": "world2-hard",
+    "learningIntent": "바람으로 긴 복도를 한 번에",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 117,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 1,
+      "y": 1
+    },
+    "exitPosition": {
+      "x": 1,
+      "y": 4
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 2,
+        "y": 3
+      },
+      {
+        "id": "b2",
+        "x": 4,
+        "y": 1
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 3
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "oneWay",
+        "tiles": [
+          {
+            "x": 2,
+            "y": 4,
+            "dx": 1,
+            "dy": 0
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 13,
+    "bareHandedMoves": 15,
+    "availablePowers": [
+      "wind"
+    ],
+    "requiredPowers": [],
+    "featuredPower": "wind",
+    "difficulty": "world2-hard",
+    "learningIntent": "화살표 칸에서 멈추는 바람",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 118,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 0,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 1,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 1,
+        "y": 4
+      },
+      {
+        "id": "b2",
+        "x": 3,
+        "y": 1
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 4
+      },
+      {
+        "x": 3,
+        "y": 4
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 4,
+            "y": 3
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 15,
+    "bareHandedMoves": 16,
+    "availablePowers": [
+      "wind"
+    ],
+    "requiredPowers": [],
+    "featuredPower": "wind",
+    "difficulty": "world2-hard",
+    "learningIntent": "바람이 멈출 벽 만들기",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 119,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 3,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 4,
+      "y": 1
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 4,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 3,
+        "y": 0
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 1
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "oneWay",
+        "tiles": [
+          {
+            "x": 1,
+            "y": 3,
+            "dx": 1,
+            "dy": 0
+          },
+          {
+            "x": 2,
+            "y": 1,
+            "dx": 0,
+            "dy": -1
+          }
+        ]
+      },
+      {
+        "type": "echoEraser",
+        "positions": [
+          {
+            "x": 0,
+            "y": 3
+          },
+          {
+            "x": 1,
+            "y": 0
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 17,
+    "bareHandedMoves": 20,
+    "availablePowers": [
+      "wind"
+    ],
+    "requiredPowers": [],
+    "featuredPower": "wind",
+    "difficulty": "world2-hard",
+    "learningIntent": "바람과 지우개의 통로",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 120,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 1,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 4,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 1,
+        "y": 4
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 4
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "oneWay",
+        "tiles": [
+          {
+            "x": 2,
+            "y": 4,
+            "dx": 0,
+            "dy": 1
+          },
+          {
+            "x": 0,
+            "y": 2,
+            "dx": 1,
+            "dy": 0
+          }
+        ]
+      },
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 4,
+          "y": 4
+        },
+        "gate": {
+          "x": 1,
+          "y": 2
+        }
+      }
+    ],
+    "minimumMoves": 18,
+    "bareHandedMoves": null,
+    "availablePowers": [
+      "wind"
+    ],
+    "requiredPowers": [
+      "wind"
+    ],
+    "featuredPower": "wind",
+    "difficulty": "world2-hard",
+    "learningIntent": "수호 정령: 바람만 닿는 문",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 121,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 5,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 1,
+      "y": 1
+    },
+    "exitPosition": {
+      "x": 3,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 4,
+        "y": 3
+      },
+      {
+        "id": "b2",
+        "x": 1,
+        "y": 2
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 1
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 2,
+          "y": 2
+        },
+        "gate": {
+          "x": 4,
+          "y": 2
+        }
+      },
+      {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 2,
+            "y": 3
+          },
+          {
+            "x": 4,
+            "y": 0
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 13,
+    "bareHandedMoves": 14,
+    "availablePowers": [
+      "moonflower_leap",
+      "seal"
+    ],
+    "requiredPowers": [],
+    "featuredPower": "seal",
+    "difficulty": "world2-master",
+    "learningIntent": "봉인과 도약, 무엇을 먼저 쓸까",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 122,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 4,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 4,
+      "y": 1
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 4,
+        "y": 4
+      },
+      {
+        "id": "b2",
+        "x": 3,
+        "y": 3
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 4
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "oneWay",
+        "tiles": [
+          {
+            "x": 2,
+            "y": 2,
+            "dx": -1,
+            "dy": 0
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 14,
+    "bareHandedMoves": 16,
+    "availablePowers": [
+      "light_swap",
+      "wind"
+    ],
+    "requiredPowers": [],
+    "featuredPower": "wind",
+    "difficulty": "world2-master",
+    "learningIntent": "교대한 뒤 바람에 실어 보내기",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 123,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 0,
+      "y": 1
+    },
+    "exitPosition": {
+      "x": 4,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 0,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 0,
+        "y": 2
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 3
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoEraser",
+        "positions": [
+          {
+            "x": 0,
+            "y": 4
+          },
+          {
+            "x": 2,
+            "y": 0
+          }
+        ]
+      },
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 1,
+            "y": 4
+          },
+          {
+            "x": 2,
+            "y": 1
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 13,
+    "bareHandedMoves": null,
+    "availablePowers": [
+      "moonflower_leap",
+      "light_swap"
+    ],
+    "requiredPowers": [
+      "moonflower_leap",
+      "light_swap"
+    ],
+    "featuredPower": "light_swap",
+    "difficulty": "world2-master",
+    "learningIntent": "교대 없이는 닫힌 꼭대기",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 124,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 5,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 2,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 3,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 0,
+        "y": 1
+      },
+      {
+        "id": "b2",
+        "x": 1,
+        "y": 0
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 1
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 1,
+            "y": 3
+          }
+        ]
+      },
+      {
+        "type": "oneWay",
+        "tiles": [
+          {
+            "x": 1,
+            "y": 2,
+            "dx": 0,
+            "dy": 1
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 16,
+    "bareHandedMoves": 20,
+    "availablePowers": [
+      "seal",
+      "wind"
+    ],
+    "requiredPowers": [],
+    "featuredPower": "wind",
+    "difficulty": "world2-master",
+    "learningIntent": "두 권능을 아껴 쓰기",
+    "reviewStatus": "awaiting_manual_play"
+  },
+  {
+    "id": 125,
+    "world": 2,
+    "revision": 1,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 4,
+      "y": 4
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 3,
+        "y": 4
+      },
+      {
+        "id": "b2",
+        "x": 1,
+        "y": 4
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 4
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 4
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 0
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 0,
+          "y": 0
+        },
+        "gate": {
+          "x": 1,
+          "y": 3
+        }
+      },
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 3,
+            "y": 2
+          },
+          {
+            "x": 2,
+            "y": 0
+          }
+        ]
+      }
+    ],
+    "minimumMoves": 19,
+    "bareHandedMoves": null,
+    "availablePowers": [
+      "moonflower_leap",
+      "light_swap"
+    ],
+    "requiredPowers": [
+      "moonflower_leap",
+      "light_swap"
+    ],
+    "featuredPower": "moonflower_leap",
+    "difficulty": "world2-master",
+    "learningIntent": "수호 정령: 등불을 켜는 마지막 길",
+    "reviewStatus": "awaiting_manual_play"
+  }
+]

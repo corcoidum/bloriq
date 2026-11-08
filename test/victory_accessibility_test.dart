@@ -173,7 +173,7 @@ void main() {
     ticking.dispose();
   });
 
-  for (final mode in [ThemeMode.light, ThemeMode.dark]) {
+  for (final mode in [ThemeMode.dark]) {
     testWidgets(
       '${mode.name}: stage 14 and 20 complete through real gestures',
       (tester) async {
@@ -185,7 +185,6 @@ void main() {
             .where((level) => {14, 20, 21}.contains(level.id))
             .toList();
         final settings = await GameSettings.load();
-        await settings.setThemeMode(mode);
         await settings.setReduceMotion(true);
         await pumpGame(
           tester,

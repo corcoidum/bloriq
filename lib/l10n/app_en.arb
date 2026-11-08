@@ -82,15 +82,11 @@
   },
   "musicOn": "Turn music off",
   "musicOff": "Turn music on",
-  "eraserRule": "Crossed tiles erase the echo when a block leaves.",
-  "holdRule": "Pause tiles keep the previous echo when a block leaves.",
-  "oneWayRule": "A block on an arrow tile can leave only in the arrow’s direction.",
-  "goalOnlyRule": "Triangle tiles admit only mint-marked RIQ.",
+  "eraserRule": "Dandelion tile: leaving it scatters the echo.",
+  "holdRule": "Amber tile: leaving it keeps the previous echo.",
+  "oneWayRule": "Stream tile: a block can leave only the way the water flows.",
+  "goalOnlyRule": "Clover tile: only RIQ may step in.",
   "settings": "Settings",
-  "appearance": "Appearance",
-  "themeSystem": "System",
-  "themeLight": "Light",
-  "themeDark": "Dark",
   "reduceMotion": "Reduce motion",
   "reduceMotionDescription": "Use quiet, instant transitions. System reduced motion is always respected.",
   "soundEffects": "Sound effects",
@@ -104,7 +100,7 @@
   "collectedStars": "{count} stars",
   "skipIntro": "Skip intro",
   "replayIntro": "Watch intro again",
-  "introLabel": "The mint courier leaves a purple Echo and reaches the star.",
+  "introLabel": "Riq wakes up, leaves a purple Echo, reaches the star gate and lights a constellation.",
   "preparingGame": "Getting your puzzles ready…",
   "retry": "Try loading again",
   "motionSection": "Motion",
@@ -327,5 +323,175 @@
         "type": "String"
       }
     }
-  }
+  },
+  "constellationAtlas": "Constellation Atlas",
+  "constellationName1": "Moonflower",
+  "constellationName2": "Five Lights",
+  "constellationName3": "Sealed Letter",
+  "constellationName4": "Wind Ring",
+  "constellationName5": "First Star",
+  "constellationLit": "{lit} of {total} stars lit",
+  "@constellationLit": {
+    "placeholders": {
+      "lit": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "constellationBestStars": "Best stars {stars}/{max}",
+  "@constellationBestStars": {
+    "placeholders": {
+      "stars": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "constellationDormant": "Still asleep",
+  "constellationRestored": "Restored",
+  "constellationGolden": "Golden",
+  "constellationSummary": "{name} constellation. {lit} of {total} stars lit. Best stars {stars} of {max}. {status}.",
+  "@constellationSummary": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "lit": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "stars": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "constellationNewStar": "A star in {name} woke up",
+  "@constellationNewStar": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "constellationCompleteTitle": "{name} shines again",
+  "@constellationCompleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "constellationGoldenTitle": "{name} turned golden",
+  "@constellationGoldenTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "constellationPending": "This star lights up once your progress is saved.",
+  "constellationNewVersion": "Cleared in an earlier version. Stars count once you clear this one.",
+  "constellationLevelStars": "Gate {number} · {stars} of 3 stars",
+  "@constellationLevelStars": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "stars": {
+        "type": "int"
+      }
+    }
+  },
+  "constellationLevelDark": "Gate {number} · not cleared yet",
+  "@constellationLevelDark": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "constellationPlay": "Play",
+  "constellationBack": "All constellations",
+  "viewConstellation": "View constellation",
+  "journey": "Journey",
+  "journeyStatus": "Status",
+  "journeyConstellations": "Stars",
+  "journeyCompanions": "Friends",
+  "journeyRewards": "Rewards",
+  "journeyMenu": "Menu",
+  "journeyCleared": "{count} / {total} stages",
+  "@journeyCleared": {"placeholders": {"count": {"type": "int"}, "total": {"type": "int"}}},
+  "journeyStarCount": "Stars {count} / {total}",
+  "@journeyStarCount": {"placeholders": {"count": {"type": "int"}, "total": {"type": "int"}}},
+  "journeyFriends": "Friends {count} / {total}",
+  "@journeyFriends": {"placeholders": {"count": {"type": "int"}, "total": {"type": "int"}}},
+  "journeyStreak": "{days}-day streak",
+  "@journeyStreak": {"placeholders": {"days": {"type": "int"}}},
+  "companionEquip": "Travel together",
+  "companionEquipped": "Traveling with you",
+  "companionUnknown": "A friend not met yet",
+  "journeyPageHint": "Swipe to see more",
+  "playerLevel": "Lv {level}",
+  "@playerLevel": {"placeholders": {"level": {"type": "int"}}},
+  "stardustCount": "Stardust {count}",
+  "@stardustCount": {"placeholders": {"count": {"type": "int"}}},
+  "rewardXp": "+{xp} XP",
+  "@rewardXp": {"placeholders": {"xp": {"type": "int"}}},
+  "rewardStardust": "+{count} stardust",
+  "@rewardStardust": {"placeholders": {"count": {"type": "int"}}},
+  "rewardLevelUp": "Level up! Lv {level}",
+  "@rewardLevelUp": {"placeholders": {"level": {"type": "int"}}},
+  "rewardPower": "New power: {name}",
+  "@rewardPower": {"placeholders": {"name": {"type": "String"}}},
+  "rewardBond": "Bond with {name} Lv {level}",
+  "@rewardBond": {"placeholders": {"name": {"type": "String"}, "level": {"type": "int"}}},
+  "rewardBareHanded": "Bare-handed star! No hints, fewest moves",
+  "rewardTrail": "New move trail: {name}",
+  "@rewardTrail": {"placeholders": {"name": {"type": "String"}}},
+  "rewardTitle": "New title: {name}",
+  "@rewardTitle": {"placeholders": {"name": {"type": "String"}}},
+  "rewardCharge": "Starlight path pass +{count}",
+  "@rewardCharge": {"placeholders": {"count": {"type": "int"}}},
+  "starlightPath": "Starlight path",
+  "starlightFree": "Free",
+  "starlightPass": "Pass",
+  "starlightShort": "Not enough stardust",
+  "starlightNoMove": "No path from here. Try undoing.",
+  "starlightCapped": "Using the starlight path caps this clear at 2 stars",
+  "minimumMovesChip": "Best {count}",
+  "@minimumMovesChip": {"placeholders": {"count": {"type": "int"}}},
+  "rewardsPowers": "Constellation powers",
+  "rewardsTrack": "Level rewards",
+  "rewardsTrails": "Move trails",
+  "rewardsTitles": "Titles",
+  "powerLocked": "Wakes when {constellation} is complete",
+  "@powerLocked": {"placeholders": {"constellation": {"type": "String"}}},
+  "powerWorld2": "Usable in the Cloud-Sea Lighthouse",
+  "powerActive": "Ready to use",
+  "trackClaimed": "Claimed",
+  "equip": "Equip",
+  "equipped": "Equipped",
+  "bondLevel": "Bond Lv {level}",
+  "@bondLevel": {"placeholders": {"level": {"type": "int"}}},
+  "nextWorldTeaser": "The star gate is open · Cloud-Sea Lighthouse — coming soon",
+  "xpToNext": "{xp} XP to next level",
+  "@xpToNext": {"placeholders": {"xp": {"type": "int"}}},
+  "resultMoves": "This run",
+  "resultBest": "Best",
+  "resultFewest": "Fewest",
+  "watchReplayShort": "Replay",
+  "moreActions": "More"
 }
