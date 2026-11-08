@@ -4,9 +4,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
 import '../design/game_theme.dart';
-import '../art/game_art_assets.dart';
 import '../domain/puzzle.dart';
-import 'board_geometry.dart';
 
 /// 드래그 중 표시할 가상 이동. 실제 게임 상태에는 적용하지 않는다.
 class DragPreview {
@@ -20,17 +18,8 @@ class DragPreview {
 
 /// The domain owns the rules; this renderer only animates their results.
 class BloriqGame extends FlameGame {
-  BloriqGame(this.controller, {this.artAssets});
-  final GameArtAssets? artAssets;
+  BloriqGame(this.controller);
   final PuzzleController controller;
-
-  double devicePixelRatio = 1;
-  BoardGeometry get geometry => BoardGeometry(
-    columns: controller.state.level.boardWidth,
-    rows: controller.state.level.boardHeight,
-    available: Size(size.x, size.y),
-    devicePixelRatio: devicePixelRatio,
-  );
 
   String? _movingId;
   Position? _from;
@@ -73,8 +62,11 @@ class BloriqGame extends FlameGame {
   DragPreview? get currentPreview {
     if (isReplaying || _dragId == null) return null;
     final state = controller.state;
-    final cell = geometry.cellSize;
-    if (cell <= 0 || _dragOffset.distance < geometry.dragThreshold) return null;
+    final cell = math.min(
+      size.x / state.level.boardWidth,
+      size.y / state.level.boardHeight,
+    );
+    if (cell <= 0 || _dragOffset.distance < cell * .24) return null;
     final block = state.blocks
         .where((block) => block.id == _dragId)
         .firstOrNull;
@@ -173,8 +165,7 @@ class BloriqGame extends FlameGame {
   }
 
   @override
-  Color backgroundColor() =>
-      artAssets == null ? _colors.background : Colors.transparent;
+  Color backgroundColor() => _colors.background;
 
   @override
   void render(Canvas canvas) {
@@ -196,12 +187,20 @@ class BloriqGame extends FlameGame {
     } else {
       state = controller.state;
     }
-    final layout = geometry;
-    final cell = layout.cellSize;
-    if (cell <= 0) return;
-    final boardSize = layout.boardSize;
-    final origin = layout.origin;
-    Offset center(Position p) => layout.center(p);
+    final cell = math.min(
+      size.x / state.level.boardWidth,
+      size.y / state.level.boardHeight,
+    );
+    final boardSize = Size(
+      cell * state.level.boardWidth,
+      cell * state.level.boardHeight,
+    );
+    final origin = Offset(
+      (size.x - boardSize.width) / 2,
+      (size.y - boardSize.height) / 2,
+    );
+    Offset center(Position p) =>
+        origin + Offset((p.x + .5) * cell, (p.y + .5) * cell);
     final paint = Paint();
     final preview = currentPreview;
     final previewTarget = preview?.target;
@@ -212,27 +211,16 @@ class BloriqGame extends FlameGame {
       (origin & boardSize).deflate(cell * .015),
       Radius.circular(cell * .22),
     );
-    canvas.drawRRect(
-      board,
-      paint
-        ..color = artAssets == null
-            ? _colors.boardSurface
-            : const Color(0xffd5c9b6),
-    );
+    canvas.drawRRect(board, paint..color = _colors.boardSurface);
 
     for (var y = 0; y < state.level.boardHeight; y++) {
       for (var x = 0; x < state.level.boardWidth; x++) {
-        final rect = layout.tileRect(Position(x, y));
-        final artTile = artAssets?.tile('empty');
-        if (artTile != null) {
-          paintArt(
-            canvas,
-            artTile,
-            rect.inflate(cell * .045),
-            darken: _colors == GameColors.dark,
-          );
-          continue;
-        }
+        final rect = Rect.fromLTWH(
+          origin.dx + x * cell + 3,
+          origin.dy + y * cell + 3,
+          cell - 6,
+          cell - 6,
+        );
         final tile = RRect.fromRectAndRadius(rect, Radius.circular(cell * .16));
         canvas.drawRRect(
           tile,
@@ -402,11 +390,6 @@ class BloriqGame extends FlameGame {
         width: cell * .86,
         height: cell * .86,
       );
-      final obstacle = artAssets?.tile('obstacle');
-      if (obstacle != null) {
-        paintArt(canvas, obstacle, rect);
-        continue;
-      }
       final wall = RRect.fromRectAndRadius(rect, Radius.circular(cell * .15));
       canvas.drawRRect(
         wall.shift(Offset(0, cell * .025)),
@@ -438,37 +421,27 @@ class BloriqGame extends FlameGame {
 
     final exit = center(state.level.exitPosition);
     final glow = _reduceMotion ? .5 : .5 + .5 * math.sin(_hintTime * 1.8);
-    final exitArt = artAssets?.tile('exit');
-    if (exitArt != null) {
-      paintArt(
-        canvas,
-        exitArt,
-        Rect.fromCenter(center: exit, width: cell * .86, height: cell * .86),
-        opacity: .92 + glow * .08,
-      );
-    } else {
-      canvas.drawCircle(
-        exit,
-        cell * (.39 + glow * .015),
-        paint..color = _colors.reward.withValues(alpha: .12 + glow * .05),
-      );
-      canvas.drawCircle(exit, cell * .33, paint..color = _colors.reward);
-      canvas.drawCircle(
-        exit,
-        cell * .27,
-        paint..color = Color.lerp(_colors.reward, _colors.surface, .65)!,
-      );
-      canvas.drawCircle(
-        exit,
-        cell * .27,
-        paint
-          ..color = _colors.highlight.withValues(alpha: .75)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = math.max(1, cell * .015),
-      );
-      paint.style = PaintingStyle.fill;
-      _label(canvas, '★', exit, cell * .33, _colors.rewardInk);
-    }
+    canvas.drawCircle(
+      exit,
+      cell * (.39 + glow * .015),
+      paint..color = _colors.reward.withValues(alpha: .12 + glow * .05),
+    );
+    canvas.drawCircle(exit, cell * .33, paint..color = _colors.reward);
+    canvas.drawCircle(
+      exit,
+      cell * .27,
+      paint..color = Color.lerp(_colors.reward, _colors.surface, .65)!,
+    );
+    canvas.drawCircle(
+      exit,
+      cell * .27,
+      paint
+        ..color = _colors.highlight.withValues(alpha: .75)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = math.max(1, cell * .015),
+    );
+    paint.style = PaintingStyle.fill;
+    _label(canvas, '★', exit, cell * .33, _colors.rewardInk);
 
     void drawEcho(Position p, double alpha) {
       if (alpha <= 0) return;
@@ -477,11 +450,6 @@ class BloriqGame extends FlameGame {
         width: cell * .72,
         height: cell * .72,
       );
-      final echoArt = artAssets?.tile('echo');
-      if (echoArt != null) {
-        paintArt(canvas, echoArt, rect.inflate(cell * .06), opacity: alpha);
-        return;
-      }
       final rounded = RRect.fromRectAndRadius(
         rect,
         Radius.circular(cell * .17),
@@ -584,14 +552,9 @@ class BloriqGame extends FlameGame {
       }
       final rect = Rect.fromCenter(
         center: at,
-        width: layout.blockSize * scale,
-        height: layout.blockSize * scale,
+        width: cell * .76 * scale,
+        height: cell * .76 * scale,
       );
-      final blockArt = artAssets?.tile(isGoal ? 'mint' : 'blue');
-      if (blockArt != null) {
-        paintArt(canvas, blockArt, rect, opacity: opacity);
-        continue;
-      }
       final color = isGoal ? _colors.goal : _colors.primary;
       canvas.drawRRect(
         RRect.fromRectAndRadius(
@@ -670,10 +633,7 @@ class BloriqGame extends FlameGame {
     if (state.isComplete && !isReplaying && !_reduceMotion) {
       _drawCelebration(canvas, exit, cell);
     }
-    if (artAssets == null &&
-        state.level.id == 1 &&
-        state.moves == 0 &&
-        _dragId == null) {
+    if (state.level.id == 1 && state.moves == 0 && _dragId == null) {
       final goal = center(state.level.startPosition);
       final shift = _reduceMotion ? 0.0 : math.sin(_hintTime * 3) * cell * .05;
       final start = goal + Offset(cell * .10 + shift, -cell * .48);

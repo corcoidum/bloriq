@@ -1,4 +1,3 @@
-import 'support/art_test_assets.dart';
 import 'support/legacy_levels.dart';
 
 import 'dart:convert';
@@ -13,8 +12,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
-  setUp(prepareMoonlitArt);
   setUp(() {
     rootBundle.clear();
     SharedPreferences.setMockInitialValues({});

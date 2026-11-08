@@ -5,7 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 게임 이벤트별 효과음. 모두 앱에 포함된 원본 합성 음원이다.
-enum SoundEffect { move, echo, blocked, gate, complete, guardian }
+enum SoundEffect { move, echo, blocked, gate, complete }
 
 abstract interface class AudioBackend {
   Future<void> startMusic();

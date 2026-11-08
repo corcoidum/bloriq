@@ -1,5 +1,3 @@
-import 'support/art_test_assets.dart';
-
 // 문서용 화면: flutter test test/visual_capture_test.dart --dart-define=CAPTURE_DESIGN=true
 // 일반 테스트 실행에서는 캡처와 파일 쓰기를 수행하지 않는다.
 import 'dart:io';
@@ -18,8 +16,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
-  setUp(prepareMoonlitArt);
   testWidgets('capture design screens', (tester) async {
     if (!const bool.fromEnvironment('CAPTURE_DESIGN')) return;
     tester.view.physicalSize = const Size(390, 844);

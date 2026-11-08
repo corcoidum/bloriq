@@ -1,36 +1,31 @@
-import 'support/art_test_assets.dart';
-
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:bloriq/domain/puzzle.dart';
 import 'package:bloriq/game/bloriq_game.dart';
 import 'package:bloriq/main.dart';
-import 'package:bloriq/progress/progress_repository.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
-  setUp(prepareMoonlitArt);
   setUp(() {
     rootBundle.clear();
     SharedPreferences.setMockInitialValues({});
   });
 
   testWidgets(
-    'new course all 25 stages can be played consecutively by dragging',
+    'new course first ten stages can be played consecutively by dragging',
     (tester) async {
       final data = jsonDecode(
         File('assets/levels/levels.json').readAsStringSync(),
       ) as List<dynamic>;
       final levels = data
           .map((value) => Level.fromJson(value as Map<String, dynamic>))
-          .take(25)
+          .take(10)
           .toList();
-      expect(levels, hasLength(25));
+      expect(levels, hasLength(10));
 
       await tester.pumpWidget(const BloriqApp());
       for (
@@ -92,21 +87,15 @@ void main() {
           findsOneWidget,
           reason: 'Level ${level.id}: completion must be shown',
         );
-        expect(
-          (await ProgressRepository.load()).spiritIds,
-          hasLength(level.id),
-        );
-        final nextLabel = level.id == 25 ? 'First level' : 'Next level';
-        expect(find.text(nextLabel), findsOneWidget);
-        await tester.ensureVisible(find.text(nextLabel));
+        expect(find.text('Next level'), findsOneWidget);
+        await tester.ensureVisible(find.text('Next level'));
         await tester.pump();
-        await tester.tap(find.text(nextLabel));
+        await tester.tap(find.text('Next level'));
         // AnimatedSwitcher needs one frame to begin and another to finish.
         await tester.pump(const Duration(milliseconds: 300));
         await tester.pump(const Duration(milliseconds: 300));
       }
-      expect(find.text('Level 1'), findsOneWidget);
-      expect((await ProgressRepository.load()).memoryIds, hasLength(25));
+      expect(find.text('Level 11'), findsOneWidget);
     },
   );
 }

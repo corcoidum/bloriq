@@ -1,5 +1,3 @@
-import 'support/art_test_assets.dart';
-
 import 'package:bloriq/design/game_theme.dart';
 import 'package:bloriq/domain/puzzle.dart';
 import 'package:bloriq/game/bloriq_game.dart';
@@ -51,8 +49,6 @@ Future<void> _step(WidgetTester tester, PuzzleMove move) async {
 }
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
-  setUp(prepareMoonlitArt);
   setUp(() {
     rootBundle.clear();
     SharedPreferences.setMockInitialValues({});

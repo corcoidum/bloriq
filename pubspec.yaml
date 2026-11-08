@@ -1,7 +1,7 @@
 name: bloriq
 description: BLORIQ one-turn echo puzzle prototype.
 publish_to: 'none'
-version: 0.3.1+4
+version: 0.1.0+1
 
 environment:
   sdk: '>=3.13.0 <4.0.0'
@@ -28,13 +28,3 @@ flutter:
   assets:
     - assets/levels/levels.json
     - assets/audio/
-    - assets/video/
-    - assets/story/season1.json
-    - assets/art/moonlit/backgrounds/
-    - assets/art/moonlit/tiles/
-    - assets/art/moonlit/spirits/
-    - assets/art/moonlit/fonts/OFL.txt
-  fonts:
-    - family: CormorantGaramond
-      fonts:
-        - asset: assets/art/moonlit/fonts/CormorantGaramond.ttf
