@@ -161,13 +161,14 @@ void main() {
     expect(reward.levelsGained.map((l) => l.level), [2, 3, 4]);
     expect(reward.levelsGained[0].reward, isA<StardustBundle>());
     expect(reward.newTrails, ['petal']);
-    expect(reward.newTitles, ['crescent_apprentice']);
-    expect(reward.clearStardust, 25);
-    expect(reward.stardustGained, 25 + 50);
-    expect(repo.stardust, 25 + 25 + 50);
+    // 황금 별자리: 별가루 50 + 첫 황금 업적(별가루 80, 칭호).
+    expect(reward.newTitles, ['crescent_apprentice', 'golden_first']);
+    expect(reward.clearStardust, 25 + 50);
+    expect(reward.stardustGained, 75 + 50 + 80);
+    expect(repo.stardust, 25 + 75 + 50 + 80);
     expect(repo.claimedLevels, {2, 3, 4});
     expect(repo.ownedTrails, {'moonlight', 'petal'});
-    expect(repo.ownedTitles, {'crescent_apprentice'});
+    expect(repo.ownedTitles, {'crescent_apprentice', 'golden_first'});
     expect(repo.title, 'crescent_apprentice');
 
     final restored = await _load();
@@ -379,9 +380,10 @@ void main() {
       expect(reward.levelsGained.map((l) => l.level), [
         for (var l = 2; l <= 12; l++) l,
       ]);
-      expect(reward.clearStardust, 25 * 25);
-      expect(reward.stardustGained, 625 + 50 + 80 + 100 + 120);
-      expect(repo.stardust, 975);
+      expect(reward.clearStardust, 25 * 25 + 5 * 50);
+      // 황금 별자리 5개 × 별가루 50 포함.
+      expect(reward.stardustGained, 875 + 50 + 80 + 100 + 120);
+      expect(repo.stardust, 1225);
       expect(reward.newPowers.map((p) => p.id), [
         'moonflower_leap',
         'light_swap',
@@ -407,7 +409,7 @@ void main() {
         isNull,
       );
       expect(repo.xp, 3350);
-      expect(repo.stardust, 975);
+      expect(repo.stardust, 1225);
 
       final restored = await _load();
       expect(restored.backfilled, true);
@@ -420,7 +422,7 @@ void main() {
         isNull,
       );
       expect(restored.xp, 3350);
-      expect(restored.stardust, 975);
+      expect(restored.stardust, 1225);
       expect(restored.powers.length, 5);
     });
 
@@ -574,6 +576,156 @@ void main() {
       expect(reward.saved, false);
       expect(repo.saveFailed, true);
       expect(repo.xp, 30);
+    });
+  });
+
+  group('star collection achievements', () {
+    test(
+      '25 forest stars pay out once, at the clear that reaches them',
+      () async {
+        final repo = await _load();
+        ClearReward? reward;
+        for (var id = 1; id <= 8; id++) {
+          reward = await repo.recordClear(
+            levelKey: '$id:1',
+            stars: 3,
+            previousBestStars: null,
+          );
+          expect(
+            reward.achievements.where(
+              (a) => a.kind == AchievementKind.worldStars,
+            ),
+            isEmpty,
+            reason: '$id',
+          );
+        }
+        expect(repo.worldStars(1), 24);
+        final before = repo.stardust;
+        reward = await repo.recordClear(
+          levelKey: '9:1',
+          stars: 1,
+          previousBestStars: null,
+        );
+        expect(reward.achievements.map((a) => a.id), ['w1-stars-25']);
+        // (맨손 별 5개 업적은 다섯째 3별 클리어 때 이미 받았다.)
+        expect(reward.achievementStardust, 100);
+        expect(repo.stardust - before, reward.stardustGained);
+        expect(repo.claimedAchievements, {'bare-5', 'w1-stars-25'});
+        // 다시 깨도 두 번 주지 않는다.
+        reward = await repo.recordClear(
+          levelKey: '9:1',
+          stars: 1,
+          previousBestStars: 1,
+        );
+        expect(reward.achievements, isEmpty);
+        expect((await _stored())['claimedAchievements'], [
+          'bare-5',
+          'w1-stars-25',
+        ]);
+      },
+    );
+
+    test('stars count per world', () async {
+      final repo = await _load();
+      await repo.recordClear(
+        levelKey: '3:1',
+        stars: 3,
+        previousBestStars: null,
+      );
+      await repo.recordClear(
+        levelKey: '101:1',
+        stars: 2,
+        previousBestStars: null,
+      );
+      await repo.recordClear(
+        levelKey: '125:1',
+        stars: 1,
+        previousBestStars: null,
+      );
+      expect(repo.worldStars(1), 3);
+      expect(repo.worldStars(2), 3);
+      expect(repo.worldStars(3), 0);
+    });
+
+    test(
+      'a golden constellation adds stardust and the first-gold title',
+      () async {
+        final repo = await _load();
+        final reward = await repo.recordClear(
+          levelKey: '5:1',
+          stars: 3,
+          previousBestStars: null,
+          constellationCompletedChapter: 1,
+          constellationGoldenChapter: 1,
+        );
+        expect(reward.clearStardust, 25 + StardustRules.goldenConstellation);
+        expect(reward.achievements.map((a) => a.id), contains('golden-1'));
+        expect(repo.ownedTitles, contains('golden_first'));
+      },
+    );
+
+    test('five bare-handed stars earn the explorer title', () async {
+      final repo = await _load();
+      ClearReward? reward;
+      for (var id = 1; id <= 5; id++) {
+        reward = await repo.recordClear(
+          levelKey: '$id:1',
+          stars: 3,
+          previousBestStars: null,
+        );
+      }
+      expect(repo.bareHanded, hasLength(5));
+      expect(reward!.achievements.map((a) => a.id), ['bare-5']);
+      expect(reward.newTitles, contains('barehand_explorer'));
+    });
+
+    test(
+      'players who already had the stars get them on their next clear',
+      () async {
+        final repo = await _load();
+        await repo.backfill(
+          records: _allThreeStars(),
+          completedChapters: {1, 2, 3, 4, 5},
+          goldenChapters: {1, 2, 3, 4, 5},
+        );
+        expect(repo.claimedAchievements, isEmpty);
+        final reward = await repo.recordClear(
+          levelKey: '1:1',
+          stars: 3,
+          previousBestStars: 3,
+        );
+        expect(
+          reward.achievements.map((a) => a.id),
+          containsAll([
+            'w1-stars-25',
+            'w1-stars-50',
+            'w1-stars-75',
+            'golden-1',
+            'golden-5',
+          ]),
+        );
+        expect(repo.ownedTrails, contains(TrailIds.aurora));
+        expect(repo.ownedTitles, contains('forest_star_keeper'));
+      },
+    );
+
+    test('every achievement reward points at a real trail or title', () {
+      for (final achievement in achievements) {
+        for (final reward in achievement.rewards) {
+          switch (reward) {
+            case TrailUnlock(:final trailId):
+              expect(trailById(trailId), isNotNull, reason: achievement.id);
+            case TitleUnlock(:final titleId):
+              expect(titleById(titleId), isNotNull, reason: achievement.id);
+            default:
+              break;
+          }
+        }
+      }
+      expect(
+        achievements.map((a) => a.id).toSet(),
+        hasLength(achievements.length),
+      );
     });
   });
 }

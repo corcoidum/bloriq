@@ -40,6 +40,7 @@ flutter:
     - assets/fonts/Jua-OFL.txt
     - assets/fonts/NanumGothic-OFL.txt
     - assets/fonts/GowunDodum-OFL.txt
+    - assets/fonts/GamjaFlower-OFL.txt
   fonts:
     - family: Jua
       fonts:
@@ -50,3 +51,7 @@ flutter:
     - family: GowunDodum
       fonts:
         - asset: assets/fonts/GowunDodum-Regular.ttf
+    # 감자꽃(OFL): 상용 한글 2350자 + 게임 문구만 남긴 서브셋. 없는 글자는 고운돋움.
+    - family: GamjaFlower
+      fonts:
+        - asset: assets/fonts/GamjaFlower-Subset.ttf

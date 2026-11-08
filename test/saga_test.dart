@@ -2,12 +2,16 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:bloriq/audio/game_audio.dart';
+import 'package:bloriq/domain/puzzle.dart';
+import 'package:bloriq/game/bloriq_game.dart';
 import 'package:bloriq/main.dart';
+import 'package:bloriq/progress/progress_repository.dart';
 import 'package:bloriq/progression/progression_repository.dart';
 import 'package:bloriq/story/story_catalog.dart';
 import 'package:bloriq/world/saga.dart';
 import 'package:bloriq/world/world_catalog.dart';
 import 'package:bloriq/world/world_text.dart';
+import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -184,6 +188,82 @@ void main() {
     );
     await tapVisible(tester, find.byKey(const ValueKey('saga-enter-2')));
     await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byKey(const ValueKey('world-continue')), findsOneWidget);
+  });
+
+  testWidgets('clearing world 1 points to the next world, not stage 1', (
+    tester,
+  ) async {
+    final levels = (jsonDecode(
+      File('assets/levels/levels.json').readAsStringSync(),
+    ) as List).cast<Map<String, dynamic>>();
+    SharedPreferences.setMockInitialValues({
+      'bloriq.onboarding.v1': 'skipped',
+      GameAudio.musicKey: false,
+      GameAudio.effectsKey: false,
+      ProgressRepository.storageKey: jsonEncode({
+        'version': ProgressRepository.schemaVersion,
+        'levels': [
+          for (final level in levels.where((l) => (l['id'] as int) < 25))
+            {
+              'levelId': level['id'],
+              'revision': level['revision'] ?? 1,
+              'bestMoves': level['minimumMoves'],
+              'bestStars': 3,
+              'completionCount': 1,
+            },
+        ],
+      }),
+      ProgressionRepository.storageKey: jsonEncode({
+        'version': 1,
+        'xp': 0,
+        'stardust': 0,
+        'backfilled': true,
+        'completedChapters': [1, 2, 3, 4],
+      }),
+    });
+    await tester.pumpWidget(const BloriqApp());
+    await waitForHome(tester);
+    await tapVisible(tester, find.byKey(const ValueKey('home-levels')));
+    await selectOpenLevel(tester, 25);
+    final board = find.byType(GameWidget<BloriqGame>);
+    BloriqGame game() => tester.widget<GameWidget<BloriqGame>>(board).game!;
+    for (final move in const PuzzleSolver().solve(
+      game().controller.state.level,
+    )!) {
+      await tester.ensureVisible(board);
+      await tester.pump();
+      final block = game().controller.state.blocks.firstWhere(
+        (b) => b.id == move.blockId,
+      );
+      final geometry = game().geometry;
+      await tester.dragFrom(
+        tester.getTopLeft(board) + geometry.center(block.position),
+        Offset(
+              (move.target.x - block.position.x).toDouble(),
+              (move.target.y - block.position.y).toDouble(),
+            ) *
+            geometry.cellSize *
+            .7,
+      );
+      await tester.pump(const Duration(milliseconds: 60));
+    }
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('world-clear')), findsOneWidget);
+    final next = find.byKey(const ValueKey('result-next'));
+    expect(
+      find.descendant(
+        of: next,
+        matching: find.text('To the Cloud-Sea Lighthouse'),
+      ),
+      findsOneWidget,
+    );
+    // 누르면 게임을 닫고 구름바다 등대 지도가 바로 열린다.
+    await tapVisible(tester, next);
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
     expect(find.byKey(const ValueKey('world-continue')), findsOneWidget);
   });
 }

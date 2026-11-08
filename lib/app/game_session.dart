@@ -13,6 +13,7 @@ import '../story/story_catalog.dart';
 import '../story/collection_repository.dart';
 import '../constellation/constellation_state.dart';
 import '../progression/progression_repository.dart';
+import '../game/assist.dart';
 import '../world/saga.dart';
 import '../world/world_catalog.dart';
 import '../world/world_progress.dart';
@@ -51,6 +52,9 @@ class GameSession {
 
   /// 별지기 레벨·별가루·권능·유대. 처음 열 때 기존 기록을 한 번 환산한다.
   final ProgressionRepository progression;
+
+  /// 판마다 얼마나 막혀 있는지(앱을 켜 둔 동안만). 막히면 도움을 권한다.
+  final StruggleTracker struggle = StruggleTracker();
 
   /// 모든 세계를 꿰는 사가(assets/worlds/saga.json). 읽지 못하면 null이며
   /// 확장 세계와 빛길 지도도 숨긴다.

@@ -40,7 +40,9 @@ import 'story/story_share.dart';
 import 'constellation/constellation_atlas.dart';
 import 'constellation/constellation_state.dart';
 import 'constellation/victory_constellation.dart';
+import 'game/assist.dart';
 import 'game/power_bar.dart';
+import 'world/saga.dart';
 import 'world/saga_map.dart';
 import 'world/world_catalog.dart';
 import 'world/world_map.dart';
@@ -106,10 +108,10 @@ class _BloriqAppState extends State<BloriqApp> {
   Widget build(BuildContext context) => MaterialApp(
     title: 'BLORIQ',
     debugShowCheckedModeBanner: false,
-    theme: GameTheme.light,
+    // 밤하늘 게임이라 늘 다크 테마만 쓴다(기기 설정이 라이트여도 같다).
+    theme: GameTheme.dark,
     darkTheme: GameTheme.dark,
-    themeMode: _settings?.themeMode ?? ThemeMode.system,
-    // Flutter 위젯과 Flame 보드가 같은 프레임에 같은 팔레트로 바뀐다.
+    themeMode: ThemeMode.dark,
     themeAnimationDuration: Duration.zero,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
@@ -188,6 +190,15 @@ class _GameScreenState extends State<GameScreen>
 
   /// 이번 시도에서 별빛 길을 썼는지(2별 상한), 무료 사용을 이미 했는지.
   bool _starlightUsed = false;
+
+  /// 이번 클리어로 지금 세계의 다섯 별자리가 모두 완성됐는지.
+  bool _worldCleared = false;
+
+  /// 풀이 따라 하기 중: 매 수마다 다음 최단 수를 비춘다. 깨면 별 1개.
+  bool _guided = false;
+
+  /// 막힘 도움을 권할 시각에 화면을 다시 그린다.
+  Timer? _stuckTimer;
   bool _starlightFreeUsed = false;
 
   /// 확장 세계: 권능 막대에서 고른 권능. 다음 밀기가 이 권능으로 움직인다.
@@ -251,7 +262,31 @@ class _GameScreenState extends State<GameScreen>
       ..trailStyle = widget.session.progression.equippedTrail;
     widget.session.analytics.addListener(_analyticsChanged);
     _startAttempt();
+    _trackOpened();
   }
+
+  /// 캠페인 판을 열면 막힘 기록을 시작하고, 도움을 권할 시각에 다시 그린다.
+  void _trackOpened() {
+    _stuckTimer?.cancel();
+    if (widget.play.mode != PlayMode.campaign || _tutorial != null) return;
+    final struggle = widget.session.struggle;
+    final id = _controller!.state.level.id;
+    struggle.opened(id);
+    final left = struggle.untilStuck(id);
+    if (left != null && left > Duration.zero) {
+      _stuckTimer = Timer(left, () {
+        if (mounted) setState(() {});
+      });
+    }
+  }
+
+  bool _offerHelp(PuzzleController controller) =>
+      widget.play.mode == PlayMode.campaign &&
+      _tutorial == null &&
+      !_guided &&
+      !_replaying &&
+      !controller.state.isComplete &&
+      widget.session.struggle.isStuck(controller.state.level.id);
 
   Map<String, Object?> get _eventContext => {
     'mode': widget.play.mode.name,
@@ -431,6 +466,18 @@ class _GameScreenState extends State<GameScreen>
       _attempt = null;
       _startAttempt();
     });
+    _trackOpened();
+  }
+
+  /// 결과 화면 "다음"이 고를 판. 확장 세계는 아직 잠긴 판 대신
+  /// 열려 있는 못 깬 판으로 간다(장 안에서는 순서가 자유롭다).
+  int _nextIndex() {
+    final next = _index + 1 < _loaded.length ? _index + 1 : 0;
+    if (!_expansion) return next;
+    final atlas = widget.session.worldAtlas(widget.play.world);
+    if (atlas == null || atlas.isUnlocked(_loaded[next].id)) return next;
+    final index = _loaded.indexWhere((level) => level.id == atlas.nextLevelId);
+    return index < 0 ? next : index;
   }
 
   void _stopReplay() {
@@ -440,6 +487,7 @@ class _GameScreenState extends State<GameScreen>
 
   @override
   void dispose() {
+    _stuckTimer?.cancel();
     _attempt?.finish('level_end', _controller!.state.moves, reason: 'leave');
     _narrative.dispose();
     widget.session.analytics.removeListener(_analyticsChanged);
@@ -492,17 +540,29 @@ class _GameScreenState extends State<GameScreen>
       return;
     }
     if (widget.play.mode != PlayMode.campaign) return;
+    widget.session.struggle.cleared(state.level.id);
+    _stuckTimer?.cancel();
     final previousStars = _progress!
         .forLevel(state.level.id, revision: state.level.revision)
         ?.bestStars;
-    final usedStarlight = _starlightUsed;
+    final guided = _guided;
+    final usedStarlight = _starlightUsed || guided;
+    final starCap = assistedStarCap(
+      followedSolution: guided,
+      usedHint: _starlightUsed,
+    );
     final usedPower = controller.usedPower;
     final worldBefore = _worldBefore;
+    final worldWasComplete = Worlds.isComplete(
+      widget.play.world,
+      widget.session.progression.completedChapters,
+    );
     final result = await _progress!.recordCompletion(
       levelId: state.level.id,
       revision: state.level.revision,
       moves: state.moves,
       minimumMoves: state.level.minimumMoves,
+      maxStars: starCap,
     );
     final added = result.saved
         ? await widget.session.collection.reconcile(
@@ -531,9 +591,9 @@ class _GameScreenState extends State<GameScreen>
         : WorldAtlas.diff(worldBefore, worldAfter, state.level.id);
     final reward = await widget.session.progression.recordClear(
       levelKey: '${state.level.id}:${state.level.revision}',
-      stars: starRating(
-        moves: state.moves,
-        minimumMoves: state.level.minimumMoves,
+      stars: math.min(
+        starRating(moves: state.moves, minimumMoves: state.level.minimumMoves),
+        starCap,
       ),
       previousBestStars: previousStars,
       usedStarlightPath: usedStarlight,
@@ -564,7 +624,15 @@ class _GameScreenState extends State<GameScreen>
       return;
     }
     _game?.trailStyle = widget.session.progression.equippedTrail;
-    setState(() => _reward = reward);
+    setState(() {
+      _reward = reward;
+      _worldCleared =
+          !worldWasComplete &&
+          Worlds.isComplete(
+            widget.play.world,
+            widget.session.progression.completedChapters,
+          );
+    });
   }
 
   void _resetAssist() {
@@ -572,7 +640,85 @@ class _GameScreenState extends State<GameScreen>
     _armedPower = null;
     _starlightUsed = false;
     _starlightFreeUsed = false;
+    _guided = false;
+    _worldCleared = false;
     _game?.hintMove = null;
+  }
+
+  /// 판을 처음 상태로 되돌린다. [countStruggle]이면 막힘 기록에 다시 시작을 센다.
+  void _restartBoard(PuzzleController controller, {bool countStruggle = true}) {
+    _skipCelebration();
+    _attempt?.restart();
+    _attempt?.finish('level_end', controller.state.moves, reason: 'restart');
+    _acknowledgeDiscovery();
+    _discovery = null;
+    _storyHidden = false;
+    _narrative.react(CompanionReaction.idle);
+    if (countStruggle && widget.play.mode == PlayMode.campaign) {
+      widget.session.struggle.restarted(controller.state.level.id);
+    }
+    controller.restart();
+    _resetAssist();
+    _attempt = null;
+    _startAttempt();
+    _game!.clearEffects();
+    _gateBlocked = false;
+    _completion = null;
+  }
+
+  /// 풀이 따라 하기: 지금 상태의 다음 최단 수를 비추고, 권능 수면 권능을 골라 둔다.
+  void _refreshGuide() {
+    if (!_guided) return;
+    final state = _controller!.state;
+    final move = state.isComplete
+        ? null
+        : const PuzzleSolver().solveFromState(state)?.firstOrNull;
+    if (move == null) {
+      _game?.hintMove = null;
+      return;
+    }
+    final from = state.blocks
+        .firstWhere((block) => block.id == move.blockId)
+        .position;
+    _armedPower = move.power;
+    _game?.hintMove = (from: from, to: move.target);
+  }
+
+  /// 막혔을 때의 도움: 열쇠 한 줄(무료) → 별빛 길 → 풀이 따라 하기.
+  Future<void> _openHelp(
+    AppLocalizations t,
+    PuzzleController controller,
+  ) async {
+    final level = controller.state.level;
+    final solution =
+        const PuzzleSolver(maxStates: 2000000)
+            .solve(level, powers: _stagePowers(level)) ??
+        const <PuzzleMove>[];
+    final lang = t.localeName;
+    final choice = await _withModal<_HelpChoice>(
+      () => showModalBottomSheet<_HelpChoice>(
+        context: context,
+        showDragHandle: true,
+        isScrollControlled: true,
+        builder: (context) => _HelpSheet(
+          keyHint: keyHint(level, solution).resolve(lang),
+          lang: lang,
+        ),
+      ),
+    );
+    if (!mounted || !identical(controller, _controller)) return;
+    switch (choice) {
+      case _HelpChoice.starlight:
+        await _useStarlight(t);
+      case _HelpChoice.guide:
+        setState(() {
+          _restartBoard(controller, countStruggle: false);
+          _guided = true;
+          _refreshGuide();
+        });
+      case null:
+        break;
+    }
   }
 
   /// 별빛 길: 지금 상태에서 가장 짧은 다음 한 수를 보드에 비춘다.
@@ -812,6 +958,7 @@ class _GameScreenState extends State<GameScreen>
                 : CompanionReaction.idle,
           );
           _game!.animateMove(block.id, from, previousEcho);
+          _refreshGuide();
           if (controller.state.isComplete) _beginCompletion(controller);
           final effect = controller.state.isComplete
               ? SoundEffect.complete
@@ -870,6 +1017,7 @@ class _GameScreenState extends State<GameScreen>
       _game!.clearEffects();
       _gateBlocked = false;
       _completion = null;
+      _refreshGuide();
     });
   }
 
@@ -1008,9 +1156,9 @@ class _GameScreenState extends State<GameScreen>
   Widget _buildVictory(AppLocalizations t, PuzzleController controller) {
     final state = controller.state;
     final colors = GameTheme.colorsOf(context);
-    final stars = capAssistedStars(
+    final stars = math.min(
       starRating(moves: state.moves, minimumMoves: state.level.minimumMoves),
-      usedStarlightPath: _starlightUsed,
+      assistedStarCap(followedSolution: _guided, usedHint: _starlightUsed),
     );
     return AnimatedBuilder(
       key: const ValueKey('complete'),
@@ -1069,7 +1217,9 @@ class _GameScreenState extends State<GameScreen>
                   session: widget.session,
                   onChanged: () => setState(() {}),
                 ),
-              if (widget.play.mode == PlayMode.campaign &&
+              if (_worldFinished case final finished?)
+                _worldClearCard(t, colors, finished)
+              else if (widget.play.mode == PlayMode.campaign &&
                   widget.session.collection.owned.length ==
                       widget.session.story.released.length &&
                   widget.session.story.released.length == 25)
@@ -1141,6 +1291,83 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
+  /// 세계를 다 마친 결과인지. 이번 클리어로 마지막 별자리가 완성됐거나,
+  /// 이미 마친 세계의 마지막 판을 깼을 때다. [next]는 바로 갈 수 있는 다음 세계
+  /// (아직 준비 중이거나 데이터가 없으면 null).
+  ({SagaWorld world, SagaWorld? next})? get _worldFinished {
+    final saga = widget.session.saga;
+    if (saga == null || widget.play.mode != PlayMode.campaign) return null;
+    final number = widget.play.world;
+    final complete = Worlds.isComplete(
+      number,
+      widget.session.progression.completedChapters,
+    );
+    if (!_worldCleared && !(complete && _index + 1 == _loaded.length)) {
+      return null;
+    }
+    final next = saga.next(number);
+    return (
+      world: saga.world(number),
+      next: next != null && widget.session.worldUnlocked(next.number)
+          ? next
+          : null,
+    );
+  }
+
+  /// 결과 팝업 안의 "세계 완료" 카드: 다음에 어디로 가는지 분명히 알려 준다.
+  Widget _worldClearCard(
+    AppLocalizations t,
+    GameColors colors,
+    ({SagaWorld world, SagaWorld? next}) finished,
+  ) {
+    final lang = t.localeName;
+    final upcoming = widget.session.saga?.next(finished.world.number);
+    final detail = finished.next != null
+        ? WorldText.gateOpened(finished.next!.title).resolve(lang)
+        : upcoming != null
+        ? '${WorldText.nextStory.resolve(lang)} · '
+              '${upcoming.title.inLocale(lang)} · '
+              '${WorldText.comingSoon.resolve(lang)}'
+        : null;
+    return Container(
+      key: const ValueKey('world-clear'),
+      margin: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: colors.reward.withValues(alpha: .16),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.reward.withValues(alpha: .6)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            WorldText.worldCleared(finished.world.title).resolve(lang),
+            textAlign: TextAlign.center,
+            style: GameTypography.reward.copyWith(
+              fontSize: 19,
+              color: colors.rewardInk,
+            ),
+          ),
+          if (detail != null)
+            KeepAllText(
+              detail,
+              textAlign: TextAlign.center,
+              style: GameTypography.body.copyWith(fontSize: 15),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// 결과 화면을 닫고 홈에서 다음 세계 지도를 바로 연다.
+  void _goToWorld(int world) {
+    _acknowledgeDiscovery();
+    setState(() => _allowPop = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Navigator.pop(context, OpenWorld(world));
+    });
+  }
+
   /// 결과 팝업 아래쪽 버튼. 다음 스테이지가 가장 크고 나머지는 작은 버튼으로 둔다.
   Widget _victoryActions(AppLocalizations t, PuzzleController controller) {
     final small = OutlinedButton.styleFrom(
@@ -1149,17 +1376,11 @@ class _GameScreenState extends State<GameScreen>
       textStyle: GameTypography.label.copyWith(fontSize: 15.5),
     );
     final friend = _discovery;
-    // 확장 세계의 마지막 스테이지까지 모두 마치면 처음으로 돌아가는 대신
-    // 빛길 지도에서 다음 이야기를 보여 준다.
-    final worldFinished =
-        _expansion &&
-        widget.play.mode == PlayMode.campaign &&
-        _index + 1 == _loaded.length &&
-        widget.session.saga != null &&
-        Worlds.isComplete(
-          widget.play.world,
-          widget.session.progression.completedChapters,
-        );
+    // 세계를 다 마쳤으면 "첫 스테이지로" 대신 다음 세계(열렸으면 그 지도,
+    // 아직 준비 중이면 빛길 지도의 예고)로 안내한다.
+    final finished = _worldFinished;
+    final worldFinished = finished != null;
+    final nextWorld = finished?.next;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1172,17 +1393,25 @@ class _GameScreenState extends State<GameScreen>
           ),
           onPressed: () => widget.play.mode != PlayMode.campaign
               ? Navigator.pop(context)
+              : nextWorld != null
+              ? _goToWorld(nextWorld.number)
               : worldFinished
               ? _withModal<int>(
                   () => showSagaMap(context, widget.session, selectable: false),
                 )
-              : _select(_index + 1 < _loaded.length ? _index + 1 : 0),
+              : _select(_nextIndex()),
           icon: Icon(
-            worldFinished ? Icons.auto_awesome_rounded : Icons.arrow_forward,
+            nextWorld != null
+                ? Icons.light_rounded
+                : worldFinished
+                ? Icons.auto_awesome_rounded
+                : Icons.arrow_forward,
           ),
           label: Text(
             widget.play.mode != PlayMode.campaign
                 ? t.close
+                : nextWorld != null
+                ? WorldText.enter(nextWorld.title).resolve(t.localeName)
                 : worldFinished
                 ? WorldText.nextStory.resolve(t.localeName)
                 : _index + 1 < _loaded.length
@@ -1387,6 +1616,7 @@ class _GameScreenState extends State<GameScreen>
                                   constraints,
                                   hint,
                                   _hasNoMoves(controller),
+                                  assistRow: _guided || _offerHelp(controller),
                                 ) <
                             minBoard) {
                       // 첫 프레임부터 넘치지 않도록 보드 외 높이를 넉넉히 추정한다.
@@ -1651,6 +1881,26 @@ class _GameScreenState extends State<GameScreen>
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         MechanicLegend(items: legend),
+                                        if (_guided &&
+                                            !controller.state.isComplete) ...[
+                                          const SizedBox(height: 6),
+                                          _guideBanner(t, colors),
+                                        ] else if (_offerHelp(controller)) ...[
+                                          const SizedBox(height: 6),
+                                          FilledButton.tonalIcon(
+                                            key: const ValueKey('stuck-help'),
+                                            onPressed: () =>
+                                                _openHelp(t, controller),
+                                            icon: const Icon(
+                                              Icons.lightbulb_rounded,
+                                            ),
+                                            label: Text(
+                                              AssistText.offer.resolve(
+                                                t.localeName,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                         if (_hasNoMoves(controller)) ...[
                                           const SizedBox(height: 8),
                                           FilledButton.icon(
@@ -1699,28 +1949,10 @@ class _GameScreenState extends State<GameScreen>
                                           ),
                                           onPressed: _replaying || _celebrating
                                               ? null
-                                              : () => setState(() {
-                                                  _skipCelebration();
-                                                  _attempt?.restart();
-                                                  _attempt?.finish(
-                                                    'level_end',
-                                                    controller.state.moves,
-                                                    reason: 'restart',
-                                                  );
-                                                  _acknowledgeDiscovery();
-                                                  _discovery = null;
-                                                  _storyHidden = false;
-                                                  _narrative.react(
-                                                    CompanionReaction.idle,
-                                                  );
-                                                  controller.restart();
-                                                  _resetAssist();
-                                                  _attempt = null;
-                                                  _startAttempt();
-                                                  _game!.clearEffects();
-                                                  _gateBlocked = false;
-                                                  _completion = null;
-                                                }),
+                                              : () => setState(
+                                                  () =>
+                                                      _restartBoard(controller),
+                                                ),
                                           child: _buttonLabel(
                                             Icons.refresh_rounded,
                                             t.restart,
@@ -1902,6 +2134,34 @@ class _GameScreenState extends State<GameScreen>
   }
 
   /// 이동 수 옆의 별빛 길 버튼. 무료·사용권·별가루 비용을 함께 보여 준다.
+  /// 풀이 따라 하기 중임을 알리는 띠. "직접 풀기"는 판을 처음부터 다시 연다.
+  Widget _guideBanner(AppLocalizations t, GameColors colors) => Container(
+    key: const ValueKey('guide-banner'),
+    padding: const EdgeInsets.fromLTRB(12, 2, 4, 2),
+    decoration: BoxDecoration(
+      color: colors.reward.withValues(alpha: .14),
+      borderRadius: BorderRadius.circular(14),
+    ),
+    child: Row(
+      children: [
+        Icon(Icons.auto_awesome_rounded, size: 18, color: colors.rewardInk),
+        const SizedBox(width: 6),
+        Expanded(
+          child: KeepAllText(
+            AssistText.guiding.resolve(t.localeName),
+            style: GameTypography.body.copyWith(fontSize: 14),
+          ),
+        ),
+        TextButton(
+          key: const ValueKey('guide-stop'),
+          onPressed: () =>
+              setState(() => _restartBoard(_controller!, countStruggle: false)),
+          child: Text(AssistText.stopGuide.resolve(t.localeName)),
+        ),
+      ],
+    ),
+  );
+
   Widget _starlightButton(
     AppLocalizations t,
     GameColors colors,
@@ -1961,6 +2221,13 @@ class _GameScreenState extends State<GameScreen>
     final lang = t.localeName;
     final standing = reward.standing;
     final badges = <(IconData, String, Color)>[
+      // 별 모으기 업적이 가장 큰 소식이라 맨 앞에 둔다.
+      for (final achievement in reward.achievements)
+        (
+          Icons.emoji_events_rounded,
+          achievementReached(achievement.name).resolve(lang),
+          colors.rewardInk,
+        ),
       // 한 번에 여러 레벨이 올라도 마지막 레벨 한 줄만 보여 준다.
       if (reward.levelsGained.lastOrNull case final up?)
         (
@@ -2131,8 +2398,9 @@ class _GameScreenState extends State<GameScreen>
   double _chromeEstimate(
     BoxConstraints constraints,
     String hint,
-    bool noMoves,
-  ) {
+    bool noMoves, {
+    bool assistRow = false,
+  }) {
     final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
     final width = math.min(constraints.maxWidth, 560.0) - GameSpacing.page * 2;
     final hintLines = hint
@@ -2148,6 +2416,7 @@ class _GameScreenState extends State<GameScreen>
         math.max(50.0, 34 * scale) +
         hintLines * math.max(38.0, 24 * scale) +
         (noMoves ? 56 : 0) +
+        (assistRow ? math.max(54.0, 22 * scale + 30) : 0) +
         (_tutorial == null
             ? math.max(48.0, 22 * scale + 26)
             : 22 * scale + 24) +
@@ -2238,4 +2507,112 @@ class _GameScreenState extends State<GameScreen>
       );
     },
   );
+}
+
+enum _HelpChoice { starlight, guide }
+
+/// 막혔을 때 여는 도움 시트. 열쇠 한 줄은 바로 보여 주고,
+/// 별빛 길과 풀이 따라 하기는 고른 쪽을 돌려준다.
+class _HelpSheet extends StatelessWidget {
+  const _HelpSheet({required this.keyHint, required this.lang});
+  final String keyHint;
+  final String lang;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = GameTheme.colorsOf(context);
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              AssistText.title.resolve(lang),
+              textAlign: TextAlign.center,
+              style: GameTypography.reward.copyWith(
+                fontSize: 22,
+                color: colors.rewardInk,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              key: const ValueKey('help-key'),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: colors.reward.withValues(alpha: .12),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: colors.reward.withValues(alpha: .4)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.key_rounded,
+                        size: 20,
+                        color: colors.rewardInk,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        AssistText.keyTitle.resolve(lang),
+                        style: GameTypography.label.copyWith(
+                          color: colors.rewardInk,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  KeepAllText(
+                    keyHint,
+                    style: GameTypography.body.copyWith(fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 6),
+            KeepAllText(
+              AssistText.selfNote.resolve(lang),
+              textAlign: TextAlign.center,
+              style: GameTypography.body.copyWith(
+                fontSize: 13.5,
+                color: colors.secondaryText,
+              ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              key: const ValueKey('help-starlight'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
+              onPressed: () => Navigator.pop(context, _HelpChoice.starlight),
+              icon: const Icon(Icons.flare_rounded),
+              label: Text(AssistText.starlight.resolve(lang)),
+            ),
+            const SizedBox(height: 8),
+            FilledButton.icon(
+              key: const ValueKey('help-guide'),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
+              onPressed: () => Navigator.pop(context, _HelpChoice.guide),
+              icon: const Icon(Icons.auto_awesome_rounded),
+              label: Text(AssistText.guide.resolve(lang)),
+            ),
+            const SizedBox(height: 4),
+            KeepAllText(
+              AssistText.guideNote.resolve(lang),
+              textAlign: TextAlign.center,
+              style: GameTypography.body.copyWith(
+                fontSize: 13,
+                color: colors.secondaryText,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

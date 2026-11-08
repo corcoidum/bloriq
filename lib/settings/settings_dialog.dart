@@ -42,29 +42,6 @@ class _SettingsDialogState extends State<SettingsDialog> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(t.appearance, style: GameTypography.label),
-              const SizedBox(height: GameSpacing.small),
-              // 세로 선택 목록은 작은 화면과 큰 글꼴에서도 잘리지 않는다.
-              for (final option in [
-                (ThemeMode.system, t.themeSystem, Icons.brightness_auto),
-                (ThemeMode.light, t.themeLight, Icons.light_mode_outlined),
-                (ThemeMode.dark, t.themeDark, Icons.dark_mode_outlined),
-              ])
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(option.$3),
-                  title: Text(option.$2),
-                  selected: widget.settings.themeMode == option.$1,
-                  selectedTileColor: colors.primary.withValues(alpha: .08),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  trailing: widget.settings.themeMode == option.$1
-                      ? const Icon(Icons.check_circle_outline)
-                      : null,
-                  onTap: () => widget.settings.setThemeMode(option.$1),
-                ),
-              const Divider(),
               Text(t.motionSection, style: GameTypography.label),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,

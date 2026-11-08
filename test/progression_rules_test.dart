@@ -104,7 +104,16 @@ void main() {
       }
       expect(trailUnlocks, [TrailIds.petal, TrailIds.firefly, TrailIds.meteor]);
       expect(trailUnlocks.every((id) => trailById(id) != null), true);
-      expect(titleUnlocks.toSet(), titles.map((t) => t.id).toSet());
+      // 레벨 트랙과 별 모으기 업적이 함께 모든 칭호를 나눠 준다.
+      final achievementTitles = {
+        for (final achievement in achievements)
+          for (final reward in achievement.rewards)
+            if (reward case TitleUnlock(:final titleId)) titleId,
+      };
+      expect({
+        ...titleUnlocks,
+        ...achievementTitles,
+      }, titles.map((t) => t.id).toSet());
       expect(charges, greaterThan(0));
     });
 
@@ -115,9 +124,11 @@ void main() {
         'firefly',
         'meteor',
         'mist',
+        'aurora',
+        'starfall',
       ]);
       expect(defaultTrailId, 'moonlight');
-      expect(titles.length, 5);
+      expect(titles.length, 13);
       for (final text in [
         ...trails.map((t) => t.name),
         ...titles.map((t) => t.name),

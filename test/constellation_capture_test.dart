@@ -79,7 +79,6 @@ void main() {
         ...prefs,
       });
       final settings = await GameSettings.load();
-      await settings.setThemeMode(mode);
       await tester.pumpWidget(
         RepaintBoundary(
           key: key,
@@ -89,10 +88,7 @@ void main() {
     }
 
     // 1. 첫 실행 인트로 (장면별)
-    for (final (mode, locale) in [
-      (ThemeMode.dark, 'ko'),
-      (ThemeMode.light, 'en'),
-    ]) {
+    for (final (mode, locale) in [(ThemeMode.dark, 'ko')]) {
       await launch(mode, locale, {});
       for (
         var i = 0;
@@ -144,10 +140,7 @@ void main() {
         ],
       }),
     };
-    for (final (mode, locale) in [
-      (ThemeMode.dark, 'ko'),
-      (ThemeMode.light, 'en'),
-    ]) {
+    for (final (mode, locale) in [(ThemeMode.dark, 'ko')]) {
       await launch(mode, locale, seeded);
       await waitForHome(tester);
       await capture('${mode.name}-$locale-home');

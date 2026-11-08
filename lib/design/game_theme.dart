@@ -100,32 +100,44 @@ class GameColors {
   );
 }
 
+/// 글꼴 세 단계:
+/// - 제목·숫자·버튼·라벨: 주아(Jua) — 둥글고 통통한 게임 글씨.
+/// - 본문·대사·설명: 감자꽃(Gamja Flower) — 동글동글한 동화책 손글씨.
+///   글자가 작게 그려지는 글꼴이라 크기를 조금 키우고 줄 간격을 줄였다.
+/// - 두 글꼴에 없는 기호(가운뎃점 등)는 고운돋움 → 나눔고딕 순으로 채운다.
 abstract final class GameTypography {
   static const canvasFontFamily = 'Jua';
+  static const storyFontFamily = 'GamjaFlower';
+  static const fallback = ['GowunDodum', 'NanumGothic'];
+
   static const brand = TextStyle(
     fontFamily: canvasFontFamily,
-    fontFamilyFallback: ['NanumGothic'],
+    fontFamilyFallback: fallback,
     fontSize: 23,
     fontWeight: FontWeight.w400,
     letterSpacing: 2,
   );
   static const reward = TextStyle(
     fontFamily: canvasFontFamily,
+    fontFamilyFallback: fallback,
     fontSize: 28,
     fontWeight: FontWeight.w400,
   );
 
-  /// 판 아래 설명·결과 팝업 본문용 둥근 손글씨풍 글꼴.
+  /// 판 아래 설명·결과 팝업 본문·정령 대사용 손글씨 글꼴.
   static const body = TextStyle(
-    fontFamily: 'GowunDodum',
-    fontFamilyFallback: ['NanumGothic'],
-    fontSize: 15.5,
-    height: 1.4,
+    fontFamily: storyFontFamily,
+    fontFamilyFallback: fallback,
+    fontSize: 17,
+    height: 1.2,
   );
+
+  /// 버튼·라벨·작은 수치. 주아는 굵기가 하나라 가짜 굵게를 쓰지 않는다.
   static const label = TextStyle(
-    fontFamily: 'NanumGothic',
+    fontFamily: canvasFontFamily,
+    fontFamilyFallback: fallback,
     fontSize: 15,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w400,
   );
 }
 
@@ -205,17 +217,37 @@ abstract final class GameTheme {
         );
     final base = ThemeData(
       useMaterial3: true,
-      fontFamily: 'NanumGothic',
+      // 기본 글은 손글씨(감자꽃), 제목·라벨은 아래에서 주아로 바꾼다.
+      fontFamily: GameTypography.storyFontFamily,
+      fontFamilyFallback: GameTypography.fallback,
       brightness: brightness,
       colorScheme: scheme,
       scaffoldBackgroundColor: colors.background,
       canvasColor: colors.surface,
     );
+    TextStyle? jua(TextStyle? style) => style?.copyWith(
+      fontFamily: GameTypography.canvasFontFamily,
+      fontFamilyFallback: GameTypography.fallback,
+      fontWeight: FontWeight.w400,
+    );
+    final text = base.textTheme;
     return base.copyWith(
-      textTheme: base.textTheme.apply(
-        bodyColor: colors.text,
-        displayColor: colors.text,
-      ),
+      textTheme: text
+          .copyWith(
+            displayLarge: jua(text.displayLarge),
+            displayMedium: jua(text.displayMedium),
+            displaySmall: jua(text.displaySmall),
+            headlineLarge: jua(text.headlineLarge),
+            headlineMedium: jua(text.headlineMedium),
+            headlineSmall: jua(text.headlineSmall),
+            titleLarge: jua(text.titleLarge),
+            titleMedium: jua(text.titleMedium),
+            titleSmall: jua(text.titleSmall),
+            labelLarge: jua(text.labelLarge),
+            labelMedium: jua(text.labelMedium),
+            labelSmall: jua(text.labelSmall),
+          )
+          .apply(bodyColor: colors.text, displayColor: colors.text),
       iconTheme: IconThemeData(color: colors.rewardInk),
       iconButtonTheme: IconButtonThemeData(
         style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
@@ -225,10 +257,8 @@ abstract final class GameTheme {
         insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         backgroundColor: colors.surface,
         surfaceTintColor: Colors.transparent,
-        titleTextStyle: base.textTheme.titleLarge?.copyWith(
-          color: colors.text,
-          fontWeight: FontWeight.w400,
-        ),
+        titleTextStyle: jua(base.textTheme.titleLarge)
+            ?.copyWith(color: colors.text),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(GameSpacing.radius),
         ),

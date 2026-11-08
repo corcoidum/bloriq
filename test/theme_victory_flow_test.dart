@@ -56,53 +56,27 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets(
-    'live theme settings preserve puzzle, follow system, and restore after restart',
-    (tester) async {
-      tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
-      addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
-      await pumpGame(tester, const BloriqApp());
-      await _ready(tester);
-      final original = _game(tester);
-      final solution = const PuzzleSolver().solve(
-        original.controller.state.level,
-      )!;
-      await _step(tester, solution.first);
-      final state = original.controller.state;
-      expect(state.moves, 1);
-      await _tap(tester, find.byTooltip('Settings'));
-      await _tap(tester, find.text('Dark'));
-      expect(_game(tester), same(original));
-      expect(original.controller.state, same(state));
-      expect(original.gameColors, same(GameColors.dark));
-      expect((await GameSettings.load()).themeMode, ThemeMode.dark);
+  testWidgets('the game always stays dark, even on a light-mode phone', (
+    tester,
+  ) async {
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
+    addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+    await pumpGame(tester, const BloriqApp());
+    await _ready(tester);
+    expect(_game(tester).gameColors, same(GameColors.dark));
+    await _tap(tester, find.byTooltip('Settings'));
+    // 설정에 테마 고르기가 없다.
+    expect(find.text('Light'), findsNothing);
+    expect(find.text('System'), findsNothing);
+    await _tap(tester, find.text('Close'));
+    await tester.pumpWidget(const SizedBox());
+  });
 
-      tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
-      await tester.pump();
-      expect(original.gameColors, same(GameColors.dark));
-      await _tap(tester, find.text('System'));
-      expect(original.gameColors, same(GameColors.light));
-      tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
-      await tester.pump();
-      expect(original.gameColors, same(GameColors.dark));
-      expect(original.controller.state, same(state));
-      await _tap(tester, find.text('Light'));
-      await _tap(tester, find.text('Close'));
-      await tester.pumpWidget(const SizedBox());
-      await pumpGame(tester, const BloriqApp());
-      await _ready(tester);
-      expect(_game(tester).gameColors, same(GameColors.light));
-      expect((await GameSettings.load()).themeMode, ThemeMode.light);
-      await tester.pumpWidget(const SizedBox());
-    },
-  );
-
-  for (final mode in [ThemeMode.light, ThemeMode.dark]) {
+  for (final mode in [ThemeMode.dark]) {
     testWidgets(
       '${mode.name}: victory saves before animation, skips, and cannot double-complete',
       (tester) async {
         final settings = await GameSettings.load();
-        await settings.setThemeMode(mode);
         await pumpGame(tester, BloriqApp(settings: settings));
         await _ready(tester);
         final game = _game(tester);
@@ -152,7 +126,6 @@ void main() {
         addTearDown(tester.view.resetDevicePixelRatio);
         addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
         final settings = await GameSettings.load();
-        await settings.setThemeMode(mode);
         await pumpGame(tester, BloriqApp(settings: settings));
         await _ready(tester);
         expect(tester.takeException(), isNull);

@@ -73,7 +73,15 @@ void main() {
         await tapVisible(tester, find.byKey(const ValueKey('skip-story')));
         if (id < 25) await tapVisible(tester, find.text('Next level'));
       }
-      expect(find.text('Every light in Season 1 is home.'), findsOneWidget);
+      // 세계 1을 다 마치면 "첫 스테이지로" 대신 다음 세계 안내가 나온다.
+      expect(find.byKey(const ValueKey('world-clear')), findsOneWidget);
+      expect(find.text('Moonlit Forest Garden complete!'), findsOneWidget);
+      expect(
+        find.text('The star gate to the Cloud-Sea Lighthouse is open'),
+        findsOneWidget,
+      );
+      expect(find.text('To the Cloud-Sea Lighthouse'), findsOneWidget);
+      expect(find.text('First level'), findsNothing);
       // 정령 도감은 결과 팝업의 더 보기 메뉴 안에 있다.
       await tapVisible(tester, find.byKey(const ValueKey('result-more')));
       await tester.pump(const Duration(milliseconds: 400));

@@ -50,6 +50,14 @@ abstract final class WorldText {
     return batchim == 0 || batchim == 8 ? '로' : '으로';
   }
 
+  static ProgressionText worldCleared(StoryText title) =>
+      ProgressionText('${title.ko} 완료!', '${title.en} complete!');
+
+  static ProgressionText gateOpened(StoryText title) => ProgressionText(
+    '${title.ko}${_ro(title.ko)} 가는 별문이 열렸어요',
+    'The star gate to the ${title.en} is open',
+  );
+
   static const play = ProgressionText('이어하기', 'Continue');
   static const stage = ProgressionText('스테이지', 'Stage');
   static const requiresPower = ProgressionText('권능 필요', 'Power needed');
@@ -58,10 +66,13 @@ abstract final class WorldText {
     'Solvable bare-handed',
   );
   static const lockedStage = ProgressionText(
-    '앞 스테이지를 먼저 깨요',
-    'Clear the previous stage first',
+    '앞 장에서 3판을 깨면 열려요',
+    'Clear 3 stages of the previous chapter to open',
   );
-  static const chapterLocked = ProgressionText('아직 잠긴 장', 'Chapter locked');
+  static const chapterLocked = ProgressionText(
+    '아직 잠긴 장 · 앞 장에서 3판을 깨면 열려요',
+    'Chapter locked · clear 3 stages of the previous chapter',
+  );
   static const close = ProgressionText('닫기', 'Close');
   static const missingArt = ProgressionText('그림 준비 중', 'Art coming soon');
 

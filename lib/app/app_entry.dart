@@ -171,9 +171,10 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
         !userInitiated || prefersReducedMotion(context, widget.settings)
         ? Duration.zero
         : GameEffects.panelDuration;
+    Object? result;
     try {
-      await Navigator.of(context).push<void>(
-        PageRouteBuilder<void>(
+      result = await Navigator.of(context).push<Object?>(
+        PageRouteBuilder<Object?>(
           transitionDuration: transition,
           reverseTransitionDuration: transition,
           pageBuilder: (_, animation, secondaryAnimation) =>
@@ -185,6 +186,16 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     } finally {
       session.audio.setGameVisible(false);
       if (mounted) setState(() => _opening = false);
+    }
+    // 세계를 막 마치고 "다음 세계로"를 눌렀으면 그 세계 지도를 바로 연다.
+    // 스테이지 선택 화면에서 들어왔다면 그 흐름이 끝난 뒤에 열어야
+    // 선택 중 잠금(_choosing)에 막히지 않는다.
+    if (result case OpenWorld(:final world)) {
+      unawaited(
+        Future<void>(() async {
+          if (mounted) await _openWorld(world);
+        }),
+      );
     }
   }
 

@@ -29,7 +29,7 @@ class WorldChapterView {
   int get cleared => stages.where((stage) => stage.cleared).length;
   bool get complete => cleared == stages.length;
   bool get golden => complete && stages.every((stage) => stage.stars == 3);
-  bool get unlocked => stages.first.unlocked;
+  bool get unlocked => stages.any((stage) => stage.unlocked);
   List<bool> get lit => [for (final stage in stages) stage.cleared];
 }
 
@@ -37,32 +37,35 @@ class WorldChapterView {
 class WorldAtlas {
   const WorldAtlas(this.world, this.chapters);
 
+  /// 장 안에서는 다섯 판을 아무 순서로나 할 수 있다. 첫 장은 처음부터 열리고,
+  /// 다음 장은 앞 장에서 [Worlds.chapterUnlockClears]판을 깨면 열린다.
+  /// 한 판에 막혀도 다른 판으로 진행을 이어 가도록 하기 위해서다.
   factory WorldAtlas.derive(LoadedWorld world, ProgressRepository progress) {
-    final stages = <WorldStageView>[];
-    var previousCleared = true;
-    for (final level in world.levels) {
-      final record = progress.forLevel(level.id, revision: level.revision);
-      stages.add(
-        WorldStageView(
-          level: level,
-          spirit: world.story.forLevel(level.id)!,
-          record: record,
-          unlocked: previousCleared || record != null,
-        ),
-      );
-      previousCleared = record != null;
-    }
     const size = Worlds.stagesPerChapter;
-    return WorldAtlas(world.number, [
-      for (final chapter in world.story.chapters)
-        WorldChapterView(
-          chapter: chapter,
-          stages: stages.sublist(
-            (chapter.number - 1) * size,
-            chapter.number * size,
+    final records = [
+      for (final level in world.levels)
+        progress.forLevel(level.id, revision: level.revision),
+    ];
+    final chapters = <WorldChapterView>[];
+    var chapterOpen = true;
+    for (final chapter in world.story.chapters) {
+      final start = (chapter.number - 1) * size;
+      final stages = [
+        for (var index = start; index < start + size; index++)
+          WorldStageView(
+            level: world.levels[index],
+            spirit: world.story.forLevel(world.levels[index].id)!,
+            record: records[index],
+            unlocked: chapterOpen || records[index] != null,
           ),
-        ),
-    ]);
+      ];
+      chapters.add(WorldChapterView(chapter: chapter, stages: stages));
+      chapterOpen =
+          chapterOpen &&
+          stages.where((stage) => stage.cleared).length >=
+              Worlds.chapterUnlockClears;
+    }
+    return WorldAtlas(world.number, chapters);
   }
 
   final int world;
@@ -77,10 +80,18 @@ class WorldAtlas {
       ? chapters[Worlds.chapterOf(levelId) - 1]
       : null;
 
-  /// 이어서 할 스테이지: 아직 못 깬 첫 스테이지, 다 깼으면 첫 스테이지.
+  /// 이어서 할 스테이지: 열려 있지만 아직 못 깬 첫 스테이지,
+  /// 다 깼으면 첫 스테이지.
   int get nextLevelId =>
-      stages.where((stage) => !stage.cleared).firstOrNull?.level.id ??
+      stages
+          .where((stage) => stage.unlocked && !stage.cleared)
+          .firstOrNull
+          ?.level
+          .id ??
       Worlds.firstLevelId(world);
+
+  bool isUnlocked(int levelId) =>
+      stages.any((stage) => stage.level.id == levelId && stage.unlocked);
 
   /// 한 스테이지 클리어 전후를 비교해 이번에 완성·황금이 된 장(전역 번호).
   static ({int? completed, int? golden}) diff(

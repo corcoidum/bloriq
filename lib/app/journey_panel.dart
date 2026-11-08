@@ -782,6 +782,28 @@ class _RewardsTab extends StatelessWidget {
         ],
       ),
     );
+    String rewardsText(List<TrackReward> rewards) =>
+        rewards.map(rewardLabel).join(' · ');
+    Widget achievementPage(String title, Iterable<Achievement> items) =>
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: Column(
+            children: [
+              heading(title),
+              for (final achievement in items)
+                Expanded(
+                  child: _AchievementRow(
+                    achievement: achievement,
+                    progress: progression.achievementProgress(achievement),
+                    claimed: progression.claimedAchievements.contains(
+                      achievement.id,
+                    ),
+                    rewards: rewardsText(achievement.rewards),
+                  ),
+                ),
+            ],
+          ),
+        );
     final style = Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Column(
@@ -806,7 +828,14 @@ class _RewardsTab extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+        ],
+      ),
+    );
+    final titlePage = Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
           heading(t.rewardsTitles),
           Wrap(
             spacing: 6,
@@ -833,7 +862,16 @@ class _RewardsTab extends StatelessWidget {
         powers,
         trackPage(rewardTrack.where((entry) => entry.level <= 11)),
         trackPage(rewardTrack.where((entry) => entry.level > 11)),
+        achievementPage(
+          AchievementText.stars.resolve(lang),
+          achievements.where((a) => a.kind == AchievementKind.worldStars),
+        ),
+        achievementPage(
+          AchievementText.mastery.resolve(lang),
+          achievements.where((a) => a.kind != AchievementKind.worldStars),
+        ),
         style,
+        titlePage,
       ],
     );
   }
@@ -900,6 +938,92 @@ class _PowerCard extends StatelessWidget {
                       fontSize: 12.5,
                       color: colors.secondaryText,
                     ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 별 모으기 업적 한 줄: 이름, 진행 막대, 보상.
+class _AchievementRow extends StatelessWidget {
+  const _AchievementRow({
+    required this.achievement,
+    required this.progress,
+    required this.claimed,
+    required this.rewards,
+  });
+  final Achievement achievement;
+  final int progress;
+  final bool claimed;
+  final String rewards;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = GameTheme.colorsOf(context);
+    final lang = Localizations.localeOf(context).languageCode;
+    final value = progress.clamp(0, achievement.target);
+    return Semantics(
+      container: true,
+      label:
+          '${achievement.name.resolve(lang)}, $value / ${achievement.target}',
+      child: Row(
+        key: ValueKey('achievement-${achievement.id}'),
+        children: [
+          Icon(
+            claimed ? Icons.emoji_events_rounded : Icons.star_outline_rounded,
+            size: 22,
+            color: claimed ? colors.reward : colors.outline,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        achievement.name.resolve(lang),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GameTypography.label.copyWith(
+                          color: claimed ? colors.rewardInk : colors.text,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '$value / ${achievement.target}',
+                      style: GameTypography.label.copyWith(
+                        fontSize: 13,
+                        color: colors.secondaryText,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    minHeight: 6,
+                    value: value / achievement.target,
+                    color: claimed ? colors.reward : colors.goal,
+                    backgroundColor: colors.outline.withValues(alpha: .2),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  rewards,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTypography.body.copyWith(
+                    fontSize: 12.5,
+                    color: colors.secondaryText,
                   ),
                 ),
               ],

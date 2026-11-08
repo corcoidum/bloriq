@@ -109,9 +109,9 @@ void main() {
       await tapVisible(tester, entry);
       await tester.pump(const Duration(milliseconds: 400));
 
-      // 지도: 첫 스테이지만 열려 있다.
-      final second = find.byKey(const ValueKey('world-stage-102'));
-      expect(tester.widget<InkWell>(second).onTap, isNull);
+      // 지도: 첫 장은 다섯 판을 아무 순서로나 할 수 있다.
+      final fifth = find.byKey(const ValueKey('world-stage-105'));
+      expect(tester.widget<InkWell>(fifth).onTap, isNotNull);
       await tapVisible(tester, find.byKey(const ValueKey('world-continue')));
       await tester.pump(const Duration(milliseconds: 400));
 
@@ -147,4 +147,54 @@ void main() {
       expect(progression.isBareHandedLevel('101:1'), false);
     },
   );
+
+  testWidgets('stuck players get a key hint and can follow the solution', (
+    tester,
+  ) async {
+    await _seed({1, 2, 3, 4, 5});
+    await tester.pumpWidget(const BloriqApp());
+    await waitForHome(tester);
+    await tapVisible(tester, find.byKey(const ValueKey('world-entry')));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tapVisible(tester, find.byKey(const ValueKey('world-continue')));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    // 세 번 다시 시작하면 도움 버튼이 나타난다.
+    expect(find.byKey(const ValueKey('stuck-help')), findsNothing);
+    for (var i = 0; i < 3; i++) {
+      await tapVisible(tester, find.text('Restart'));
+    }
+    await tapVisible(tester, find.byKey(const ValueKey('stuck-help')));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byKey(const ValueKey('help-key')), findsOneWidget);
+    expect(find.textContaining('Moonflower Leap'), findsWidgets);
+
+    // 풀이 따라 하기: 매 수마다 빛 화살표가 다음 최단 수를 가리킨다.
+    await tapVisible(tester, find.byKey(const ValueKey('help-guide')));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byKey(const ValueKey('guide-banner')), findsOneWidget);
+    for (var step = 0; step < 30; step++) {
+      final game = _game(tester);
+      if (game.controller.state.isComplete) break;
+      final hint = game.hintMove!;
+      final dx = (hint.to.x - hint.from.x).sign.toDouble();
+      final dy = (hint.to.y - hint.from.y).sign.toDouble();
+      final direction = dx != 0 ? Offset(dx, 0) : Offset(0, dy == 0 ? 1 : dy);
+      await tester.ensureVisible(_board);
+      await tester.pump();
+      await tester.dragFrom(
+        tester.getTopLeft(_board) + game.geometry.center(hint.from),
+        direction * game.geometry.cellSize * .7,
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+    final controller = _game(tester).controller;
+    expect(controller.state.isComplete, true);
+    expect(controller.state.moves, controller.state.level.minimumMoves);
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump();
+    // 최소 수로 깼어도 풀이를 따라갔으니 별 1개만 남는다.
+    final progress = await ProgressRepository.load();
+    expect(progress.forLevel(Worlds.firstLevelId(2))?.bestStars, 1);
+  });
 }

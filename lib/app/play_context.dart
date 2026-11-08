@@ -38,3 +38,10 @@ class PlayContext {
   final int world;
   String? get dailyDate => challenge?.date;
 }
+
+/// 게임 화면이 닫히며 홈에 남기는 요청: 이 세계의 지도를 바로 연다.
+/// 세계를 막 마친 결과 화면의 "다음 세계로" 버튼이 쓴다.
+class OpenWorld {
+  const OpenWorld(this.world);
+  final int world;
+}

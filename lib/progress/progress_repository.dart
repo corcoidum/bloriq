@@ -202,11 +202,16 @@ class ProgressRepository {
     int revision = 1,
     required int moves,
     required int minimumMoves,
+    int maxStars = 3,
   }) async {
     if (revision < 1 || levelId < 1) {
       throw ArgumentError.value(levelId, 'levelId');
     }
-    final stars = starRating(moves: moves, minimumMoves: minimumMoves);
+    // 힌트나 풀이 따라 하기로 깬 판은 [maxStars]까지만 별을 남긴다.
+    final stars = math.min(
+      starRating(moves: moves, minimumMoves: minimumMoves),
+      maxStars,
+    );
     final previous = forLevel(levelId, revision: revision);
     final isNewBest = previous == null || moves < previous.bestMoves;
     final progress = LevelProgress(

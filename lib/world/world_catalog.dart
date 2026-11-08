@@ -15,6 +15,9 @@ abstract final class Worlds {
   static const stagesPerChapter = 5;
   static const stageCount = chapterCount * stagesPerChapter;
 
+  /// 앞 장에서 이만큼 깨면 다음 장이 열린다(별자리 완성은 다섯 판 모두).
+  static const chapterUnlockClears = 3;
+
   static int firstLevelId(int world) => (world - 1) * 100 + 1;
   static int worldOf(int levelId) => (levelId - 1) ~/ 100 + 1;
 

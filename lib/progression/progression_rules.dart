@@ -117,6 +117,9 @@ abstract final class StardustRules {
   static const perStar = 5;
   static const firstClearBonus = 10;
 
+  /// 황금 별자리(장의 다섯 판 모두 3별)를 처음 만들 때마다.
+  static const goldenConstellation = 50;
+
   /// 숲 계열 유대 Lv3 보너스(+20%, 올림).
   static const forestBonusPercent = 20;
 }
@@ -156,6 +159,8 @@ abstract final class TrailIds {
   static const firefly = 'firefly';
   static const meteor = 'meteor';
   static const mist = 'mist';
+  static const aurora = 'aurora';
+  static const starfall = 'starfall';
 }
 
 const defaultTrailId = TrailIds.moonlight;
@@ -166,6 +171,8 @@ const trails = <TrailDefinition>[
   TrailDefinition(TrailIds.firefly, ProgressionText('반딧불', 'Firefly')),
   TrailDefinition(TrailIds.meteor, ProgressionText('유성', 'Meteor')),
   TrailDefinition(TrailIds.mist, ProgressionText('안개', 'Mist')),
+  TrailDefinition(TrailIds.aurora, ProgressionText('오로라', 'Aurora')),
+  TrailDefinition(TrailIds.starfall, ProgressionText('별비', 'Starfall')),
 ];
 
 TrailDefinition? trailById(String? id) {
@@ -193,6 +200,36 @@ const titles = <TitleDefinition>[
   ),
   TitleDefinition('spirit_friend', ProgressionText('정령의 벗', 'Spirit Friend')),
   TitleDefinition('moon_guardian', ProgressionText('달의 수호자', 'Moon Guardian')),
+  // 별 모으기 업적 칭호
+  TitleDefinition(
+    'forest_star_keeper',
+    ProgressionText('달빛 숲의 별지기', 'Star Keeper of the Forest'),
+  ),
+  TitleDefinition(
+    'lighthouse_star_keeper',
+    ProgressionText('구름바다의 별지기', 'Star Keeper of the Cloud Sea'),
+  ),
+  TitleDefinition('golden_first', ProgressionText('첫 황금 별자리', 'First Gold')),
+  TitleDefinition(
+    'golden_collector',
+    ProgressionText('황금 별자리 수집가', 'Gold Collector'),
+  ),
+  TitleDefinition(
+    'golden_sky',
+    ProgressionText('황금 하늘지기', 'Keeper of the Gold Sky'),
+  ),
+  TitleDefinition(
+    'barehand_explorer',
+    ProgressionText('맨손 탐험가', 'Bare-Handed Explorer'),
+  ),
+  TitleDefinition(
+    'barehand_artisan',
+    ProgressionText('맨손 장인', 'Bare-Handed Artisan'),
+  ),
+  TitleDefinition(
+    'barehand_legend',
+    ProgressionText('맨손 전설', 'Bare-Handed Legend'),
+  ),
 ];
 
 TitleDefinition? titleById(String? id) {
@@ -536,4 +573,154 @@ class FamilyAbilities {
 
 void _checkStars(int stars) {
   if (stars < 1 || stars > 3) throw ArgumentError.value(stars, 'stars');
+}
+
+// ---------------------------------------------------------------------------
+// 별 모으기 업적: 세계별 별 개수, 황금 별자리 수, 맨손 별 수
+// ---------------------------------------------------------------------------
+
+enum AchievementKind {
+  /// 한 세계에서 모은 별(판마다 최고 별, 최대 75).
+  worldStars,
+
+  /// 황금 별자리(장의 다섯 판을 모두 3별로) 개수. 모든 세계를 합친다.
+  goldenConstellations,
+
+  /// 맨손 별을 받은 판 개수. 모든 세계를 합친다.
+  bareHandedStars,
+}
+
+class Achievement {
+  const Achievement({
+    required this.id,
+    required this.kind,
+    required this.target,
+    required this.name,
+    required this.rewards,
+    this.world,
+  });
+  final String id;
+  final AchievementKind kind;
+  final int target;
+
+  /// [AchievementKind.worldStars]일 때 세계 번호.
+  final int? world;
+  final ProgressionText name;
+  final List<TrackReward> rewards;
+}
+
+/// 목표에 닿으면 다음 클리어 때 자동으로 받는다(한 번만).
+const achievements = <Achievement>[
+  Achievement(
+    id: 'w1-stars-25',
+    kind: AchievementKind.worldStars,
+    world: 1,
+    target: 25,
+    name: ProgressionText('달빛 숲 별 25개', '25 Forest stars'),
+    rewards: [StardustBundle(100)],
+  ),
+  Achievement(
+    id: 'w1-stars-50',
+    kind: AchievementKind.worldStars,
+    world: 1,
+    target: 50,
+    name: ProgressionText('달빛 숲 별 50개', '50 Forest stars'),
+    rewards: [StarlightCharge(2)],
+  ),
+  Achievement(
+    id: 'w1-stars-75',
+    kind: AchievementKind.worldStars,
+    world: 1,
+    target: 75,
+    name: ProgressionText('달빛 숲 별 75개', 'All 75 Forest stars'),
+    rewards: [TrailUnlock(TrailIds.aurora), TitleUnlock('forest_star_keeper')],
+  ),
+  Achievement(
+    id: 'w2-stars-25',
+    kind: AchievementKind.worldStars,
+    world: 2,
+    target: 25,
+    name: ProgressionText('구름바다 별 25개', '25 Cloud-Sea stars'),
+    rewards: [StardustBundle(150)],
+  ),
+  Achievement(
+    id: 'w2-stars-50',
+    kind: AchievementKind.worldStars,
+    world: 2,
+    target: 50,
+    name: ProgressionText('구름바다 별 50개', '50 Cloud-Sea stars'),
+    rewards: [StarlightCharge(3)],
+  ),
+  Achievement(
+    id: 'w2-stars-75',
+    kind: AchievementKind.worldStars,
+    world: 2,
+    target: 75,
+    name: ProgressionText('구름바다 별 75개', 'All 75 Cloud-Sea stars'),
+    rewards: [
+      TrailUnlock(TrailIds.starfall),
+      TitleUnlock('lighthouse_star_keeper'),
+    ],
+  ),
+  Achievement(
+    id: 'golden-1',
+    kind: AchievementKind.goldenConstellations,
+    target: 1,
+    name: ProgressionText('황금 별자리 1개', '1 golden constellation'),
+    rewards: [StardustBundle(80), TitleUnlock('golden_first')],
+  ),
+  Achievement(
+    id: 'golden-5',
+    kind: AchievementKind.goldenConstellations,
+    target: 5,
+    name: ProgressionText('황금 별자리 5개', '5 golden constellations'),
+    rewards: [StardustBundle(200), TitleUnlock('golden_collector')],
+  ),
+  Achievement(
+    id: 'golden-10',
+    kind: AchievementKind.goldenConstellations,
+    target: 10,
+    name: ProgressionText('황금 별자리 10개', '10 golden constellations'),
+    rewards: [StardustBundle(400), TitleUnlock('golden_sky')],
+  ),
+  Achievement(
+    id: 'bare-5',
+    kind: AchievementKind.bareHandedStars,
+    target: 5,
+    name: ProgressionText('맨손 별 5개', '5 bare-handed stars'),
+    rewards: [StardustBundle(50), TitleUnlock('barehand_explorer')],
+  ),
+  Achievement(
+    id: 'bare-15',
+    kind: AchievementKind.bareHandedStars,
+    target: 15,
+    name: ProgressionText('맨손 별 15개', '15 bare-handed stars'),
+    rewards: [StarlightCharge(2), TitleUnlock('barehand_artisan')],
+  ),
+  Achievement(
+    id: 'bare-30',
+    kind: AchievementKind.bareHandedStars,
+    target: 30,
+    name: ProgressionText('맨손 별 30개', '30 bare-handed stars'),
+    rewards: [StardustBundle(300), TitleUnlock('barehand_legend')],
+  ),
+];
+
+Achievement? achievementById(String id) {
+  for (final achievement in achievements) {
+    if (achievement.id == id) return achievement;
+  }
+  return null;
+}
+
+/// 레벨 id로 세계 번호를 구한다(세계 n = 레벨 (n-1)*100+1..).
+int worldOfLevelId(int levelId) => (levelId - 1) ~/ 100 + 1;
+
+ProgressionText achievementReached(ProgressionText name) =>
+    ProgressionText('업적 달성 · ${name.ko}', 'Achievement · ${name.en}');
+
+abstract final class AchievementText {
+  static const heading = ProgressionText('별 모으기', 'Star collection');
+  static const stars = ProgressionText('세계별 별', 'Stars by world');
+  static const mastery = ProgressionText('황금 별자리 · 맨손 별', 'Gold & bare-handed');
 }

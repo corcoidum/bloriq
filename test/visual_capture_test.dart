@@ -108,14 +108,13 @@ void main() {
       }
     }
 
-    for (final mode in [ThemeMode.light, ThemeMode.dark]) {
+    for (final mode in [ThemeMode.dark]) {
       SharedPreferences.setMockInitialValues({
         'bloriq.onboarding.v1': 'skipped',
         GameAudio.musicKey: false,
         GameAudio.effectsKey: false,
       });
       final settings = await GameSettings.load();
-      await settings.setThemeMode(mode);
       await tester.pumpWidget(
         RepaintBoundary(
           key: boundary,

@@ -27,6 +27,7 @@ class ClearReward {
     required this.bareHanded,
     required this.newBareHanded,
     required this.newTrails,
+    this.achievements = const [],
     required this.totalXp,
     required this.totalStardust,
     required this.standing,
@@ -56,6 +57,9 @@ class ClearReward {
 
   /// 이번에 새로 얻은 궤적(레벨 보상 + 구름 유대).
   final List<String> newTrails;
+
+  /// 이번 클리어로 달성한 별 모으기 업적(보상은 이미 적용되었다).
+  final List<Achievement> achievements;
   final int totalXp, totalStardust;
   final LevelStanding standing;
 
@@ -74,22 +78,38 @@ class ClearReward {
             : 0),
   );
 
-  /// 클리어 별가루 + 레벨 보상 별가루.
-  int get stardustGained => clearStardust + trackStardust;
+  Iterable<TrackReward> get _achievementRewards =>
+      achievements.expand((achievement) => achievement.rewards);
+
+  /// 업적 보상 별가루 합.
+  int get achievementStardust => _achievementRewards.fold(
+    0,
+    (sum, reward) => sum + (reward is StardustBundle ? reward.amount : 0),
+  );
+
+  /// 클리어 별가루 + 레벨 보상 별가루 + 업적 별가루.
+  int get stardustGained => clearStardust + trackStardust + achievementStardust;
 
   List<String> get newTitles => [
     for (final up in levelsGained)
       if (up.reward case TitleUnlock(:final titleId)) titleId,
+    for (final reward in _achievementRewards)
+      if (reward case TitleUnlock(:final titleId)) titleId,
   ];
 
-  int get newStarlightCharges => levelsGained.fold(
-    0,
-    (sum, up) =>
-        sum +
-        (up.reward is StarlightCharge
-            ? (up.reward as StarlightCharge).charges
-            : 0),
-  );
+  int get newStarlightCharges =>
+      levelsGained.fold(
+        0,
+        (sum, up) =>
+            sum +
+            (up.reward is StarlightCharge
+                ? (up.reward as StarlightCharge).charges
+                : 0),
+      ) +
+      _achievementRewards.fold(
+        0,
+        (sum, reward) => sum + (reward is StarlightCharge ? reward.charges : 0),
+      );
 }
 
 /// 기존 기록을 한 번만 성장 보상으로 환산한 결과.
@@ -142,6 +162,7 @@ class ProgressionRepository {
   final Set<String> _ownedTitles = {};
   final Map<String, int> _bonds = {};
   final Set<String> _bareHanded = {};
+  final Set<String> _claimedAchievements = {};
 
   /// 단계 키(`id:revision`)별로 이미 보상한 최고 별 수. 백필 중복 방지용.
   final Map<String, int> _rewardedStars = {};
@@ -184,6 +205,24 @@ class ProgressionRepository {
   Set<String> get bareHanded => Set.unmodifiable(_bareHanded);
   bool isBareHandedLevel(String levelKey) => _bareHanded.contains(levelKey);
   bool get backfilled => _backfilled;
+
+  Set<String> get claimedAchievements => Set.unmodifiable(_claimedAchievements);
+
+  /// 한 세계에서 모은 별(판마다 보상한 최고 별의 합).
+  int worldStars(int world) => _rewardedStars.entries
+      .where((entry) {
+        final id = int.tryParse(entry.key.split(':').first);
+        return id != null && worldOfLevelId(id) == world;
+      })
+      .fold(0, (sum, entry) => sum + entry.value);
+
+  /// 업적의 현재 진행 값.
+  int achievementProgress(Achievement achievement) =>
+      switch (achievement.kind) {
+        AchievementKind.worldStars => worldStars(achievement.world!),
+        AchievementKind.goldenConstellations => _goldenChapters.length,
+        AchievementKind.bareHandedStars => _bareHanded.length,
+      };
 
   FamilyAbilities abilitiesFor({
     String? companionId,
@@ -273,6 +312,7 @@ class ProgressionRepository {
     _ownedTrails.addAll(list<String>('ownedTrails'));
     _ownedTitles.addAll(list<String>('ownedTitles'));
     _bareHanded.addAll(list<String>('bareHanded'));
+    _claimedAchievements.addAll(list<String>('claimedAchievements'));
     _bonds.addAll(counts('bonds'));
     _rewardedStars.addAll(counts('rewardedStars'));
     final trail = optionalString('equippedTrail');
@@ -298,6 +338,7 @@ class ProgressionRepository {
     _ownedTitles.clear();
     _bonds.clear();
     _bareHanded.clear();
+    _claimedAchievements.clear();
     _rewardedStars.clear();
     _equippedTrail = defaultTrailId;
     _title = null;
@@ -363,9 +404,11 @@ class ProgressionRepository {
       xpGained += XpRules.constellationCompleted;
       newPower = powerForChapter(constellationCompletedChapter);
     }
+    var goldenDust = 0;
     if (constellationGoldenChapter != null &&
         _goldenChapters.add(constellationGoldenChapter)) {
       xpGained += XpRules.constellationGolden;
+      goldenDust = StardustRules.goldenConstellation;
     }
 
     final newTrails = <String>[];
@@ -393,8 +436,9 @@ class ProgressionRepository {
     _rewardedStars[levelKey] = rewarded;
 
     _xp += xpGained;
-    _stardust += dust;
+    _stardust += dust + goldenDust;
     final levels = _claimLevelRewards(newTrails);
+    final reached = _claimAchievements(newTrails);
     final saved = await retrySave();
     return _reward(
       starsAwarded: awarded,
@@ -402,7 +446,8 @@ class ProgressionRepository {
       bare: bare,
       newBare: newBare,
       xpGained: xpGained,
-      clearStardust: dust,
+      clearStardust: dust + goldenDust,
+      achievements: reached,
       levels: levels,
       newPower: newPower,
       bondLevelUp: bondLevelUp,
@@ -467,6 +512,7 @@ class ProgressionRepository {
     for (final chapter in goldenChapters.toList()..sort()) {
       if (_goldenChapters.add(chapter)) {
         xpGained += XpRules.constellationGolden;
+        dust += StardustRules.goldenConstellation;
       }
     }
     _backfilled = true;
@@ -559,22 +605,41 @@ class ProgressionRepository {
     for (var l = 2; l <= current; l++) {
       if (!_claimedLevels.add(l)) continue;
       final reward = rewardForLevel(l);
-      switch (reward) {
-        case StardustBundle(:final amount):
-          _stardust += amount;
-        case TrailUnlock(:final trailId):
-          if (_ownedTrails.add(trailId)) newTrails.add(trailId);
-        case TitleUnlock(:final titleId):
-          _ownedTitles.add(titleId);
-          _title ??= titleId;
-        case StarlightCharge(:final charges):
-          _charges += charges;
-        case null:
-          break;
-      }
+      if (reward != null) _apply(reward, newTrails);
       gained.add(LevelUp(l, reward));
     }
     return gained;
+  }
+
+  /// 목표에 닿았지만 아직 받지 않은 업적 보상을 모두 적용한다.
+  /// 업데이트 전에 이미 모은 별도 다음 클리어 때 한꺼번에 받는다.
+  List<Achievement> _claimAchievements(List<String> newTrails) {
+    final reached = <Achievement>[];
+    for (final achievement in achievements) {
+      if (achievementProgress(achievement) < achievement.target ||
+          !_claimedAchievements.add(achievement.id)) {
+        continue;
+      }
+      for (final reward in achievement.rewards) {
+        _apply(reward, newTrails);
+      }
+      reached.add(achievement);
+    }
+    return reached;
+  }
+
+  void _apply(TrackReward reward, List<String> newTrails) {
+    switch (reward) {
+      case StardustBundle(:final amount):
+        _stardust += amount;
+      case TrailUnlock(:final trailId):
+        if (_ownedTrails.add(trailId)) newTrails.add(trailId);
+      case TitleUnlock(:final titleId):
+        _ownedTitles.add(titleId);
+        _title ??= titleId;
+      case StarlightCharge(:final charges):
+        _charges += charges;
+    }
   }
 
   ClearReward _reward({
@@ -588,6 +653,7 @@ class ProgressionRepository {
     PowerDefinition? newPower,
     int? bondLevelUp,
     List<String> newTrails = const [],
+    List<Achievement> achievements = const [],
     bool saved = false,
   }) => ClearReward(
     starsAwarded: starsAwarded,
@@ -600,6 +666,7 @@ class ProgressionRepository {
     bareHanded: bare,
     newBareHanded: newBare,
     newTrails: List.unmodifiable(newTrails),
+    achievements: List.unmodifiable(achievements),
     totalXp: _xp,
     totalStardust: _stardust,
     standing: standing,
@@ -623,6 +690,7 @@ class ProgressionRepository {
       _bonds.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
     ),
     'bareHanded': _bareHanded.toList()..sort(),
+    'claimedAchievements': _claimedAchievements.toList()..sort(),
     'rewardedStars': Map.fromEntries(
       _rewardedStars.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
     ),
