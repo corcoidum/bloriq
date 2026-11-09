@@ -15,8 +15,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+// ignore: depend_on_referenced_packages
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
 import 'support/start_game.dart';
+
+class _FailingVoyageStore extends InMemorySharedPreferencesStore {
+  _FailingVoyageStore(super.data) : super.withData();
+
+  @override
+  Future<bool> setValue(String valueType, String key, Object value) async =>
+      false;
+}
 
 EndlessPool _pool() =>
     EndlessPool.parse(File(EndlessPool.asset).readAsStringSync());
@@ -262,6 +272,7 @@ void main() {
         ..depth = 27
         ..score = 900
         ..perfects = 4;
+      await repo.saveRun(run, clearedBoard: true);
       final first = await repo.finish(run);
       expect(first.newBestScore, isTrue);
       expect(first.newBestDepth, isTrue);
@@ -287,6 +298,89 @@ void main() {
       expect(reloaded.voyages, 2);
       expect(reloaded.claimedMilestones, {'depth10', 'depth25'});
     });
+
+    test(
+      'legacy progress counts immediately and weekly score rolls on Monday',
+      () async {
+        final run = VoyageRun.start(_pool(), seed: 8)
+          ..depth = 45
+          ..score = 12000;
+        await _seed(
+          extra: {
+            EndlessRepository.storageKey: jsonEncode({
+              'version': 1,
+              'run': run.toJson(),
+            }),
+          },
+        );
+        var now = DateTime(2026, 11, 8);
+        final repo = await EndlessRepository.load(clock: () => now);
+        final saved = repo.savedRun!;
+        expect(repo.harborBestScore, 12000);
+        expect(repo.harborBestDepth, 44);
+        expect(repo.weekBest, 0);
+        await repo.saveRun(saved, clearedBoard: true);
+        expect(repo.weekBest, 12000);
+        expect(
+          (await EndlessRepository.load(clock: () => now)).weekBest,
+          12000,
+        );
+        now = DateTime(2026, 11, 9);
+        await repo.saveRun(saved);
+        expect(repo.weekBest, 0);
+        saved
+          ..depth += 1
+          ..score += 500;
+        await repo.saveRun(saved, clearedBoard: true);
+        expect(repo.weekBest, 12500);
+
+        final next = VoyageRun.start(_pool(), seed: 10);
+        final competing = VoyageRun.start(_pool(), seed: 11);
+        expect(
+          await Future.wait([
+            repo.replaceRun(saved, next),
+            repo.replaceRun(saved, competing),
+          ]),
+          [true, false],
+        );
+        final restored = await EndlessRepository.load(clock: () => now);
+        expect(restored.savedRun?.seed, next.seed);
+        expect(restored.savedRun?.depth, 1);
+        expect(restored.bestScore, 12500);
+        expect(restored.bestDepth, 45);
+        expect(restored.weekBest, 12500);
+        expect(restored.voyages, 0);
+        expect(restored.claimedMilestones, isEmpty);
+      },
+    );
+
+    test(
+      'a failed replacement keeps the original run and disk snapshot',
+      () async {
+        final pool = _pool();
+        final run = VoyageRun.start(pool, seed: 8)..depth = 45;
+        final original = jsonEncode({'version': 1, 'run': run.toJson()});
+        SharedPreferences.setMockInitialValues({});
+        SharedPreferencesStorePlatform.instance = _FailingVoyageStore({
+          'flutter.${EndlessRepository.storageKey}': original,
+        });
+        addTearDown(() => SharedPreferences.setMockInitialValues({}));
+        final repo = await EndlessRepository.load();
+        final saved = repo.savedRun!;
+        expect(
+          await repo.replaceRun(saved, VoyageRun.start(pool, seed: 9)),
+          isFalse,
+        );
+        expect(repo.saveFailed, isTrue);
+        expect(repo.savedRun, same(saved));
+        expect(
+          (await SharedPreferences.getInstance()).getString(
+            EndlessRepository.storageKey,
+          ),
+          original,
+        );
+      },
+    );
 
     test(
       'an unfinished voyage is restored, a corrupt one is dropped',
@@ -321,6 +415,60 @@ void main() {
   });
 
   group('screen', () {
+    testWidgets('Sea 45 shows progress and new voyage requires confirmation', (
+      tester,
+    ) async {
+      final run = VoyageRun.start(_pool(), seed: 8)
+        ..depth = 45
+        ..score = 12000;
+      await _seed(
+        extra: {
+          EndlessRepository.storageKey: jsonEncode({
+            'version': 1,
+            'run': run.toJson(),
+          }),
+        },
+      );
+      await tester.pumpWidget(const BloriqApp());
+      await waitForHome(tester);
+      await tapVisible(tester, find.byKey(const ValueKey('home-voyage')));
+      final newVoyage = find.byKey(const ValueKey('endless-new'));
+      for (var i = 0; i < 50 && newVoyage.evaluate().isEmpty; i++) {
+        await tester.pump(const Duration(milliseconds: 20));
+      }
+      expect(find.text('Continue voyage · Sea 45'), findsOneWidget);
+      expect(find.text('44 cleared · 12000 pts'), findsOneWidget);
+      expect(find.text('12000'), findsOneWidget);
+      expect(find.text('44'), findsOneWidget);
+
+      final start = tester.widget<OutlinedButton>(newVoyage).onPressed!;
+      start();
+      start();
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsOneWidget);
+      await tapVisible(
+        tester,
+        find.byKey(const ValueKey('endless-cancel-new')),
+      );
+      expect(find.text('Continue voyage · Sea 45'), findsOneWidget);
+      await tapVisible(tester, newVoyage);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect((await EndlessRepository.load()).savedRun?.depth, 45);
+
+      await tapVisible(tester, newVoyage);
+      await tapVisible(
+        tester,
+        find.byKey(const ValueKey('endless-confirm-new')),
+      );
+      expect(find.text('Sea 1'), findsOneWidget);
+      final restored = await EndlessRepository.load();
+      expect(restored.savedRun?.depth, 1);
+      expect(restored.bestDepth, 44);
+      expect(restored.bestScore, 12000);
+      expect(restored.voyages, 0);
+    });
+
     testWidgets('the voyage stays locked until the first constellation', (
       tester,
     ) async {

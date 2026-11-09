@@ -121,76 +121,91 @@ class _ChapterPage extends StatelessWidget {
   final WorldChapterView chapter;
   final String lang;
 
+  static const _minSkyHeight = 48.0;
+
   @override
   Widget build(BuildContext context) {
     final colors = GameTheme.colorsOf(context);
     final info = chapter.chapter;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: [
-          Text(
-            '${info.number}. ${info.name.inLocale(lang)}',
-            style: GameTypography.reward.copyWith(
-              fontSize: 20,
-              color: colors.rewardInk,
-            ),
-          ),
-          Text(
-            info.constellation.inLocale(lang),
-            style: GameTypography.label.copyWith(color: colors.goalInk),
-          ),
-          if (info.power case final power?)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    PowerBar.iconFor(power),
-                    size: 16,
+    // 보통 폰에서는 별자리가 남는 높이를 채우고, 모자라면 장 전체를 스크롤한다.
+    return CustomScrollView(
+      key: const ValueKey('world-chapter-scroll'),
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: [
+                Text(
+                  '${info.number}. ${info.name.inLocale(lang)}',
+                  style: GameTypography.reward.copyWith(
+                    fontSize: 20,
                     color: colors.rewardInk,
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    powerDefinition(power)?.name.resolve(lang) ?? power.id,
-                    style: GameTypography.label.copyWith(
-                      color: colors.rewardInk,
+                ),
+                Text(
+                  info.constellation.inLocale(lang),
+                  style: GameTypography.label.copyWith(color: colors.goalInk),
+                ),
+                if (info.power case final power?)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          PowerBar.iconFor(power),
+                          size: 16,
+                          color: colors.rewardInk,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          powerDefinition(power)?.name.resolve(lang) ??
+                              power.id,
+                          style: GameTypography.label.copyWith(
+                            color: colors.rewardInk,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-          Expanded(
-            child: Semantics(
-              label: info.constellation.inLocale(lang),
-              value: '${chapter.cleared} / ${chapter.stages.length}',
-              child: CustomPaint(
-                size: Size.infinite,
-                painter: ConstellationPainter(
-                  definition: chapter.definition,
-                  lit: chapter.lit,
-                  colors: colors,
-                  golden: chapter.golden ? 1 : 0,
+                Expanded(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: _minSkyHeight),
+                    child: Semantics(
+                      label: info.constellation.inLocale(lang),
+                      value: '${chapter.cleared} / ${chapter.stages.length}',
+                      child: CustomPaint(
+                        size: Size.infinite,
+                        painter: ConstellationPainter(
+                          definition: chapter.definition,
+                          lit: chapter.lit,
+                          colors: colors,
+                          golden: chapter.golden ? 1 : 0,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                KeepAllText(
+                  !chapter.unlocked
+                      ? WorldText.chapterLocked.resolve(lang)
+                      : chapter.complete
+                      ? '${info.endingTitle.inLocale(lang)} — '
+                            '${info.ending.inLocale(lang)}'
+                      : info.intro.inLocale(lang),
+                  textAlign: TextAlign.center,
+                  style: GameTypography.body.copyWith(fontSize: 13.5),
+                ),
+                const SizedBox(height: 8),
+                for (final stage in chapter.stages)
+                  _StageTile(stage: stage, lang: lang),
+              ],
             ),
           ),
-          KeepAllText(
-            !chapter.unlocked
-                ? WorldText.chapterLocked.resolve(lang)
-                : chapter.complete
-                ? '${info.endingTitle.inLocale(lang)} — '
-                      '${info.ending.inLocale(lang)}'
-                : info.intro.inLocale(lang),
-            textAlign: TextAlign.center,
-            style: GameTypography.body.copyWith(fontSize: 13.5),
-          ),
-          const SizedBox(height: 8),
-          for (final stage in chapter.stages)
-            _StageTile(stage: stage, lang: lang),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

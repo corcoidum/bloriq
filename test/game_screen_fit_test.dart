@@ -265,6 +265,71 @@ void main() {
     expect(problems, isEmpty, reason: problems.take(40).join('\n'));
   }, timeout: const Timeout(Duration(minutes: 3)));
 
+  testWidgets('the world map stays usable on every phone', (tester) async {
+    final problems = await forEachPhone(tester, (
+      name,
+      height,
+      bottom,
+      problems,
+    ) async {
+      // 앞으로 할 판이 있는 지도, 마지막 장, 다음 이야기가 붙는 완료 지도.
+      for (final (next, first) in [(101, 101), (121, 121), (126, 101)]) {
+        final phone = tester.view.physicalSize;
+        final textScale = tester.platformDispatcher.textScaleFactor;
+        tester.view.physicalSize = const Size(412, 915);
+        tester.platformDispatcher.textScaleFactorTestValue = 1;
+        SharedPreferences.setMockInitialValues(_worldTwoSeed(next));
+        await tester.pumpWidget(const BloriqApp());
+        await waitForHome(tester);
+        await tapVisible(tester, find.byKey(const ValueKey('world-entry')));
+        await tester.pump(const Duration(milliseconds: 400));
+        final play = find.byKey(const ValueKey('world-continue'));
+        expect(play, findsOneWidget, reason: 'map $next did not open');
+        tester.view.physicalSize = phone;
+        tester.platformDispatcher.textScaleFactorTestValue = textScale;
+        await tester.pump(const Duration(milliseconds: 300));
+        final map = '$name map $next';
+        final error = tester.takeException();
+        if (error != null) problems.add('$map: $error');
+        if (tester.getRect(play).bottom > height - bottom) {
+          problems.add('$map: play button is below the screen');
+        }
+        // 작은 화면에서는 스크롤로 마지막 판까지 닿아야 한다.
+        final last = find.byKey(ValueKey('world-stage-${first + 4}'));
+        await tester.ensureVisible(last);
+        await tester.pump();
+        if (tester.getRect(last).bottom > tester.getRect(play).top + 1) {
+          problems.add('$map: last stage is hidden behind the play button');
+        }
+        await tester.pumpWidget(const SizedBox());
+        await tester.pump();
+      }
+    });
+    expect(problems, isEmpty, reason: problems.take(40).join('\n'));
+  }, timeout: const Timeout(Duration(minutes: 5)));
+
+  testWidgets('a tall phone shows a whole chapter without scrolling', (
+    tester,
+  ) async {
+    await _loadFonts();
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    tester.platformDispatcher.localesTestValue = [const Locale('ko')];
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    tester.view.physicalSize = const Size(393, 852);
+    SharedPreferences.setMockInitialValues(_worldTwoSeed(101));
+    await tester.pumpWidget(const BloriqApp());
+    await waitForHome(tester);
+    await tapVisible(tester, find.byKey(const ValueKey('world-entry')));
+    await tester.pump(const Duration(milliseconds: 400));
+    final page = find.byKey(const ValueKey('world-chapter-scroll')).first;
+    final scroll = tester.state<ScrollableState>(
+      find.descendant(of: page, matching: find.byType(Scrollable)).first,
+    );
+    expect(scroll.position.maxScrollExtent, 0);
+  });
+
   testWidgets('the folded legend switches text when an icon is tapped', (
     tester,
   ) async {
