@@ -4,7 +4,9 @@ import '../domain/mechanics/echo_eraser.dart';
 import '../domain/mechanics/echo_gate.dart';
 import '../domain/mechanics/echo_hold.dart';
 import '../domain/mechanics/goal_only.dart';
+import '../domain/mechanics/mirror_pair.dart';
 import '../domain/mechanics/one_way.dart';
+import 'mirror_pair_art.dart';
 
 enum GateBadge { crystal, open, closed }
 
@@ -21,6 +23,7 @@ class BoardBadge extends CustomPainter {
     OneWay.typeId: _drawOneWay,
     GoalOnly.typeId: _drawGoalOnly,
     EchoGate.typeId: _drawGate,
+    MirrorPair.typeId: _drawMirrorPair,
   };
 
   static const _stoneBounds = Rect.fromLTWH(-.48, -.48, .96, .96);
@@ -99,6 +102,19 @@ class BoardBadge extends CustomPainter {
 
     glyph(canvas, paint, direction, gate);
     canvas.restore();
+  }
+
+  static void _drawMirrorPair(Canvas canvas, Paint _, Offset _, GateBadge _) {
+    for (var pair = 0; pair < 2; pair++) {
+      final x = pair == 0 ? -.17 : .17;
+      MirrorPairArt.ring(
+        canvas,
+        Rect.fromCenter(center: Offset(x, 0), width: .32, height: .48),
+        pair,
+        stroke: .055,
+      );
+      MirrorPairArt.arrow(canvas, Offset(x, 0), Offset(x.sign, 0), .19, pair);
+    }
   }
 
   static void _drawEraser(Canvas canvas, Paint paint, Offset _, GateBadge _) {

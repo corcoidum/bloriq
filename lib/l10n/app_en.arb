@@ -86,6 +86,7 @@
   "holdRule": "Aurora amber tile: leaving it keeps the previous echo.",
   "oneWayRule": "Stream tile: a block can leave only the way the water flows.",
   "goalOnlyRule": "Clover tile: only RIQ may step in.",
+  "mirrorPairRule": "Mirror twins — push one and its twin moves the opposite way",
   "settings": "Settings",
   "reduceMotion": "Reduce motion",
   "reduceMotionDescription": "Use quiet, instant transitions. System reduced motion is always respected.",

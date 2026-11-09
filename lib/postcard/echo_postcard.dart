@@ -8,8 +8,11 @@ import 'package:share_plus/share_plus.dart';
 import '../design/game_theme.dart';
 import '../design/star_art.dart';
 import '../game/block_art.dart';
+import '../game/mirror_pair_art.dart';
 
-/// 카드에는 게임 결과만 전달한다. 퍼즐 좌표나 이동 이력은 받지 않는다.
+typedef MirrorPostcardStep = ({int pair, int dx, int dy});
+
+/// 짝은 보드 좌표 대신 실제로 따라간 방향을 표식으로 남긴다.
 class EchoPostcardData {
   const EchoPostcardData({
     required this.levelId,
@@ -20,6 +23,7 @@ class EchoPostcardData {
     required this.movesText,
     required this.bestText,
     this.story,
+    this.mirrorSteps = const [],
   }) : assert(levelId > 0),
        assert(moves >= 0),
        assert(bestMoves >= 0),
@@ -33,6 +37,7 @@ class EchoPostcardData {
   final String movesText;
   final String bestText;
   final StoryCardContent? story;
+  final List<MirrorPostcardStep> mirrorSteps;
 }
 
 class StoryCardContent {
@@ -50,7 +55,7 @@ class StoryCardContent {
   final List<double> portraitScales;
 }
 
-/// 동일한 결과에 동일한 이미지를 만든다. 실제 이동 좌표는 사용하지 않는다.
+/// 같은 카드 데이터로 같은 이미지를 만든다.
 class EchoPostcardPainter extends CustomPainter {
   const EchoPostcardPainter(this.data, {this.colors = GameColors.light});
 
@@ -104,6 +109,7 @@ class EchoPostcardPainter extends CustomPainter {
     BlockArt.echo(canvas, const Offset(255, 470), 220, colors);
     BlockArt.block(canvas, const Offset(520, 470), 330, colors);
     BlockArt.exit(canvas, const Offset(790, 470), 230, colors);
+    if (data.mirrorSteps.isNotEmpty) _paintMirrorSteps(canvas);
     canvas.restore();
 
     for (var i = 0; i < 3; i++) {
@@ -151,6 +157,51 @@ class EchoPostcardPainter extends CustomPainter {
       2,
     );
     canvas.restore();
+  }
+
+  void _paintMirrorSteps(Canvas canvas) {
+    final steps = data.mirrorSteps;
+    final first = math.max(0, steps.length - 12);
+    final width = (steps.length - first) * 57.0 + (first > 0 ? 88 : 24);
+    final strip = Rect.fromCenter(
+      center: const Offset(540, 620),
+      width: width,
+      height: 66,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(strip, const Radius.circular(24)),
+      Paint()..color = const Color(0xe21b2c46),
+    );
+    var x = strip.left + 40;
+    if (first > 0) {
+      _text(
+        canvas,
+        '+$first',
+        Offset(strip.left + 14, 605),
+        23,
+        Colors.white,
+        FontWeight.w700,
+        0,
+      );
+      x += 64;
+    }
+    for (final step in steps.skip(first)) {
+      final center = Offset(x, strip.center.dy);
+      MirrorPairArt.ring(
+        canvas,
+        Rect.fromCircle(center: center, radius: 22),
+        step.pair,
+        stroke: 2.6,
+      );
+      MirrorPairArt.arrow(
+        canvas,
+        center,
+        Offset(step.dx.toDouble(), step.dy.toDouble()),
+        24,
+        step.pair,
+      );
+      x += 57;
+    }
   }
 
   void _paintStory(Canvas canvas, StoryCardContent story) {

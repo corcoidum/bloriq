@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 
 import 'audio/game_audio.dart';
 import 'domain/puzzle.dart';
+import 'domain/mechanics/mirror_pair.dart';
 import 'design/game_theme.dart';
 import 'game/bloriq_game.dart';
 import 'game/mechanic_legend.dart';
@@ -950,6 +951,15 @@ class _GameScreenState extends State<GameScreen>
               : t.level(_displayNumber(state.level)),
           movesText: t.moves(state.moves),
           bestText: t.bestMoves(best),
+          mirrorSteps: [
+            for (final move in controller.moveHistory)
+              if (MirrorPair.recordedShift(move) case final shift?)
+                (
+                  pair: shift.pair,
+                  dx: shift.to.x - shift.from.x,
+                  dy: shift.to.y - shift.from.y,
+                ),
+          ],
         ),
         onShareTap: () => widget.session.analytics.record(
           'postcard_share_tap',
@@ -989,7 +999,7 @@ class _GameScreenState extends State<GameScreen>
       final aligned = delta.dx.abs() >= delta.dy.abs()
           ? Offset(delta.dx, 0)
           : Offset(0, delta.dy);
-      _game!.setDrag(_dragBlock, aligned);
+      _game!.setDrag(_dragBlock, aligned, _armedPower);
       _narrative.react(
         CompanionReaction.look,
         direction: aligned.dx.sign.toInt(),
@@ -1045,7 +1055,7 @@ class _GameScreenState extends State<GameScreen>
                 ? CompanionReaction.echo
                 : CompanionReaction.idle,
           );
-          _game!.animateMove(block.id, from, previousEcho);
+          _game!.animateMove(controller.lastMove!);
           _refreshGuide();
           if (controller.state.isComplete) _beginCompletion(controller);
           final effect = controller.state.isComplete

@@ -15,9 +15,11 @@ import '../domain/mechanics/echo_eraser.dart';
 import '../domain/mechanics/echo_gate.dart';
 import '../domain/mechanics/echo_hold.dart';
 import '../domain/mechanics/goal_only.dart';
+import '../domain/mechanics/mirror_pair.dart';
 import '../domain/mechanics/one_way.dart';
 import '../domain/puzzle.dart';
 import '../world/world_theme.dart';
+import 'mirror_pair_art.dart';
 
 typedef _MechanicCanvas = ({
   Canvas canvas,
@@ -37,11 +39,17 @@ typedef _MechanicPainter = void Function(
 
 /// 드래그 중 표시할 가상 이동. 실제 게임 상태에는 적용하지 않는다.
 class DragPreview {
-  const DragPreview({required this.from, required this.target, this.nextState});
+  const DragPreview({
+    required this.from,
+    required this.target,
+    this.nextState,
+    this.twin,
+  });
 
   final Position from;
   final Position target;
   final PuzzleState? nextState;
+  final MirrorShift? twin;
   bool get isValid => nextState != null;
 }
 
@@ -68,6 +76,10 @@ class BloriqGame extends FlameGame {
   Position? _from;
   Position? _oldEcho;
   double _motion = 1;
+  static const _twinDelay = .1;
+  static final _moveSeconds = GameEffects.moveDuration.inMilliseconds / 1000;
+  MirrorShift? _twin;
+  double _twinTime = 0;
   Position? _blocked;
   double _blockedTime = 0;
 
@@ -104,6 +116,7 @@ class BloriqGame extends FlameGame {
   bool _gateTarget = false;
   String? _dragId;
   Offset _dragOffset = Offset.zero;
+  PuzzlePower? _dragPower;
   double _hintTime = 0;
   GameColors _colors = GameColors.light;
   WorldBoardSkin? _skin;
@@ -111,6 +124,7 @@ class BloriqGame extends FlameGame {
   double _celebrationProgress = 1;
   bool _isNewBest = false;
   List<MoveRecord>? _replay;
+  static const _replayDuration = 2.5;
   double _replayTime = 0;
   VoidCallback? _onReplayFinished;
 
@@ -128,7 +142,10 @@ class BloriqGame extends FlameGame {
     _colors = colors;
     _skin = skin;
     _reduceMotion = reduceMotion;
-    if (reduceMotion) _motion = 1;
+    if (reduceMotion) {
+      _motion = 1;
+      _twin = null;
+    }
   }
 
   /// Flutter의 단일 타임라인을 사용한다. 기록 저장이나 규칙을 실행하지 않는다.
@@ -155,10 +172,19 @@ class BloriqGame extends FlameGame {
         : 0;
     final dy = dx == 0 ? _dragOffset.dy.sign.toInt() : 0;
     final target = Position(block.position.x + dx, block.position.y + dy);
+    final power = _dragPower;
+    final next = power == null
+        ? previewMove(state, block.id, target)
+        : previewPower(state, power, block.id, Position(dx, dy));
     return DragPreview(
       from: block.position,
-      target: target,
-      nextState: previewMove(state, block.id, target),
+      target: power == null ? target : next?.positionOf(block.id) ?? target,
+      nextState: next,
+      twin: power == null && next != null
+          ? state.level
+                .mechanic<MirrorPair>(MirrorPair.typeId)
+                ?.shiftBetween(state, next, block.id)
+          : null,
     );
   }
 
@@ -194,19 +220,22 @@ class BloriqGame extends FlameGame {
     super.onRemove();
   }
 
-  void setDrag(String? id, [Offset offset = Offset.zero]) {
+  void setDrag(String? id, [Offset offset = Offset.zero, PuzzlePower? power]) {
     if (isReplaying) return;
     _dragId = id;
     _dragOffset = offset;
+    _dragPower = power;
   }
 
-  void animateMove(String id, Position from, Position? oldEcho) {
+  void animateMove(MoveRecord move) {
     _dragId = null;
     hintMove = null;
-    _movingId = id;
-    _from = from;
-    _oldEcho = oldEcho;
+    _movingId = move.blockId;
+    _from = move.from;
+    _oldEcho = move.previousEcho;
     _motion = _reduceMotion ? 1 : 0;
+    _twin = _reduceMotion ? null : MirrorPair.recordedShift(move);
+    _twinTime = 0;
   }
 
   void flashBlocked(Position position, {String? blockId}) {
@@ -246,6 +275,7 @@ class BloriqGame extends FlameGame {
     _movingId = null;
     _dragId = null;
     _motion = 1;
+    _twin = null;
     _blockedTime = 0;
     _impactTime = 0;
     _shakeTime = 0;
@@ -258,17 +288,15 @@ class BloriqGame extends FlameGame {
     super.update(dt);
     if (isReplaying) {
       _replayTime += dt;
-      if (_replayTime >= 2.5) {
+      if (_replayTime >= _replayDuration) {
         skipReplay();
       }
     } else {
       final wasMoving = _motion < 1;
-      _motion = _reduceMotion
-          ? 1
-          : math.min(
-              1.0,
-              _motion + dt * 1000 / GameEffects.moveDuration.inMilliseconds,
-            );
+      _motion = _reduceMotion ? 1 : math.min(1.0, _motion + dt / _moveSeconds);
+      if (_twin != null && _twinTime < _twinDelay + _moveSeconds) {
+        _twinTime += dt;
+      }
       if (wasMoving && _motion >= 1) _land();
     }
     _blockedTime = math.max(0.0, _blockedTime - dt);
@@ -288,9 +316,11 @@ class BloriqGame extends FlameGame {
   void render(Canvas canvas) {
     super.render(canvas);
     final replay = _replay;
+    var twin = _twin;
+    var twinMotion = ((_twinTime - _twinDelay) / _moveSeconds).clamp(0.0, 1.0);
     PuzzleState state;
     if (replay != null) {
-      final progress = (_replayTime / 2.5 * replay.length).clamp(
+      final progress = (_replayTime / _replayDuration * replay.length).clamp(
         0.0,
         replay.length.toDouble(),
       );
@@ -301,6 +331,10 @@ class BloriqGame extends FlameGame {
       _from = move.from;
       _oldEcho = move.previousEcho;
       _motion = _reduceMotion ? 1 : (progress - index).clamp(0.0, 1.0);
+      twin = MirrorPair.recordedShift(move);
+      // 짧은 재생 구간에서도 짝의 이동이 다음 수에 잘리지 않게 지연을 줄인다.
+      final lag = math.min(.45, _twinDelay * replay.length / _replayDuration);
+      twinMotion = ((_motion - lag) / (1 - lag)).clamp(0.0, 1.0);
     } else {
       state = controller.state;
     }
@@ -311,6 +345,7 @@ class BloriqGame extends FlameGame {
     final preview = currentPreview;
     final previewTarget = preview?.target;
     final previewState = preview?.nextState;
+    final mirror = state.level.mechanic<MirrorPair>(MirrorPair.typeId);
 
     // 착지 순간 보드 전체가 이동 방향으로 살짝 밀렸다가 돌아온다.
     canvas.save();
@@ -401,6 +436,17 @@ class BloriqGame extends FlameGame {
     for (final block in state.blocks) {
       final isGoal = block.id == Level.goalBlockId;
       var at = center(block.position);
+      final following = twin != null && twin.blockId == block.id;
+      if (following && twinMotion < 1) {
+        at = Offset.lerp(
+          center(twin.from),
+          at,
+          Curves.easeOutCubic.transform(twinMotion),
+        )!;
+        if (twinMotion > 0) {
+          MirrorPairArt.ripple(canvas, at, cell, twin.pair, twinMotion);
+        }
+      }
       final moving = block.id == _movingId && _from != null && _motion < 1;
       var along = 1.0, across = 1.0;
       var axis = Offset.zero;
@@ -443,7 +489,8 @@ class BloriqGame extends FlameGame {
           _dragOffset.dy.clamp(-maxDrag, maxDrag).toDouble(),
         );
       }
-      final escaping = state.isComplete && isGoal;
+      final escaping =
+          state.isComplete && isGoal && (!following || twinMotion >= 1);
       final celebrating = escaping && !isReplaying && !_reduceMotion;
       if (escaping &&
           ((!celebrating && _motion >= 1) ||
@@ -477,6 +524,9 @@ class BloriqGame extends FlameGame {
               _motion < 1
           ? (block.position.x - _from!.x) * .07 * math.sin(_motion * math.pi)
           : 0.0;
+      if (mirror?.partnerOf(block.id) case final link?) {
+        MirrorPairArt.marker(canvas, at, cell, link.pair, opacity: opacity);
+      }
       canvas.save();
       canvas.translate(at.dx, at.dy);
       canvas.rotate(tilt);
@@ -494,6 +544,20 @@ class BloriqGame extends FlameGame {
         opacity: opacity,
       );
       canvas.restore();
+    }
+    if (preview?.twin case final shift?) {
+      if (shift.from == shift.to) {
+        MirrorPairArt.blocked(canvas, center(shift.from), cell, shift.pair);
+      } else {
+        MirrorPairArt.arrow(
+          canvas,
+          center(shift.to),
+          center(shift.to) - center(shift.from),
+          cell * .53,
+          shift.pair,
+          opacity: .68,
+        );
+      }
     }
     if (!_reduceMotion) _drawImpact(canvas, layout);
     _drawMechanics(mechanicCanvas, badges: true);

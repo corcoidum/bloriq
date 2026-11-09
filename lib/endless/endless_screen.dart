@@ -337,7 +337,7 @@ class _EndlessScreenState extends State<EndlessScreen> {
         final target = Position(from.x + dx, from.y + dy);
         if (controller.move(block.id, target)) {
           _run!.pushed();
-          _game!.animateMove(block.id, from, previousEcho);
+          _game!.animateMove(controller.lastMove!);
           final complete = controller.state.isComplete;
           _audio.play(
             complete
