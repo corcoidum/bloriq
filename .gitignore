@@ -11,7 +11,7 @@ bloriq-playtest*.json
 __pycache__/
 android/.gradle/
 android/local.properties
-android/key.properties
+key.properties
 *.jks
 *.keystore
 *.iml
