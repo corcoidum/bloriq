@@ -1,4 +1,4 @@
-"""세계 설정에 맞춰 비어 있는 슬롯만 생성한다. --check는 공개 판을 읽어서 검증한다."""
+"""세계 설정에 맞춰 슬롯을 생성하고 --check로 기존 판을 검증한다."""
 from __future__ import annotations
 
 import argparse
@@ -17,15 +17,17 @@ from tempfile import TemporaryDirectory
 from time import monotonic
 from typing import Iterator, NamedTuple
 
-from tools.level_audit import canonical, similarity
+from tools.level_audit import SIMILARITY_THRESHOLD, canonical, similarity
 from tools.mechanics import DIRECTIONS, REGISTRY, Position, populate_random_rules
 from tools.validate_levels import (
+    Move,
     SearchBudgetExceeded,
     available_powers,
     check_world,
     decorative_mechanic,
     first_level_id,
     power_profile,
+    published_worlds,
     record_solution,
     solve_or_none,
     write_levels,
@@ -86,6 +88,8 @@ def random_level(world: int, index: int, slot: Slot, rng: random.Random) -> dict
         'obstacles': [take() for _ in range(rng.randint(*slot.walls))],
     }
     populate_random_rules(level, slot.mechanics, rng, take)
+    if slot.rule_filter is not None and not slot.rule_filter(level['specialRules']):
+        raise ValueError('Generated rules do not match the slot')
     level['availablePowers'] = list(slot.powers)
     return level
 
@@ -113,8 +117,15 @@ def mutate(level: dict, slot: Slot, rng: random.Random) -> dict:
     return level
 
 
-def full_check(level: dict, slot: Slot, minimum: int, relaxed: bool, deadline: float) -> dict | None:
-    profile = power_profile(level, max_states=slot.full_states, deadline=deadline)
+def full_check(
+    level: dict, slot: Slot, solution: list[Move], relaxed: bool, deadline: float,
+) -> dict | None:
+    minimum = len(solution)
+    if decorative_mechanic(
+        level, minimum, powers=slot.powers, max_states=slot.full_states, deadline=deadline,
+    ) is not None:
+        return None
+    profile = power_profile(level, max_states=slot.full_states, deadline=deadline, solution=solution)
     bare = profile['bareHandedMoves']
     if slot.featured is not None:
         if slot.required or bare is None:
@@ -125,16 +136,13 @@ def full_check(level: dict, slot: Slot, minimum: int, relaxed: bool, deadline: f
         else:
             if not minimum < bare <= 40:
                 return None
-            without = solve_or_none(
-                level, powers=tuple(power for power in slot.powers if power != slot.featured),
-                max_states=slot.full_states, deadline=deadline,
-            )
-            if without is not None and len(without) <= minimum:
-                return None
-    if decorative_mechanic(
-        level, minimum, powers=slot.powers, max_states=slot.full_states, deadline=deadline,
-    ) is not None:
-        return None
+            if len(slot.powers) > 1:
+                without = solve_or_none(
+                    level, powers=tuple(power for power in slot.powers if power != slot.featured),
+                    max_states=slot.full_states, deadline=deadline, max_moves=minimum,
+                )
+                if without is not None:
+                    return None
     return profile
 
 
@@ -144,6 +152,7 @@ class Job(NamedTuple):
     slot: Slot
     seed: int
     seen: frozenset[str]
+    similar_to: tuple[dict, ...] = ()
 
 
 class Result(NamedTuple):
@@ -154,7 +163,7 @@ class Result(NamedTuple):
 
 def design(job: Job) -> Result:
     """최단 수를 키우는 언덕 오르기. 슬롯 한도에 가까워지면 목표를 완화한다."""
-    world, index, slot, seed, seen = job
+    world, index, slot, seed, seen, similar_to = job
     rng = random.Random(seed)
     started = monotonic()
     deadline = started + slot.max_seconds
@@ -170,23 +179,30 @@ def design(job: Job) -> Result:
             while stale < 400 and monotonic() < deadline:
                 candidate = mutate(current, slot, rng)
                 elapsed = monotonic() - started
-                low = max(1, slot.target_moves - min(3, int(elapsed / (slot.max_seconds / 6))))
+                tolerance = slot.move_tolerance
+                if tolerance is None:
+                    low = max(1, slot.target_moves - min(3, int(elapsed / (slot.max_seconds / 6))))
+                    high = slot.target_moves + 2
+                else:
+                    low = max(1, slot.target_moves - tolerance)
+                    high = slot.target_moves + tolerance
                 try:
                     quick = solve_or_none(
                         candidate, powers=slot.powers, max_states=slot.quick_states,
-                        deadline=deadline,
+                        deadline=deadline, max_moves=high if tolerance is not None else None,
                     )
                     if quick is None:
                         stale += 1
                         continue
                     minimum = len(quick)
-                    candidate_score = max(0, slot.target_moves - minimum)
+                    difference = slot.target_moves - minimum
+                    candidate_score = max(0, difference) if tolerance is None else abs(difference)
                     if score is not None and candidate_score > score:
                         stale += 1
                         continue
                     profile = (
-                        full_check(candidate, slot, minimum, elapsed > slot.max_seconds * .6, deadline)
-                        if low <= minimum <= slot.target_moves + 2 else None
+                        full_check(candidate, slot, quick, elapsed > slot.max_seconds * .6, deadline)
+                        if low <= minimum <= high else None
                     )
                 except SearchBudgetExceeded:
                     # 예산 초과는 해가 없다는 증거가 아니다. 후보만 버린다.
@@ -198,7 +214,9 @@ def design(job: Job) -> Result:
                     continue
                 stale = 0 if score is None or candidate_score < score else stale + 1
                 current, score = candidate, candidate_score
-                if profile is not None and canonical(candidate) not in seen:
+                if (profile is not None and canonical(candidate) not in seen
+                        and not any(similarity(candidate, other) >= SIMILARITY_THRESHOLD
+                                    for other in similar_to)):
                     solution = profile.pop('solution')
                     level = {
                         **candidate, **profile, 'revision': 1, 'featuredPower': slot.featured,
@@ -241,7 +259,8 @@ def signatures(existing: dict[int, dict], previous: list[dict]) -> dict[str, int
     return seen
 
 
-def check_existing(existing: dict[int, dict], world: int, slots: tuple[Slot, ...]) -> None:
+def check_existing(existing: dict[int, dict], world: int, slots: tuple[Slot, ...],
+                   previous: list[dict]) -> None:
     if len(existing) != len(slots):
         raise ValueError(f'World {world}: {len(existing)}/{len(slots)} stages present')
     for index, slot in enumerate(slots):
@@ -254,6 +273,15 @@ def check_existing(existing: dict[int, dict], world: int, slots: tuple[Slot, ...
                 or level.get('featuredPower') != slot.featured
                 or 'solution' not in level):
             raise ValueError(f"Level {level['id']}: slot metadata or solution mismatch")
+        if slot.rule_filter is not None and not slot.rule_filter(level['specialRules']):
+            raise ValueError(f"Level {level['id']}: rules do not match the slot")
+        if (slot.move_tolerance is not None
+                and abs(level['minimumMoves'] - slot.target_moves) > slot.move_tolerance):
+            raise ValueError(f"Level {level['id']}: outside the target move range")
+        if slot.reject_similar:
+            for other in (*previous, *(existing[i] for i in range(index))):
+                if similarity(level, other) >= SIMILARITY_THRESHOLD:
+                    raise ValueError(f"Similar levels: {other['id']} and {level['id']}")
     # 공개판은 생성 당시의 하한 완화와 수동 검토 결과를 보존한다.
     check_world(list(existing.values()), world,
                 budgets=tuple(slot.full_states for slot in slots))
@@ -298,6 +326,7 @@ def generate(
         return True
 
     accepted = 0
+    strict = {job.index for job in jobs if job.slot.reject_similar}
     dirty = False
     remaining = len(jobs)
     checkpoint_at = monotonic() + CHECKPOINT_SECONDS
@@ -319,15 +348,18 @@ def generate(
                             logger.info('슬롯 %d 중복 판 %d 제외, 예산 초과 후보 %d개 폐기',
                                         index + 1, seen[signature], over_budget)
                         else:
-                            for other in levels.values():
-                                if similarity(level, other) >= .8:
-                                    logger.info('유사 판 %d, %d', level['id'], other['id'])
-                            levels[index] = level
-                            seen[signature] = level['id']
-                            accepted += 1
-                            dirty = True
-                            logger.info('슬롯 %d 완료 (%d수), 예산 초과 후보 %d개 폐기',
-                                        index + 1, level['minimumMoves'], over_budget)
+                            similar = next((other for other in levels.values()
+                                            if other['id'] != level['id']
+                                            and similarity(level, other) >= SIMILARITY_THRESHOLD), None)
+                            if similar is not None:
+                                logger.info('유사 판 %d, %d', level['id'], similar['id'])
+                            if similar is None or index not in strict:
+                                levels[index] = level
+                                seen[signature] = level['id']
+                                accepted += 1
+                                dirty = True
+                                logger.info('슬롯 %d 완료 (%d수), 예산 초과 후보 %d개 폐기',
+                                            index + 1, level['minimumMoves'], over_budget)
                 if monotonic() >= checkpoint_at:
                     if dirty:
                         checkpoint(output, levels)
@@ -350,11 +382,16 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument('--workers', type=int, default=8)
     parser.add_argument('--seed', type=int, default=20261107)
     parser.add_argument('--check', action='store_true', help='기존 판만 검증')
+    parser.add_argument('--replace', action='store_true', help='선택한 슬롯에 새 판이 나오면 교체')
     args = parser.parse_args(argv)
     if args.world < 2 or args.workers < 1:
         parser.error('--world는 2 이상, --workers는 1 이상이어야 합니다.')
     if args.check and args.only is not None:
         parser.error('--check는 세계 전체를 검증합니다.')
+    if args.replace and args.only is None:
+        parser.error('--replace는 --only와 함께 사용합니다.')
+    if args.replace and args.world in dict(published_worlds()):
+        parser.error('공개된 세계의 판은 교체할 수 없습니다.')
     try:
         slots = load_slots(args.world)
         for index, slot in enumerate(slots, 1):
@@ -371,7 +408,7 @@ def main(argv: list[str] | None = None) -> None:
         if args.check:
             levels = load_existing(output, args.world, len(slots))
             signatures(levels, previous)
-            check_existing(levels, args.world, slots)
+            check_existing(levels, args.world, slots, previous)
             return
 
         log_dir = ROOT / 'build/design_logs'
@@ -385,8 +422,16 @@ def main(argv: list[str] | None = None) -> None:
             logger = logging.getLogger(__name__)
             levels = load_existing(output, args.world, len(slots))
             seen = signatures(levels, previous)
-            jobs = [Job(args.world, index, slots[index], args.seed + 7919 * index, frozenset(seen))
-                    for index in (number - 1 for number in selected) if index not in levels]
+            jobs = [
+                Job(
+                    args.world, index, slots[index], args.seed + 7919 * index, frozenset(seen),
+                    tuple(other for other in (*previous, *levels.values())
+                          if other['id'] != first_level_id(args.world) + index)
+                    if slots[index].reject_similar else (),
+                )
+                for index in (number - 1 for number in selected)
+                if args.replace or index not in levels
+            ]
             logger.info('세계 %d, %d슬롯 생성, 기존 %d판 유지', args.world, len(jobs), len(levels))
             if not generate(jobs, levels, seen, output, args.workers, logger):
                 parser.exit(1, '완료된 판을 저장했습니다. 같은 명령으로 남은 슬롯을 이어서 생성할 수 있습니다.\n')

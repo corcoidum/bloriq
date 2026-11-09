@@ -9,9 +9,9 @@ from time import monotonic
 from typing import Any
 
 if __package__:
-    from .mechanics import Board, DIRECTIONS, MechanicMove, Position, State, parse_mechanics
+    from .mechanics import Board, BoardMechanic, DIRECTIONS, MechanicMove, Position, State, parse_mechanics
 else:
-    from mechanics import Board, DIRECTIONS, MechanicMove, Position, State, parse_mechanics
+    from mechanics import Board, BoardMechanic, DIRECTIONS, MechanicMove, Position, State, parse_mechanics
 
 ROOT = Path(__file__).resolve().parents[1]
 LEVELS_FILE = ROOT / 'assets/levels/levels.json'
@@ -35,6 +35,7 @@ def validate_level(
     powers: tuple[str, ...] | frozenset[str] = (),
     must_use: str | None = None,
     deadline: float | None = None,
+    max_moves: int | None = None,
 ) -> list[Move]:
     """powers 는 아직 쓰지 않은 권능이다. 각 권능은 한 번, 한 수로 센다.
     must_use 가 있으면 그 권능을 쓴 해만 정답으로 본다(강조 권능 확인용)."""
@@ -65,6 +66,12 @@ def validate_level(
     assert not ({start, exit_point} & (set(blocks) | walls))
     mechanics = parse_mechanics(level, point, walls=walls, disabled_rule=disabled_rule,
                                 gate_locked=gate_locked)
+    transforms = [rule.transformMove for rule in mechanics
+                  if type(rule).transformMove is not BoardMechanic.transformMove]
+    echo_rules = [rule.nextEcho for rule in mechanics
+                  if type(rule).nextEcho is not BoardMechanic.nextEcho]
+    keyed_rules = [rule for rule in mechanics
+                   if type(rule).stateKey is not BoardMechanic.stateKey]
     board = Board(width, height, exit_point, walls, ('goal', *ids), mechanics)
     assert all(power in POWERS for power in powers)
 
@@ -110,11 +117,11 @@ def validate_level(
         source = state.positions[index]
         positions = state.positions[:index] + (dest,) + state.positions[index + 1:]
         # 일반/권능 착지 → 기믹 배치 변환 → 잔상. 봉인·교대의 잔상 규칙이 우선한다.
-        for mechanic in mechanics:
-            positions = mechanic.transformMove(state, move, positions)
+        for transform in transforms:
+            positions = transform(state, move, positions)
         echo = source
-        for mechanic in mechanics:
-            echo = mechanic.nextEcho(state, move, positions, echo)
+        for next_echo in echo_rules:
+            echo = next_echo(state, move, positions, echo)
         if power == SEAL:
             echo = state.echo
         elif power == SWAP:
@@ -124,7 +131,9 @@ def validate_level(
 
     def state_key(state: State) -> tuple:
         key = (state.positions, state.echo, state.powers)
-        extra = tuple((mechanic.type, value) for mechanic in mechanics
+        if not keyed_rules:
+            return key
+        extra = tuple((mechanic.type, value) for mechanic in keyed_rules
                       if (value := mechanic.stateKey(state)) is not None)
         return (*key, extra) if extra else key
 
@@ -139,6 +148,8 @@ def validate_level(
                 check_deadline()
             expanded += 1
         state, key = pending.popleft()
+        if max_moves is not None and state.moves >= max_moves:
+            break
         for candidate in successors(state):
             next_state = apply(state, candidate)
             next_key = state_key(next_state)
@@ -162,9 +173,11 @@ def validate_level(
                     cursor, step_move = link
                     path.append(step_move)
                 return path[::-1]
-            pending.append((next_state, next_key))
+            if max_moves is None or next_state.moves < max_moves:
+                pending.append((next_state, next_key))
     check_deadline()
-    raise ValueError(f"Level {level['id']} has no solution")
+    limit = f' within {max_moves} moves' if max_moves is not None else ''
+    raise ValueError(f"Level {level['id']} has no solution{limit}")
 
 
 def solve_or_none(level: dict, **kwargs) -> list[Move] | None:
@@ -185,14 +198,19 @@ def available_powers(level: dict) -> tuple[str, ...]:
 
 def power_profile(
     level: dict, max_states: int = 2_000_000, *, deadline: float | None = None,
+    solution: list[Move] | None = None,
 ) -> dict:
     """그 스테이지의 권능을 모두 가진 최소 수, 맨손 최소 수, 꼭 필요한 권능을 계산한다."""
     powers = available_powers(level)
-    best = validate_level(level, powers=powers, max_states=max_states, deadline=deadline)
+    best = (validate_level(level, powers=powers, max_states=max_states, deadline=deadline)
+            if solution is None else solution)
     bare = solve_or_none(level, max_states=max_states, deadline=deadline) if powers else best
-    required = [p for p in powers
-                if solve_or_none(level, powers=tuple(q for q in powers if q != p),
-                                 max_states=max_states, deadline=deadline) is None]
+    if len(powers) == 1:
+        required = list(powers) if bare is None else []
+    else:
+        required = [p for p in powers
+                    if solve_or_none(level, powers=tuple(q for q in powers if q != p),
+                                     max_states=max_states, deadline=deadline) is None]
     return {'minimumMoves': len(best), 'bareHandedMoves': None if bare is None else len(bare),
             'requiredPowers': required, 'solution': best}
 
@@ -202,13 +220,22 @@ def decorative_mechanic(
     max_states: int = 200_000, deadline: float | None = None,
 ) -> str | None:
     """하나씩 끄고 다시 풀어도 최단 수가 같은 첫 기믹을 찾는다."""
-    for kind in dict.fromkeys(rule['type'] for rule in level['specialRules']):
+    rules = level['specialRules']
+    # 원래 최단 수 안에서 해가 없으면 이미 기믹의 효과를 확인한 셈이다.
+    limits = dict(powers=powers, max_states=max_states, deadline=deadline, max_moves=minimum)
+    for kind in dict.fromkeys(rule['type'] for rule in rules):
         alternative = solve_or_none(
-            level, powers=powers, disabled_rule=kind, gate_locked=kind == 'echoGate',
-            max_states=max_states, deadline=deadline,
+            level, disabled_rule=kind, gate_locked=kind == 'echoGate', **limits,
         )
         if alternative is not None and len(alternative) == minimum:
             return kind
+        matches = [index for index, rule in enumerate(rules) if rule['type'] == kind]
+        if len(matches) > 1:
+            for pair, index in enumerate(matches, 1):
+                reduced = {**level, 'specialRules': rules[:index] + rules[index + 1:]}
+                alternative = solve_or_none(reduced, **limits)
+                if alternative is not None and len(alternative) == minimum:
+                    return f'{kind} #{pair}'
     return None
 
 
@@ -217,13 +244,25 @@ def first_level_id(world: int) -> int:
     return (world - 1) * 100 + 1
 
 
-def expansion_worlds() -> list[tuple[int, Path]]:
+def published_worlds() -> list[tuple[int, Path]]:
     """saga.json 에서 공개된 확장 세계(세계 2부터)의 번호와 레벨 파일."""
     if not SAGA_FILE.exists():
         return []
     saga = json.loads(SAGA_FILE.read_text(encoding='utf-8'))
     return [(world['number'], ROOT / world['levels']) for world in saga['worlds']
             if world['status'] == 'playable' and world['number'] >= 2]
+
+
+def expansion_worlds() -> list[tuple[int, Path]]:
+    """공개 전 세계의 생성 결과도 같은 검증과 풀이 기록 경로에 넣는다."""
+    paths = dict(published_worlds())
+    for path in LEVELS_FILE.parent.glob('world*.json'):
+        suffix = path.stem.removeprefix('world')
+        if suffix.isdecimal():
+            number = int(suffix)
+            if number >= 2 and path.stem == f'world{number}':
+                paths.setdefault(number, path)
+    return sorted(paths.items())
 
 
 def record_solution(level: dict, moves: list[Move], *, write: bool) -> None:
@@ -294,7 +333,7 @@ def check_world(
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--write-solutions', action='store_true',
-                        help='공개 캠페인 레벨 JSON에 검증한 최단 풀이를 기록한다')
+                        help='캠페인 레벨 JSON에 검증한 최단 풀이를 기록한다')
     args = parser.parse_args()
     levels = json.loads(LEVELS_FILE.read_text(encoding='utf-8'))
     assert [level['id'] for level in levels] == list(range(1, len(levels) + 1))

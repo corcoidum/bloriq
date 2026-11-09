@@ -7,7 +7,14 @@ from time import monotonic
 from unittest.mock import patch
 
 from tools.design_world import Job, checkpoint, design, load_existing, pt
-from tools.validate_levels import SearchBudgetExceeded, decorative_mechanic, validate_level
+from tools.validate_levels import (
+    SearchBudgetExceeded,
+    decorative_mechanic,
+    expansion_worlds,
+    published_worlds,
+    solve_or_none,
+    validate_level,
+)
 from tools.worlds import Slot
 
 
@@ -33,6 +40,27 @@ class WorldGeneratorTest(unittest.TestCase):
             validate_level(level, max_states=1)
         with self.assertRaises(TimeoutError):
             validate_level(level, deadline=monotonic() - 1)
+
+    def test_move_limit_includes_solutions_on_its_boundary(self):
+        level = board(201)
+        self.assertIsNone(solve_or_none(level, max_moves=1))
+        self.assertEqual(validate_level(level, max_moves=2), validate_level(level))
+
+    def test_validation_discovers_drafts_separately_from_publication(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            saga = root / 'saga.json'
+            saga.write_text(json.dumps({'worlds': [
+                {'number': 2, 'status': 'playable', 'levels': 'world2.json'},
+                {'number': 3, 'status': 'planned'},
+            ]}))
+            draft = root / 'world3.json'
+            draft.write_text('[]')
+            with patch.multiple('tools.validate_levels', ROOT=root,
+                                LEVELS_FILE=root / 'levels.json', SAGA_FILE=saga):
+                published = [(2, root / 'world2.json')]
+                self.assertEqual(published_worlds(), published)
+                self.assertEqual(expansion_worlds(), published + [(3, draft)])
 
     def test_unused_mechanic_is_decorative(self):
         level = board(201)

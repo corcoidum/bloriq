@@ -5,11 +5,13 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+from typing import Iterable
 
 from tools.mechanics import REGISTRY
 from tools.validate_levels import available_powers, decorative_mechanic, expansion_worlds, validate_level
 
 ROOT = Path(__file__).resolve().parents[1]
+SIMILARITY_THRESHOLD = .8
 
 
 def orientations(level: dict) -> list[frozenset[str]]:
@@ -55,13 +57,14 @@ def similarity(a: dict, b: dict) -> float:
     return max(len(left & right) / len(left | right) for right in orientations(b))
 
 
-def inspect(levels: list[dict]) -> list[dict]:
-    seen: dict[str, int] = {}
+def inspect(levels: list[dict], *, prior_levels: Iterable[dict] = ()) -> list[dict]:
+    earlier = list(prior_levels)
+    seen = {canonical(level): level['id'] for level in earlier}
     reports = []
     known_rules: set[str] = set()
     previous = 0
     previous_states = 0
-    for index, level in enumerate(levels):
+    for level in levels:
         stats: dict[str, int] = {}
         # 월드 2 스테이지는 네 권능을 한 번씩 쓸 수 있는 상태로 최단 해를 잰다.
         expansion = level.get('world', 1) >= 2
@@ -82,8 +85,8 @@ def inspect(levels: list[dict]) -> list[dict]:
             warnings.append('minimum_move_jump')
         if previous_states and stats['visited'] > max(previous_states * 4, previous_states + 1000):
             warnings.append('search_space_jump')
-        for other in levels[:index]:
-            if similarity(level, other) >= .8:
+        for other in earlier:
+            if similarity(level, other) >= SIMILARITY_THRESHOLD:
                 warnings.append(f"similar_to_{other['id']}")
         decorative = decorative_mechanic(level, len(solution), powers=powers, max_states=budget)
         if decorative is not None:
@@ -92,6 +95,7 @@ def inspect(levels: list[dict]) -> list[dict]:
                         'visited': stats['visited'], 'fingerprint': hashlib.sha256(identity.encode()).hexdigest(),
                         'warnings': warnings, 'solution': solution,
                         'manual': level.get('reviewStatus', 'existing_content')})
+        earlier.append(level)
         known_rules.update(rules)
         previous = len(solution)
         previous_states = stats['visited']
@@ -102,17 +106,20 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument('--include-drafts', action='store_true')
     parser.add_argument('--world', type=int, default=1,
-                        help='검토할 세계 번호(assets/worlds/saga.json 기준). 기본 1')
+                        help='검토할 공개 또는 제작 중인 세계 번호. 기본 1')
     parser.add_argument('--world2', action='store_const', const=2, dest='world', help='--world 2 와 같다')
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
-    path = ROOT / 'assets/levels/levels.json'
-    if args.world >= 2:
-        path = dict(expansion_worlds())[args.world]
+    paths = {1: ROOT / 'assets/levels/levels.json', **dict(expansion_worlds())}
+    path = paths.get(args.world)
+    if path is None:
+        parser.error(f'No level file for world {args.world}')
     levels = json.loads(path.read_text(encoding='utf-8'))
     if args.include_drafts:
         levels += json.loads((ROOT / 'assets/levels/draft_levels_26_40.json').read_text(encoding='utf-8'))
-    reports = inspect(levels)
+    prior_levels = (level for world, earlier in paths.items() if world < args.world
+                    for level in json.loads(earlier.read_text(encoding='utf-8')))
+    reports = inspect(levels, prior_levels=prior_levels)
     lines = ['# 레벨 자동 검토', '', '경고는 휴리스틱이며 수동 플레이 검토를 대체하지 않습니다.', '',
              '| ID | revision | 최소 이동 | 탐색 상태 | 경고 | 수동 상태 |', '|---|---|---|---|---|---|']
     for report in reports:

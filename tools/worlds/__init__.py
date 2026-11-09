@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from importlib import import_module
 from math import isfinite
+from typing import Callable
 
 
 @dataclass(frozen=True)
@@ -19,6 +20,9 @@ class Slot:
     quick_states: int = 250_000
     full_states: int = 2_000_000
     max_seconds: float = 600
+    move_tolerance: int | None = None
+    rule_filter: Callable[[list[dict]], bool] | None = None
+    reject_similar: bool = False
 
     def __post_init__(self) -> None:
         width, height = self.size
@@ -31,6 +35,8 @@ class Slot:
             raise ValueError('A slot needs positive state budgets and a time limit')
         if self.featured not in (None, *self.powers) or (self.required and self.featured is None):
             raise ValueError('A required or featured power must be available in the slot')
+        if self.move_tolerance is not None and self.move_tolerance < 0:
+            raise ValueError('Move tolerance must be nonnegative')
 
 
 def load_slots(world: int) -> tuple[Slot, ...]:
