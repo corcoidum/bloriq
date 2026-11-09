@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:bloriq/constellation/constellation_atlas.dart';
 import 'package:bloriq/design/game_theme.dart';
+import 'package:bloriq/design/star_art.dart';
 import 'package:bloriq/l10n/app_localizations.dart';
 import 'package:bloriq/progress/progress_repository.dart';
 import 'package:bloriq/settings/game_settings.dart';
@@ -46,6 +47,7 @@ Future<int?> _open(
   required String language,
 }) async {
   final session = await loadStorySession(tester);
+  await tester.runAsync(() => StarArt.loadPortrait(StarArt.lunabel));
   final settings = GameSettings(reduceMotion: true);
   int? picked;
   var closed = false;
@@ -91,6 +93,14 @@ Future<int?> _open(
   expect(tester.takeException(), isNull);
   await tapVisible(tester, find.byKey(const ValueKey('atlas-chapter-1')));
   expect(find.byKey(const ValueKey('atlas-detail-1')), findsOneWidget);
+  final portrait = find.byKey(
+    const ValueKey('constellation-guardian-portrait'),
+  );
+  expect(portrait, findsOneWidget);
+  expect(
+    tester.widget<RawImage>(portrait).image,
+    StarArt.portraits[StarArt.lunabel],
+  );
   await tapVisible(tester, find.byKey(const ValueKey('atlas-back')));
   await tester.scrollUntilVisible(
     find.byKey(const ValueKey('atlas-chapter-2')),
@@ -101,6 +111,7 @@ Future<int?> _open(
     ),
   );
   await tapVisible(tester, find.byKey(const ValueKey('atlas-chapter-2')));
+  expect(portrait, findsNothing);
   await tester.scrollUntilVisible(
     find.byKey(const ValueKey('atlas-play-7')),
     120,

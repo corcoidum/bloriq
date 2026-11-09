@@ -81,7 +81,7 @@ class VictoryConstellation extends StatelessWidget {
                     spark: animatingNode ? _seg(p, .78, .90) : null,
                     nodeReveal: animatingNode ? _seg(p, .88, .97) : 1,
                     lineReveal: animatingNode ? _seg(p, .90, 1) : 1,
-                    silhouetteReveal: event?.chapterCompleted == true
+                    portraitReveal: event?.chapterCompleted == true
                         ? _seg(p, .92, 1)
                         : 1,
                     golden: event?.becameGolden == true

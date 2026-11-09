@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../design/game_theme.dart';
 import '../design/keep_all_text.dart';
-import '../design/star_art.dart';
+import 'board_badge.dart';
 
 /// 판 아래 설명 한 줄의 종류. 보드 그림과 같은 아이콘을 쓴다.
 enum LegendKind { eraser, hold, oneWay, goalOnly, gate, note }
@@ -102,22 +102,6 @@ class MechanicLegend extends StatelessWidget {
     return math.max(tallestNote, total);
   }
 
-  static const _sprites = {
-    LegendKind.eraser: 'tile_dandelion',
-    LegendKind.hold: 'tile_amber',
-    LegendKind.oneWay: 'tile_stream',
-    LegendKind.goalOnly: 'tile_clover',
-    LegendKind.gate: 'switch_crystal',
-  };
-
-  static const _fallbackIcons = {
-    LegendKind.eraser: Icons.close_rounded,
-    LegendKind.hold: Icons.pause_rounded,
-    LegendKind.oneWay: Icons.arrow_forward_rounded,
-    LegendKind.goalOnly: Icons.play_arrow_rounded,
-    LegendKind.gate: Icons.diamond_outlined,
-  };
-
   @override
   Widget build(BuildContext context) {
     if (compact) return _CompactLegend(items: items, lines: lines);
@@ -140,10 +124,7 @@ class MechanicLegend extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                SizedBox.square(
-                  dimension: _iconSize,
-                  child: _icon(item.kind, colors),
-                ),
+                SizedBox.square(dimension: _iconSize, child: _icon(item.kind)),
                 const SizedBox(width: _iconGap),
                 Expanded(child: KeepAllText(item.text, style: style)),
               ],
@@ -153,23 +134,18 @@ class MechanicLegend extends StatelessWidget {
     );
   }
 
-  static Widget _icon(LegendKind kind, GameColors colors) {
-    final image = StarArt.garden[_sprites[kind]];
-    if (image == null) {
-      return Icon(
-        _fallbackIcons[kind] ?? Icons.auto_awesome,
-        size: 22,
-        color: colors.echoInk,
-      );
-    }
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface.withValues(alpha: .55),
-        borderRadius: BorderRadius.circular(9),
-      ),
-      padding: const EdgeInsets.all(2),
-      child: RawImage(image: image, fit: BoxFit.contain),
-    );
+  static Widget _icon(LegendKind kind) {
+    final mark = switch (kind) {
+      LegendKind.eraser => BoardMark.eraser,
+      LegendKind.hold => BoardMark.hold,
+      LegendKind.oneWay => BoardMark.oneWay,
+      LegendKind.goalOnly => BoardMark.goalOnly,
+      LegendKind.gate => BoardMark.crystal,
+      LegendKind.note => null,
+    };
+    return mark == null
+        ? const SizedBox.shrink()
+        : CustomPaint(painter: BoardBadge(mark));
   }
 }
 
@@ -207,7 +183,7 @@ class _CompactLegendState extends State<_CompactLegend> {
         if (items.length == 1) ...[
           SizedBox.square(
             dimension: MechanicLegend._iconSize,
-            child: MechanicLegend._icon(items.single.kind, colors),
+            child: MechanicLegend._icon(items.single.kind),
           ),
           const SizedBox(width: MechanicLegend._iconGap),
         ] else ...[
@@ -228,7 +204,7 @@ class _CompactLegendState extends State<_CompactLegend> {
                         opacity: item.kind == current.kind ? 1 : .55,
                         child: SizedBox.square(
                           dimension: MechanicLegend._iconSize,
-                          child: MechanicLegend._icon(item.kind, colors),
+                          child: MechanicLegend._icon(item.kind),
                         ),
                       ),
                     ),

@@ -9,7 +9,7 @@ import '../settings/game_settings.dart';
 import 'constellation_painter.dart';
 import 'constellation_state.dart';
 
-/// 별자리 한 장. 완성된 별자리만 수호 정령의 흐린 실루엣을 드러낸다.
+/// 별자리 한 장. 완성된 별자리에는 별점과 수호 정령의 초상을 나란히 보여 준다.
 class ConstellationArt extends StatefulWidget {
   const ConstellationArt({
     super.key,
@@ -20,7 +20,7 @@ class ConstellationArt extends StatefulWidget {
     this.nodeReveal = 1,
     this.spark,
     this.lineReveal = 1,
-    this.silhouetteReveal = 1,
+    this.portraitReveal = 1,
     this.golden,
     this.lit,
   });
@@ -32,7 +32,7 @@ class ConstellationArt extends StatefulWidget {
   final double nodeReveal;
   final double? spark;
   final double lineReveal;
-  final double silhouetteReveal;
+  final double portraitReveal;
 
   /// 연출 중에는 저장된 상태 대신 보여 줄 값을 덮어쓴다.
   final double? golden;
@@ -46,19 +46,19 @@ class _ConstellationArtState extends State<ConstellationArt> {
   @override
   void initState() {
     super.initState();
-    _loadSilhouette();
+    _loadPortrait();
   }
 
   @override
   void didUpdateWidget(covariant ConstellationArt oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.guardianAsset != widget.guardianAsset) _loadSilhouette();
+    if (oldWidget.guardianAsset != widget.guardianAsset) _loadPortrait();
   }
 
-  void _loadSilhouette() {
+  void _loadPortrait() {
     final asset = widget.guardianAsset;
     if (asset == null || StarArt.portraits.containsKey(asset)) return;
-    // 실루엣을 못 읽어도 별과 선은 그대로 그린다.
+    // 초상을 못 읽어도 별과 선은 그린다.
     StarArt.loadPortrait(asset).then((_) {
       if (mounted) setState(() {});
     }, onError: (_) {});
@@ -69,24 +69,58 @@ class _ConstellationArtState extends State<ConstellationArt> {
     final chapter = widget.chapter;
     final lit = widget.lit ?? chapter.litMask;
     final complete = lit.every((value) => value);
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    return RepaintBoundary(
-      child: CustomPaint(
-        painter: ConstellationPainter(
-          definition: chapter.definition,
-          lit: lit,
-          colors: GameTheme.colorsOf(context),
-          golden: widget.golden ?? (chapter.golden ? 1 : 0),
-          pendingNode: widget.pendingNode,
-          highlightNode: widget.highlightNode,
-          nodeReveal: widget.nodeReveal,
-          spark: widget.spark,
-          lineReveal: widget.lineReveal,
-          silhouette: complete ? StarArt.portraits[widget.guardianAsset] : null,
-          silhouetteOpacity: (dark ? .14 : .10) * widget.silhouetteReveal,
-        ),
-        child: const SizedBox.expand(),
+    final colors = GameTheme.colorsOf(context);
+    final portrait = complete ? StarArt.portraits[widget.guardianAsset] : null;
+    final chart = CustomPaint(
+      painter: ConstellationPainter(
+        definition: chapter.definition,
+        lit: lit,
+        colors: colors,
+        golden: widget.golden ?? (chapter.golden ? 1 : 0),
+        pendingNode: widget.pendingNode,
+        highlightNode: widget.highlightNode,
+        nodeReveal: widget.nodeReveal,
+        spark: widget.spark,
+        lineReveal: widget.lineReveal,
       ),
+      child: const SizedBox.expand(),
+    );
+    return RepaintBoundary(
+      child: portrait == null
+          ? chart
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  flex: 56,
+                  child: Opacity(
+                    opacity: widget.portraitReveal.clamp(0.0, 1.0),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: RadialGradient(
+                          colors: [
+                            colors.primary.withValues(alpha: .14),
+                            colors.primary.withValues(alpha: 0),
+                          ],
+                        ),
+                      ),
+                      child: RawImage(
+                        key: const ValueKey('constellation-guardian-portrait'),
+                        image: portrait,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.medium,
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 44,
+                  child: Center(
+                    child: AspectRatio(aspectRatio: 1.1, child: chart),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }
