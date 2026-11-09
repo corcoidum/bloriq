@@ -213,6 +213,10 @@ const titles = <TitleDefinition>[
     'lighthouse_star_keeper',
     ProgressionText('구름바다의 별지기', 'Star Keeper of the Cloud Sea'),
   ),
+  TitleDefinition(
+    'mirror_lake_keeper',
+    ProgressionText('호수의 거울지기', 'Mirror Keeper of the Lake'),
+  ),
   TitleDefinition('golden_first', ProgressionText('첫 황금 별자리', 'First Gold')),
   TitleDefinition(
     'golden_collector',
@@ -678,6 +682,30 @@ const achievements = <Achievement>[
       TrailUnlock(TrailIds.starfall),
       TitleUnlock('lighthouse_star_keeper'),
     ],
+  ),
+  Achievement(
+    id: 'w3-stars-25',
+    kind: AchievementKind.worldStars,
+    world: 3,
+    target: 25,
+    name: ProgressionText('거울 호수 별 25개', '25 Mirror Lake stars'),
+    rewards: [StardustBundle(200)],
+  ),
+  Achievement(
+    id: 'w3-stars-50',
+    kind: AchievementKind.worldStars,
+    world: 3,
+    target: 50,
+    name: ProgressionText('거울 호수 별 50개', '50 Mirror Lake stars'),
+    rewards: [StarlightCharge(3)],
+  ),
+  Achievement(
+    id: 'w3-stars-75',
+    kind: AchievementKind.worldStars,
+    world: 3,
+    target: 75,
+    name: ProgressionText('거울 호수 별 75개', 'All 75 Mirror Lake stars'),
+    rewards: [TitleUnlock('mirror_lake_keeper')],
   ),
   Achievement(
     id: 'golden-1',

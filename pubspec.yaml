@@ -1,7 +1,7 @@
 name: bloriq
 description: BLORIQ one-turn echo puzzle prototype.
 publish_to: 'none'
-version: 0.1.2+3
+version: 0.2.0+4
 
 environment:
   sdk: '>=3.13.0 <4.0.0'
@@ -29,6 +29,7 @@ flutter:
     - assets/levels/levels.json
     - assets/levels/daily_pool_v1.json
     - assets/levels/world2.json
+    - assets/levels/world3.json
     - assets/levels/endless_pool_v1.json
     - assets/audio/
     - assets/art/star_courier/
@@ -37,6 +38,7 @@ flutter:
     - assets/art/moon_garden/
     - assets/story/season1.json
     - assets/story/world2.json
+    - assets/story/world3.json
     - assets/worlds/saga.json
     - assets/fonts/Jua-OFL.txt
     - assets/fonts/NanumGothic-OFL.txt

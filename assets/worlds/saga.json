@@ -43,8 +43,21 @@
     {
       "number": 3,
       "id": "w3",
-      "status": "planned",
+      "status": "playable",
       "lighthouse": 2,
+      "levels": "assets/levels/world3.json",
+      "story": "assets/story/world3.json",
+      "theme": {
+        "palette": {
+          "background": "#101C35",
+          "board": "#263D59",
+          "border": "#BFD3DF",
+          "accent": "#71E6D6"
+        },
+        "floor": null,
+        "rock": null,
+        "bgm": "assets/audio/bgm_w3.wav"
+      },
       "title": { "ko": "거울 호수 등대", "en": "Mirror Lake Lighthouse" },
       "subtitle": { "ko": "둘째 등대 · 물에 비친 잔상", "en": "Second lighthouse · The Echo in the Water" },
       "mechanic": { "ko": "거울 짝: 한 블록을 밀면 호수에 비친 짝 블록이 반대 방향으로 함께 움직여요.", "en": "Mirror twins: push one block and its reflection moves the opposite way." },

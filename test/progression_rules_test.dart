@@ -136,7 +136,7 @@ void main() {
         'tide',
       ]);
       expect(defaultTrailId, 'moonlight');
-      expect(titles.length, 16);
+      expect(titles.length, 17);
       for (final text in [
         ...trails.map((t) => t.name),
         ...titles.map((t) => t.name),
@@ -146,6 +146,11 @@ void main() {
       }
       expect(titleById('garden_keeper')!.name.resolve('ko'), '정원지기');
       expect(titleById('garden_keeper')!.name.resolve('en'), 'Garden Keeper');
+      expect(titleById('mirror_lake_keeper')!.name.ko, '호수의 거울지기');
+      expect(
+        titleById('mirror_lake_keeper')!.name.en,
+        'Mirror Keeper of the Lake',
+      );
     });
   });
 

@@ -83,3 +83,21 @@ for bar, chord in enumerate([
 for i in range(len(cloud_sea)):
     cloud_sea[i] *= min(1., i / (RATE * .06), (len(cloud_sea) - i - 1) / (RATE * .12))
 write('bgm_w2.wav', cloud_sea)
+
+# 거울 호수의 16초 루프. 원래 음 뒤에 한 옥타브 낮은 답을 둔다.
+mirror_lake = [0.] * round(length * RATE)
+for bar, chord in enumerate([
+    (220.00, 261.63, 329.63, 392.00),
+    (174.61, 220.00, 261.63, 329.63),
+    (130.81, 164.81, 196.00, 293.66),
+    (196.00, 246.94, 293.66, 349.23),
+]):
+    base = bar * 4
+    mix(mirror_lake, tone(chord[0] / 2, 3.88, .055, .54, False), base)
+    for step, note in enumerate((0, 2, 3, 1)):
+        start = base + step * .91
+        mix(mirror_lake, tone(chord[note] * 2, 1.02, .083, 3.0), start)
+        mix(mirror_lake, tone(chord[note], .66, .042, 3.8), start + .34)
+for i in range(len(mirror_lake)):
+    mirror_lake[i] *= min(1., i / (RATE * .06), (len(mirror_lake) - i - 1) / (RATE * .12))
+write('bgm_w3.wav', mirror_lake)

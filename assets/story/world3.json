@@ -1,0 +1,1071 @@
+{
+  "version": 1,
+  "worldId": "w3",
+  "title": {
+    "ko": "거울 호수 등대",
+    "en": "Mirror Lake Lighthouse"
+  },
+  "prologue": {
+    "ko": "첫째 등대의 빛이 호수에 닿았어. 리크를 꼭 닮은 잔상 하나가 물 위를 혼자 걸었어. 리크는 그 잔상을 따라갔어.",
+    "en": "The first lighthouse lit the lake. An echo just like RIQ walked alone on the water. RIQ followed it."
+  },
+  "chapters": [
+    {
+      "number": 1,
+      "globalChapter": 11,
+      "power": null,
+      "family": "water_shadow",
+      "name": {
+        "ko": "잔잔한 물가",
+        "en": "Still Shore"
+      },
+      "familyName": {
+        "ko": "물그림자 가문",
+        "en": "Water Reflection Family"
+      },
+      "constellation": {
+        "ko": "물그림자자리",
+        "en": "The Water Reflection"
+      },
+      "stars": {
+        "nodes": [
+          [0.16, 0.32],
+          [0.34, 0.52],
+          [0.64, 0.52],
+          [0.84, 0.32],
+          [0.5, 0.76]
+        ],
+        "edges": [
+          [0, 1],
+          [1, 2],
+          [2, 3],
+          [1, 4],
+          [2, 4]
+        ]
+      },
+      "intro": {
+        "ko": "리크가 물가에서 멈춰 섰어. 물 위의 발자국은 조금 더 걸어갔어.",
+        "en": "RIQ paused at the shore. The footprints on the water took a few more steps."
+      },
+      "endingTitle": {
+        "ko": "멈춘 발, 걷는 그림자",
+        "en": "Still Feet, Walking Shadow"
+      },
+      "ending": {
+        "ko": "리크는 발을 꼭 붙이고 서 있었어. 그런데 잔상은 혼자서 물가를 걸었어.",
+        "en": "RIQ stood perfectly still. The echo kept walking along the shore."
+      }
+    },
+    {
+      "number": 2,
+      "globalChapter": 12,
+      "power": null,
+      "family": "lotus",
+      "name": {
+        "ko": "수련 징검다리",
+        "en": "Lily Stepping Stones"
+      },
+      "familyName": {
+        "ko": "수련 가문",
+        "en": "Water Lily Family"
+      },
+      "constellation": {
+        "ko": "수련자리",
+        "en": "The Water Lily"
+      },
+      "stars": {
+        "nodes": [
+          [0.18, 0.52],
+          [0.34, 0.72],
+          [0.66, 0.72],
+          [0.82, 0.52],
+          [0.5, 0.23]
+        ],
+        "edges": [
+          [0, 1],
+          [1, 2],
+          [2, 3],
+          [0, 4],
+          [3, 4]
+        ]
+      },
+      "intro": {
+        "ko": "물 위에 수련 잎이 한 장씩 떠올랐어. 잔상이 첫 잎을 살며시 밟았어.",
+        "en": "Lily pads rose one by one. The echo stepped gently onto the first."
+      },
+      "endingTitle": {
+        "ko": "잎에 비친 낯선 곳",
+        "en": "Places in the Leaves"
+      },
+      "ending": {
+        "ko": "잔상이 밟은 수련마다 낯선 풍경이 비쳤어. 리크가 잊은 옛 기억의 조각들이었어.",
+        "en": "Each pad the echo touched showed a strange place. They were pieces of RIQ’s old memories."
+      }
+    },
+    {
+      "number": 3,
+      "globalChapter": 13,
+      "power": "moonflower_leap",
+      "family": "waterbird",
+      "name": {
+        "ko": "물안개 다리",
+        "en": "Mist Bridge"
+      },
+      "familyName": {
+        "ko": "물새 가문",
+        "en": "Waterbird Family"
+      },
+      "constellation": {
+        "ko": "물새자리",
+        "en": "The Waterbird"
+      },
+      "stars": {
+        "nodes": [
+          [0.12, 0.48],
+          [0.31, 0.3],
+          [0.5, 0.55],
+          [0.71, 0.36],
+          [0.86, 0.44]
+        ],
+        "edges": [
+          [0, 1],
+          [1, 2],
+          [2, 3],
+          [3, 4],
+          [2, 4]
+        ]
+      },
+      "intro": {
+        "ko": "물새들이 안개 너머에서 날아왔어. 모두 잔상을 알아보는 듯했어.",
+        "en": "Waterbirds flew out of the mist. They seemed to know the echo."
+      },
+      "endingTitle": {
+        "ko": "새들이 부르는 이름",
+        "en": "The Name the Birds Knew"
+      },
+      "ending": {
+        "ko": "물새들이 잔상 곁에 모였어. 가장 작은 물새가 “등대지기!” 하고 불렀어.",
+        "en": "The birds gathered around the echo. The smallest called out, “Lighthouse keeper!”"
+      }
+    },
+    {
+      "number": 4,
+      "globalChapter": 14,
+      "power": "light_swap",
+      "family": "moon_halo",
+      "name": {
+        "ko": "뒤집힌 탑",
+        "en": "The Upside-Down Tower"
+      },
+      "familyName": {
+        "ko": "달무리 가문",
+        "en": "Moon Halo Family"
+      },
+      "constellation": {
+        "ko": "달무리자리",
+        "en": "The Moon Halo"
+      },
+      "stars": {
+        "nodes": [
+          [0.48, 0.18],
+          [0.73, 0.29],
+          [0.8, 0.55],
+          [0.62, 0.76],
+          [0.35, 0.68]
+        ],
+        "edges": [
+          [0, 1],
+          [1, 2],
+          [2, 3],
+          [3, 4]
+        ]
+      },
+      "intro": {
+        "ko": "호숫가 등대의 창은 어두웠어. 그런데 물속에서 작은 빛이 반짝였어.",
+        "en": "The tower windows were dark. A little light glimmered in the lake."
+      },
+      "endingTitle": {
+        "ko": "물속에 켜진 등대",
+        "en": "A Light Beneath the Lake"
+      },
+      "ending": {
+        "ko": "호수에 비친 등대는 거꾸로 서 있었어. 그 안의 불은 아직 켜져 있었어.",
+        "en": "The lighthouse stood upside down in the lake. Its lamp was still lit."
+      }
+    },
+    {
+      "number": 5,
+      "globalChapter": 15,
+      "power": null,
+      "family": "mirror_keeper",
+      "name": {
+        "ko": "그림자 리크",
+        "en": "RIQ’s Shadow"
+      },
+      "familyName": {
+        "ko": "거울지기 가문",
+        "en": "Mirror Keeper Family"
+      },
+      "constellation": {
+        "ko": "거울지기자리",
+        "en": "The Mirror Keeper"
+      },
+      "stars": {
+        "nodes": [
+          [0.25, 0.22],
+          [0.75, 0.22],
+          [0.75, 0.74],
+          [0.25, 0.74],
+          [0.5, 0.48]
+        ],
+        "edges": [
+          [0, 1],
+          [1, 2],
+          [2, 3],
+          [3, 0],
+          [0, 4],
+          [2, 4]
+        ]
+      },
+      "intro": {
+        "ko": "리크가 손을 내밀었어. 잔상도 맞은편에서 손을 내밀었어.",
+        "en": "RIQ reached out. Across the water, the echo reached back."
+      },
+      "endingTitle": {
+        "ko": "돌아온 밤의 소리",
+        "en": "The Sound That Came Back"
+      },
+      "ending": {
+        "ko": "잔상은 리크가 잃은 기억이 남긴 그림자였어. 그림자가 리크에게 스며들었어. 한 가지 기억이 돌아왔어. “등대가 꺼지던 밤, 시계가 울렸어.”",
+        "en": "The echo was the shadow of RIQ’s lost memories. It slipped back into RIQ. One memory returned. “The clock rang the night the lighthouse went dark.”"
+      }
+    }
+  ],
+  "spirits": [
+    {
+      "id": "s3-01",
+      "levelId": 201,
+      "chapter": 1,
+      "family": "water_shadow",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "float",
+      "name": {
+        "ko": "물톨",
+        "en": "Droplet"
+      },
+      "levelTitle": {
+        "ko": "마주 본 첫발",
+        "en": "A Step Across"
+      },
+      "appearance": {
+        "ko": "이마에 맺힌 물방울이 반짝여.",
+        "en": "A drop glimmers on its brow."
+      },
+      "personality": {
+        "ko": "처음 만난 친구에게 먼저 손을 흔들어.",
+        "en": "It waves first to a new friend."
+      },
+      "memory": {
+        "ko": "물 아래에서도 누군가 손을 흔들었어.",
+        "en": "Someone waved beneath the water, too."
+      },
+      "quote": {
+        "ko": "“맞은편에도 친구가 있어.”",
+        "en": "“There’s a friend across the water.”"
+      }
+    },
+    {
+      "id": "s3-02",
+      "levelId": 202,
+      "chapter": 1,
+      "family": "water_shadow",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "잔비",
+        "en": "Drizzle"
+      },
+      "levelTitle": {
+        "ko": "바위 옆 한 걸음",
+        "en": "A Step by the Rock"
+      },
+      "appearance": {
+        "ko": "비에 젖은 잎을 어깨에 걸쳤어.",
+        "en": "A rain-soaked leaf covers its shoulders."
+      },
+      "personality": {
+        "ko": "막힌 길 앞에서도 느긋하게 기다려.",
+        "en": "It waits patiently at a blocked path."
+      },
+      "memory": {
+        "ko": "그림자 하나가 바위 앞에서 멈췄어.",
+        "en": "One shadow stopped beside a rock."
+      },
+      "quote": {
+        "ko": "“멈춰도 괜찮아. 다른 쪽을 봐.”",
+        "en": "“It’s fine to stop. Look the other way.”"
+      }
+    },
+    {
+      "id": "s3-03",
+      "levelId": 203,
+      "chapter": 1,
+      "family": "water_shadow",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "tilt",
+      "name": {
+        "ko": "윤슬",
+        "en": "Shimmer"
+      },
+      "levelTitle": {
+        "ko": "윗물의 빈길",
+        "en": "The Clear Upper Bank"
+      },
+      "appearance": {
+        "ko": "옆구리에 작은 햇살 무늬가 있어.",
+        "en": "A small sunbeam marks its side."
+      },
+      "personality": {
+        "ko": "빈길을 보면 먼저 살펴보고 돌아와.",
+        "en": "It scouts an open path and comes back."
+      },
+      "memory": {
+        "ko": "윗물의 반짝임이 반대편으로 번졌어.",
+        "en": "The upper bank’s shimmer spread across."
+      },
+      "quote": {
+        "ko": "“저기 물빛이 길을 내줘.”",
+        "en": "“See where the water makes a path.”"
+      }
+    },
+    {
+      "id": "s3-04",
+      "levelId": 204,
+      "chapter": 1,
+      "family": "water_shadow",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "wave",
+      "name": {
+        "ko": "소복",
+        "en": "Puddle"
+      },
+      "levelTitle": {
+        "ko": "잔상 사이의 틈",
+        "en": "Between the Echoes"
+      },
+      "appearance": {
+        "ko": "두 볼에 동그란 물무늬가 있어.",
+        "en": "Round ripples mark both cheeks."
+      },
+      "personality": {
+        "ko": "친구와 걸음 맞추기를 좋아해.",
+        "en": "It likes matching a friend’s steps."
+      },
+      "memory": {
+        "ko": "발자국이 남자 짝이 잠깐 쉬었어.",
+        "en": "The twin rested when a footprint stayed."
+      },
+      "quote": {
+        "ko": "“한 걸음 쉬었다가 맞춰 보자.”",
+        "en": "“Let’s pause, then match our steps.”"
+      }
+    },
+    {
+      "id": "s3-05",
+      "levelId": 205,
+      "chapter": 1,
+      "family": "water_shadow",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "bow",
+      "name": {
+        "ko": "고요",
+        "en": "Stillwater"
+      },
+      "levelTitle": {
+        "ko": "물가의 약속",
+        "en": "The Shore’s Promise"
+      },
+      "appearance": {
+        "ko": "은빛 물결이 머리 위를 맴돌아.",
+        "en": "A silver ripple circles its head."
+      },
+      "personality": {
+        "ko": "작은 소리도 놓치지 않고 들어줘.",
+        "en": "It listens even to the quietest sound."
+      },
+      "memory": {
+        "ko": "리크가 멈췄는데도 물 위의 발소리는 이어졌어.",
+        "en": "RIQ stopped, but footsteps on the water continued."
+      },
+      "quote": {
+        "ko": "“네가 서 있어도 저 잔상은 걸어.”",
+        "en": "“Even when you stand still, it walks.”"
+      }
+    },
+    {
+      "id": "s3-06",
+      "levelId": 206,
+      "chapter": 2,
+      "family": "lotus",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "float",
+      "name": {
+        "ko": "꽃닢",
+        "en": "Petal"
+      },
+      "levelTitle": {
+        "ko": "지워진 물결",
+        "en": "The Fading Ripple"
+      },
+      "appearance": {
+        "ko": "분홍 수련 잎이 귀처럼 접혀 있어.",
+        "en": "Pink lily leaves fold like little ears."
+      },
+      "personality": {
+        "ko": "길을 다 쓴 뒤에는 살며시 쓸어.",
+        "en": "It gently sweeps a path after using it."
+      },
+      "memory": {
+        "ko": "첫 수련에 낯선 돌담이 비쳤어.",
+        "en": "A strange stone wall shone in the first lily."
+      },
+      "quote": {
+        "ko": "“이 잎은 발자국을 오래 두지 않아.”",
+        "en": "“This leaf lets footprints go.”"
+      }
+    },
+    {
+      "id": "s3-07",
+      "levelId": 207,
+      "chapter": 2,
+      "family": "lotus",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "방울",
+        "en": "Bead"
+      },
+      "levelTitle": {
+        "ko": "붙든 잔상",
+        "en": "An Echo Held"
+      },
+      "appearance": {
+        "ko": "호박빛 방울을 목에 달고 있어.",
+        "en": "An amber bead hangs at its throat."
+      },
+      "personality": {
+        "ko": "소중한 것을 한 번 더 바라봐.",
+        "en": "It takes one more look at what it loves."
+      },
+      "memory": {
+        "ko": "잎 하나에 오래된 창문이 떠올랐어.",
+        "en": "An old window appeared in one leaf."
+      },
+      "quote": {
+        "ko": "“좋은 기억은 조금 더 두자.”",
+        "en": "“Let’s keep a good memory a little longer.”"
+      }
+    },
+    {
+      "id": "s3-08",
+      "levelId": 208,
+      "chapter": 2,
+      "family": "lotus",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "tilt",
+      "name": {
+        "ko": "새잎",
+        "en": "Sprig"
+      },
+      "levelTitle": {
+        "ko": "다시 밟는 잎",
+        "en": "A Leaf to Step On Again"
+      },
+      "appearance": {
+        "ko": "새로 난 수련 잎을 등에 이고 있어.",
+        "en": "A fresh lily pad rests on its back."
+      },
+      "personality": {
+        "ko": "돌아오는 친구를 반갑게 맞아.",
+        "en": "It greets a returning friend warmly."
+      },
+      "memory": {
+        "ko": "리크는 잎에서 본 길이 어쩐지 익숙했어.",
+        "en": "The path in the leaf felt familiar to RIQ."
+      },
+      "quote": {
+        "ko": "“한 번 더 밟으면 뭐가 보일까?”",
+        "en": "“What will you see if you step again?”"
+      }
+    },
+    {
+      "id": "s3-09",
+      "levelId": 209,
+      "chapter": 2,
+      "family": "lotus",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "wave",
+      "name": {
+        "ko": "숨잎",
+        "en": "Hushleaf"
+      },
+      "levelTitle": {
+        "ko": "남겨 둘 자리",
+        "en": "A Place to Hold"
+      },
+      "appearance": {
+        "ko": "얇은 잎 아래 작은 불빛이 숨어.",
+        "en": "A tiny light hides under a thin leaf."
+      },
+      "personality": {
+        "ko": "말없이도 친구 옆을 지켜 줘.",
+        "en": "It keeps a friend company without a word."
+      },
+      "memory": {
+        "ko": "낯선 계단 끝에 리크의 표식이 있었어.",
+        "en": "RIQ’s mark was at the end of unfamiliar stairs."
+      },
+      "quote": {
+        "ko": "“이 장면은 여기에 두고 가.”",
+        "en": "“Leave this little scene here for now.”"
+      }
+    },
+    {
+      "id": "s3-10",
+      "levelId": 210,
+      "chapter": 2,
+      "family": "lotus",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "bow",
+      "name": {
+        "ko": "연화",
+        "en": "Lotus"
+      },
+      "levelTitle": {
+        "ko": "잎이 간직한 풍경",
+        "en": "The Lily’s Little Scenes"
+      },
+      "appearance": {
+        "ko": "하얀 수련 꽃잎을 망토처럼 둘렀어.",
+        "en": "White lily petals wrap it like a cloak."
+      },
+      "personality": {
+        "ko": "흩어진 이야기를 차분히 이어 줘.",
+        "en": "It patiently pieces stories together."
+      },
+      "memory": {
+        "ko": "잔상이 잎을 밟자 잊힌 풍경들이 차례로 돌아왔어.",
+        "en": "Forgotten places returned as the echo crossed the lilies."
+      },
+      "quote": {
+        "ko": "“처음 보는 것 같아도, 네 기억이야.”",
+        "en": "“They feel new, but they’re your memories.”"
+      }
+    },
+    {
+      "id": "s3-11",
+      "levelId": 211,
+      "chapter": 3,
+      "family": "waterbird",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "float",
+      "name": {
+        "ko": "솜깃",
+        "en": "Downfeather"
+      },
+      "levelTitle": {
+        "ko": "안개 옆 물길",
+        "en": "A Current by the Mist"
+      },
+      "appearance": {
+        "ko": "솜 같은 깃털에 물방울이 맺혀.",
+        "en": "Drops gather on its soft feathers."
+      },
+      "personality": {
+        "ko": "친구보다 한 발 앞서 바람을 읽어.",
+        "en": "It reads the wind a step ahead."
+      },
+      "memory": {
+        "ko": "안개 너머의 잔상을 보고 고개를 갸웃했어.",
+        "en": "It tilted its head at the echo in the mist."
+      },
+      "quote": {
+        "ko": "“물결이 가리키는 쪽을 봐.”",
+        "en": "“Watch which way the current points.”"
+      }
+    },
+    {
+      "id": "s3-12",
+      "levelId": 212,
+      "chapter": 3,
+      "family": "waterbird",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "비오리",
+        "en": "Merglet"
+      },
+      "levelTitle": {
+        "ko": "돌을 넘는 깃",
+        "en": "A Leap Over Stone"
+      },
+      "appearance": {
+        "ko": "머리의 푸른 깃이 위로 솟았어.",
+        "en": "A blue crest rises from its head."
+      },
+      "personality": {
+        "ko": "작은 바위쯤은 가볍게 넘어.",
+        "en": "It hops easily over little rocks."
+      },
+      "memory": {
+        "ko": "물새는 잔상의 걸음을 전에 본 듯했어.",
+        "en": "The bird seemed to know the echo’s walk."
+      },
+      "quote": {
+        "ko": "“돌 너머에 빈자리가 있어.”",
+        "en": "“There’s room beyond the rock.”"
+      }
+    },
+    {
+      "id": "s3-13",
+      "levelId": 213,
+      "chapter": 3,
+      "family": "waterbird",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "tilt",
+      "name": {
+        "ko": "보늬",
+        "en": "Cloverwing"
+      },
+      "levelTitle": {
+        "ko": "리크의 클로버",
+        "en": "RIQ’s Clover"
+      },
+      "appearance": {
+        "ko": "한쪽 날개에 클로버 무늬가 있어.",
+        "en": "A clover marks one wing."
+      },
+      "personality": {
+        "ko": "친구마다 편한 길이 다르다고 믿어.",
+        "en": "It knows each friend has a different path."
+      },
+      "memory": {
+        "ko": "작은 발 하나만 지나갈 길이 있었어.",
+        "en": "One path was wide enough for just one little foot."
+      },
+      "quote": {
+        "ko": "“이쪽은 네 발에 꼭 맞아.”",
+        "en": "“This way fits your feet.”"
+      }
+    },
+    {
+      "id": "s3-14",
+      "levelId": 214,
+      "chapter": 3,
+      "family": "waterbird",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "wave",
+      "name": {
+        "ko": "훌쩍",
+        "en": "Skipwing"
+      },
+      "levelTitle": {
+        "ko": "물안개 너머",
+        "en": "Beyond the Water Mist"
+      },
+      "appearance": {
+        "ko": "꼬리 끝에 안개가 한 줌 붙어 있어.",
+        "en": "A tuft of mist clings to its tail."
+      },
+      "personality": {
+        "ko": "뛰기 전에 착지할 곳을 먼저 살펴.",
+        "en": "It checks where it will land before jumping."
+      },
+      "memory": {
+        "ko": "물새들은 잔상을 향해 깃을 모았어.",
+        "en": "The birds folded their wings toward the echo."
+      },
+      "quote": {
+        "ko": "“비어 있는 곳에 가볍게 내려.”",
+        "en": "“Land softly in the open space.”"
+      }
+    },
+    {
+      "id": "s3-15",
+      "levelId": 215,
+      "chapter": 3,
+      "family": "waterbird",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "bow",
+      "name": {
+        "ko": "물결새",
+        "en": "Wavetern"
+      },
+      "levelTitle": {
+        "ko": "물새의 인사",
+        "en": "The Waterbirds’ Greeting"
+      },
+      "appearance": {
+        "ko": "가슴에 은빛 깃이 한 줄 나 있어.",
+        "en": "A line of silver feathers crosses its chest."
+      },
+      "personality": {
+        "ko": "친구를 만나면 이름부터 불러 줘.",
+        "en": "It greets friends by name."
+      },
+      "memory": {
+        "ko": "물새들이 오래 기다린 손님을 잔상에서 알아봤어.",
+        "en": "The birds recognized a long-awaited guest in the echo."
+      },
+      "quote": {
+        "ko": "“등대지기, 우리를 기억해?”",
+        "en": "“Lighthouse keeper, do you remember us?”"
+      }
+    },
+    {
+      "id": "s3-16",
+      "levelId": 216,
+      "chapter": 4,
+      "family": "moon_halo",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "float",
+      "name": {
+        "ko": "달테",
+        "en": "Moonring"
+      },
+      "levelTitle": {
+        "ko": "두 짝의 문",
+        "en": "The Gate of Two Pairs"
+      },
+      "appearance": {
+        "ko": "머리 둘레에 흐린 달빛 고리가 있어.",
+        "en": "A faint moon halo circles its head."
+      },
+      "personality": {
+        "ko": "서로 다른 친구를 잘 구별해.",
+        "en": "It remembers what makes each friend different."
+      },
+      "memory": {
+        "ko": "어두운 탑 밑에서 푸른 수정이 빛났어.",
+        "en": "A blue crystal shone below the dark tower."
+      },
+      "quote": {
+        "ko": "“어느 짝이 수정에 닿을까?”",
+        "en": "“Which pair can reach the crystal?”"
+      }
+    },
+    {
+      "id": "s3-17",
+      "levelId": 217,
+      "chapter": 4,
+      "family": "moon_halo",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "아롱",
+        "en": "Halo"
+      },
+      "levelTitle": {
+        "ko": "수정 곁 자리",
+        "en": "Beside the Crystal"
+      },
+      "appearance": {
+        "ko": "작은 고리 두 개가 등 뒤로 떠 있어.",
+        "en": "Two small rings float behind it."
+      },
+      "personality": {
+        "ko": "누가 문을 잡아 주면 꼭 고마워해.",
+        "en": "It always thanks a friend who holds the gate."
+      },
+      "memory": {
+        "ko": "물에 비친 창문만 희미하게 밝았어.",
+        "en": "Only the reflected window was faintly bright."
+      },
+      "quote": {
+        "ko": "“내가 열면 네가 먼저 지나가.”",
+        "en": "“I’ll open it. You go first.”"
+      }
+    },
+    {
+      "id": "s3-18",
+      "levelId": 218,
+      "chapter": 4,
+      "family": "moon_halo",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "tilt",
+      "name": {
+        "ko": "은띠",
+        "en": "Silverband"
+      },
+      "levelTitle": {
+        "ko": "먼 곳을 여는 문",
+        "en": "The Gate Across the Way"
+      },
+      "appearance": {
+        "ko": "은빛 띠를 허리에 두르고 있어.",
+        "en": "A silver ribbon wraps its waist."
+      },
+      "personality": {
+        "ko": "멀리 있는 친구까지 자주 살펴.",
+        "en": "It keeps an eye on friends far away."
+      },
+      "memory": {
+        "ko": "반대쪽에 선 등대가 물결에 흔들렸어.",
+        "en": "The far-side lighthouse wavered in the ripples."
+      },
+      "quote": {
+        "ko": "“저쪽에서 움직이면 이쪽도 바뀌어.”",
+        "en": "“A move over there changes this side.”"
+      }
+    },
+    {
+      "id": "s3-19",
+      "levelId": 219,
+      "chapter": 4,
+      "family": "moon_halo",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "wave",
+      "name": {
+        "ko": "밤울",
+        "en": "Nightbell"
+      },
+      "levelTitle": {
+        "ko": "빛을 바꾼 자리",
+        "en": "Where Light Changes Places"
+      },
+      "appearance": {
+        "ko": "달빛을 담은 작은 방울을 들었어.",
+        "en": "It carries a little bell full of moonlight."
+      },
+      "personality": {
+        "ko": "먼 친구와 자리를 바꾸며 도와줘.",
+        "en": "It helps by trading places with distant friends."
+      },
+      "memory": {
+        "ko": "물에 비친 창의 불은 꺼지지 않았어.",
+        "en": "The light in the reflected window stayed on."
+      },
+      "quote": {
+        "ko": "“네가 남긴 자리로 빛을 불러 봐.”",
+        "en": "“Call the light to the place you left.”"
+      }
+    },
+    {
+      "id": "s3-20",
+      "levelId": 220,
+      "chapter": 4,
+      "family": "moon_halo",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "bow",
+      "name": {
+        "ko": "달무리",
+        "en": "Moonhalo"
+      },
+      "levelTitle": {
+        "ko": "뒤집힌 등불",
+        "en": "The Inverted Lamp"
+      },
+      "appearance": {
+        "ko": "머리 위 둥근 고리에 별빛이 돌아.",
+        "en": "Starlight circles the ring over its head."
+      },
+      "personality": {
+        "ko": "불빛이 작아져도 곁을 떠나지 않아.",
+        "en": "It stays beside a light even when it dims."
+      },
+      "memory": {
+        "ko": "거꾸로 선 등대 창에 따뜻한 불이 남아 있었어.",
+        "en": "A warm light remained in the upside-down tower."
+      },
+      "quote": {
+        "ko": "“물속 불빛은 아직 기다리고 있어.”",
+        "en": "“The light in the lake is still waiting.”"
+      }
+    },
+    {
+      "id": "s3-21",
+      "levelId": 221,
+      "chapter": 5,
+      "family": "mirror_keeper",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "float",
+      "name": {
+        "ko": "짝빛",
+        "en": "Twinlight"
+      },
+      "levelTitle": {
+        "ko": "맞은편의 발자국",
+        "en": "Footprints Across the Water"
+      },
+      "appearance": {
+        "ko": "반쪽은 밝고 반쪽은 물빛이야.",
+        "en": "Half is bright, half the color of water."
+      },
+      "personality": {
+        "ko": "친구와 같은 속도로 걸어 줘.",
+        "en": "It walks at a friend’s pace."
+      },
+      "memory": {
+        "ko": "리크가 걷자 그림자가 반대쪽으로 움직였어.",
+        "en": "When RIQ walked, the shadow moved the other way."
+      },
+      "quote": {
+        "ko": "“네 발끝이 저쪽에도 닿아.”",
+        "en": "“Your steps reach the other side.”"
+      }
+    },
+    {
+      "id": "s3-22",
+      "levelId": 222,
+      "chapter": 5,
+      "family": "mirror_keeper",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "마주",
+        "en": "Across"
+      },
+      "levelTitle": {
+        "ko": "그림자가 여는 문",
+        "en": "The Shadow Opens the Gate"
+      },
+      "appearance": {
+        "ko": "양손에 작은 물빛이 맺혀 있어.",
+        "en": "A little glow gathers in each hand."
+      },
+      "personality": {
+        "ko": "혼자 갈 때보다 손잡을 때 용감해.",
+        "en": "It is braver with a hand to hold."
+      },
+      "memory": {
+        "ko": "그림자가 움직이자 리크가 문 앞으로 왔어.",
+        "en": "The shadow moved, and RIQ came to the gate."
+      },
+      "quote": {
+        "ko": "“이번에는 저쪽 손을 잡아 봐.”",
+        "en": "“This time, take the other hand.”"
+      }
+    },
+    {
+      "id": "s3-23",
+      "levelId": 223,
+      "chapter": 5,
+      "family": "mirror_keeper",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "tilt",
+      "name": {
+        "ko": "결빛",
+        "en": "Gleam"
+      },
+      "levelTitle": {
+        "ko": "서로 비켜 난 길",
+        "en": "Two Paths Apart"
+      },
+      "appearance": {
+        "ko": "물결 모양의 가는 빛을 두르고 있어.",
+        "en": "A thin, wavy light wraps around it."
+      },
+      "personality": {
+        "ko": "서로 먼저 가라며 웃곤 해.",
+        "en": "It laughs when friends both yield the way."
+      },
+      "memory": {
+        "ko": "낯선 풍경 속에 리크의 웃음이 있었어.",
+        "en": "RIQ’s own laugh was in an unfamiliar scene."
+      },
+      "quote": {
+        "ko": "“그 웃음, 네가 잊고 있던 거야.”",
+        "en": "“That laugh is one you forgot.”"
+      }
+    },
+    {
+      "id": "s3-24",
+      "levelId": 224,
+      "chapter": 5,
+      "family": "mirror_keeper",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "wave",
+      "name": {
+        "ko": "한결",
+        "en": "Always"
+      },
+      "levelTitle": {
+        "ko": "마주 보는 수정",
+        "en": "The Crystal Between Them"
+      },
+      "appearance": {
+        "ko": "은색 조각 두 개를 꼭 안고 있어.",
+        "en": "It hugs two little silver pieces."
+      },
+      "personality": {
+        "ko": "친구가 돌아올 자리를 비워 둬.",
+        "en": "It saves a place for a friend to return."
+      },
+      "memory": {
+        "ko": "문이 열리자 그림자가 가까이 다가왔어.",
+        "en": "The shadow came closer when the gate opened."
+      },
+      "quote": {
+        "ko": "“서두르지 마. 이제 닿을 수 있어.”",
+        "en": "“No hurry. You can reach it now.”"
+      }
+    },
+    {
+      "id": "s3-25",
+      "levelId": 225,
+      "chapter": 5,
+      "family": "mirror_keeper",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "bow",
+      "name": {
+        "ko": "온빛",
+        "en": "Wholelight"
+      },
+      "levelTitle": {
+        "ko": "다시 들린 시계",
+        "en": "The Clock Heard Again"
+      },
+      "appearance": {
+        "ko": "작은 거울 안에 온기가 어려 있어.",
+        "en": "Warm light rests in a little mirror."
+      },
+      "personality": {
+        "ko": "잃어버린 것을 돌려주기를 좋아해.",
+        "en": "It likes returning what was lost."
+      },
+      "memory": {
+        "ko": "그림자가 리크에게 돌아오자 오래된 종소리가 들렸어.",
+        "en": "As the shadow returned to RIQ, an old bell rang."
+      },
+      "quote": {
+        "ko": "“그 밤의 시계 소리를 기억해 봐.”",
+        "en": "“Listen for the clock from that night.”"
+      }
+    }
+  ]
+}
