@@ -97,17 +97,30 @@ class BloriqGame extends FlameGame {
   /// 별빛 길이 비추는 다음 한 수. 블록을 움직이면 사라진다.
   ({Position from, Position to})? hintMove;
 
-  /// 장착한 이동 잔영(moonlight, petal, firefly, meteor, mist, aurora, starfall, tide).
+  /// 장착한 이동 잔영 id(`TrailIds`). `gold_`로 시작하면 금빛 반짝임이 더해진다.
   String trailStyle = 'moonlight';
 
+  /// 테마와 상관없이 색이 정해진 잔영. 보상 화면의 색 견본도 이 표를 쓴다.
+  static const trailPalette = <String, Color>{
+    'petal': Color(0xfff4a9c4),
+    'firefly': Color(0xffffd86b),
+    'aurora': Color(0xff7ef0d0),
+    'starfall': Color(0xfffff0b3),
+    'tide': Color(0xff6fd3ff),
+    'rose': Color(0xffff8fa3),
+    'ember': Color(0xffff9a5c),
+    'lilac': Color(0xffc9a7ff),
+    'jade': Color(0xff6fe0a4),
+    'silver': Color(0xffdde6f5),
+    'gold_forest': Color(0xffffcf4a),
+    'gold_cloud': Color(0xffffe08a),
+    'gold_mirror': Color(0xfff0b84a),
+  };
+
   Color _trailColor(bool isGoal) => switch (trailStyle) {
-    'petal' => const Color(0xfff4a9c4),
-    'firefly' => const Color(0xffffd86b),
     'meteor' => _colors.reward,
     'mist' => _colors.echo,
-    'aurora' => const Color(0xff7ef0d0),
-    'starfall' => const Color(0xfffff0b3),
-    'tide' => const Color(0xff6fd3ff),
+    final id when trailPalette.containsKey(id) => trailPalette[id]!,
     _ => isGoal ? _colors.goal : _colors.primary,
   };
 
@@ -998,6 +1011,23 @@ class BloriqGame extends FlameGame {
           ..strokeWidth = cell * .46
           ..strokeCap = StrokeCap.round,
       );
+    }
+    if (trailStyle.startsWith('gold_') && !_reduceMotion) {
+      // 황금 잔영: 지나간 길에 작은 금빛 별이 흩어진다.
+      final sparkle = Paint()..color = color.withValues(alpha: .85 * fade);
+      for (var i = 1; i <= 5; i++) {
+        final along = Offset.lerp(start, at, i / 6)!;
+        final side = (i.isEven ? 1 : -1) * cell * .18 * math.sin(i * 1.7);
+        final dir = at - start;
+        final normal = dir.distance < 1
+            ? Offset.zero
+            : Offset(-dir.dy, dir.dx) / dir.distance;
+        canvas.drawCircle(
+          along + normal * side,
+          cell * (.035 + .015 * (i % 2)) * fade,
+          sparkle,
+        );
+      }
     }
     for (var k = 3; k >= 1; k--) {
       final t = eased - k * .17;

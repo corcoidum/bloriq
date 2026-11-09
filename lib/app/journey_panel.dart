@@ -5,6 +5,7 @@ import '../constellation/constellation_state.dart';
 import '../design/arcade_components.dart';
 import '../design/game_theme.dart';
 import '../design/keep_all_text.dart';
+import '../game/bloriq_game.dart';
 import '../l10n/app_localizations.dart';
 import '../progress/chapter_progress.dart';
 import '../settings/game_settings.dart';
@@ -810,24 +811,74 @@ class _RewardsTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           heading(t.rewardsTrails),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
+          // 공방 잔영은 산 것만 보여 준다(살 수 있는 것은 공방 페이지에 있다).
+          // 잔영이 많아져 작은 화면에서 넘치면 이 칸만 스크롤한다.
+          Flexible(
+            child: SingleChildScrollView(
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final trail in trails)
+                    if (shopItemFor(trail.id) == null ||
+                        progression.ownedTrails.contains(trail.id))
+                      ChoiceChip(
+                        key: ValueKey('trail-${trail.id}'),
+                        label: Text(trail.name.resolve(lang)),
+                        selected: progression.equippedTrail == trail.id,
+                        onSelected: progression.ownedTrails.contains(trail.id)
+                            ? (_) async {
+                                await progression.equipTrail(trail.id);
+                                onChanged();
+                              }
+                            : null,
+                      ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    final shop = Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          heading(ShopText.heading.resolve(lang)),
+          Row(
             children: [
-              for (final trail in trails)
-                ChoiceChip(
-                  key: ValueKey('trail-${trail.id}'),
-                  label: Text(trail.name.resolve(lang)),
-                  selected: progression.equippedTrail == trail.id,
-                  onSelected: progression.ownedTrails.contains(trail.id)
-                      ? (_) async {
-                          await progression.equipTrail(trail.id);
-                          onChanged();
-                        }
-                      : null,
+              Expanded(
+                child: KeepAllText(
+                  ShopText.intro.resolve(lang),
+                  style: GameTypography.body.copyWith(
+                    fontSize: 13.5,
+                    color: colors.secondaryText,
+                  ),
                 ),
+              ),
+              Icon(Icons.auto_awesome, size: 16, color: colors.rewardInk),
+              const SizedBox(width: 4),
+              Text(
+                '${progression.stardust}',
+                key: const ValueKey('shop-balance'),
+                style: GameTypography.label.copyWith(color: colors.rewardInk),
+              ),
             ],
           ),
+          const SizedBox(height: 6),
+          for (final item in trailShop)
+            Expanded(
+              child: _ShopRow(
+                item: item,
+                owned: progression.ownedTrails.contains(item.trailId),
+                affordable: progression.stardust >= item.price,
+                onBuy: () async {
+                  await progression.buyTrail(item.trailId);
+                  onChanged();
+                },
+              ),
+            ),
         ],
       ),
     );
@@ -867,9 +918,18 @@ class _RewardsTab extends StatelessWidget {
           achievements.where((a) => a.kind == AchievementKind.worldStars),
         ),
         achievementPage(
-          AchievementText.mastery.resolve(lang),
-          achievements.where((a) => a.kind != AchievementKind.worldStars),
+          AchievementText.golden.resolve(lang),
+          achievements.where(
+            (a) =>
+                a.kind == AchievementKind.worldGolden ||
+                a.kind == AchievementKind.goldenConstellations,
+          ),
         ),
+        achievementPage(
+          AchievementText.bareHanded.resolve(lang),
+          achievements.where((a) => a.kind == AchievementKind.bareHandedStars),
+        ),
+        shop,
         style,
         titlePage,
       ],
@@ -1031,6 +1091,62 @@ class _AchievementRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// 별빛 공방의 한 줄: 색 견본, 이름, 값, 사기 버튼.
+class _ShopRow extends StatelessWidget {
+  const _ShopRow({
+    required this.item,
+    required this.owned,
+    required this.affordable,
+    required this.onBuy,
+  });
+  final ShopItem item;
+  final bool owned, affordable;
+  final Future<void> Function() onBuy;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = GameTheme.colorsOf(context);
+    final lang = Localizations.localeOf(context).languageCode;
+    final name = trailById(item.trailId)?.name.resolve(lang) ?? item.trailId;
+    final swatch = BloriqGame.trailPalette[item.trailId] ?? colors.primary;
+    return Row(
+      key: ValueKey('shop-${item.trailId}'),
+      children: [
+        Container(
+          width: 22,
+          height: 22,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: swatch,
+            border: Border.all(color: colors.outline.withValues(alpha: .5)),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GameTypography.label.copyWith(color: colors.text),
+          ),
+        ),
+        if (owned)
+          Text(
+            ShopText.owned.resolve(lang),
+            style: GameTypography.label.copyWith(color: colors.goalInk),
+          )
+        else
+          FilledButton.tonalIcon(
+            key: ValueKey('shop-buy-${item.trailId}'),
+            onPressed: affordable ? onBuy : null,
+            icon: const Icon(Icons.auto_awesome, size: 16),
+            label: Text('${item.price}'),
+          ),
+      ],
     );
   }
 }

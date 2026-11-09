@@ -216,6 +216,29 @@ class _GameScreenState extends State<GameScreen>
   Timer? _stuckTimer;
   bool _starlightFreeUsed = false;
 
+  /// 이번 클리어를 기록할 때 정한 별 상한. 결과 팝업이 이 값을 쓴다
+  /// (기록하면서 저장된 도움 상한이 지워지기 때문).
+  int? _clearCap;
+
+  /// 캠페인 판의 저장 키. 도움 상한은 이 키로 판마다 저장된다.
+  String? get _assistKey {
+    final level = _controller?.state.level;
+    if (level == null || widget.play.mode != PlayMode.campaign) return null;
+    return '${level.id}:${level.revision}';
+  }
+
+  /// 지금 깨면 받을 수 있는 최대 별: 이번 시도의 도움과, 다시 시작하거나
+  /// 판을 나갔다 와도 남는 판별 도움 기록 중 낮은 쪽.
+  int get _starCap {
+    final attempt = assistedStarCap(
+      followedSolution: _guided,
+      usedHint: _starlightUsed,
+    );
+    final key = _assistKey;
+    if (key == null) return attempt;
+    return math.min(attempt, widget.session.progression.assistCap(key));
+  }
+
   /// 확장 세계: 권능 막대에서 고른 권능. 다음 밀기가 이 권능으로 움직인다.
   PuzzlePower? _armedPower;
 
@@ -582,11 +605,9 @@ class _GameScreenState extends State<GameScreen>
         .forLevel(state.level.id, revision: state.level.revision)
         ?.bestStars;
     final guided = _guided;
-    final usedStarlight = _starlightUsed || guided;
-    final starCap = assistedStarCap(
-      followedSolution: guided,
-      usedHint: _starlightUsed,
-    );
+    final starCap = _starCap;
+    _clearCap = starCap;
+    final usedStarlight = _starlightUsed || guided || starCap < 3;
     final usedPower = controller.usedPower;
     final worldBefore = _worldBefore;
     final worldWasComplete = Worlds.isComplete(
@@ -676,6 +697,7 @@ class _GameScreenState extends State<GameScreen>
     _armedPower = null;
     _starlightUsed = false;
     _starlightFreeUsed = false;
+    _clearCap = null;
     _guided = false;
     _guideState = null;
     _guidePath = null;
@@ -804,6 +826,9 @@ class _GameScreenState extends State<GameScreen>
       case _HelpChoice.starlight:
         await _useStarlight(t);
       case _HelpChoice.guide:
+        if (_assistKey case final key?) {
+          unawaited(widget.session.progression.markAssist(key, 1));
+        }
         setState(() {
           _restartBoard(controller, countStruggle: false);
           _guided = true;
@@ -839,6 +864,7 @@ class _GameScreenState extends State<GameScreen>
       final companion = widget.session.collection.companion;
       final quote = await widget.session.progression.useStarlightPath(
         freeUsedThisAttempt: _starlightFreeUsed,
+        levelKey: _assistKey,
         companionId: companion?.id,
         companionFamily: companion?.family,
         onUsed: (used) {
@@ -1295,7 +1321,7 @@ class _GameScreenState extends State<GameScreen>
     final colors = GameTheme.colorsOf(context);
     final stars = math.min(
       starRating(moves: state.moves, minimumMoves: state.level.minimumMoves),
-      assistedStarCap(followedSolution: _guided, usedHint: _starlightUsed),
+      _clearCap ?? _starCap,
     );
     return AnimatedBuilder(
       key: const ValueKey('complete'),
@@ -2370,6 +2396,7 @@ class _GameScreenState extends State<GameScreen>
     final companion = widget.session.collection.companion;
     final quote = widget.session.progression.quoteStarlightPath(
       freeUsedThisAttempt: _starlightFreeUsed,
+      levelKey: _assistKey,
       companionId: companion?.id,
       companionFamily: companion?.family,
     );
@@ -2383,8 +2410,11 @@ class _GameScreenState extends State<GameScreen>
         !_replaying &&
         !_celebrating &&
         !_hintBusy;
-    return Tooltip(
-      message: t.starlightPath,
+    final cap = _starCap;
+    final button = Tooltip(
+      message: cap < 3
+          ? '${t.starlightPath} · ${AssistCapText.kept.resolve(t.localeName)}'
+          : t.starlightPath,
       child: Material(
         color: colors.reward.withValues(alpha: .14),
         shape: RoundedRectangleBorder(
@@ -2416,6 +2446,18 @@ class _GameScreenState extends State<GameScreen>
           ),
         ),
       ),
+    );
+    if (cap >= 3) return button;
+    // 도움을 쓴 판: 다시 시작해도 상한이 남아 있음을 늘 보여 준다.
+    return Badge(
+      key: const ValueKey('assist-cap-badge'),
+      backgroundColor: colors.reward,
+      textColor: colors.rewardInk,
+      label: Text(AssistCapText.badge(cap).resolve(t.localeName)),
+      // 버튼 위 가운데에 붙여서 화면 오른쪽 끝을 넘지 않게 한다.
+      alignment: Alignment.topCenter,
+      offset: const Offset(-26, -10),
+      child: button,
     );
   }
 

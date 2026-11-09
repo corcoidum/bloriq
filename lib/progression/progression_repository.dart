@@ -166,6 +166,13 @@ class ProgressionRepository {
 
   /// 단계 키(`id:revision`)별로 이미 보상한 최고 별 수. 백필 중복 방지용.
   final Map<String, int> _rewardedStars = {};
+
+  /// 단계 키별로 도움(별빛 길 2, 풀이 따라 하기 1)을 쓰고 아직 깨지 않은 판의
+  /// 별 상한. 다시 시작하거나 판을 나갔다 와도 남고, 그 판을 깨면 지운다.
+  final Map<String, int> _assistCaps = {};
+
+  /// 첫별자리 권능의 무료 별빛 길을 쓰고 아직 깨지 않은 판.
+  final Set<String> _freeStarlightUsed = {};
   String _equippedTrail = defaultTrailId;
   String? _title, _raw;
   bool _backfilled = false;
@@ -204,6 +211,13 @@ class ProgressionRepository {
   int bondLevel(String spiritId) => bondLevelForClears(bondClears(spiritId));
   Set<String> get bareHanded => Set.unmodifiable(_bareHanded);
   bool isBareHandedLevel(String levelKey) => _bareHanded.contains(levelKey);
+
+  /// 이 판을 다음에 깰 때의 별 상한(도움을 안 썼으면 3).
+  int assistCap(String levelKey) => _assistCaps[levelKey] ?? 3;
+
+  /// 이 판에서 무료 별빛 길을 이미 썼는지(깰 때까지 유지).
+  bool freeStarlightUsed(String levelKey) =>
+      _freeStarlightUsed.contains(levelKey);
   bool get backfilled => _backfilled;
 
   Set<String> get claimedAchievements => Set.unmodifiable(_claimedAchievements);
@@ -222,6 +236,10 @@ class ProgressionRepository {
         AchievementKind.worldStars => worldStars(achievement.world!),
         AchievementKind.goldenConstellations => _goldenChapters.length,
         AchievementKind.bareHandedStars => _bareHanded.length,
+        AchievementKind.worldGolden =>
+          _goldenChapters
+              .where((chapter) => worldOfChapter(chapter) == achievement.world)
+              .length,
       };
 
   FamilyAbilities abilitiesFor({
@@ -315,6 +333,14 @@ class ProgressionRepository {
     _claimedAchievements.addAll(list<String>('claimedAchievements'));
     _bonds.addAll(counts('bonds'));
     _rewardedStars.addAll(counts('rewardedStars'));
+    // 0.2 이후 필드. 없으면 빈 값으로 읽는다(옛 저장과 호환).
+    for (final entry in counts('assistCaps').entries) {
+      if (entry.value < 1 || entry.value > 2) {
+        throw const FormatException('assistCaps');
+      }
+      _assistCaps[entry.key] = entry.value;
+    }
+    _freeStarlightUsed.addAll(list<String>('freeStarlightUsed'));
     final trail = optionalString('equippedTrail');
     _equippedTrail = trail != null && _ownedTrails.contains(trail)
         ? trail
@@ -340,6 +366,8 @@ class ProgressionRepository {
     _bareHanded.clear();
     _claimedAchievements.clear();
     _rewardedStars.clear();
+    _assistCaps.clear();
+    _freeStarlightUsed.clear();
     _equippedTrail = defaultTrailId;
     _title = null;
     _backfilled = false;
@@ -351,6 +379,7 @@ class ProgressionRepository {
   /// 캠페인 클리어 한 번을 기록하고 보상을 지급한다.
   ///
   /// [stars] 는 판정된 별 수이며 [usedStarlightPath] 이면 2별로 깎는다.
+  /// 이 판에 저장된 도움 상한([assistCap])도 적용하고, 깼으므로 지운다.
   /// [previousBestStars] 가 null 이면 첫 클리어. 장 별자리가 이번에 완성되면
   /// [constellationCompletedChapter], 황금이 되면 [constellationGoldenChapter]
   /// 를 넘긴다(같은 장은 한 번만 지급된다). 월드 2는 맨손 판정이 달라
@@ -367,18 +396,19 @@ class ProgressionRepository {
     int? constellationGoldenChapter,
     bool? bareHandedClear,
   }) async {
-    final awarded = capAssistedStars(
-      stars,
-      usedStarlightPath: usedStarlightPath,
-    );
+    final pendingCap = assistCap(levelKey);
+    final assisted = usedStarlightPath || pendingCap < 3;
+    final capped = capAssistedStars(stars, usedStarlightPath: assisted);
+    final awarded = capped < pendingCap ? capped : pendingCap;
     final firstClear = previousBestStars == null;
-    final bare =
-        bareHandedClear ??
-        isBareHanded(
-          stars: awarded,
-          usedHint: usedHint,
-          usedStarlightPath: usedStarlightPath,
-        );
+    // 세계 2부터는 맨손 판정을 호출한 쪽이 한다. 저장된 도움이 있으면 맨손이 아니다.
+    final bare = bareHandedClear != null
+        ? bareHandedClear && !assisted
+        : isBareHanded(
+            stars: awarded,
+            usedHint: usedHint,
+            usedStarlightPath: assisted,
+          );
     if (!_writable) {
       return _reward(starsAwarded: awarded, firstClear: firstClear, bare: bare);
     }
@@ -394,9 +424,11 @@ class ProgressionRepository {
     );
     final dust = clearStardust(
       stars: awarded,
-      firstClear: firstClear,
+      previousBestStars: previousBestStars,
       forestBonus: abilities.stardustBonus,
     );
+    _assistCaps.remove(levelKey);
+    _freeStarlightUsed.remove(levelKey);
 
     PowerDefinition? newPower;
     if (constellationCompletedChapter != null &&
@@ -496,7 +528,7 @@ class ProgressionRepository {
       if (previous != null && previous >= best) continue;
       xpGained += campaignClearXp(stars: best, previousBestStars: previous);
       if (previous == null) {
-        dust += clearStardust(stars: best, firstClear: true);
+        dust += clearStardust(stars: best);
       }
       _rewardedStars[record.levelKey] = best;
     }
@@ -539,15 +571,45 @@ class ProgressionRepository {
     return true;
   }
 
+  /// 별빛 공방에서 잔영을 산다. 이미 가졌거나 별가루가 모자라면 false.
+  /// 사면 바로 장착한다.
+  Future<bool> buyTrail(String trailId) async {
+    final item = shopItemFor(trailId);
+    if (!_writable ||
+        item == null ||
+        _ownedTrails.contains(trailId) ||
+        item.price > _stardust) {
+      return false;
+    }
+    _stardust -= item.price;
+    _ownedTrails.add(trailId);
+    _equippedTrail = trailId;
+    await retrySave();
+    return true;
+  }
+
+  /// 풀이 따라 하기처럼 별빛 길 밖의 도움을 이 판에 기록한다.
+  /// 상한은 더 낮은 쪽을 남긴다.
+  Future<bool> markAssist(String levelKey, int cap) async {
+    if (!_writable || cap < 1 || cap > 2) return false;
+    if (assistCap(levelKey) <= cap) return true;
+    _assistCaps[levelKey] = cap;
+    return retrySave();
+  }
+
   /// 지금 별빛 길을 쓰면 어떤 수단으로 얼마를 내는지.
   /// [freeUsedThisAttempt] 는 이번 시도에서 무료 사용을 이미 했는지(UI 상태).
+  /// [levelKey] 를 주면 그 판에서 이미 쓴 무료 사용도 센다.
   StarlightPathQuote quoteStarlightPath({
     required bool freeUsedThisAttempt,
+    String? levelKey,
     String? companionId,
     String? companionFamily,
   }) => starlightPathQuote(
     powerUnlocked: hasPower(PowerIds.starlightPath),
-    freeUsedThisAttempt: freeUsedThisAttempt,
+    freeUsedThisAttempt:
+        freeUsedThisAttempt ||
+        (levelKey != null && _freeStarlightUsed.contains(levelKey)),
     charges: _charges,
     starlightDiscount: abilitiesFor(
       companionId: companionId,
@@ -557,9 +619,12 @@ class ProgressionRepository {
 
   /// 별빛 길을 결제한다. 별가루가 모자라면 null(변화 없음).
   /// 성공하면 이번 클리어는 [recordClear] 에 `usedStarlightPath: true` 로 넘긴다.
+  /// [levelKey] 를 주면(캠페인) 그 판에 2별 상한과 무료 사용을 저장해서,
+  /// 다시 시작하거나 판을 나갔다 와도 지워지지 않는다.
   /// [onUsed]는 비용을 확정한 직후 저장을 기다리기 전에 실행된다.
   Future<StarlightPathQuote?> useStarlightPath({
     required bool freeUsedThisAttempt,
+    String? levelKey,
     String? companionId,
     String? companionFamily,
     void Function(StarlightPathQuote)? onUsed,
@@ -567,17 +632,30 @@ class ProgressionRepository {
     if (!_writable) return null;
     final quote = quoteStarlightPath(
       freeUsedThisAttempt: freeUsedThisAttempt,
+      levelKey: levelKey,
       companionId: companionId,
       companionFamily: companionFamily,
     );
+    if (quote.source == StarlightPathSource.stardust &&
+        quote.cost > _stardust) {
+      return null;
+    }
+    if (levelKey != null) {
+      if (assistCap(levelKey) > StarlightPathRules.assistedStarCap) {
+        _assistCaps[levelKey] = StarlightPathRules.assistedStarCap;
+      }
+      if (quote.source == StarlightPathSource.free) {
+        _freeStarlightUsed.add(levelKey);
+      }
+    }
     switch (quote.source) {
       case StarlightPathSource.free:
         onUsed?.call(quote);
+        if (levelKey != null) await retrySave();
         return quote;
       case StarlightPathSource.charge:
         _charges--;
       case StarlightPathSource.stardust:
-        if (quote.cost > _stardust) return null;
         _stardust -= quote.cost;
     }
     onUsed?.call(quote);
@@ -728,6 +806,10 @@ class ProgressionRepository {
       _rewardedStars.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
     ),
     'backfilled': _backfilled,
+    'assistCaps': Map.fromEntries(
+      _assistCaps.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
+    ),
+    'freeStarlightUsed': _freeStarlightUsed.toList()..sort(),
   };
 
   Future<bool> retrySave() async {

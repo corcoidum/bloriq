@@ -70,14 +70,81 @@ void main() {
 
   group('stardust', () {
     test('stars*5 plus 10 on first clear, forest +20% rounded up', () {
-      expect(clearStardust(stars: 3, firstClear: true), 25);
-      expect(clearStardust(stars: 1, firstClear: true), 15);
-      expect(clearStardust(stars: 2, firstClear: false), 10);
-      expect(clearStardust(stars: 3, firstClear: true, forestBonus: true), 30);
-      expect(clearStardust(stars: 1, firstClear: true, forestBonus: true), 18);
-      expect(clearStardust(stars: 2, firstClear: false, forestBonus: true), 12);
+      expect(clearStardust(stars: 3), 25);
+      expect(clearStardust(stars: 1), 15);
+      expect(clearStardust(stars: 3, forestBonus: true), 30);
+      expect(clearStardust(stars: 1, forestBonus: true), 18);
       expect(applyForestBonus(7), 9);
       expect(applyForestBonus(0), 0);
+    });
+
+    test('replays pay 1, upgrades pay only the new stars', () {
+      expect(clearStardust(stars: 2, previousBestStars: 2), 1);
+      expect(clearStardust(stars: 3, previousBestStars: 3), 1);
+      expect(clearStardust(stars: 1, previousBestStars: 3), 1);
+      expect(clearStardust(stars: 3, previousBestStars: 1), 10);
+      expect(clearStardust(stars: 3, previousBestStars: 2), 5);
+      expect(
+        clearStardust(stars: 3, previousBestStars: 2, forestBonus: true),
+        6,
+      );
+    });
+
+    test('a stage pays at most 25 whatever order the stars come in', () {
+      final direct = clearStardust(stars: 3);
+      final stepped =
+          clearStardust(stars: 1) +
+          clearStardust(stars: 2, previousBestStars: 1) +
+          clearStardust(stars: 3, previousBestStars: 2);
+      expect(direct, 25);
+      expect(stepped, 25);
+    });
+
+    test('golden constellation pays 100', () {
+      expect(StardustRules.goldenConstellation, 100);
+    });
+  });
+
+  group('starlight workshop', () {
+    test('shop items are known trails, unique, priced and ascending', () {
+      final ids = trailShop.map((item) => item.trailId).toList();
+      expect(ids.toSet(), hasLength(ids.length));
+      for (final item in trailShop) {
+        expect(trailById(item.trailId), isNotNull);
+        expect(item.price, greaterThan(0));
+        expect(shopItemFor(item.trailId), same(item));
+      }
+      final prices = trailShop.map((item) => item.price).toList();
+      expect(prices, [...prices]..sort());
+      expect(shopItemFor(TrailIds.moonlight), isNull);
+      expect(shopItemFor(TrailIds.goldForest), isNull);
+    });
+  });
+
+  group('golden worlds', () {
+    test('chapters map to worlds of five', () {
+      expect(worldOfChapter(1), 1);
+      expect(worldOfChapter(5), 1);
+      expect(worldOfChapter(6), 2);
+      expect(worldOfChapter(15), 3);
+    });
+
+    test('each released world has a golden-sky trail achievement', () {
+      for (final (world, trail) in [
+        (1, TrailIds.goldForest),
+        (2, TrailIds.goldCloud),
+        (3, TrailIds.goldMirror),
+      ]) {
+        final achievement = achievements.singleWhere(
+          (a) => a.kind == AchievementKind.worldGolden && a.world == world,
+        );
+        expect(achievement.target, 5);
+        expect(
+          achievement.rewards.whereType<TrailUnlock>().single.trailId,
+          trail,
+        );
+        expect(TrailIds.isGolden(trail), true);
+      }
     });
   });
 
@@ -134,6 +201,14 @@ void main() {
         'aurora',
         'starfall',
         'tide',
+        'rose',
+        'ember',
+        'lilac',
+        'jade',
+        'silver',
+        'gold_forest',
+        'gold_cloud',
+        'gold_mirror',
       ]);
       expect(defaultTrailId, 'moonlight');
       expect(titles.length, 17);

@@ -59,7 +59,8 @@ void main() {
       previousBestStars: 2,
     );
     expect(reward.xpGained, 5);
-    expect(reward.clearStardust, 10);
+    // 별을 늘리지 못한 재도전은 별가루 1.
+    expect(reward.clearStardust, 1);
 
     reward = await repo.recordClear(
       levelKey: '1:1',
@@ -67,11 +68,12 @@ void main() {
       previousBestStars: 2,
     );
     expect(reward.xpGained, 15);
-    expect(reward.clearStardust, 15);
+    // 늘어난 별 1개분만 준다.
+    expect(reward.clearStardust, 5);
     expect(reward.bareHanded, true);
     expect(reward.newBareHanded, true);
     expect(reward.totalXp, 80);
-    expect(reward.totalStardust, 45);
+    expect(reward.totalStardust, 26);
     expect(repo.bareHanded, {'1:1'});
 
     reward = await repo.recordClear(
@@ -161,11 +163,11 @@ void main() {
     expect(reward.levelsGained.map((l) => l.level), [2, 3, 4]);
     expect(reward.levelsGained[0].reward, isA<StardustBundle>());
     expect(reward.newTrails, ['petal']);
-    // 황금 별자리: 별가루 50 + 첫 황금 업적(별가루 80, 칭호).
+    // 황금 별자리: 별가루 100 + 첫 황금 업적(별가루 80, 칭호).
     expect(reward.newTitles, ['crescent_apprentice', 'golden_first']);
-    expect(reward.clearStardust, 25 + 50);
-    expect(reward.stardustGained, 75 + 50 + 80);
-    expect(repo.stardust, 25 + 75 + 50 + 80);
+    expect(reward.clearStardust, 25 + 100);
+    expect(reward.stardustGained, 125 + 50 + 80);
+    expect(repo.stardust, 25 + 125 + 50 + 80);
     expect(repo.claimedLevels, {2, 3, 4});
     expect(repo.ownedTrails, {'moonlight', 'petal'});
     expect(repo.ownedTitles, {'crescent_apprentice', 'golden_first'});
@@ -218,17 +220,17 @@ void main() {
     final dust = <int>[];
     for (var i = 0; i < 9; i++) {
       final reward = await repo.recordClear(
-        levelKey: '1:1',
+        levelKey: '${i + 1}:1',
         stars: 3,
-        previousBestStars: i == 0 ? null : 3,
+        previousBestStars: null,
         companionId: 's1-01',
         companionFamily: 'forest',
       );
       dust.add(reward.clearStardust);
     }
     expect(dust.first, 25);
-    expect(dust[7], 15); // 8번째 클리어로 Lv3 이 된다.
-    expect(dust[8], 18);
+    expect(dust[7], 25); // 8번째 클리어로 Lv3 이 된다.
+    expect(dust[8], 30);
   });
 
   test('cloud bond Lv3 unlocks the mist trail', () async {
@@ -355,6 +357,228 @@ void main() {
     });
   });
 
+  group('help stays with the stage', () {
+    Future<ProgressionRepository> rich() async {
+      final repo = await _load();
+      for (var id = 1; id <= 4; id++) {
+        await repo.recordClear(
+          levelKey: '$id:1',
+          stars: 3,
+          previousBestStars: null,
+        );
+      }
+      return repo;
+    }
+
+    test('paid starlight caps the next clear even after a reload', () async {
+      final repo = await rich();
+      expect(repo.assistCap('9:1'), 3);
+      await repo.useStarlightPath(freeUsedThisAttempt: false, levelKey: '9:1');
+      expect(repo.assistCap('9:1'), 2);
+
+      // 다시 시작하거나 판을 나갔다 오는 것은 앱이 시도 상태를 버리는 것과 같다.
+      final reloaded = await _load();
+      expect(reloaded.assistCap('9:1'), 2);
+      final reward = await reloaded.recordClear(
+        levelKey: '9:1',
+        stars: 3,
+        previousBestStars: null,
+      );
+      expect(reward.starsAwarded, 2);
+      expect(reward.bareHanded, false);
+      expect(reloaded.bareHanded, isNot(contains('9:1')));
+
+      // 깨고 나면 지워져서 다음 재도전은 다시 3별을 받을 수 있다.
+      expect(reloaded.assistCap('9:1'), 3);
+      final again = await reloaded.recordClear(
+        levelKey: '9:1',
+        stars: 3,
+        previousBestStars: 2,
+      );
+      expect(again.starsAwarded, 3);
+    });
+
+    test(
+      'a stage-saved cap also applies to world-2 bare-hand checks',
+      () async {
+        final repo = await rich();
+        await repo.useStarlightPath(
+          freeUsedThisAttempt: false,
+          levelKey: '101:1',
+        );
+        final reward = await repo.recordClear(
+          levelKey: '101:1',
+          stars: 3,
+          previousBestStars: null,
+          bareHandedClear: true,
+        );
+        expect(reward.starsAwarded, 2);
+        expect(reward.bareHanded, false);
+      },
+    );
+
+    test('a failed payment leaves no cap behind', () async {
+      final repo = await _load();
+      expect(
+        await repo.useStarlightPath(
+          freeUsedThisAttempt: false,
+          levelKey: '1:1',
+        ),
+        isNull,
+      );
+      expect(repo.assistCap('1:1'), 3);
+    });
+
+    test('following the solution caps at 1 and keeps the lower cap', () async {
+      final repo = await rich();
+      expect(await repo.markAssist('7:1', 1), true);
+      await repo.useStarlightPath(freeUsedThisAttempt: false, levelKey: '7:1');
+      expect(repo.assistCap('7:1'), 1);
+      final reward = await (await _load()).recordClear(
+        levelKey: '7:1',
+        stars: 3,
+        previousBestStars: null,
+      );
+      expect(reward.starsAwarded, 1);
+      expect(await repo.markAssist('7:1', 3), false);
+    });
+
+    test('free starlight is once per stage until it is cleared', () async {
+      final repo = await _load();
+      await repo.backfill(
+        records: _allThreeStars(),
+        completedChapters: {1, 2, 3, 4, 5},
+        goldenChapters: {1, 2, 3, 4, 5},
+      );
+      expect(
+        await repo.useStarlightPath(
+          freeUsedThisAttempt: false,
+          levelKey: '101:1',
+        ),
+        const StarlightPathQuote(StarlightPathSource.free, 0),
+      );
+      // 다시 시작하면 시도 상태(freeUsedThisAttempt)는 false 로 돌아가지만
+      // 판에 남은 기록 때문에 무료가 다시 생기지 않는다.
+      final reloaded = await _load();
+      expect(reloaded.freeStarlightUsed('101:1'), true);
+      expect(
+        reloaded.quoteStarlightPath(
+          freeUsedThisAttempt: false,
+          levelKey: '101:1',
+        ),
+        const StarlightPathQuote(StarlightPathSource.charge, 0),
+      );
+      // 다른 판에서는 여전히 무료.
+      expect(
+        reloaded
+            .quoteStarlightPath(freeUsedThisAttempt: false, levelKey: '102:1')
+            .source,
+        StarlightPathSource.free,
+      );
+      await reloaded.recordClear(
+        levelKey: '101:1',
+        stars: 2,
+        previousBestStars: null,
+      );
+      expect(reloaded.freeStarlightUsed('101:1'), false);
+    });
+
+    test('old saves without the new fields still load', () async {
+      SharedPreferences.setMockInitialValues({
+        ProgressionRepository.storageKey: jsonEncode({
+          'version': 1,
+          'xp': 300,
+          'stardust': 40,
+          'ownedTrails': ['moonlight'],
+          'rewardedStars': {'1:1': 3},
+          'backfilled': true,
+        }),
+      });
+      final repo = await _load();
+      expect(repo.corrupt, false);
+      expect(repo.stardust, 40);
+      expect(repo.assistCap('1:1'), 3);
+      expect(repo.freeStarlightUsed('1:1'), false);
+      await repo.markAssist('2:1', 2);
+      final stored = await _stored();
+      expect(stored['assistCaps'], {'2:1': 2});
+      expect(stored['freeStarlightUsed'], isEmpty);
+      expect(stored['xp'], 300);
+    });
+
+    test('an out-of-range saved cap counts as corrupt', () async {
+      SharedPreferences.setMockInitialValues({
+        ProgressionRepository.storageKey: jsonEncode({
+          'version': 1,
+          'assistCaps': {'1:1': 3},
+        }),
+      });
+      expect((await _load()).corrupt, true);
+    });
+  });
+
+  group('starlight workshop', () {
+    test('buying spends stardust, owns and equips the trail', () async {
+      final repo = await _load();
+      for (var id = 1; id <= 12; id++) {
+        await repo.recordClear(
+          levelKey: '$id:1',
+          stars: 3,
+          previousBestStars: null,
+        );
+      }
+      final before = repo.stardust;
+      expect(before, greaterThanOrEqualTo(300));
+      expect(await repo.buyTrail(TrailIds.rose), true);
+      expect(repo.stardust, before - 300);
+      expect(repo.ownedTrails, contains(TrailIds.rose));
+      expect(repo.equippedTrail, TrailIds.rose);
+      // 두 번 사지 않는다.
+      expect(await repo.buyTrail(TrailIds.rose), false);
+      expect(repo.stardust, before - 300);
+      final reloaded = await _load();
+      expect(reloaded.ownedTrails, contains(TrailIds.rose));
+      expect(reloaded.equippedTrail, TrailIds.rose);
+    });
+
+    test('cannot buy without enough stardust or a non-shop trail', () async {
+      final repo = await _load();
+      await repo.recordClear(
+        levelKey: '1:1',
+        stars: 3,
+        previousBestStars: null,
+      );
+      expect(await repo.buyTrail(TrailIds.rose), false);
+      expect(await repo.buyTrail(TrailIds.goldForest), false);
+      expect(await repo.buyTrail(TrailIds.aurora), false);
+      expect(repo.stardust, 25);
+      expect(repo.ownedTrails, {'moonlight'});
+    });
+  });
+
+  test('five golden chapters in one world unlock its golden trail', () async {
+    final repo = await _load();
+    ClearReward? last;
+    for (var chapter = 6; chapter <= 10; chapter++) {
+      last = await repo.recordClear(
+        levelKey: '${100 + chapter}:1',
+        stars: 3,
+        previousBestStars: null,
+        constellationCompletedChapter: chapter,
+        constellationGoldenChapter: chapter,
+      );
+      final w2 = achievementById('w2-golden-5')!;
+      expect(repo.achievementProgress(w2), chapter - 5);
+    }
+    expect(last!.newTrails, contains(TrailIds.goldCloud));
+    expect(
+      last.achievements.map((a) => a.id),
+      containsAll(['w2-golden-5', 'golden-5']),
+    );
+    expect(repo.ownedTrails, contains(TrailIds.goldCloud));
+    expect(repo.achievementProgress(achievementById('w1-golden-5')!), 0);
+  });
+
   test('spendStardust only succeeds with enough balance', () async {
     final repo = await _load();
     await repo.recordClear(levelKey: '1:1', stars: 3, previousBestStars: null);
@@ -380,10 +604,10 @@ void main() {
       expect(reward.levelsGained.map((l) => l.level), [
         for (var l = 2; l <= 12; l++) l,
       ]);
-      expect(reward.clearStardust, 25 * 25 + 5 * 50);
-      // 황금 별자리 5개 × 별가루 50 포함.
-      expect(reward.stardustGained, 875 + 50 + 80 + 100 + 120);
-      expect(repo.stardust, 1225);
+      expect(reward.clearStardust, 25 * 25 + 5 * 100);
+      // 황금 별자리 5개 × 별가루 100 포함.
+      expect(reward.stardustGained, 1125 + 50 + 80 + 100 + 120);
+      expect(repo.stardust, 1475);
       expect(reward.newPowers.map((p) => p.id), [
         'moonflower_leap',
         'light_swap',
@@ -409,7 +633,7 @@ void main() {
         isNull,
       );
       expect(repo.xp, 3350);
-      expect(repo.stardust, 1225);
+      expect(repo.stardust, 1475);
 
       final restored = await _load();
       expect(restored.backfilled, true);
@@ -422,7 +646,7 @@ void main() {
         isNull,
       );
       expect(restored.xp, 3350);
-      expect(restored.stardust, 1225);
+      expect(restored.stardust, 1475);
       expect(restored.powers.length, 5);
     });
 

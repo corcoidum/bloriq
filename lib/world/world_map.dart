@@ -6,6 +6,7 @@ import '../design/game_theme.dart';
 import '../design/keep_all_text.dart';
 import '../game/power_bar.dart';
 import '../l10n/app_localizations.dart';
+import '../progression/progression_rules.dart';
 import '../world/saga.dart';
 import 'world_catalog.dart';
 import 'world_progress.dart';
@@ -159,7 +160,13 @@ class _ChapterPage extends StatelessWidget {
                     child: TextButton.icon(
                       key: ValueKey('world-guardian-${guardian.level.id}'),
                       onPressed: () => _openGuardian(context),
-                      icon: const Icon(Icons.auto_awesome_rounded, size: 16),
+                      icon: Icon(
+                        chapter.golden
+                            ? Icons.workspace_premium_rounded
+                            : Icons.auto_awesome_rounded,
+                        size: 16,
+                        color: chapter.golden ? colors.reward : null,
+                      ),
                       label: Text(info.constellation.inLocale(lang)),
                     ),
                   )
@@ -271,16 +278,58 @@ class _GuardianAtlasCard extends StatelessWidget {
               ),
             ),
           ),
-          if (spirit.asset case final asset?)
-            Image.asset(
-              asset,
-              width: 72,
-              height: 72,
-              fit: BoxFit.contain,
-              errorBuilder: (_, _, _) => placeholder,
+          DecoratedBox(
+            key: ValueKey(
+              chapter.golden ? 'guardian-golden-frame' : 'guardian-frame',
+            ),
+            // 황금 별자리의 수호 정령은 금빛 테두리와 후광을 두른다.
+            decoration: chapter.golden
+                ? BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: colors.reward, width: 3),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colors.reward.withValues(alpha: .55),
+                        blurRadius: 18,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  )
+                : const BoxDecoration(),
+            child: Padding(
+              padding: EdgeInsets.all(chapter.golden ? 6 : 0),
+              child: spirit.asset != null
+                  ? Image.asset(
+                      spirit.asset!,
+                      width: 72,
+                      height: 72,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, _, _) => placeholder,
+                    )
+                  : placeholder,
+            ),
+          ),
+          if (chapter.golden)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                GoldenText.guardian.resolve(lang),
+                textAlign: TextAlign.center,
+                style: GameTypography.label.copyWith(color: colors.rewardInk),
+              ),
             )
           else
-            placeholder,
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: KeepAllText(
+                GoldenText.howTo.resolve(lang),
+                textAlign: TextAlign.center,
+                style: GameTypography.body.copyWith(
+                  fontSize: 12.5,
+                  color: colors.secondaryText,
+                ),
+              ),
+            ),
           Text(
             spirit.name.inLocale(lang),
             textAlign: TextAlign.center,

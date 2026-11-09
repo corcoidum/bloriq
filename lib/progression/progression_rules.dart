@@ -117,23 +117,36 @@ abstract final class StardustRules {
   static const perStar = 5;
   static const firstClearBonus = 10;
 
+  /// 이미 깬 판을 별을 늘리지 못하고 다시 깼을 때.
+  static const replayClear = 1;
+
   /// 황금 별자리(장의 다섯 판 모두 3별)를 처음 만들 때마다.
-  static const goldenConstellation = 50;
+  static const goldenConstellation = 100;
 
   /// 숲 계열 유대 Lv3 보너스(+20%, 올림).
   static const forestBonusPercent = 20;
 }
 
-/// 클리어 한 번의 별가루. [forestBonus] 는 숲 계열 유대 능력이다.
+/// 클리어 한 번의 별가루. [previousBestStars] 가 null 이면 첫 클리어다.
+///
+/// 첫 클리어는 별마다 5 + 10, 별을 늘린 재도전은 늘어난 별마다 5,
+/// 별을 늘리지 못한 재도전은 1. 그래서 한 판에서 받는 별가루는 어떤 순서로
+/// 깨도 최대 25로 같고, 쉬운 판을 되풀이해도 거의 쌓이지 않는다.
+/// [forestBonus] 는 숲 계열 유대 능력이다.
 int clearStardust({
   required int stars,
-  required bool firstClear,
+  int? previousBestStars,
   bool forestBonus = false,
 }) {
   _checkStars(stars);
-  final base =
-      StardustRules.perStar * stars +
-      (firstClear ? StardustRules.firstClearBonus : 0);
+  final int base;
+  if (previousBestStars == null) {
+    base = StardustRules.perStar * stars + StardustRules.firstClearBonus;
+  } else if (stars > previousBestStars) {
+    base = StardustRules.perStar * (stars - previousBestStars);
+  } else {
+    base = StardustRules.replayClear;
+  }
   return forestBonus ? applyForestBonus(base) : base;
 }
 
@@ -164,6 +177,20 @@ abstract final class TrailIds {
 
   /// 별바다 항해 25판 이정표.
   static const tide = 'tide';
+
+  // 별빛 공방에서 별가루로 사는 잔영.
+  static const rose = 'rose';
+  static const ember = 'ember';
+  static const lilac = 'lilac';
+  static const jade = 'jade';
+  static const silver = 'silver';
+
+  // 한 세계의 별자리 다섯 개를 모두 황금으로 만들면 받는 잔영.
+  static const goldForest = 'gold_forest';
+  static const goldCloud = 'gold_cloud';
+  static const goldMirror = 'gold_mirror';
+
+  static bool isGolden(String id) => id.startsWith('gold_');
 }
 
 const defaultTrailId = TrailIds.moonlight;
@@ -177,7 +204,55 @@ const trails = <TrailDefinition>[
   TrailDefinition(TrailIds.aurora, ProgressionText('오로라', 'Aurora')),
   TrailDefinition(TrailIds.starfall, ProgressionText('별비', 'Starfall')),
   TrailDefinition(TrailIds.tide, ProgressionText('물결', 'Tide')),
+  TrailDefinition(TrailIds.rose, ProgressionText('장밋빛', 'Rose')),
+  TrailDefinition(TrailIds.ember, ProgressionText('불씨', 'Ember')),
+  TrailDefinition(TrailIds.lilac, ProgressionText('라일락', 'Lilac')),
+  TrailDefinition(TrailIds.jade, ProgressionText('비취', 'Jade')),
+  TrailDefinition(TrailIds.silver, ProgressionText('은하수', 'Silver Way')),
+  TrailDefinition(
+    TrailIds.goldForest,
+    ProgressionText('황금 달빛', 'Golden Moonlight'),
+  ),
+  TrailDefinition(TrailIds.goldCloud, ProgressionText('황금 구름', 'Golden Cloud')),
+  TrailDefinition(
+    TrailIds.goldMirror,
+    ProgressionText('황금 물결', 'Golden Ripple'),
+  ),
 ];
+
+/// 별빛 공방: 별가루로 사는 잔영과 값. 세계 하나(별가루 약 1,700)를
+/// 다 깨면 두세 개를 살 수 있는 정도로 맞췄다.
+class ShopItem {
+  const ShopItem(this.trailId, this.price);
+  final String trailId;
+  final int price;
+}
+
+const trailShop = <ShopItem>[
+  ShopItem(TrailIds.rose, 300),
+  ShopItem(TrailIds.ember, 400),
+  ShopItem(TrailIds.lilac, 500),
+  ShopItem(TrailIds.jade, 800),
+  ShopItem(TrailIds.silver, 1200),
+];
+
+ShopItem? shopItemFor(String trailId) {
+  for (final item in trailShop) {
+    if (item.trailId == trailId) return item;
+  }
+  return null;
+}
+
+abstract final class ShopText {
+  static const heading = ProgressionText('별빛 공방', 'Starlight Workshop');
+  static const intro = ProgressionText(
+    '별가루로 새 이동 잔영을 살 수 있어요',
+    'Trade stardust for new move trails',
+  );
+  static const owned = ProgressionText('가졌어요', 'Owned');
+  static const bought = ProgressionText('새 잔영을 달았어요', 'New trail equipped');
+  static const short = ProgressionText('별가루가 모자라요', 'Not enough stardust');
+}
 
 TrailDefinition? trailById(String? id) {
   for (final trail in trails) {
@@ -609,7 +684,13 @@ enum AchievementKind {
 
   /// 맨손 별을 받은 판 개수. 모든 세계를 합친다.
   bareHandedStars,
+
+  /// 한 세계 안의 황금 별자리 개수(최대 5).
+  worldGolden,
 }
+
+/// 전역 장 번호(세계 n = (n-1)*5+1..)로 세계 번호를 구한다.
+int worldOfChapter(int chapter) => (chapter - 1) ~/ 5 + 1;
 
 class Achievement {
   const Achievement({
@@ -624,7 +705,7 @@ class Achievement {
   final AchievementKind kind;
   final int target;
 
-  /// [AchievementKind.worldStars]일 때 세계 번호.
+  /// [AchievementKind.worldStars], [AchievementKind.worldGolden]일 때 세계 번호.
   final int? world;
   final ProgressionText name;
   final List<TrackReward> rewards;
@@ -729,6 +810,30 @@ const achievements = <Achievement>[
     rewards: [StardustBundle(400), TitleUnlock('golden_sky')],
   ),
   Achievement(
+    id: 'w1-golden-5',
+    kind: AchievementKind.worldGolden,
+    world: 1,
+    target: 5,
+    name: ProgressionText('달빛 숲 황금 하늘', 'Golden Forest sky'),
+    rewards: [TrailUnlock(TrailIds.goldForest), StardustBundle(300)],
+  ),
+  Achievement(
+    id: 'w2-golden-5',
+    kind: AchievementKind.worldGolden,
+    world: 2,
+    target: 5,
+    name: ProgressionText('구름바다 황금 하늘', 'Golden Cloud-Sea sky'),
+    rewards: [TrailUnlock(TrailIds.goldCloud), StardustBundle(300)],
+  ),
+  Achievement(
+    id: 'w3-golden-5',
+    kind: AchievementKind.worldGolden,
+    world: 3,
+    target: 5,
+    name: ProgressionText('거울 호수 황금 하늘', 'Golden Mirror Lake sky'),
+    rewards: [TrailUnlock(TrailIds.goldMirror), StardustBundle(300)],
+  ),
+  Achievement(
     id: 'bare-5',
     kind: AchievementKind.bareHandedStars,
     target: 5,
@@ -768,4 +873,28 @@ abstract final class AchievementText {
   static const heading = ProgressionText('별 모으기', 'Star collection');
   static const stars = ProgressionText('세계별 별', 'Stars by world');
   static const mastery = ProgressionText('황금 별자리 · 맨손 별', 'Gold & bare-handed');
+  static const golden = ProgressionText('황금 별자리', 'Golden constellations');
+  static const bareHanded = ProgressionText('맨손 별', 'Bare-handed stars');
+}
+
+/// 황금 별자리 화면 문구.
+abstract final class GoldenText {
+  static const guardian = ProgressionText(
+    '황금 별자리의 수호 정령',
+    'Guardian of a golden constellation',
+  );
+  static const howTo = ProgressionText(
+    '장의 다섯 판을 모두 별 3개로 깨면 별자리가 황금빛이 돼요',
+    'Earn 3 stars on all five stages to turn it gold',
+  );
+}
+
+/// 도움을 쓴 판의 표시.
+abstract final class AssistCapText {
+  static ProgressionText badge(int cap) =>
+      ProgressionText('최대 ★$cap', 'Max ★$cap');
+  static const kept = ProgressionText(
+    '이 판에서 쓴 도움은 다시 시작해도 남아요. 깰 때까지 별 상한이 그대로예요',
+    'Help used here stays after a restart. The star limit holds until you clear it',
+  );
 }

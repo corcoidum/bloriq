@@ -82,4 +82,37 @@ void main() {
     expect(saved.stardust, lessThan(40 + 25));
     expect(saved.bareHanded, isEmpty);
   });
+
+  testWidgets('restarting after the starlight path keeps the 2-star cap', (
+    tester,
+  ) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString(
+      ProgressionRepository.storageKey,
+      '{"version":1,"xp":0,"stardust":40,"backfilled":true}',
+    );
+    await pumpGame(tester, const BloriqApp());
+    expect(find.byKey(const ValueKey('assist-cap-badge')), findsNothing);
+    await tapVisible(tester, find.byKey(const ValueKey('starlight-path')));
+    expect(_game(tester).hintMove, isNotNull);
+    expect(find.byKey(const ValueKey('assist-cap-badge')), findsOneWidget);
+
+    // 예전에는 다시 시작하면 별빛 길을 안 쓴 것처럼 3별을 받을 수 있었다.
+    // "별 2개까지" 안내 스낵바가 버튼을 가리지 않게 사라질 때까지 기다린다.
+    for (var i = 0; i < 12; i++) {
+      await tester.pump(const Duration(milliseconds: 500));
+    }
+    await tapVisible(tester, find.byIcon(Icons.refresh_rounded));
+    expect(_game(tester).hintMove, isNull);
+    expect(find.byKey(const ValueKey('assist-cap-badge')), findsOneWidget);
+    expect(find.text('Max ★2'), findsOneWidget);
+
+    await _solve(tester);
+    expect(find.text('★★☆'), findsOneWidget);
+    final saved = await ProgressionRepository.load();
+    // 별빛 길 값(20)은 돌려받지 않고, 2별 첫 클리어 별가루(20)만 받는다.
+    expect(saved.stardust, 40 - 20 + 20);
+    expect(saved.bareHanded, isEmpty);
+    expect(saved.assistCap('1:1'), 3);
+  });
 }

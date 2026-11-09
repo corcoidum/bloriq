@@ -71,12 +71,13 @@ class _ConstellationArtState extends State<ConstellationArt> {
     final complete = lit.every((value) => value);
     final colors = GameTheme.colorsOf(context);
     final portrait = complete ? StarArt.portraits[widget.guardianAsset] : null;
+    final goldenGlow = widget.golden ?? (chapter.golden ? 1.0 : 0.0);
     final chart = CustomPaint(
       painter: ConstellationPainter(
         definition: chapter.definition,
         lit: lit,
         colors: colors,
-        golden: widget.golden ?? (chapter.golden ? 1 : 0),
+        golden: goldenGlow,
         pendingNode: widget.pendingNode,
         highlightNode: widget.highlightNode,
         nodeReveal: widget.nodeReveal,
@@ -96,12 +97,23 @@ class _ConstellationArtState extends State<ConstellationArt> {
                   child: Opacity(
                     opacity: widget.portraitReveal.clamp(0.0, 1.0),
                     child: DecoratedBox(
+                      // 황금 별자리의 수호 정령은 금빛 후광을 두른다.
                       decoration: BoxDecoration(
                         gradient: RadialGradient(
-                          colors: [
-                            colors.primary.withValues(alpha: .14),
-                            colors.primary.withValues(alpha: 0),
-                          ],
+                          colors: goldenGlow > 0
+                              ? [
+                                  colors.reward.withValues(
+                                    alpha: .6 * goldenGlow,
+                                  ),
+                                  colors.reward.withValues(
+                                    alpha: .2 * goldenGlow,
+                                  ),
+                                  colors.reward.withValues(alpha: 0),
+                                ]
+                              : [
+                                  colors.primary.withValues(alpha: .14),
+                                  colors.primary.withValues(alpha: 0),
+                                ],
                         ),
                       ),
                       child: RawImage(
