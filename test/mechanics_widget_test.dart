@@ -30,6 +30,11 @@ void main() {
       oneWays: {const Position(2, 1): const Position(1, 0)},
       goalOnlyTiles: {const Position(3, 1)},
     );
+    // 키 큰 폰에서는 기믹 설명을 모두 펼쳐 보여 준다.
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     await pumpGame(tester, BloriqApp(loadLevels: () async => [level]));
     final boardFinder = find.byType(GameWidget<BloriqGame>);
     for (var i = 0; i < 100 && boardFinder.evaluate().isEmpty; i++) {

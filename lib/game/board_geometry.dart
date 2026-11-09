@@ -89,10 +89,6 @@ class BoardGeometry {
   RRect get boardShape =>
       RRect.fromRectAndRadius(boardRect, Radius.circular(boardRadius));
   Rect get framedBoardRect => boardRect.shift(Offset(frameInset, frameInset));
-  RRect get frameShape => RRect.fromRectAndRadius(
-    (Offset.zero & outerSize).deflate(4).translate(0, -stoneDepth / 2),
-    Radius.circular(boardRadius + frameInset - 4),
-  );
   double get dragThreshold => cellSize * dragFraction;
   double get tileGap =>
       (cellSize * .05 * devicePixelRatio).round().clamp(

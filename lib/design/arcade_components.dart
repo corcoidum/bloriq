@@ -14,19 +14,6 @@ bool prefersReducedMotion(BuildContext context, GameSettings settings) =>
         .accessibilityFeatures
         .reduceMotion;
 
-class BrandMark extends StatelessWidget {
-  const BrandMark({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = GameTheme.colorsOf(context);
-    return Text(
-      'BLORIQ',
-      style: GameTypography.brand.copyWith(color: colors.rewardInk),
-    );
-  }
-}
-
 /// 매 스테이지 상단 중앙에 고정하는 금빛 게임 로고.
 class GameWordmark extends StatelessWidget {
   const GameWordmark({super.key, this.size = 32});

@@ -130,7 +130,8 @@ void main() {
     expect(progress.bestStars, 3);
     expect(progress.completionCount, 2);
 
-    await tapVisible('Levels');
+    await tester.tap(find.byTooltip('Levels'));
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('★★★'), findsWidgets);
   });

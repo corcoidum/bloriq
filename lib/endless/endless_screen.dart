@@ -59,9 +59,11 @@ class _EndlessScreenState extends State<EndlessScreen> {
   VoyageSummary? _summary;
   ClearReward? _reward;
   bool _finishing = false;
+  bool _starting = false;
 
   /// 아주 작은 화면이나 큰 글자에서 보드 칸이 너무 작아지면 스크롤 배치로 바꾼다.
   bool _scrollLayout = false;
+  bool _compactLegend = false;
   static const _minCell = 40.0;
   String? _dragBlock;
   Offset? _dragStart, _dragEnd;
@@ -100,18 +102,60 @@ class _EndlessScreenState extends State<EndlessScreen> {
 
   // ---- 항해 흐름 -------------------------------------------------------------
 
-  void _startNew() {
-    final seed =
-        widget.seed ?? DateTime.now().millisecondsSinceEpoch & 0x7fffffff;
-    final run = VoyageRun.start(_pool!, seed: seed);
-    unawaited(_repo.saveRun(run));
-    _sail(run);
+  Future<void> _startNew() async {
+    if (_starting) return;
+    final previous = _repo.savedRun;
+    final lang = AppLocalizations.of(context)!.localeName;
+    setState(() => _starting = true);
+    try {
+      if (previous != null) {
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: Text(EndlessText.endVoyageTitle.resolve(lang)),
+            content: Text(
+              EndlessText.endVoyageBody(
+                previous.depth,
+                previous.cleared,
+                previous.score,
+              ).resolve(lang),
+            ),
+            actions: [
+              TextButton(
+                key: const ValueKey('endless-cancel-new'),
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: Text(EndlessText.keepVoyage.resolve(lang)),
+              ),
+              TextButton(
+                key: const ValueKey('endless-confirm-new'),
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: Text(EndlessText.endAndSail.resolve(lang)),
+              ),
+            ],
+          ),
+        );
+        if (confirm != true || !mounted) return;
+      }
+      final seed =
+          widget.seed ?? DateTime.now().millisecondsSinceEpoch & 0x7fffffff;
+      final run = VoyageRun.start(_pool!, seed: seed);
+      final saved = await _repo.replaceRun(previous, run);
+      if (!mounted) return;
+      if (saved) {
+        _sail(run);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(EndlessText.startSaveFailed.resolve(lang))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _starting = false);
+    }
   }
 
   void _resume() {
     final run = _repo.savedRun;
-    if (run == null) return _startNew();
-    _sail(run);
+    if (run != null && !_starting) _sail(run);
   }
 
   void _sail(VoyageRun run) {
@@ -143,7 +187,7 @@ class _EndlessScreenState extends State<EndlessScreen> {
   void _boardCleared() {
     final run = _run!;
     final result = run.clear(_minimum, _pool!);
-    unawaited(_repo.saveRun(run));
+    unawaited(_repo.saveRun(run, clearedBoard: true));
     _flash = result;
     final reduce = prefersReducedMotion(context, widget.settings);
     _flashTimer = Timer(Duration(milliseconds: reduce ? 700 : 1300), () {
@@ -522,7 +566,7 @@ class _EndlessScreenState extends State<EndlessScreen> {
             children: [
               _record(
                 EndlessText.best.resolve(lang),
-                '${_repo.bestScore}',
+                '${_repo.harborBestScore}',
                 colors,
                 const ValueKey('endless-best'),
               ),
@@ -536,7 +580,7 @@ class _EndlessScreenState extends State<EndlessScreen> {
               const SizedBox(width: 8),
               _record(
                 EndlessText.bestDepth.resolve(lang),
-                '${_repo.bestDepth}',
+                '${_repo.harborBestDepth}',
                 colors,
                 const ValueKey('endless-depth'),
               ),
@@ -554,7 +598,7 @@ class _EndlessScreenState extends State<EndlessScreen> {
             FilledButton.icon(
               key: const ValueKey('endless-resume'),
               style: FilledButton.styleFrom(minimumSize: const Size(48, 56)),
-              onPressed: _resume,
+              onPressed: _starting ? null : _resume,
               icon: const Icon(Icons.play_arrow_rounded, size: 27),
               label: Text(
                 '${EndlessText.resume.resolve(lang)} · '
@@ -562,14 +606,20 @@ class _EndlessScreenState extends State<EndlessScreen> {
                 style: const TextStyle(fontSize: 19),
               ),
             ),
+            const SizedBox(height: 4),
+            KeepAllText(
+              EndlessText.voyageProgress(
+                saved.cleared,
+                saved.score,
+              ).resolve(lang),
+              textAlign: TextAlign.center,
+              style: GameTypography.body.copyWith(color: colors.secondaryText),
+            ),
             const SizedBox(height: 8),
             OutlinedButton.icon(
               key: const ValueKey('endless-new'),
               style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48)),
-              onPressed: () async {
-                await _repo.discardRun();
-                if (mounted) _startNew();
-              },
+              onPressed: _starting ? null : _startNew,
               icon: const Icon(Icons.restart_alt_rounded),
               label: Text(EndlessText.newVoyage.resolve(lang)),
             ),
@@ -577,7 +627,7 @@ class _EndlessScreenState extends State<EndlessScreen> {
             FilledButton.icon(
               key: const ValueKey('endless-start'),
               style: FilledButton.styleFrom(minimumSize: const Size(48, 56)),
-              onPressed: _startNew,
+              onPressed: _starting ? null : _startNew,
               icon: const Icon(Icons.sailing_rounded, size: 26),
               label: Text(
                 EndlessText.start.resolve(lang),
@@ -589,14 +639,38 @@ class _EndlessScreenState extends State<EndlessScreen> {
     );
   }
 
-  /// 홈과 같은 기준: 아주 작은 화면이나 큰 글자에서는 처음부터 스크롤 배치를 쓴다.
+  /// 설명을 접어도 보드가 들어가지 않을 때만 스크롤 배치를 쓴다.
   Widget _sailing(AppLocalizations t, GameColors colors) => LayoutBuilder(
     builder: (context, area) {
-      if (!_scrollLayout &&
-          (area.maxHeight < 560 ||
-              MediaQuery.textScalerOf(context).scale(10) > 13)) {
-        _scrollLayout = true;
-      }
+      final level = _controller!.state.level;
+      final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
+      final room =
+          area.maxHeight -
+          level.boardHeight * _minCell -
+          BoardGeometry.defaultFrameInset * 2 -
+          (30 * scale +
+              6 +
+              math.max(24.0, 22 * scale) +
+              4 +
+              24 * scale +
+              8 +
+              math.max(48.0, 22 * scale + 26));
+      double legendHeight(bool compact) => MechanicLegend.slotHeight(
+        context,
+        width: area.maxWidth,
+        compact: compact,
+        notes: [t.instruction, t.echoInstruction],
+        mechanics: [
+          if (level.echoErasers.isNotEmpty) [t.eraserRule],
+          if (level.echoHolds.isNotEmpty) [t.holdRule],
+          if (level.oneWays.isNotEmpty) [t.oneWayRule],
+          if (level.goalOnlyTiles.isNotEmpty) [t.goalOnlyRule],
+          if (level.echoGate != null)
+            [t.gateOpen, t.gateOccupied, t.gateInstruction],
+        ],
+      );
+      _compactLegend = room < legendHeight(false);
+      if (!_scrollLayout && room < legendHeight(true)) _scrollLayout = true;
       return _sailingColumn(t, colors);
     },
   );
@@ -751,7 +825,7 @@ class _EndlessScreenState extends State<EndlessScreen> {
           )
         else
           Expanded(child: _board(t)),
-        MechanicLegend(items: legend),
+        MechanicLegend(items: legend, compact: _compactLegend),
         const SizedBox(height: 8),
         Row(
           children: [

@@ -218,7 +218,7 @@ void main() {
         await _step(tester, move);
       }
       expect(find.text('Skip celebration'), findsOneWidget);
-      await _tap(tester, find.text('Levels'));
+      await _tap(tester, find.byTooltip('Levels'));
       await _tap(tester, find.text('Level 2').last);
       await tester.pump(const Duration(seconds: 2));
       expect(_game(tester).controller.state.level.id, 2);

@@ -114,7 +114,7 @@ class _IntroScreenState extends State<IntroScreen>
                                 alignment: Alignment.centerLeft,
                                 child: FittedBox(
                                   fit: BoxFit.scaleDown,
-                                  child: BrandMark(),
+                                  child: GameWordmark(size: 22),
                                 ),
                               ),
                             ),

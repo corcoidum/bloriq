@@ -11,10 +11,8 @@ void main() {
     await tester.runAsync(StarArt.load);
     expect(StarArt.garden.keys.toSet(), StarArt.gardenSprites.toSet());
     for (final name in StarArt.gardenSprites) {
-      // 판석·판자 결·물길은 칸 끝까지 이어지므로 모서리 투명도를 보지 않는다.
-      if (name.startsWith('floor') ||
-          name == 'plank' ||
-          name == 'tile_stream') {
+      // 판석과 물길은 칸 끝까지 이어지므로 모서리 투명도를 보지 않는다.
+      if (name.startsWith('floor') || name == 'tile_stream') {
         continue;
       }
       await tester.runAsync(() async {

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -41,6 +42,7 @@ class EndlessRepository {
   int _weekBest = 0;
   final Set<String> _milestones = {};
   VoyageRun? _run;
+  String? _runClearWeek;
 
   static Future<EndlessRepository> load({DateTime Function()? clock}) async {
     SharedPreferences? preferences;
@@ -77,6 +79,7 @@ class EndlessRepository {
     if (data['run'] case final Map<String, dynamic> run) {
       try {
         _run = VoyageRun.fromJson(run);
+        if (data['runClearWeek'] case final String week) _runClearWeek = week;
       } catch (_) {
         _run = null;
       }
@@ -93,21 +96,66 @@ class EndlessRepository {
         '${monday.day.toString().padLeft(2, '0')}';
   }
 
-  int get weekBest => _weekKey == currentWeek ? _weekBest : 0;
+  int get harborBestScore => math.max(bestScore, _run?.score ?? 0);
+  int get harborBestDepth => math.max(bestDepth, _run?.cleared ?? 0);
+
+  int _archivedWeekBest(String week) => _weekKey == week ? _weekBest : 0;
+
+  int get weekBest {
+    final week = currentWeek;
+    return math.max(
+      _archivedWeekBest(week),
+      _runClearWeek == week ? _run?.score ?? 0 : 0,
+    );
+  }
+
   Set<String> get claimedMilestones => Set.unmodifiable(_milestones);
 
   /// 저장된, 아직 끝나지 않은 항해.
   VoyageRun? get savedRun => _run;
 
-  /// 항해 진행을 저장한다(판을 깰 때, 밀 때마다).
-  Future<void> saveRun(VoyageRun run) {
+  /// 이동과 힌트는 마지막 클리어가 속한 주를 바꾸지 않는다.
+  Future<void> saveRun(VoyageRun run, {bool clearedBoard = false}) {
+    if (!identical(_run, run)) _runClearWeek = null;
     _run = run;
+    if (clearedBoard) _runClearWeek = currentWeek;
     return _save();
   }
 
-  Future<void> discardRun() {
-    _run = null;
-    return _save();
+  /// 기존 기록과 새 항해를 한 스냅샷에 저장한다.
+  Future<bool> replaceRun(VoyageRun? expected, VoyageRun next) {
+    final task = _queue.then((_) async {
+      if (!identical(_run, expected)) return false;
+      final score = harborBestScore;
+      final depth = harborBestDepth;
+      final week = currentWeek;
+      final weekly = weekBest;
+      final stored = await _write({
+        ..._snapshot(),
+        'bestScore': score,
+        'bestDepth': depth,
+        'weekKey': week,
+        'weekBest': weekly,
+        'run': next.toJson(),
+        'runClearWeek': null,
+      });
+      if (!stored) {
+        // SharedPreferences는 쓰기가 실패해도 메모리 캐시를 먼저 바꾼다.
+        try {
+          await _preferences?.reload();
+        } catch (_) {}
+        return false;
+      }
+      bestScore = score;
+      bestDepth = depth;
+      _weekKey = week;
+      _weekBest = weekly;
+      _run = next;
+      _runClearWeek = null;
+      return true;
+    });
+    _queue = task.then<void>((_) {});
+    return task;
   }
 
   /// 등불이 꺼져 항해를 마친다. 기록을 갱신하고 처음 넘은 이정표를 돌려준다.
@@ -120,7 +168,8 @@ class EndlessRepository {
     }
     final newBestScore = run.score > bestScore;
     final newBestDepth = boards > bestDepth;
-    final newWeekBest = run.score > _weekBest;
+    final newWeekBest =
+        identical(_run, run) && _runClearWeek == week && run.score > _weekBest;
     if (newBestScore) bestScore = run.score;
     if (newBestDepth) bestDepth = boards;
     if (newWeekBest) _weekBest = run.score;
@@ -132,6 +181,7 @@ class EndlessRepository {
           milestone,
     ];
     _run = null;
+    _runClearWeek = null;
     await _save();
     return VoyageSummary(
       score: run.score,
@@ -159,21 +209,24 @@ class EndlessRepository {
     'weekBest': _weekBest,
     'milestones': _milestones.toList()..sort(),
     'run': _run?.toJson(),
+    'runClearWeek': _runClearWeek,
   };
 
+  Future<bool> _write(Map<String, dynamic> snapshot) async {
+    try {
+      saveFailed =
+          !(await _preferences?.setString(storageKey, jsonEncode(snapshot)) ??
+              false);
+    } catch (_) {
+      saveFailed = true;
+    }
+    return !saveFailed;
+  }
+
   Future<void> _save() {
-    final snapshot = jsonEncode(_snapshot());
+    final snapshot = _snapshot();
     final task = _queue.then((_) async {
-      final preferences = _preferences;
-      if (preferences == null) {
-        saveFailed = true;
-        return;
-      }
-      try {
-        saveFailed = !await preferences.setString(storageKey, snapshot);
-      } catch (_) {
-        saveFailed = true;
-      }
+      await _write(snapshot);
     });
     _queue = task;
     return task;
