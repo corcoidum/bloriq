@@ -58,7 +58,7 @@ void main() {
       expect(find.text('Our star, at last!'), findsOneWidget);
       // 첫 클리어 3별: 40 + 30 경험치, 별가루 15 + 10.
       expect(find.text('+70 XP'), findsOneWidget);
-      expect(find.text('✦ +25 stardust'), findsOneWidget);
+      expect(find.text('+25 stardust'), findsOneWidget);
       final saved = await ProgressionRepository.load();
       expect(saved.xp, 70);
       expect(saved.stardust, 25);

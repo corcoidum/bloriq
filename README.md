@@ -1,16 +1,16 @@
 # BLORIQ
 
-현재 버전은 **BLORIQ 0.1.2**입니다. 리크와 룬석을 한 칸씩 밀어 길을 만드는 오프라인 퍼즐입니다. 블록이 떠난 칸에 남는 한 턴의 잔상이 다음 이동의 길을 바꿉니다.
+현재 버전은 **BLORIQ 0.2.0**입니다. 리크와 룬석을 한 칸씩 밀어 길을 만드는 오프라인 퍼즐입니다. 블록이 떠난 칸에 남는 한 턴의 잔상이 다음 이동의 길을 바꿉니다.
 
-## 0.1.2에서 달라진 점
+## 0.2.0에서 달라진 점
 
-- **달빛 슬레이트 보드와 돌 배지**. 민들레, 오로라 호박석, 달 수정, 네 방향 물길 화살표, 리크 전용 세모 잎, 문 열림·닫힘 미리보기를 같은 스타일로 표시합니다. 호박석 테두리에는 살구빛·청록·연보라가 비치며, 도움말과 보드 아래 설명에도 같은 배지를 씁니다.
-- **별자리 도감**. 한 장의 별점 5개를 모두 밝히면 수호 정령의 컬러 원화와 별자리 지도가 나란히 나타납니다. 해당 장에서 별 15개를 모으면 황금 별자리가 됩니다.
-- **별바다 항해 기록**. 항구에서 현재 항해의 점수와 클리어 수를 볼 수 있습니다. 진행 중인 성적은 최고 점수·최고 깊이에 반영되며, 이번 주 기록은 그 주에 판을 클리어할 때 집계합니다. 새 출항은 확인을 거치고 달성한 최고 기록을 보존합니다.
+- **거울 호수 등대**. 구름바다 등대의 별자리 5개를 완성하면 둘째 등대가 열립니다. 201~225번의 다섯 장에서 새벽 호수 보드와 전용 BGM을 배경으로 정령 25명을 만납니다.
+- **거울 짝**. 한 블록을 밀면 짝이 반대쪽으로 한 칸 움직입니다. 짝의 길이 막히면 짝은 제자리에 있습니다. 201번의 세 장짜리 안내는 게임 방법에서 다시 볼 수 있습니다.
+- **수호 정령과 별 모으기**. 수호 판을 깨면 세계 지도에서 정령의 기억과 별자리를 다시 볼 수 있습니다. 거울 호수에서 별 25·50·75개를 모으면 차례로 별가루 200개, 별빛 길 사용권 3장, ‘호수의 거울지기’ 칭호를 받습니다.
 
 소스는 [0.1.2 보관 브랜치](https://github.com/corcoidum/bloriq/tree/codex/aurora-board-badges)에서도 확인할 수 있습니다.
 
-현재 플레이 가능한 캠페인은 **달빛 숲 25판과 구름바다 등대 25판**입니다. 첫 세계에서는 25종의 친구와 기억, 다섯 장의 결말을 모읍니다. 두 세계 외에는 날짜별 **오늘의 잔상**과 무한 모드 **별바다 항해**를 플레이할 수 있습니다. 나머지 세계는 빛길 지도에서 예고로 표시됩니다.
+현재 캠페인은 **달빛 숲, 구름바다 등대, 거울 호수 등대**의 총 75판입니다. 날짜별 **오늘의 잔상**과 무한 모드 **별바다 항해**도 플레이할 수 있습니다. 이후 세계는 빛길 지도에서 예고로 표시됩니다. [거울 호수 레벨 검토와 보드 캡처](docs/LEVEL_REVIEW_W3.md)
 
 현재 규칙을 기준으로 정리한 후속 제작 지시와 완료 기준은 [개발 마스터 프롬프트 v3](docs/ECHO_BLOCK_MASTER_PROMPT_V3.md)를 참고하세요.
 
@@ -64,7 +64,7 @@
 
 ## 실행 방법
 
-Flutter SDK가 필요합니다. 0.1.2의 검증 환경은 Flutter 3.47.8 / Dart 3.13.7입니다. 설치는 [Flutter 공식 문서](https://docs.flutter.dev/get-started/install)를 참고하세요. Android SDK 없이 Chrome으로 실행할 수 있습니다.
+Flutter SDK가 필요합니다. 0.2.0의 검증 환경은 Flutter 3.47.8 / Dart 3.13.7입니다. Android SDK 없이 Chrome으로 실행할 수 있습니다. [Flutter 설치 문서](https://docs.flutter.dev/get-started/install)
 
 다른 컴퓨터에서 처음 시작한다면 `git clone https://github.com/corcoidum/bloriq.git`으로 저장소를 내려받고 `cd bloriq`으로 이동합니다. 이미 저장소가 있다면 본인 작업을 확인한 후 `git pull --ff-only`로 최신 변경을 가져옵니다.
 
@@ -83,26 +83,29 @@ Chrome 창이 열리면 마우스로 블록을 드래그해 플레이합니다. 
 
 Android 실행에는 Android SDK, 호환 JDK, USB 디버깅을 켠 기기 또는 에뮬레이터가 필요합니다. [Android 환경 설정](https://docs.flutter.dev/platform-integration/android/setup) 후 `flutter devices`에서 기기 ID를 확인하고 `flutter run -d <기기_ID>`를 실행합니다. `flutter doctor`가 Android 라이선스 동의를 요청하면 `flutter doctor --android-licenses`를 실행합니다.
 
-Android 테스트 APK는 `flutter build apk --release`로 빌드합니다. 결과는 `build/app/outputs/flutter-apk/app-release.apk`에 생성됩니다. 0.1.2의 Android 버전 코드는 3입니다.
+Android 테스트 APK는 `flutter build apk --release`로 빌드합니다. 결과는 `build/app/outputs/flutter-apk/app-release.apk`에 생성됩니다. 0.2.0의 Android 버전 코드는 4입니다.
 
-Android APK 빌드와 서명 검증을 완료했습니다. 현재 프로젝트의 릴리스 빌드는 테스트용 디버그 키로 서명합니다. 기존 앱 위에 설치하려면 앱 ID와 서명이 일치해야 합니다. 최초 별바다 항해 APK와 0.1.2의 서명은 다릅니다. 진행 기록을 보존하려면 기존 앱을 삭제하지 마세요. 기기 연결과 설치는 [Android 휴대폰 테스트 안내](docs/ANDROID_PHONE_TEST.md)를 참고하세요.
+`android/key.properties`가 없는 환경의 릴리스 빌드는 테스트용 디버그 키로 서명합니다. 진행 기록을 보존하며 앱을 업데이트하려면 기기에 설치된 앱과 APK의 앱 ID 및 서명이 일치해야 합니다. [Android 휴대폰 테스트 안내](docs/ANDROID_PHONE_TEST.md)
 
 ## 검증
 
-```powershell
+```bash
 flutter gen-l10n
 flutter analyze
-flutter test
-python tools/validate_levels.py
-python -m tools.level_audit --include-drafts --output docs/LEVEL_REVIEW.md
-python -m unittest tools.test_hybrid_tools -v
+flutter test -r failures-only
+python3 tools/validate_levels.py
+python3 -m tools.level_audit --world 3
 ```
 
-0.1.2에서 Flutter 테스트 461개가 통과했습니다. 테스트는 퍼즐 이동과 잔상, Undo/Restart, 연속 스테이지 플레이, 작은 화면과 큰 글꼴, 별자리 도감, 항해 기록 복원과 새 출항 확인을 검증합니다. 독립 Python 검증기는 특수 칸과 문을 포함한 상태 전이로 해결 가능성과 최단 이동 횟수를 확인합니다. 터치 감도, 사운드 출력과 실제 기기 성능은 실기기 검증 항목입니다.
+위젯 테스트는 세계 2의 마지막 판에서 세계 3이 열리는 흐름, 거울 짝 안내와 수호 정령 도감, 320×568의 200% 글자 크기에서 게임과 결과 화면을 검증합니다. 독립 Python 검증기는 해결 가능성과 최단 수를 확인합니다. [세계 3 화면 캡처](docs/screenshots/world3/)
+
+```bash
+flutter test -r failures-only test/world3_release_test.dart --dart-define=CAPTURE_WORLD3_RELEASE=true
+```
 
 ## 데이터와 범위
 
-`assets/levels/levels.json`에서 `startPosition`은 목표 블록 시작 위치, `exitPosition`은 출구, `blocks`는 일반 블록, `obstacles`는 고정 장애물입니다. `specialRules`에는 `echoGate`, `echoEraser`, `echoHold`, `oneWay`, `goalOnly`를 조합할 수 있습니다. 좌표 `(0, 0)`은 왼쪽 위입니다. `minimumMoves`는 잔상까지 포함해 검증한 최단 이동 횟수입니다. 새로운 스테이지를 추가하면 위 테스트와 검증기를 다시 실행하세요.
+`assets/levels/levels.json`에서 `startPosition`은 목표 블록 시작 위치, `exitPosition`은 출구, `blocks`는 일반 블록, `obstacles`는 고정 장애물입니다. `specialRules`에는 `echoGate`, `echoEraser`, `echoHold`, `oneWay`, `goalOnly`, `mirrorPair`를 조합할 수 있습니다. 좌표 `(0, 0)`은 왼쪽 위입니다. `minimumMoves`는 잔상까지 포함해 검증한 최단 이동 횟수입니다. 새로운 스테이지를 추가하면 위 테스트와 검증기를 다시 실행하세요.
 
 계정, 서버, 광고, 결제 기능은 없습니다. 스테이지별 최고 이동 수, 최고 별, 완료 횟수는 기기 내부에 저장되며 스테이지 메뉴에서 최고 별을 볼 수 있습니다. 새 코스의 기록은 이전 코스와 분리되며, 이전 기록은 기기에 보존되지만 새 코스에는 표시되지 않습니다. 이전 스테이지 데이터는 `assets/levels/legacy_levels.json`에 보관합니다. 앱 데이터 삭제나 앱 제거 시 기록이 사라질 수 있습니다. 포스트카드에는 스테이지 번호와 결과가 들어갑니다. 거울 짝이 움직인 판에서는 최근 12번까지의 짝 이동 방향과 앞선 짝 이동 수를 표시합니다. 표식은 방향만 담으며 보드 좌표는 사용하지 않습니다. 공유를 선택하면 기기의 시스템 공유 창이 열립니다. 효과음과 BGM은 앱에 포함된 합성 음원으로 오프라인에서 재생되며 기기의 오디오 설정에 영향을 받습니다. Android 아이콘과 서명은 출시용이 아닙니다. 실기기 사용자 테스트, 접근성 검토 및 정식 출시 준비는 후속 작업입니다.
 

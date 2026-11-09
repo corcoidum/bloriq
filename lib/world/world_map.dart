@@ -5,6 +5,7 @@ import '../constellation/constellation_painter.dart';
 import '../design/game_theme.dart';
 import '../design/keep_all_text.dart';
 import '../game/power_bar.dart';
+import '../l10n/app_localizations.dart';
 import '../world/saga.dart';
 import 'world_catalog.dart';
 import 'world_progress.dart';
@@ -123,10 +124,18 @@ class _ChapterPage extends StatelessWidget {
 
   static const _minSkyHeight = 48.0;
 
+  Future<void> _openGuardian(BuildContext context) {
+    return showDialog<void>(
+      context: context,
+      builder: (_) => _GuardianAtlasCard(chapter: chapter, lang: lang),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = GameTheme.colorsOf(context);
     final info = chapter.chapter;
+    final guardian = chapter.stages.last;
     // 보통 폰에서는 별자리가 남는 높이를 채우고, 모자라면 장 전체를 스크롤한다.
     return CustomScrollView(
       key: const ValueKey('world-chapter-scroll'),
@@ -144,10 +153,21 @@ class _ChapterPage extends StatelessWidget {
                     color: colors.rewardInk,
                   ),
                 ),
-                Text(
-                  info.constellation.inLocale(lang),
-                  style: GameTypography.label.copyWith(color: colors.goalInk),
-                ),
+                if (guardian.cleared)
+                  Tooltip(
+                    message: AppLocalizations.of(context)!.constellationAtlas,
+                    child: TextButton.icon(
+                      key: ValueKey('world-guardian-${guardian.level.id}'),
+                      onPressed: () => _openGuardian(context),
+                      icon: const Icon(Icons.auto_awesome_rounded, size: 16),
+                      label: Text(info.constellation.inLocale(lang)),
+                    ),
+                  )
+                else
+                  Text(
+                    info.constellation.inLocale(lang),
+                    style: GameTypography.label.copyWith(color: colors.goalInk),
+                  ),
                 if (info.power case final power?)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
@@ -204,6 +224,86 @@ class _ChapterPage extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+class _GuardianAtlasCard extends StatelessWidget {
+  const _GuardianAtlasCard({required this.chapter, required this.lang});
+
+  final WorldChapterView chapter;
+  final String lang;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
+    final colors = GameTheme.colorsOf(context);
+    final spirit = chapter.stages.last.spirit;
+    final info = chapter.chapter;
+    final placeholder = Icon(
+      Icons.star_rounded,
+      size: 46,
+      color: colors.reward,
+    );
+    return AlertDialog(
+      key: ValueKey('guardian-atlas-${spirit.levelId}'),
+      scrollable: true,
+      title: Text(t.constellationAtlas, textAlign: TextAlign.center),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            info.constellation.inLocale(lang),
+            textAlign: TextAlign.center,
+            style: GameTypography.label.copyWith(color: colors.goalInk),
+          ),
+          SizedBox(
+            width: 220,
+            height: 96,
+            child: CustomPaint(
+              painter: ConstellationPainter(
+                definition: chapter.definition,
+                lit: chapter.lit,
+                colors: colors,
+                golden: chapter.golden ? 1 : 0,
+              ),
+            ),
+          ),
+          if (spirit.asset case final asset?)
+            Image.asset(
+              asset,
+              width: 72,
+              height: 72,
+              fit: BoxFit.contain,
+              errorBuilder: (_, _, _) => placeholder,
+            )
+          else
+            placeholder,
+          Text(
+            spirit.name.inLocale(lang),
+            textAlign: TextAlign.center,
+            style: GameTypography.reward.copyWith(color: colors.rewardInk),
+          ),
+          Text(info.familyName.inLocale(lang), textAlign: TextAlign.center),
+          const SizedBox(height: 10),
+          KeepAllText(
+            spirit.memory.inLocale(lang),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 6),
+          KeepAllText(
+            spirit.quote.inLocale(lang),
+            textAlign: TextAlign.center,
+            style: GameTypography.body.copyWith(color: colors.goalInk),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(t.close),
         ),
       ],
     );

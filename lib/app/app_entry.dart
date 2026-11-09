@@ -23,6 +23,7 @@ import '../endless/endless_screen.dart';
 import '../world/saga_map.dart';
 import '../world/world_map.dart';
 import '../world/world_text.dart';
+import '../tutorial/mirror_tutorial.dart';
 import '../daily/daily_panel.dart';
 
 class AppEntry extends StatefulWidget {
@@ -339,9 +340,16 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   }
 
   Future<void> _help() async {
-    final replay = await showGameHelp(context, widget.settings);
     final session = _session;
-    if (replay == true && mounted && session != null) {
+    final replay = await showGameHelp(
+      context,
+      widget.settings,
+      showMirrorGuide: session?.worldUnlocked(3) ?? false,
+    );
+    if (!mounted) return;
+    if (replay == GameHelpAction.mirror) {
+      await showMirrorTutorial(context, widget.settings);
+    } else if (replay == GameHelpAction.echo && session != null) {
       await _open(
         1,
         play: PlayContext.tutorialReplay(

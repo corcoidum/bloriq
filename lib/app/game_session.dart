@@ -81,9 +81,21 @@ class GameSession {
   /// 불러온 확장 세계(세계 2부터). 에셋이 깨진 세계는 빠지고 입구도 숨긴다.
   final Map<int, LoadedWorld> worlds;
   final Map<int, WorldBoardSkin> _boardSkins;
+  bool _mirrorGuideShown = false;
 
   LoadedWorld? world(int number) => worlds[number];
   WorldBoardSkin? boardSkin(int number) => _boardSkins[number];
+
+  /// 첫 판 기록과 세션 상태로 안내를 관리한다.
+  bool takeMirrorGuide(Level level) {
+    if (_mirrorGuideShown ||
+        level.id != Worlds.firstLevelId(3) ||
+        progress.forLevel(level.id, revision: level.revision) != null) {
+      return false;
+    }
+    _mirrorGuideShown = true;
+    return true;
+  }
 
   /// 앞 세계의 다섯 별자리를 모두 완성했고 이 세계 데이터가 준비됐는지.
   bool worldUnlocked(int number) =>

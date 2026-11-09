@@ -49,9 +49,15 @@ Future<void> showExperienceSettings(
   }
 }
 
-Future<bool?> showGameHelp(BuildContext context, GameSettings settings) {
+enum GameHelpAction { echo, mirror }
+
+Future<GameHelpAction?> showGameHelp(
+  BuildContext context,
+  GameSettings settings, {
+  bool showMirrorGuide = false,
+}) {
   final t = AppLocalizations.of(context)!;
-  return showDialog<bool>(
+  return showDialog<GameHelpAction>(
     context: context,
     animationStyle: prefersReducedMotion(context, settings)
         ? AnimationStyle.noAnimation
@@ -71,9 +77,15 @@ Future<bool?> showGameHelp(BuildContext context, GameSettings settings) {
         ),
       ),
       actions: [
+        if (showMirrorGuide)
+          TextButton(
+            key: const ValueKey('replay-mirror-guide'),
+            onPressed: () => Navigator.pop(context, GameHelpAction.mirror),
+            child: Text(t.mirrorGuideReplay),
+          ),
         TextButton(
           key: const ValueKey('replay-tutorial'),
-          onPressed: () => Navigator.pop(context, true),
+          onPressed: () => Navigator.pop(context, GameHelpAction.echo),
           child: Text(t.replayTutorial),
         ),
         TextButton(

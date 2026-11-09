@@ -32,6 +32,7 @@ import 'design/arcade_components.dart';
 import 'design/star_art.dart';
 import 'app/play_context.dart';
 import 'tutorial/echo_tutorial.dart';
+import 'tutorial/mirror_tutorial.dart';
 import 'analytics/local_analytics.dart';
 import 'story/narrative_controller.dart';
 import 'story/companion_view.dart';
@@ -278,6 +279,25 @@ class _GameScreenState extends State<GameScreen>
     widget.session.analytics.addListener(_analyticsChanged);
     _startAttempt();
     _trackOpened();
+    _maybeShowMirrorGuide();
+  }
+
+  void _maybeShowMirrorGuide() {
+    final controller = _controller!;
+    final level = controller.state.level;
+    if (widget.play.world != 3 || level.id != Worlds.firstLevelId(3)) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted ||
+          !identical(_controller, controller) ||
+          _modalOpen ||
+          ModalRoute.of(context)?.isCurrent != true ||
+          !widget.session.takeMirrorGuide(level)) {
+        return;
+      }
+      unawaited(
+        _withModal<void>(() => showMirrorTutorial(context, widget.settings)),
+      );
+    });
   }
 
   /// 캠페인 판을 열면 막힘 기록을 시작하고, 도움을 권할 시각에 다시 그린다.
@@ -482,6 +502,7 @@ class _GameScreenState extends State<GameScreen>
       _startAttempt();
     });
     _trackOpened();
+    _maybeShowMirrorGuide();
   }
 
   /// 결과 화면 "다음"이 고를 판. 확장 세계는 아직 잠긴 판 대신
@@ -1147,8 +1168,15 @@ class _GameScreenState extends State<GameScreen>
 
   Future<void> _showHelp(AppLocalizations t) async {
     await _withModal<void>(() async {
-      final replay = await showGameHelp(context, widget.settings);
-      if (replay == true && mounted) {
+      final replay = await showGameHelp(
+        context,
+        widget.settings,
+        showMirrorGuide: widget.play.world == 3,
+      );
+      if (!mounted) return;
+      if (replay == GameHelpAction.mirror) {
+        await showMirrorTutorial(context, widget.settings);
+      } else if (replay == GameHelpAction.echo) {
         final session = widget.session;
         final saga = session.saga;
         session.audio.setMusicTrack(saga?.world(1).theme?.bgm);
@@ -2505,12 +2533,25 @@ class _GameScreenState extends State<GameScreen>
                 ),
               ),
               if (reward.stardustGained > 0)
-                Text(
-                  '✦ ${t.rewardStardust(reward.stardustGained)}',
-                  style: GameTypography.label.copyWith(
-                    fontSize: 16,
-                    color: colors.rewardInk,
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.auto_awesome_rounded,
+                      size: 14,
+                      color: colors.rewardInk,
+                    ),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        t.rewardStardust(reward.stardustGained),
+                        style: GameTypography.label.copyWith(
+                          fontSize: 16,
+                          color: colors.rewardInk,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
             ],
           ),
