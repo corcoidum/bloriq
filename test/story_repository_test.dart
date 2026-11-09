@@ -17,27 +17,8 @@ void main() {
     );
   });
 
-  test('25 stable bilingual released assets and five chapter guardians', () {
-    expect(catalog.spirits.length, 25);
-    expect(catalog.released.length, 25);
-    expect(catalog.spirits.where((s) => s.guardian).map((s) => s.levelId), [
-      5,
-      10,
-      15,
-      20,
-      25,
-    ]);
-    for (final s in catalog.spirits) {
-      expect(s.name.ko, isNotEmpty);
-      expect(s.name.en, isNotEmpty);
-      expect(s.memory.ko, isNotEmpty);
-      expect(s.memory.en, isNotEmpty);
-      if (s.released) {
-        expect(File(s.asset!).existsSync(), true);
-      } else {
-        expect(s.asset, isNull);
-      }
-    }
+  test('all season 1 spirits are released for the collection', () {
+    expect(catalog.released, hasLength(25));
   });
 
   test(

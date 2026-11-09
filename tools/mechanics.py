@@ -3,11 +3,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from random import Random
-from typing import Callable, ClassVar, NamedTuple
+from typing import Callable, ClassVar, Iterable, NamedTuple
 
 Position = tuple[int, int]
 Positions = tuple[Position, ...]
 PointParser = Callable[[dict], Position]
+AuditToken = Callable[[str, dict], str]
+AuditDirection = Callable[[int, int], Position]
 DIRECTIONS = ((1, 0), (-1, 0), (0, 1), (0, -1))
 
 
@@ -68,6 +70,11 @@ class BoardMechanic:
 
     def stateKey(self, state: State) -> int | None:
         return None
+
+    @classmethod
+    def auditTokens(cls, rule: dict, token: AuditToken, direction: AuditDirection) -> Iterable[str]:
+        """회전·대칭에서 같은 판을 찾기 위한 칸별 표식."""
+        return (token(cls.type, point) for point in rule['positions'])
 
 
 class Board(NamedTuple):
@@ -154,6 +161,12 @@ class OneWay(BoardMechanic):
             for dx, dy in rng.sample(DIRECTIONS, rng.randint(1, 2))
         ]}
 
+    @classmethod
+    def auditTokens(cls, rule: dict, token: AuditToken, direction: AuditDirection) -> Iterable[str]:
+        for tile in rule['tiles']:
+            dx, dy = direction(tile['dx'], tile['dy'])
+            yield token(f'arrow{dx},{dy}', tile)
+
 
 @dataclass(frozen=True)
 class EchoGate(BoardMechanic):
@@ -185,6 +198,10 @@ class EchoGate(BoardMechanic):
     @classmethod
     def randomRule(cls, level: dict, rng: Random, take: Callable[[], dict]) -> dict:
         return {'type': cls.type, 'switch': take(), 'gate': take()}
+
+    @classmethod
+    def auditTokens(cls, rule: dict, token: AuditToken, direction: AuditDirection) -> Iterable[str]:
+        return (token('switch', rule['switch']), token('gate', rule['gate']))
 
 
 # 순서는 Dart MechanicRegistry와 같아야 한다.

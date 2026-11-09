@@ -5,6 +5,7 @@ from collections import deque
 import json
 from pathlib import Path
 from textwrap import indent
+from time import monotonic
 from typing import Any
 
 if __package__:
@@ -23,15 +24,25 @@ LEAP, SWAP, SEAL, WIND = 'moonflower_leap', 'light_swap', 'seal', 'wind'
 POWERS = (LEAP, SWAP, SEAL, WIND)
 
 
+class SearchBudgetExceeded(RuntimeError):
+    """상태 예산으로 탐색을 중단했다. 해가 없다는 뜻과 구분한다."""
+
+
 def validate_level(
     level: dict[str, Any], *, use_echo: bool = True, gate_locked: bool = False,
     disabled_rule: str | None = None,
     stats: dict[str, int] | None = None, max_states: int = 200000,
     powers: tuple[str, ...] | frozenset[str] = (),
     must_use: str | None = None,
+    deadline: float | None = None,
 ) -> list[Move]:
     """powers 는 아직 쓰지 않은 권능이다. 각 권능은 한 번, 한 수로 센다.
     must_use 가 있으면 그 권능을 쓴 해만 정답으로 본다(강조 권능 확인용)."""
+    def check_deadline() -> None:
+        if deadline is not None and monotonic() >= deadline:
+            raise TimeoutError(f"Level {level['id']} search deadline exceeded")
+
+    check_deadline()
     width, height = level['boardWidth'], level['boardHeight']
     assert type(width) is int and type(height) is int and width > 0 and height > 0
 
@@ -121,7 +132,12 @@ def validate_level(
     initial_key = state_key(initial)
     parents: dict[tuple, tuple[tuple, Move] | None] = {initial_key: None}
     pending = deque([(initial, initial_key)])
+    expanded = 0
     while pending:
+        if deadline is not None:
+            if expanded % 128 == 0:
+                check_deadline()
+            expanded += 1
         state, key = pending.popleft()
         for candidate in successors(state):
             next_state = apply(state, candidate)
@@ -133,10 +149,11 @@ def validate_level(
             move = push if power is None else (*push, power)
             parents[next_key] = (key, move)
             if len(parents) > max_states:
-                raise RuntimeError(f"Level {level['id']} search budget exceeded: {max_states}")
+                raise SearchBudgetExceeded(f"Level {level['id']} search budget exceeded: {max_states}")
             if next_state.positions[0] == exit_point:
                 if must_use is not None and must_use in next_state.powers:
                     continue  # 권능을 쓰지 않은 도착은 이 탐색에서 정답이 아니다.
+                check_deadline()
                 if stats is not None:
                     stats['visited'] = len(parents)
                 path = []
@@ -146,6 +163,7 @@ def validate_level(
                     path.append(step_move)
                 return path[::-1]
             pending.append((next_state, next_key))
+    check_deadline()
     raise ValueError(f"Level {level['id']} has no solution")
 
 
@@ -161,19 +179,38 @@ def available_powers(level: dict) -> tuple[str, ...]:
     allowed = level.get('availablePowers')
     if allowed is None:
         return POWERS
-    assert allowed and len(set(allowed)) == len(allowed) and all(p in POWERS for p in allowed)
+    assert len(set(allowed)) == len(allowed) and all(p in POWERS for p in allowed)
     return tuple(p for p in POWERS if p in allowed)
 
 
-def power_profile(level: dict, max_states: int = 2_000_000) -> dict:
+def power_profile(
+    level: dict, max_states: int = 2_000_000, *, deadline: float | None = None,
+) -> dict:
     """그 스테이지의 권능을 모두 가진 최소 수, 맨손 최소 수, 꼭 필요한 권능을 계산한다."""
     powers = available_powers(level)
-    best = validate_level(level, powers=powers, max_states=max_states)
-    bare = solve_or_none(level, max_states=max_states)
+    best = validate_level(level, powers=powers, max_states=max_states, deadline=deadline)
+    bare = solve_or_none(level, max_states=max_states, deadline=deadline) if powers else best
     required = [p for p in powers
-                if solve_or_none(level, powers=tuple(q for q in powers if q != p), max_states=max_states) is None]
+                if solve_or_none(level, powers=tuple(q for q in powers if q != p),
+                                 max_states=max_states, deadline=deadline) is None]
     return {'minimumMoves': len(best), 'bareHandedMoves': None if bare is None else len(bare),
             'requiredPowers': required, 'solution': best}
+
+
+def decorative_mechanic(
+    level: dict, minimum: int, *, powers: tuple[str, ...] = (),
+    max_states: int = 200_000, deadline: float | None = None,
+) -> str | None:
+    """하나씩 끄고 다시 풀어도 최단 수가 같은 첫 기믹을 찾는다."""
+    for rule in level['specialRules']:
+        kind = rule['type']
+        alternative = solve_or_none(
+            level, powers=powers, disabled_rule=kind, gate_locked=kind == 'echoGate',
+            max_states=max_states, deadline=deadline,
+        )
+        if alternative is not None and len(alternative) == minimum:
+            return kind
+    return None
 
 
 def first_level_id(world: int) -> int:
@@ -207,6 +244,9 @@ def record_solution(level: dict, moves: list[Move], *, write: bool) -> None:
 def write_levels(path: Path, levels: list[dict]) -> None:
     entries = []
     for level in levels:
+        if 'solution' not in level:
+            entries.append(indent(json.dumps(level, ensure_ascii=False, indent=2), '  '))
+            continue
         board = {key: value for key, value in level.items() if key != 'solution'}
         body = json.dumps(board, ensure_ascii=False, indent=2).removesuffix('\n}')
         moves = ',\n'.join('    ' + json.dumps(move, ensure_ascii=False)
@@ -215,14 +255,19 @@ def write_levels(path: Path, levels: list[dict]) -> None:
     path.write_text('[\n' + ',\n'.join(entries) + '\n]\n', encoding='utf-8')
 
 
-def check_world(levels: list[dict], world: int, *, write_solutions: bool = False) -> None:
+def check_world(
+    levels: list[dict], world: int, *, write_solutions: bool = False,
+    budgets: tuple[int, ...] | None = None,
+) -> None:
     first = first_level_id(world)
     assert len(levels) == 25, f'World {world} needs 25 stages'
     assert [level['id'] for level in levels] == list(range(first, first + len(levels)))
-    for level in levels:
+    for index, level in enumerate(levels):
+        budget = budgets[index] if budgets is not None else 2_000_000
         assert level.get('world') == world
-        assert 4 <= level['boardWidth'] <= 5 and 4 <= level['boardHeight'] <= 5
-        profile = power_profile(level)
+        if world == 2:
+            assert 4 <= level['boardWidth'] <= 5 and 4 <= level['boardHeight'] <= 5
+        profile = power_profile(level, max_states=budget)
         for key in ('minimumMoves', 'bareHandedMoves', 'requiredPowers'):
             assert level.get(key, [] if key == 'requiredPowers' else None) == profile[key], (
                 f"Level {level['id']}: {key} expected {level.get(key)}, got {profile[key]}")
@@ -231,19 +276,14 @@ def check_world(levels: list[dict], world: int, *, write_solutions: bool = False
         featured = level.get('featuredPower')
         assert featured is None or featured in powers
         if featured is not None:
-            # 강조한 권능은 실제로 최단 해를 줄이거나 해를 가능하게 해야 한다.
             # 강조한 권능은 최단 수를 줄이거나, 적어도 최단 해 하나에 쓰인다.
-            without = solve_or_none(level, powers=tuple(p for p in powers if p != featured), max_states=2_000_000)
-            used = solve_or_none(level, powers=powers, must_use=featured, max_states=2_000_000)
+            without = solve_or_none(level, powers=tuple(p for p in powers if p != featured), max_states=budget)
+            used = solve_or_none(level, powers=powers, must_use=featured, max_states=budget)
             assert (without is None or len(without) > profile['minimumMoves']
                     or (used is not None and len(used) == profile['minimumMoves'])), (
                 f"Level {level['id']}: featured {featured} has no effect")
-        for rule in level['specialRules']:
-            kind = rule['type']
-            without = solve_or_none(level, powers=powers, gate_locked=kind == 'echoGate', disabled_rule=kind,
-                                    max_states=2_000_000)
-            assert without is None or len(without) != profile['minimumMoves'], (
-                f"Level {level['id']}: {kind} has no effect on optimum")
+        decorative = decorative_mechanic(level, profile['minimumMoves'], powers=powers, max_states=budget)
+        assert decorative is None, f"Level {level['id']}: {decorative} has no effect on optimum"
         bare = profile['bareHandedMoves']
         types = ', '.join(rule['type'] for rule in level['specialRules']) or 'basic'
         print(f"World{world} {level['id']}: minimum={profile['minimumMoves']}, bare={bare}, "
@@ -266,13 +306,8 @@ def main() -> None:
         )
         record_solution(level, moves, write=args.write_solutions)
         # 각 기믹의 실질적 영향: 비활성화 시 최단 해가 달라지거나 해가 없어야 한다.
-        for rule in level['specialRules']:
-            kind = rule['type']
-            try:
-                without = validate_level(level, gate_locked=kind == 'echoGate', disabled_rule=kind)
-            except ValueError:
-                continue
-            assert len(without) != len(moves), f"Level {level['id']}: {kind} has no effect on optimum"
+        decorative = decorative_mechanic(level, len(moves))
+        assert decorative is None, f"Level {level['id']}: {decorative} has no effect on optimum"
         types = ', '.join(rule['type'] for rule in level['specialRules']) or 'basic'
         print(f"Level {level['id']}: minimum={len(moves)}, {types}")
     print(f'{len(levels)}/{len(levels)} levels valid and solvable; recorded minima match BFS.')

@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "worldId": "wN",
+  "title": { "ko": "", "en": "" },
+  "prologue": { "ko": "", "en": "" },
+  "chapters": [
+    {
+      "number": 1,
+      "globalChapter": 0,
+      "power": null,
+      "family": "",
+      "name": { "ko": "", "en": "" },
+      "familyName": { "ko": "", "en": "" },
+      "constellation": { "ko": "", "en": "" },
+      "stars": {
+        "nodes": [[0.1, 0.7], [0.3, 0.5], [0.5, 0.3], [0.7, 0.5], [0.9, 0.7]],
+        "edges": [[0, 1], [1, 2], [2, 3], [3, 4]]
+      },
+      "intro": { "ko": "", "en": "" },
+      "endingTitle": { "ko": "", "en": "" },
+      "ending": { "ko": "", "en": "" }
+    }
+  ],
+  "spirits": [
+    {
+      "id": "sN-01",
+      "levelId": 0,
+      "chapter": 1,
+      "family": "",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": { "ko": "", "en": "" },
+      "levelTitle": { "ko": "", "en": "" },
+      "appearance": { "ko": "", "en": "" },
+      "personality": { "ko": "", "en": "" },
+      "memory": { "ko": "", "en": "" },
+      "quote": { "ko": "", "en": "" }
+    }
+  ]
+}

@@ -20,9 +20,9 @@ import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
-from tools.design_world2 import cells, occupied, pt
+from tools.design_world import cells, occupied, pt
 from tools.level_audit import canonical
-from tools.validate_levels import validate_level
+from tools.validate_levels import decorative_mechanic, validate_level
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / 'assets/levels/endless_pool_v1.json'
@@ -112,18 +112,10 @@ def accept(level: dict, tier: int) -> int | None:
     best = minimum(level, FULL_BUDGET)
     if best is None or not low <= best <= high:
         return None
-    for rule in level['specialRules']:
-        kind = rule['type']
-        try:
-            alt = len(validate_level(level, gate_locked=kind == 'echoGate', disabled_rule=kind,
-                                     max_states=FULL_BUDGET))
-        except ValueError:
-            continue  # 기믹을 빼면 풀 수 없다: 꼭 필요한 기믹이다.
-        except (AssertionError, RuntimeError):
-            return None
-        if alt == best:
-            return None
-    return best
+    try:
+        return best if decorative_mechanic(level, best, max_states=FULL_BUDGET) is None else None
+    except (AssertionError, RuntimeError):
+        return None
 
 
 def design(tier: int, seed: int) -> dict | None:

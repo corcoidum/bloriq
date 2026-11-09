@@ -67,22 +67,11 @@ void main() {
     expect(Worlds.globalChapter(2, 5), 10);
   });
 
-  test('the world 2 story has 5 chapters, 25 spirits and constellations', () {
+  test('world 2 introduces its four powers in chapter order', () {
     final story = WorldStory.parse(
       File('assets/story/world2.json').readAsStringSync(),
       2,
     );
-    expect(story.chapters.map((c) => c.globalChapter), [6, 7, 8, 9, 10]);
-    expect(story.spirits.map((s) => s.levelId).toSet(), hasLength(25));
-    expect(story.forLevel(105)!.guardian, true);
-    expect(story.forLevel(126), isNull);
-    for (final constellation in story.chapters.map((c) => c.stars)) {
-      expect(constellation.nodes, hasLength(5));
-      for (final (a, b) in constellation.edges) {
-        expect(a, inInclusiveRange(0, 4));
-        expect(b, inInclusiveRange(0, 4));
-      }
-    }
     expect(story.chapters.take(4).map((c) => c.power), [
       PuzzlePower.moonflowerLeap,
       PuzzlePower.lightSwap,

@@ -10,9 +10,10 @@ import json
 import random
 from pathlib import Path
 
-from tools.design_world2 import cells, pt, random_level
+from tools.design_world import cells, pt, random_level
 from tools.mechanics import REGISTRY
 from tools.validate_levels import POWERS, solve_or_none
+from tools.worlds.w2 import SLOTS as WORLD2_SLOTS
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = ROOT / 'test/fixtures/power_fuzz.json'
@@ -44,8 +45,12 @@ def generate_cases(count: int, seed: int, mechanics: list[str] | None) -> list[d
     cases = []
     for _ in range(count * 100):
         # 인자가 없으면 기존 월드 2 생성기로 권능 교차 검증 표본을 만든다.
-        level = (random_level(rng.randrange(15), rng) if mechanics is None
-                 else random_mechanic_level(mechanics, rng))
+        if mechanics is None:
+            index = rng.randrange(15)
+            level = random_level(2, index, WORLD2_SLOTS[index], rng)
+            level.pop('availablePowers')
+        else:
+            level = random_mechanic_level(mechanics, rng)
         level.update(id=900 + len(cases), minimumMoves=0, difficulty='fuzz')
         try:
             powered = solve_or_none(level, powers=POWERS, max_states=MAX_STATES)

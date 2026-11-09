@@ -76,22 +76,27 @@
    - `lib/domain/mechanics/`에 기믹 파일을 하나 만든다. `board_mechanic.dart`의 훅을 구현하고 `mechanic_registry.dart`에 JSON의 `type`과 파서를 등록한다. `tools/mechanics.py`에도 같은 이름과 훅을 등록한다. 두 레지스트리의 적용 순서를 맞춘다.
    - 이동은 진입·출발 판정 → 일반 이동 또는 권능 착지 → `transformMove`로 배치 변환 → `nextEcho`로 잔상 처리 순이다. 기존 봉인과 빛 교대의 잔상 규칙은 마지막에 우선한다. 위치 외에 탐색 결과를 바꾸는 값이 있다면 `stateKey`에 넣는다.
    - 같은 `type` 키로 `lib/game/board_badge.dart`에 배지, `lib/game/bloriq_game.dart`에 보드 그리기, `lib/game/mechanic_legend.dart`에 범례를 등록한다. 문구는 `lib/l10n/app_ko.arb`와 `app_en.arb`에 넣는다.
-   - Python 기믹의 `randomRule`로 검증 표본을 만들고 두 solver의 최단 수를 비교한다. `python3 tools/validate_levels.py --write-solutions`로 공개 판과 이전 코스 보관본의 풀이 데이터를 갱신한다.
+   - Python 기믹의 `randomRule`로 검증 표본을 만들고 두 solver의 최단 수를 비교한다. 위치 목록 이외의 정보를 쓰는 기믹은 회전·대칭 중복 검사용 `auditTokens`도 구현한다. `python3 tools/validate_levels.py --write-solutions`로 공개 판과 이전 코스 보관본의 풀이 데이터를 갱신한다.
 
      ```bash
      python3 -m tools.power_fuzz_fixture --mechanics echoHold echoGate --count 100 --output /tmp/bloriq-fuzz.json
      flutter test test/power_solver_agreement_test.dart --dart-define=MECHANIC_FIXTURE=/tmp/bloriq-fuzz.json
      ```
 
-2. **판 생성:** `tools/design_world2.py`를 `tools/design_world3.py`로 복사해 `SLOTS`, 출력 경로(`assets/levels/world3.json`), id 시작(201), `world: 3`을 바꾸고 생성한다.
-3. **이야기:** `assets/story/world3.json`을 `world2.json`과 같은 모양으로 쓴다. `worldId: "w3"`, 장마다 `globalChapter` 11–15, 별자리 좌표 `stars`(노드 5개, 0..1), 정령 25명.
-4. **사가 등록:** `assets/worlds/saga.json`에서 세계 3의 `status`를 `"playable"`로 바꾸고 `levels`, `story` 경로를 적는다. 공개된 세계는 앞에서부터 이어져야 한다(세계 3을 건너뛰고 세계 4만 열 수 없다).
-5. **번들:** `pubspec.yaml`의 `assets`에 두 JSON을 추가한다(`test/saga_test.dart`가 확인한다).
-6. **검증:**
-   - `python3 tools/validate_levels.py`: 사가에 공개된 모든 세계를 BFS로 다시 확인한다.
-   - `python3 -m tools.level_audit --world 3`
-   - `flutter analyze && flutter test`
-7. **그림:** 정령 그림이 없으면 `asset: null`로 두면 된다. 화면은 별 모양 자리표시를 쓴다.
+2. **판 생성.** `tools/worlds/w3.py`에 슬롯 25개를 둔다. 슬롯마다 판 크기, 블록과 바위 수, 기믹, 권능, 목표 수, 탐색 예산(`quick_states`, `full_states`)과 최대 시간(`max_seconds`)을 정한다. `python3 -m tools.design_world --world 3 --workers 8`은 `assets/levels/world3.json`에 레벨 201–225와 최단 풀이를 기록한다. `--only 7`을 붙이면 일곱째 슬롯만 선택한다. 30초마다 완료된 슬롯을 저장하며 다시 실행하면 빠진 슬롯부터 이어서 만든다. 진행과 예산 초과로 버린 후보 수는 `build/design_logs/w3.log`에서 확인한다. 기존 공개 판은 `--check`로 읽기 전용 검증을 한다.
+3. **이야기.** 빈 틀을 `assets/story/world3.json`으로 복사하고 `worldId`를 `"w3"`으로 설정한다. 장 5개의 `globalChapter`는 11–15이며, 장마다 0..1 좌표의 별 5개를 둔다. 정령 25명을 레벨에 연결하고 각 장 다섯째 정령을 수호자로 지정한다. 그림이 없는 정령은 `asset`을 `null`로 둔다. [이야기 틀과 필드 설명](STORY_TEMPLATE.md)
+4. **사가와 테마.** `assets/worlds/saga.json`에 `levels`, `story` 경로를 적고 앞 세계부터 순서대로 `status`를 `"playable"`로 바꾼다. 선택 항목 `theme.palette`에는 `background`, `board`, `border`, `accent` 색을 `#RRGGBB`로 적는다. `floor`와 `rock`이 `null`이면 팔레트로 판석과 바위를 그린다. `bgm`은 세계에 들어갈 때 재생하는 루프 경로이며, 값이 없으면 기본 곡을 쓴다. 테마가 없는 세계는 달빛 숲 스킨을 쓴다. [세계 2 테마 예시](../assets/worlds/saga.json)
+5. **번들.** `pubspec.yaml`의 `assets`에 레벨·이야기 JSON과 새 그림·음원 경로를 추가한다. 이야기 빈 틀은 작업용으로 둔다.
+6. **검증.** 생성기가 기믹을 하나씩 꺼 보고 최단 수가 바뀌지 않는 후보를 제외한다. 공개 전 Dart 공통 검사에서 25판, 정령·수호자 연결, 별자리와 한·영 문구, 번들 에셋, 저장 풀이를 확인하고 수동 플레이 검토를 마친다.
+
+   ```bash
+   python3 -m tools.design_world --world 3 --check
+   python3 tools/validate_levels.py
+   python3 -m tools.level_audit --world 3
+   flutter gen-l10n
+   flutter analyze
+   flutter test -r failures-only
+   ```
 
 코드는 세계 번호만 받아 동작한다. 홈 입구, 지도, 권능 막대, 결과 보상, 별자리 완성 기록이 모두 새 세계에서 그대로 작동한다.
 

@@ -5,6 +5,10 @@
     "ko": "잊힌 별의 발자국",
     "en": "Footprints of a Forgotten Star"
   },
+  "prologue": {
+    "ko": "달빛 숲에서 눈을 뜬 리크가 보라색 잔상을 남기며 첫 별문을 향해 걸었어.",
+    "en": "RIQ woke in the moonlit forest and left a violet echo with every step toward the first star gate."
+  },
   "chapters": [
     {
       "number": 1,
@@ -17,6 +21,10 @@
       "familyName": {
         "ko": "숲",
         "en": "Forest"
+      },
+      "intro": {
+        "ko": "리크가 조용한 초승달 정원에서 친구들의 흔적을 찾기 시작했어.",
+        "en": "In the quiet Crescent Garden, RIQ began looking for traces of the missing friends."
       },
       "endingTitle": {
         "ko": "초승달 정원의 약속",
@@ -39,6 +47,10 @@
         "ko": "별빛",
         "en": "Starlight"
       },
+      "intro": {
+        "ko": "정원 너머 수문은 닫혀 있었고 물길에는 별빛만 고여 있었어.",
+        "en": "Beyond the garden, the watergate was shut and only starlight pooled in its channels."
+      },
       "endingTitle": {
         "ko": "다섯 빛이 만나는 곳",
         "en": "Where Five Lights Meet"
@@ -59,6 +71,10 @@
       "familyName": {
         "ko": "편지",
         "en": "Letter"
+      },
+      "intro": {
+        "ko": "잊힌 우체국에는 아직 전해지지 않은 편지들이 리크를 기다렸어.",
+        "en": "Letters that had never been delivered waited for RIQ in the forgotten post office."
       },
       "endingTitle": {
         "ko": "답장을 기다리는 편지",
@@ -81,6 +97,10 @@
         "ko": "구름",
         "en": "Cloud"
       },
+      "intro": {
+        "ko": "바람의 회랑에 들어서자 멀리서 끊어진 노래가 들려왔어.",
+        "en": "As RIQ entered the Hall of Winds, fragments of a song drifted from far away."
+      },
       "endingTitle": {
         "ko": "멈춘 노래의 신호",
         "en": "The Signal in the Silent Song"
@@ -101,6 +121,10 @@
       "familyName": {
         "ko": "기억",
         "en": "Memory"
+      },
+      "intro": {
+        "ko": "관측소의 오래된 기록에는 등대가 멈춘 밤의 이야기가 남아 있었어.",
+        "en": "The observatory’s old records held the story of the night the lighthouses stopped."
       },
       "endingTitle": {
         "ko": "마지막 등대의 고백",

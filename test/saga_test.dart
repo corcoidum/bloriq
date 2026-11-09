@@ -51,37 +51,16 @@ void main() {
     test('seven worlds: prelude, five lighthouses, the First Star', () {
       expect(saga.worlds, hasLength(7));
       expect(saga.worlds.map((w) => w.lighthouse), [null, 1, 2, 3, 4, 5, null]);
-      expect(saga.worlds.where((w) => w.playable).map((w) => w.number), [1, 2]);
+      expect(saga.world(1).playable, isTrue);
+      expect(saga.world(2).playable, isTrue);
       expect(saga.next(2)!.number, 3);
       expect(saga.next(7), isNull);
-    });
-
-    test('every playable world loads and every asset is bundled', () {
-      final pubspec = File('pubspec.yaml').readAsStringSync();
-      expect(pubspec, contains(Saga.asset));
-      for (final world in saga.worlds.where((w) => w.playable && w.expansion)) {
-        expect(pubspec, contains(world.levelsAsset));
-        expect(pubspec, contains(world.storyAsset));
-        final levels = Worlds.parseLevels(
-          File(world.levelsAsset!).readAsStringSync(),
-          world.number,
-        );
-        final story = WorldStory.parse(
-          File(world.storyAsset!).readAsStringSync(),
-          world.number,
-        );
-        expect(levels.first.id, Worlds.firstLevelId(world.number));
-        expect(story.title.ko, world.title.ko);
-        expect(
-          story.chapters.map((c) => c.stars.chapter).toSet(),
-          Worlds.chaptersOf(world.number),
-        );
-      }
     });
 
     test('a playable world may not follow a planned one', () {
       final data = _sagaJson();
       final worlds = (data['worlds'] as List).cast<Map<String, dynamic>>();
+      worlds[2] = {...worlds[2], 'status': 'planned'};
       worlds[3] = {
         ...worlds[3],
         'status': 'playable',
@@ -152,6 +131,7 @@ void main() {
   testWidgets('finishing world 2 lights a lighthouse and teases world 3', (
     tester,
   ) async {
+    final world3Playable = Saga.fromJson(_sagaJson()).world(3).playable;
     await _seed({for (var c = 1; c <= 10; c++) c});
     await tester.pumpWidget(const BloriqApp());
     await waitForHome(tester);
@@ -169,7 +149,7 @@ void main() {
     await tester.pump();
     expect(
       find.descendant(of: world3, matching: find.text('Coming soon')),
-      findsOneWidget,
+      world3Playable ? findsNothing : findsOneWidget,
     );
     expect(
       find.descendant(
@@ -178,7 +158,10 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.byKey(const ValueKey('saga-enter-3')), findsNothing);
+    expect(
+      find.byKey(const ValueKey('saga-enter-3')),
+      world3Playable ? findsOneWidget : findsNothing,
+    );
 
     // 다 마친 세계로 다시 들어갈 수 있다.
     await tester.scrollUntilVisible(

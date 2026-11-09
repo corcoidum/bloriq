@@ -5,7 +5,9 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
-from tools.validate_levels import available_powers, expansion_worlds, validate_level
+
+from tools.mechanics import REGISTRY
+from tools.validate_levels import available_powers, decorative_mechanic, expansion_worlds, validate_level
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -27,24 +29,19 @@ def orientations(level: dict) -> list[frozenset[str]]:
             def token(kind: str, point: dict) -> str:
                 return f'{kind}:{transform(point["x"], point["y"])}'
 
+            def direction(dx: int, dy: int) -> tuple[int, int]:
+                if mirror:
+                    dx = -dx
+                for _ in range(rotation):
+                    dx, dy = -dy, dx
+                return dx, dy
+
             tokens = {f'size:{(height, width) if rotation % 2 else (width, height)}',
                       token('start', level['startPosition']), token('exit', level['exitPosition'])}
             tokens.update(token('block', block) for block in level['blocks'])
             tokens.update(token('wall', wall) for wall in level['obstacles'])
             for rule in level['specialRules']:
-                kind = rule['type']
-                if kind == 'echoGate':
-                    tokens.update((token('switch', rule['switch']), token('gate', rule['gate'])))
-                elif kind == 'oneWay':
-                    for tile in rule['tiles']:
-                        dx, dy = tile['dx'], tile['dy']
-                        if mirror:
-                            dx = -dx
-                        for _ in range(rotation):
-                            dx, dy = -dy, dx
-                        tokens.add(token(f'arrow{dx},{dy}', tile))
-                else:
-                    tokens.update(token(kind, point) for point in rule['positions'])
+                tokens.update(REGISTRY[rule['type']].auditTokens(rule, token, direction))
             result.append(frozenset(tokens))
     return result
 
@@ -67,8 +64,9 @@ def inspect(levels: list[dict]) -> list[dict]:
     for index, level in enumerate(levels):
         stats: dict[str, int] = {}
         # 월드 2 스테이지는 네 권능을 한 번씩 쓸 수 있는 상태로 최단 해를 잰다.
-        powers = available_powers(level) if level.get('world', 1) >= 2 else ()
-        budget = 2_000_000 if powers else 200000
+        expansion = level.get('world', 1) >= 2
+        powers = available_powers(level) if expansion else ()
+        budget = 2_000_000 if expansion else 200_000
         solution = validate_level(level, stats=stats, powers=powers, max_states=budget)
         if len(solution) != level['minimumMoves']:
             raise ValueError(f"Level {level['id']}: minimumMoves mismatch")
@@ -87,14 +85,9 @@ def inspect(levels: list[dict]) -> list[dict]:
         for other in levels[:index]:
             if similarity(level, other) >= .8:
                 warnings.append(f"similar_to_{other['id']}")
-        for rule in level['specialRules']:
-            try:
-                alternative = validate_level(level, gate_locked=rule['type'] == 'echoGate', disabled_rule=rule['type'],
-                                             powers=powers, max_states=budget)
-            except ValueError:
-                continue
-            if len(alternative) == len(solution):
-                raise ValueError(f"Level {level['id']}: {rule['type']} has no effect")
+        decorative = decorative_mechanic(level, len(solution), powers=powers, max_states=budget)
+        if decorative is not None:
+            raise ValueError(f"Level {level['id']}: {decorative} has no effect")
         reports.append({'id': level['id'], 'revision': level.get('revision', 1), 'minimum': len(solution),
                         'visited': stats['visited'], 'fingerprint': hashlib.sha256(identity.encode()).hexdigest(),
                         'warnings': warnings, 'solution': solution,
