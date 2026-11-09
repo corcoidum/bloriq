@@ -39,7 +39,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test('shared block artwork keeps saturated fill after drawing its translucent shadow', () async {
-    for (final colors in [GameColors.dark]) {
+    for (final colors in [GameColors.light, GameColors.dark]) {
       final recorder = ui.PictureRecorder();
       final canvas = Canvas(recorder)..drawColor(colors.tileTop, BlendMode.src);
       BlockArt.block(canvas, const Offset(50, 50), 100, colors);
@@ -78,6 +78,22 @@ void main() {
     expect(controller.undo(), isTrue);
     expect(controller.state.moves, 0);
   });
+
+  test(
+    'both themes render the same board state with different palettes',
+    () async {
+      final controller = PuzzleController(sampleLevel());
+      final game = BloriqGame(controller)..onGameResize(Vector2(300, 300));
+      controller.move('a', const Position(1, 0));
+      final state = controller.state;
+      game.configureAppearance(colors: GameColors.light, reduceMotion: true);
+      final light = await renderPixels(game);
+      game.configureAppearance(colors: GameColors.dark, reduceMotion: true);
+      final dark = await renderPixels(game);
+      expect(light, isNot(orderedEquals(dark)));
+      expect(controller.state, same(state));
+    },
+  );
 
   test(
     'reduced motion removes idle and celebration motion from canvas',

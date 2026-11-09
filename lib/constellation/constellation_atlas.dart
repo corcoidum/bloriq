@@ -69,6 +69,7 @@ class _ConstellationArtState extends State<ConstellationArt> {
     final chapter = widget.chapter;
     final lit = widget.lit ?? chapter.litMask;
     final complete = lit.every((value) => value);
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return RepaintBoundary(
       child: CustomPaint(
         painter: ConstellationPainter(
@@ -82,7 +83,7 @@ class _ConstellationArtState extends State<ConstellationArt> {
           spark: widget.spark,
           lineReveal: widget.lineReveal,
           silhouette: complete ? StarArt.portraits[widget.guardianAsset] : null,
-          silhouetteOpacity: .14 * widget.silhouetteReveal,
+          silhouetteOpacity: (dark ? .14 : .10) * widget.silhouetteReveal,
         ),
         child: const SizedBox.expand(),
       ),

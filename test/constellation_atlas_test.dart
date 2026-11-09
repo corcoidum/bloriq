@@ -40,14 +40,18 @@ Map<String, Object> _progress() {
   };
 }
 
-Future<int?> _open(WidgetTester tester, {required String language}) async {
+Future<int?> _open(
+  WidgetTester tester, {
+  required bool dark,
+  required String language,
+}) async {
   final session = await loadStorySession(tester);
   final settings = GameSettings(reduceMotion: true);
   int? picked;
   var closed = false;
   await tester.pumpWidget(
     MaterialApp(
-      theme: GameTheme.dark,
+      theme: dark ? GameTheme.dark : GameTheme.light,
       locale: Locale(language),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -112,15 +116,16 @@ Future<int?> _open(WidgetTester tester, {required String language}) async {
 }
 
 void main() {
-  for (final language in ['ko', 'en']) {
-    {
-      testWidgets('atlas $language: states, detail and replay pick', (
-        tester,
-      ) async {
-        SharedPreferences.setMockInitialValues(_progress());
-        final picked = await _open(tester, language: language);
-        expect(picked, 7);
-      });
+  for (final dark in [true, false]) {
+    for (final language in ['ko', 'en']) {
+      testWidgets(
+        'atlas ${dark ? 'dark' : 'light'} $language: states, detail and replay pick',
+        (tester) async {
+          SharedPreferences.setMockInitialValues(_progress());
+          final picked = await _open(tester, dark: dark, language: language);
+          expect(picked, 7);
+        },
+      );
     }
   }
 
@@ -165,7 +170,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-    final picked = await _open(tester, language: 'ko');
+    final picked = await _open(tester, dark: true, language: 'ko');
     expect(picked, 7);
   });
 }

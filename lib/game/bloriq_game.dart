@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 
 import '../design/game_theme.dart';
 import '../design/board_material.dart';
+import '../design/star_art.dart';
 import 'block_art.dart';
-import 'device_art.dart';
 import 'board_geometry.dart';
 import '../domain/puzzle.dart';
 
@@ -57,11 +57,31 @@ class BloriqGame extends FlameGame {
   String? _shakeId;
   Offset _shakeDirection = Offset.zero;
   double _shakeTime = 0;
+
+  /// 별빛 길이 비추는 다음 한 수. 블록을 움직이면 사라진다.
+  ({Position from, Position to})? hintMove;
+
+  /// 장착한 이동 잔영(moonlight, petal, firefly, meteor, mist, aurora, starfall, tide).
+  String trailStyle = 'moonlight';
+
+  Color _trailColor(bool isGoal) => switch (trailStyle) {
+    'petal' => const Color(0xfff4a9c4),
+    'firefly' => const Color(0xffffd86b),
+    'meteor' => _colors.reward,
+    'mist' => _colors.echo,
+    'aurora' => const Color(0xff7ef0d0),
+    'starfall' => const Color(0xfffff0b3),
+    'tide' => const Color(0xff6fd3ff),
+    _ => isGoal ? _colors.goal : _colors.primary,
+  };
+
+  /// 덩굴 문이 열린 정도(0~1). 도메인의 문 상태를 따라 부드럽게 움직인다.
+  double _gateOpen = 0;
+  bool _gateTarget = false;
   String? _dragId;
   Offset _dragOffset = Offset.zero;
   double _hintTime = 0;
-  double _gateAmount = 0;
-  GameColors _colors = GameColors.dark;
+  GameColors _colors = GameColors.light;
   bool _reduceMotion = false;
   double _celebrationProgress = 1;
   bool _isNewBest = false;
@@ -155,6 +175,7 @@ class BloriqGame extends FlameGame {
 
   void animateMove(String id, Position from, Position? oldEcho) {
     _dragId = null;
+    hintMove = null;
     _movingId = id;
     _from = from;
     _oldEcho = oldEcho;
@@ -226,13 +247,11 @@ class BloriqGame extends FlameGame {
     _blockedTime = math.max(0.0, _blockedTime - dt);
     _impactTime = math.max(0.0, _impactTime - dt);
     _shakeTime = math.max(0.0, _shakeTime - dt);
+    final gateGoal = _gateTarget ? 1.0 : 0.0;
+    _gateOpen = _reduceMotion
+        ? gateGoal
+        : _gateOpen + (gateGoal - _gateOpen).clamp(-dt / .35, dt / .35);
     if (!_reduceMotion) _hintTime += dt;
-    // 달문과 꽃판은 상태가 바뀌면 0.2초에 걸쳐 열리고 닫힌다.
-    final gateTarget = controller.state.isGateOpen ? 1.0 : 0.0;
-    final gateStep = dt / .2;
-    _gateAmount = _gateAmount < gateTarget
-        ? math.min(gateTarget, _gateAmount + gateStep)
-        : math.max(gateTarget, _gateAmount - gateStep);
   }
 
   @override
@@ -281,47 +300,168 @@ class BloriqGame extends FlameGame {
     final material = BoardMaterial(_colors);
     material.floor(canvas, layout);
 
-    // 장치는 칸을 가득 채워 그린다. 블록이 덮으면 모서리 표식이 대신 알려 준다.
-    final phase = _reduceMotion ? 0.0 : _hintTime;
-    Rect deviceRect(Position p) => Rect.fromCenter(
-      center: center(p),
-      width: cell * .94,
-      height: cell * .94,
-    );
-    final gateAmount = isReplaying || _reduceMotion
-        ? (state.isGateOpen ? 1.0 : 0.0)
-        : _gateAmount;
-    final devices = deviceTiles(state.level);
-    double amountOf(DeviceKind kind) =>
-        kind == DeviceKind.gate || kind == DeviceKind.moonbloom
-        ? gateAmount
-        : 0;
-    final switchPosition = state.level.echoSwitch;
-    final gatePosition = state.level.echoGate;
-    if (switchPosition != null && gatePosition != null) {
-      // 꽃판과 달문이 이어져 있음을 작은 빛방울 줄로 보여 준다.
-      final from = center(switchPosition), to = center(gatePosition);
-      final steps = math.max(2, ((to - from).distance / (cell * .22)).round());
-      for (var i = 1; i < steps; i++) {
-        canvas.drawCircle(
-          Offset.lerp(from, to, i / steps)!,
-          math.max(1.2, cell * .018),
-          paint
-            ..style = PaintingStyle.fill
-            ..color = _colors.cyan.withValues(alpha: .22 + .4 * gateAmount),
-        );
-      }
+    // 기믹은 색과 모양을 함께 사용하고, 블록이 덮어도 아래 모서리 표시를 남긴다.
+    String directionSymbol(Position direction) {
+      if (direction.x == 1) return '→';
+      if (direction.x == -1) return '←';
+      if (direction.y == 1) return '↓';
+      return '↑';
     }
-    for (final (position, kind, direction) in devices) {
-      DeviceArt.draw(
+
+    final mechanicTiles = <(Position, String, Color)>[
+      for (final p in state.level.echoErasers) (p, '×', _colors.echo),
+      for (final p in state.level.echoHolds) (p, 'Ⅱ', _colors.echo),
+      for (final entry in state.level.oneWays.entries)
+        (entry.key, directionSymbol(entry.value), _colors.primary),
+      for (final p in state.level.goalOnlyTiles) (p, '▶', _colors.goal),
+    ];
+    final breathe = _reduceMotion ? 0.0 : .5 + .5 * math.sin(_hintTime * 2.2);
+    for (final (position, symbol, color) in mechanicTiles) {
+      final kind = switch (symbol) {
+        '×' => 'tile_dandelion',
+        'Ⅱ' => 'tile_amber',
+        '▶' => 'tile_clover',
+        _ => 'tile_stream',
+      };
+      final direction = switch (symbol) {
+        '←' => const Offset(-1, 0),
+        '↑' => const Offset(0, -1),
+        '↓' => const Offset(0, 1),
+        _ => const Offset(1, 0),
+      };
+      if (BlockArt.mechanic(
         canvas,
         kind,
-        deviceRect(position),
-        _colors,
-        phase: phase,
-        amount: amountOf(kind),
+        center(position),
+        cell,
         direction: direction,
+        pulse: breathe,
+      )) {
+        if (kind == 'tile_stream' && !_reduceMotion) {
+          _drawCurrent(canvas, center(position), direction, cell);
+        }
+        continue;
+      }
+      final rect = Rect.fromCenter(
+        center: center(position),
+        width: cell * .88,
+        height: cell * .88,
       );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect, Radius.circular(cell * .15)),
+        paint..color = color.withValues(alpha: .15),
+      );
+      _label(
+        canvas,
+        symbol,
+        center(position),
+        cell * .28,
+        color == _colors.echo
+            ? _colors.echoInk
+            : Color.lerp(color, _colors.text, .26)!,
+      );
+    }
+
+    // Matching cyan outlines connect the echo plate and its gate even while
+    // a block is covering the plate. The gate state comes from the domain.
+    final switchPosition = state.level.echoSwitch;
+    final gatePosition = state.level.echoGate;
+    _gateTarget = state.isGateOpen;
+    if (switchPosition != null && gatePosition != null) {
+      _drawVineLink(canvas, center(switchPosition), center(gatePosition), cell);
+    }
+    if (switchPosition != null &&
+        BlockArt.switchPlate(
+          canvas,
+          center(switchPosition),
+          cell,
+          _colors,
+          glow: _gateOpen,
+        )) {
+      // 수정 발판 그림이 있으면 아래의 코드 그림을 건너뛴다.
+    } else if (switchPosition != null) {
+      final switchCenter = center(switchPosition);
+      final plateRect = Rect.fromCenter(
+        center: switchCenter,
+        width: cell * .94,
+        height: cell * .94,
+      );
+      final plate = RRect.fromRectAndRadius(
+        plateRect,
+        Radius.circular(cell * .18),
+      );
+      canvas.drawRRect(
+        plate,
+        paint
+          ..color = _colors.cyan.withValues(alpha: .18)
+          ..style = PaintingStyle.fill,
+      );
+      canvas.drawRRect(
+        plate.deflate(cell * .015),
+        paint
+          ..color = _colors.cyan
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = math.max(2.0, cell * .025),
+      );
+      paint.style = PaintingStyle.fill;
+      // A diamond marks the plate even in grayscale.
+      final diamond = Path()
+        ..moveTo(switchCenter.dx, switchCenter.dy - cell * .14)
+        ..lineTo(switchCenter.dx + cell * .14, switchCenter.dy)
+        ..lineTo(switchCenter.dx, switchCenter.dy + cell * .14)
+        ..lineTo(switchCenter.dx - cell * .14, switchCenter.dy)
+        ..close();
+      canvas.drawPath(diamond, paint..color = _colors.cyan);
+    }
+
+    if (gatePosition != null &&
+        BlockArt.gate(
+          canvas,
+          center(gatePosition),
+          cell,
+          _colors,
+          open: _gateOpen,
+        )) {
+      // 덩굴 문 그림이 있으면 아래의 코드 그림을 건너뛴다.
+    } else if (gatePosition != null) {
+      final gateCenter = center(gatePosition);
+      final gateRect = Rect.fromCenter(
+        center: gateCenter,
+        width: cell * .88,
+        height: cell * .88,
+      );
+      final gate = RRect.fromRectAndRadius(
+        gateRect,
+        Radius.circular(cell * .14),
+      );
+      final gateColor = _colors.cyan;
+      canvas.drawRRect(
+        gate,
+        paint
+          ..color = gateColor.withValues(alpha: state.isGateOpen ? .10 : .18)
+          ..style = PaintingStyle.fill,
+      );
+      canvas.drawRRect(
+        gate,
+        paint
+          ..color = gateColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = math.max(2.5, cell * .035),
+      );
+      // Closed gates have visible bars. An open gate is an unobstructed frame.
+      if (!state.isGateOpen) {
+        paint
+          ..strokeWidth = math.max(2.0, cell * .035)
+          ..strokeCap = StrokeCap.round;
+        for (final offset in [-.19, 0.0, .19]) {
+          canvas.drawLine(
+            gateCenter + Offset(cell * offset, -cell * .29),
+            gateCenter + Offset(cell * offset, cell * .29),
+            paint,
+          );
+        }
+      }
+      paint.style = PaintingStyle.fill;
     }
     // 실제 문의 상태는 유지하고, 이동 후 바뀔 상태만 바깥 테두리에 표시한다.
     if (gatePosition != null &&
@@ -349,16 +489,25 @@ class BloriqGame extends FlameGame {
       );
     }
     for (final p in state.level.obstacles) {
-      DeviceArt.draw(
+      if (BlockArt.obstacle(canvas, center(p), cell, p.x * 7 + p.y * 3)) {
+        continue;
+      }
+      material.raised(
         canvas,
-        DeviceKind.wall,
-        deviceRect(p),
-        _colors,
-        variant: p.x * 7 + p.y * 13,
+        Rect.fromCenter(
+          center: center(p),
+          width: cell * .8,
+          height: cell * .76,
+        ),
+        cell,
+        _colors.slate,
       );
     }
 
     final exit = center(state.level.exitPosition);
+    if (!_reduceMotion && StarArt.garden.isNotEmpty) {
+      _drawExitRays(canvas, exit, cell);
+    }
     BlockArt.exit(canvas, exit, cell, _colors);
 
     void drawEcho(Position p, double alpha) =>
@@ -487,18 +636,22 @@ class BloriqGame extends FlameGame {
       canvas.restore();
     }
     if (!_reduceMotion) _drawImpact(canvas, layout);
-    // 블록이 장치를 덮었을 때만 모서리에 작은 표식을 남긴다.
-    for (final (position, kind, direction) in devices) {
-      if (!state.blocks.any((block) => block.position == position)) continue;
-      DeviceArt.badge(
-        canvas,
-        kind,
-        center(position) + Offset(cell * .33, -cell * .33),
-        cell * .135,
-        _colors,
-        amount: amountOf(kind),
-        direction: direction,
-      );
+    for (final (position, symbol, color) in mechanicTiles) {
+      final marker = center(position) + Offset(cell * .34, -cell * .34);
+      canvas.drawCircle(marker, cell * .12, paint..color = color);
+      _label(canvas, symbol, marker, cell * .17, _colors.blockSymbol);
+    }
+    if (switchPosition != null) {
+      // The corner marker remains visible when a block covers the plate.
+      final marker = center(switchPosition) + Offset(-cell * .34, -cell * .34);
+      canvas.drawCircle(marker, cell * .095, paint..color = _colors.cyan);
+      final mark = Path()
+        ..moveTo(marker.dx, marker.dy - cell * .05)
+        ..lineTo(marker.dx + cell * .05, marker.dy)
+        ..lineTo(marker.dx, marker.dy + cell * .05)
+        ..lineTo(marker.dx - cell * .05, marker.dy)
+        ..close();
+      canvas.drawPath(mark, paint..color = _colors.surface);
     }
     if (state.isComplete && !isReplaying && !_reduceMotion) {
       _drawCelebration(canvas, exit, cell);
@@ -551,7 +704,161 @@ class BloriqGame extends FlameGame {
       );
       paint.style = PaintingStyle.fill;
     }
+    if (hintMove case final hint? when !isReplaying && !state.isComplete) {
+      _drawHint(canvas, center(hint.from), center(hint.to), cell);
+    }
+    if (!_reduceMotion && StarArt.garden.isNotEmpty) {
+      _drawFireflies(canvas, layout);
+    }
     canvas.restore();
+  }
+
+  /// 별빛 길 화살표: 블록에서 다음 칸까지 금빛 길과 도착 고리.
+  void _drawHint(Canvas canvas, Offset from, Offset to, double cell) {
+    final pulse = _reduceMotion ? 1.0 : .6 + .4 * math.sin(_hintTime * 4);
+    final direction = (to - from) / (to - from).distance;
+    final normal = Offset(-direction.dy, direction.dx);
+    final start = from + direction * cell * .3;
+    final tip = to - direction * cell * .12;
+    final paint = Paint()
+      ..color = _colors.reward.withValues(alpha: .9 * pulse)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(3.0, cell * .07)
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(start, tip, paint);
+    canvas.drawPath(
+      Path()
+        ..moveTo(
+          tip.dx + direction.dx * cell * .08,
+          tip.dy + direction.dy * cell * .08,
+        )
+        ..lineTo(
+          tip.dx - direction.dx * cell * .12 + normal.dx * cell * .12,
+          tip.dy - direction.dy * cell * .12 + normal.dy * cell * .12,
+        )
+        ..lineTo(
+          tip.dx - direction.dx * cell * .12 - normal.dx * cell * .12,
+          tip.dy - direction.dy * cell * .12 - normal.dy * cell * .12,
+        )
+        ..close(),
+      Paint()..color = _colors.reward.withValues(alpha: .95 * pulse),
+    );
+    canvas.drawCircle(
+      to,
+      cell * (.36 + .06 * pulse),
+      Paint()
+        ..color = _colors.reward.withValues(alpha: .55 * pulse)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = math.max(2.0, cell * .035),
+    );
+  }
+
+  /// 스위치와 문을 잇는 희미한 덩굴 빛줄기. 열리면 빛이 문 쪽으로 흐른다.
+  void _drawVineLink(Canvas canvas, Offset from, Offset to, double cell) {
+    final bend = Offset(-(to - from).dy, (to - from).dx) * .18;
+    final control = Offset.lerp(from, to, .5)! + bend;
+    final path = Path()
+      ..moveTo(from.dx, from.dy)
+      ..quadraticBezierTo(control.dx, control.dy, to.dx, to.dy);
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = BoardMaterial.moss.withValues(alpha: .35)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = math.max(2.0, cell * .05)
+        ..strokeCap = StrokeCap.round,
+    );
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = _colors.cyan.withValues(alpha: .18 + .42 * _gateOpen)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = math.max(1.2, cell * .018)
+        ..strokeCap = StrokeCap.round,
+    );
+    if (_gateOpen > 0 && !_reduceMotion) {
+      final metric = path.computeMetrics().first;
+      for (var i = 0; i < 3; i++) {
+        final t = (_hintTime * .6 + i / 3) % 1;
+        final spot = metric.getTangentForOffset(metric.length * t)!.position;
+        canvas.drawCircle(
+          spot,
+          cell * .045,
+          Paint()
+            ..color = _colors.cyan.withValues(
+              alpha: .8 * _gateOpen * math.sin(t * math.pi),
+            ),
+        );
+      }
+    }
+  }
+
+  /// 물길 칸 위로 흐름 방향을 따라 흘러가는 물결 점.
+  void _drawCurrent(Canvas canvas, Offset at, Offset direction, double cell) {
+    final normal = Offset(-direction.dy, direction.dx);
+    for (var i = 0; i < 3; i++) {
+      final t = (_hintTime * .7 + i / 3) % 1;
+      final spot =
+          at + direction * cell * (t - .5) * .8 + normal * cell * (i - 1) * .1;
+      canvas.drawLine(
+        spot - direction * cell * .05,
+        spot + direction * cell * .05,
+        Paint()
+          ..color = _colors.highlight.withValues(
+            alpha: .55 * math.sin(t * math.pi),
+          )
+          ..strokeWidth = math.max(1.2, cell * .018)
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+  }
+
+  /// 별문 뒤에서 천천히 도는 빛살.
+  void _drawExitRays(Canvas canvas, Offset exit, double cell) {
+    final paint = Paint()
+      ..strokeWidth = math.max(1.2, cell * .022)
+      ..strokeCap = StrokeCap.round;
+    for (var i = 0; i < 12; i++) {
+      final angle = _hintTime * .35 + i * math.pi / 6;
+      final direction = Offset(math.cos(angle), math.sin(angle));
+      final flicker = .5 + .5 * math.sin(_hintTime * 2 + i * 1.3);
+      canvas.drawLine(
+        exit + direction * cell * .4,
+        exit + direction * cell * (.45 + .04 * flicker),
+        paint..color = _colors.reward.withValues(alpha: .28 * flicker),
+      );
+    }
+  }
+
+  /// 판 위를 천천히 떠다니는 반딧불. 위치는 시간만으로 정해진다.
+  void _drawFireflies(Canvas canvas, BoardGeometry layout) {
+    final rect = layout.boardRect;
+    for (var i = 0; i < 5; i++) {
+      final t = _hintTime * (.11 + i * .023) + i * 1.7;
+      final at = Offset(
+        rect.left + rect.width * (.5 + .44 * math.sin(t + i)),
+        rect.top + rect.height * (.5 + .42 * math.cos(t * 1.3 + i * 2)),
+      );
+      final twinkle = .5 + .5 * math.sin(_hintTime * 3 + i * 1.9);
+      final radius = layout.cellSize * .12;
+      canvas.drawCircle(
+        at,
+        radius,
+        Paint()
+          ..shader = RadialGradient(
+            colors: [
+              const Color(0xfffff1b0).withValues(alpha: .55 * twinkle),
+              const Color(0xffffd36b).withValues(alpha: 0),
+            ],
+          ).createShader(Rect.fromCircle(center: at, radius: radius)),
+      );
+      canvas.drawCircle(
+        at,
+        math.max(1.0, layout.cellSize * .016),
+        Paint()
+          ..color = const Color(0xfffff6d6).withValues(alpha: .9 * twinkle),
+      );
+    }
   }
 
   /// 출발 칸의 파동, 빛 꼬리, 잔영 블록으로 속도감을 준다.
@@ -565,7 +872,7 @@ class BloriqGame extends FlameGame {
     bool isGoal,
   ) {
     final fade = 1 - _motion;
-    final color = isGoal ? _colors.goal : _colors.primary;
+    final color = _trailColor(isGoal);
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = math.max(1.5, cell * .04 * fade)
@@ -608,7 +915,13 @@ class BloriqGame extends FlameGame {
     final eased = Curves.easeOutCubic.transform(p);
     final fade = 1 - p;
     final c = layout.center(at);
-    final color = _impactGoal ? _colors.goal : _colors.primary;
+    final color = trailStyle != 'moonlight'
+        ? _trailColor(_impactGoal)
+        : _impactGoal
+        ? _colors.goal
+        : StarArt.garden.isEmpty
+        ? _colors.primary
+        : BoardMaterial.moss;
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = math.max(1.5, cell * .05 * fade)
@@ -773,20 +1086,3 @@ class BloriqGame extends FlameGame {
     }
   }
 }
-
-/// 판 위의 모든 장치. 순서는 그리는 순서와 안내 칩 순서에 함께 쓴다.
-List<(Position, DeviceKind, Offset)> deviceTiles(Level level) => [
-  if (level.echoSwitch case final p?)
-    (p, DeviceKind.moonbloom, const Offset(1, 0)),
-  if (level.echoGate case final p?) (p, DeviceKind.gate, const Offset(1, 0)),
-  for (final p in level.echoErasers) (p, DeviceKind.eraser, const Offset(1, 0)),
-  for (final p in level.echoHolds) (p, DeviceKind.hold, const Offset(1, 0)),
-  for (final entry in level.oneWays.entries)
-    (
-      entry.key,
-      DeviceKind.oneWay,
-      Offset(entry.value.x.toDouble(), entry.value.y.toDouble()),
-    ),
-  for (final p in level.goalOnlyTiles)
-    (p, DeviceKind.goalOnly, const Offset(1, 0)),
-];

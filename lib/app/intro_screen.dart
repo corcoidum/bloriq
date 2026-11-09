@@ -17,13 +17,9 @@ class IntroScreen extends StatefulWidget {
     super.key,
     required this.settings,
     required this.onFinished,
-    this.short = false,
   });
   final GameSettings settings;
   final VoidCallback onFinished;
-
-  /// 두 번째 실행부터 쓰는 짧은 버전. 로딩을 겸한다.
-  final bool short;
 
   @override
   State<IntroScreen> createState() => _IntroScreenState();
@@ -32,9 +28,6 @@ class IntroScreen extends StatefulWidget {
 class _IntroScreenState extends State<IntroScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final AnimationController _timeline;
-  late final Duration _duration = widget.short
-      ? GameEffects.quickIntroDuration
-      : GameEffects.introDuration;
   Timer? _fallback;
   bool _finished = false;
 
@@ -43,18 +36,22 @@ class _IntroScreenState extends State<IntroScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     widget.settings.addListener(_accessibilityChanged);
-    _timeline = AnimationController(vsync: this, duration: _duration)
-      ..addStatusListener((status) {
-        if (status == AnimationStatus.completed) _finish();
-      })
-      ..forward();
+    _timeline =
+        AnimationController(vsync: this, duration: GameEffects.introDuration)
+          ..addStatusListener((status) {
+            if (status == AnimationStatus.completed) _finish();
+          })
+          ..forward();
     // 마지막 장면의 달꽃자리 실루엣. 읽지 못해도 별과 선은 그린다.
-    if (!widget.short && !StarArt.portraits.containsKey(StarArt.lunabel)) {
+    if (!StarArt.portraits.containsKey(StarArt.lunabel)) {
       StarArt.loadPortrait(StarArt.lunabel)
           .then((_) => StarArt.revision.value++, onError: (_) {});
     }
     // TickerMode나 렌더러가 멈춰도 시작 화면에 갇히지 않는다.
-    _fallback = Timer(_duration + const Duration(milliseconds: 200), _finish);
+    _fallback = Timer(
+      GameEffects.introDuration + const Duration(milliseconds: 200),
+      _finish,
+    );
   }
 
   void _finish() {
@@ -74,12 +71,7 @@ class _IntroScreenState extends State<IntroScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // 알림창 등으로 잠깐 inactive가 되는 것은 백그라운드 전환이 아니다.
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.hidden ||
-        state == AppLifecycleState.detached) {
-      _finish();
-    }
+    if (state != AppLifecycleState.resumed) _finish();
   }
 
   @override
@@ -97,9 +89,6 @@ class _IntroScreenState extends State<IntroScreen>
     if (prefersReducedMotion(context, widget.settings)) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _finish());
     }
-    if (widget.short) {
-      return QuickIntro(progress: _timeline, onSkip: _finish);
-    }
     return Scaffold(
       key: const ValueKey('intro-screen'),
       body: ArcadeBackdrop(
@@ -113,25 +102,40 @@ class _IntroScreenState extends State<IntroScreen>
                   padding: const EdgeInsets.all(GameSpacing.page),
                   child: Column(
                     children: [
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          key: const ValueKey('skip-intro'),
-                          onPressed: _finish,
-                          child: Text(t.skipIntro),
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: FadeTransition(
+                              opacity: _timeline.drive(
+                                CurveTween(curve: const Interval(.825, 1)),
+                              ),
+                              child: const Align(
+                                alignment: Alignment.centerLeft,
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: GameWordmark(size: 22),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Flexible(
+                            child: TextButton(
+                              key: const ValueKey('skip-intro'),
+                              onPressed: _finish,
+                              child: Text(t.skipIntro),
+                            ),
+                          ),
+                        ],
                       ),
                       SizedBox(
                         height: (constraints.maxHeight * .50).clamp(160, 480),
                         child: Center(child: IntroScene(progress: _timeline)),
                       ),
-                      FadeTransition(
-                        opacity: _timeline.drive(
-                          CurveTween(curve: const Interval(.825, 1)),
-                        ),
-                        child: const FittedBox(
+                      const Center(
+                        child: FittedBox(
                           fit: BoxFit.scaleDown,
-                          child: GameWordmark(size: 38),
+                          child: GameWordmark(size: 36),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -147,129 +151,6 @@ class _IntroScreenState extends State<IntroScreen>
       ),
     );
   }
-}
-
-/// 짧은 인트로: 리크가 깡총 뛰고 별이 올라가며 로고가 나타난다. 화면 어디를 눌러도 끝난다.
-class QuickIntro extends StatelessWidget {
-  const QuickIntro({super.key, required this.progress, required this.onSkip});
-  final Animation<double> progress;
-  final VoidCallback onSkip;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = GameTheme.colorsOf(context);
-    return GestureDetector(
-      key: const ValueKey('skip-intro'),
-      behavior: HitTestBehavior.opaque,
-      onTap: onSkip,
-      child: Scaffold(
-        key: const ValueKey('intro-screen'),
-        body: ArcadeBackdrop(
-          child: Center(
-            child: Semantics(
-              label: 'BLORIQ',
-              child: AnimatedBuilder(
-                animation: progress,
-                builder: (context, _) {
-                  final seconds = progress.value * 1.5;
-                  final (dy, sx, sy) = IntroBoardPainter.hop(seconds, .15, .16);
-                  final appear = IntroBoardPainter.seg(
-                    seconds,
-                    0,
-                    .2,
-                    Curves.easeOutCubic,
-                  );
-                  final logo = IntroBoardPainter.seg(
-                    seconds,
-                    .65,
-                    1.05,
-                    Curves.easeOut,
-                  );
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        width: 170,
-                        height: 200,
-                        child: CustomPaint(
-                          painter: _RisingStarPainter(
-                            seg: IntroBoardPainter.seg(
-                              seconds,
-                              .45,
-                              1.2,
-                              Curves.easeOutCubic,
-                            ),
-                            colors: colors,
-                          ),
-                          child: Align(
-                            alignment: Alignment.bottomCenter,
-                            child: Opacity(
-                              opacity: appear,
-                              child: Transform.translate(
-                                offset: Offset(0, dy * 140),
-                                child: Transform(
-                                  alignment: Alignment.bottomCenter,
-                                  transform: Matrix4.diagonal3Values(sx, sy, 1),
-                                  child: Image.asset(
-                                    StarArt.riqHappy,
-                                    width: 130,
-                                    height: 130,
-                                    cacheWidth: 384,
-                                    excludeFromSemantics: true,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: GameSpacing.medium),
-                      Opacity(
-                        opacity: logo,
-                        child: const FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: GameWordmark(size: 38),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RisingStarPainter extends CustomPainter {
-  const _RisingStarPainter({required this.seg, required this.colors});
-  final double seg;
-  final GameColors colors;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (seg <= 0) return;
-    final from = Offset(size.width / 2, size.height * .55);
-    for (final (dx, delay, radius) in const [
-      (0.0, 0.0, 15.0),
-      (-46.0, .12, 7.0),
-      (44.0, .22, 8.0),
-    ]) {
-      final t = ((seg - delay) / (1 - delay)).clamp(0.0, 1.0);
-      if (t <= 0) continue;
-      IntroBoardPainter.sparkle(
-        canvas,
-        from + Offset(dx * t, -(size.height * .5) * t),
-        radius,
-        colors.reward.withValues(alpha: math.sin(t * math.pi * .9).clamp(0, 1)),
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_RisingStarPainter old) => old.seg != seg;
 }
 
 class IntroScene extends StatelessWidget {
@@ -408,7 +289,7 @@ class IntroBoardPainter extends CustomPainter {
     // Scene 1: 별문 위의 작은 반짝임이 잠든 리크를 부른다.
     final twinkle = math.sin(seg(seconds, .20, .62) * math.pi);
     if (twinkle > 0) {
-      sparkle(
+      _sparkle(
         canvas,
         exit + Offset(cell * .26, -cell * .26),
         cell * .09 * twinkle,
@@ -494,7 +375,7 @@ class IntroBoardPainter extends CustomPainter {
       final at =
           Offset.lerp(exit, target, rise)! +
           Offset(-math.sin(rise * math.pi) * cell * .35, 0);
-      sparkle(canvas, at, cell * (.18 - .07 * rise), colors.reward);
+      _sparkle(canvas, at, cell * (.18 - .07 * rise), colors.reward);
     }
     canvas.restore();
   }
@@ -626,7 +507,7 @@ class IntroBoardPainter extends CustomPainter {
     }
   }
 
-  static void sparkle(Canvas canvas, Offset at, double radius, Color color) {
+  static void _sparkle(Canvas canvas, Offset at, double radius, Color color) {
     final path = Path();
     for (var i = 0; i < 8; i++) {
       final angle = -math.pi / 2 + i * math.pi / 4;

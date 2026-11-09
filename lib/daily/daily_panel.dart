@@ -8,15 +8,88 @@ import '../l10n/app_localizations.dart';
 import 'daily_repository.dart';
 
 class DailyPanel extends StatelessWidget {
-  const DailyPanel({super.key, required this.daily, required this.onPlay});
+  const DailyPanel({
+    super.key,
+    required this.daily,
+    required this.onPlay,
+    this.compact = false,
+  });
   final DailyRepository daily;
   final VoidCallback? onPlay;
+
+  /// 홈 한 화면용 한 줄 카드. 목표와 연속 참여만 보여 준다.
+  final bool compact;
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
     final colors = GameTheme.colorsOf(context);
     final challenge = daily.today;
     final best = daily.bestMoves(challenge.date);
+    if (compact) {
+      return ArcadeSurface(
+        accent: colors.echo,
+        padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
+        child: Row(
+          children: [
+            Image.asset(
+              StarArt.portal,
+              height: 36,
+              width: 36,
+              excludeFromSemantics: true,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    t.dailyEcho,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTypography.label.copyWith(
+                      color: colors.rewardInk,
+                    ),
+                  ),
+                  Text(
+                    best == challenge.level.minimumMoves
+                        ? t.dailyPerfect
+                        : '${t.dailyTarget(challenge.level.minimumMoves)} · '
+                              '${t.journeyStreak(daily.streak)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: colors.secondaryText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 132),
+              child: FilledButton.tonal(
+                key: const ValueKey('daily-play'),
+                style: FilledButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  backgroundColor: colors.echo.withValues(alpha: .18),
+                  foregroundColor: colors.text,
+                ),
+                onPressed: onPlay,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    daily.completed(challenge.date)
+                        ? t.dailyReplay
+                        : t.dailyPlay,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     return ArcadeSurface(
       accent: colors.echo,
       child: Column(

@@ -108,7 +108,7 @@ void main() {
       }
     }
 
-    for (final mode in ['dark']) {
+    for (final mode in [ThemeMode.dark]) {
       SharedPreferences.setMockInitialValues({
         'bloriq.onboarding.v1': 'skipped',
         GameAudio.musicKey: false,
@@ -121,7 +121,7 @@ void main() {
           child: BloriqApp(settings: settings),
         ),
       );
-      final prefix = mode;
+      final prefix = mode.name;
       await tester.pump(const Duration(milliseconds: 300));
       await capture('$prefix-intro-reveal');
       await tester.pump(const Duration(milliseconds: 1000));

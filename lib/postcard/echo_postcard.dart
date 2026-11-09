@@ -52,7 +52,7 @@ class StoryCardContent {
 
 /// 동일한 결과에 동일한 이미지를 만든다. 실제 이동 좌표는 사용하지 않는다.
 class EchoPostcardPainter extends CustomPainter {
-  const EchoPostcardPainter(this.data, {this.colors = GameColors.dark});
+  const EchoPostcardPainter(this.data, {this.colors = GameColors.light});
 
   final EchoPostcardData data;
   final GameColors colors;
@@ -297,7 +297,7 @@ class EchoPostcardPainter extends CustomPainter {
 /// 미리보기와 같은 painter를 사용해 정확히 1080×1080 PNG를 만든다.
 Future<Uint8List> renderEchoPostcardPng(
   EchoPostcardData data, {
-  GameColors colors = GameColors.dark,
+  GameColors colors = GameColors.light,
 }) async {
   if (data.story case final story?) {
     for (final path in story.portraitAssets) {

@@ -68,7 +68,6 @@ void main() {
     (tester) async {
       final settings = GameSettings(reduceMotion: true);
       await tester.pumpWidget(BloriqApp(settings: settings));
-      await startFromHome(tester);
       await _ready(tester);
       final first = _game(tester).controller.state.level;
       final solution = const PuzzleSolver().solve(first)!;
@@ -96,13 +95,15 @@ void main() {
               .completionCount,
           1,
         );
-        await tapVisible(tester, find.byKey(const ValueKey('result-reward')));
         expect(find.byKey(const ValueKey('skip-story')), findsOneWidget);
         if (id == 5) expect(find.text('The Garden’s Promise'), findsOneWidget);
         await tapVisible(tester, find.byKey(const ValueKey('skip-story')));
         if (id < 5) await tapVisible(tester, find.text('Next level'));
       }
-      await tapVisible(tester, find.byTooltip('More'));
+      // 정령 도감은 결과 팝업의 더 보기 메뉴 안에 있다.
+      await tapVisible(tester, find.byKey(const ValueKey('result-more')));
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
       await tapVisible(tester, find.byKey(const ValueKey('result-album')));
       expect(find.byType(SpiritAlbum), findsOneWidget);
       await tapVisible(tester, find.byKey(const ValueKey('spirit-s1-02')));
@@ -110,9 +111,9 @@ void main() {
       expect(session.collection.companion?.id, 's1-02');
       await tapVisible(tester, find.text('Close').last);
       await tapVisible(tester, find.byTooltip('Close'));
-      await tapVisible(tester, find.byTooltip('Try again'));
+      await tapVisible(tester, find.text('Try again'));
       await _solve(tester);
-      expect(find.byKey(const ValueKey('result-reward')), findsNothing);
+      expect(find.byKey(const ValueKey('skip-story')), findsNothing);
       expect(session.collection.owned.length, 5);
       expect(
         session.progress
@@ -120,7 +121,7 @@ void main() {
             .completionCount,
         2,
       );
-      await tapVisible(tester, find.byKey(const ValueKey('result-home')));
+      await tapVisible(tester, find.byKey(const ValueKey('game-home')));
       expect(find.byKey(const ValueKey('home-screen')), findsOneWidget);
       await tester.pumpWidget(const SizedBox());
       expect(
@@ -160,7 +161,7 @@ void main() {
         await _solve(tester);
         expect(session.collection.owned, isEmpty);
         expect(session.progress.completedCampaignLevelIds, isEmpty);
-        expect(find.byKey(const ValueKey('result-reward')), findsNothing);
+        expect(find.byKey(const ValueKey('skip-story')), findsNothing);
         await tester.pumpWidget(const SizedBox());
         await disposeStorySession(tester, session);
         settings.dispose();

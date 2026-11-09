@@ -80,7 +80,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
     }
 
-    for (final mode in ['dark']) {
+    for (final mode in [ThemeMode.dark]) {
       for (final locale in ['ko', 'en']) {
         rootBundle.clear();
         SharedPreferences.setMockInitialValues({
@@ -122,7 +122,7 @@ void main() {
           ),
         );
         await tester.pump();
-        final prefix = '$mode-$locale';
+        final prefix = '${mode.name}-$locale';
         await capture('$prefix-tutorial-move');
         await move(0, 1);
         await capture('$prefix-tutorial-echo');

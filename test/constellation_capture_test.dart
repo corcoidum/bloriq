@@ -68,7 +68,7 @@ void main() {
     }
 
     Future<void> launch(
-      String mode,
+      ThemeMode mode,
       String locale,
       Map<String, Object> prefs,
     ) async {
@@ -88,7 +88,7 @@ void main() {
     }
 
     // 1. 첫 실행 인트로 (장면별)
-    for (final (mode, locale) in [('dark', 'ko'), ('dark', 'en')]) {
+    for (final (mode, locale) in [(ThemeMode.dark, 'ko')]) {
       await launch(mode, locale, {});
       for (
         var i = 0;
@@ -109,7 +109,7 @@ void main() {
       ]) {
         await tester.pump(Duration(milliseconds: ms - elapsed));
         elapsed = ms;
-        await capture('$mode-$locale-intro-$scene');
+        await capture('${mode.name}-$locale-intro-$scene');
       }
       await tester.pumpWidget(const SizedBox());
     }
@@ -140,10 +140,10 @@ void main() {
         ],
       }),
     };
-    for (final (mode, locale) in [('dark', 'ko'), ('dark', 'en')]) {
+    for (final (mode, locale) in [(ThemeMode.dark, 'ko')]) {
       await launch(mode, locale, seeded);
       await waitForHome(tester);
-      await capture('$mode-$locale-home');
+      await capture('${mode.name}-$locale-home');
       await tapVisible(tester, find.byKey(const ValueKey('home-levels')));
       await selectOpenLevel(tester, 5);
       for (var i = 0; i < 100 && board.evaluate().isEmpty; i++) {
@@ -175,10 +175,10 @@ void main() {
       await tester.pump(const Duration(milliseconds: 1900));
       final strip = find.byKey(const ValueKey('victory-constellation'));
       if (strip.evaluate().isNotEmpty) await tester.ensureVisible(strip);
-      await capture('$mode-$locale-victory-mid');
+      await capture('${mode.name}-$locale-victory-mid');
       await tester.pump(const Duration(milliseconds: 600));
       if (strip.evaluate().isNotEmpty) await tester.ensureVisible(strip);
-      await capture('$mode-$locale-victory-final');
+      await capture('${mode.name}-$locale-victory-final');
 
       // 3. 결과에서 연 별자리 상세, 목록
       await tapVisible(
@@ -188,9 +188,9 @@ void main() {
       await tester.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 200)),
       );
-      await capture('$mode-$locale-atlas-detail');
+      await capture('${mode.name}-$locale-atlas-detail');
       await tapVisible(tester, find.byKey(const ValueKey('atlas-back')));
-      await capture('$mode-$locale-atlas-list');
+      await capture('${mode.name}-$locale-atlas-list');
       await tester.pumpWidget(const SizedBox());
     }
   });

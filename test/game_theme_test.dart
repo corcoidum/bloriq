@@ -12,17 +12,18 @@ double contrast(Color foreground, Color background) {
 
 void main() {
   test('forest themes preserve mint, Echo and gold semantic roles', () {
-    for (final colors in [GameColors.dark]) {
+    for (final colors in [GameColors.light, GameColors.dark]) {
       expect(colors.goal.g, greaterThan(colors.goal.r));
       expect(colors.echo.b, greaterThan(colors.echo.g));
       expect(colors.reward.r, greaterThan(colors.reward.b));
     }
     expect(GameColors.dark.background.computeLuminance(), lessThan(.03));
+    expect(GameColors.light.background.computeLuminance(), greaterThan(.8));
     expect(GameTypography.canvasFontFamily, 'Jua');
   });
 
   test('body and semantic text maintain at least 4.5:1 contrast', () {
-    for (final colors in [GameColors.dark]) {
+    for (final colors in [GameColors.light, GameColors.dark]) {
       for (final background in [colors.background, colors.surface]) {
         for (final foreground in [
           colors.text,
@@ -52,8 +53,10 @@ void main() {
   test(
     'Material controls use the same palette with readable filled buttons',
     () {
-      for (final theme in [GameTheme.dark]) {
-        const colors = GameColors.dark;
+      for (final theme in [GameTheme.light, GameTheme.dark]) {
+        final colors = theme.brightness == Brightness.light
+            ? GameColors.light
+            : GameColors.dark;
         expect(theme.scaffoldBackgroundColor, colors.background);
         expect(theme.dialogTheme.backgroundColor, colors.surface);
         expect(theme.colorScheme.onSurface, colors.text);

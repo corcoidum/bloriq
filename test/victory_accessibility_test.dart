@@ -152,6 +152,11 @@ void main() {
     final pausedProgress = game.celebrationProgress;
     await tester.pump(const Duration(milliseconds: 500));
     expect(game.celebrationProgress, pausedProgress);
+    expect(
+      find.text('Next level'),
+      findsOneWidget,
+      reason: 'Discovery results allow continuing from the first frame',
+    );
     await tester.pump(const Duration(milliseconds: 1200));
     await tester.pump();
     expect(game.celebrationProgress, 1);
@@ -168,40 +173,41 @@ void main() {
     ticking.dispose();
   });
 
-  for (final mode in ['dark']) {
-    testWidgets('$mode: stage 14 and 20 complete through real gestures', (
-      tester,
-    ) async {
-      final raw = jsonDecode(
-        await rootBundle.loadString('assets/levels/levels.json'),
-      ) as List<dynamic>;
-      final levels = raw
-          .map((json) => Level.fromJson(json as Map<String, dynamic>))
-          .where((level) => {14, 20, 21}.contains(level.id))
-          .toList();
-      final settings = await GameSettings.load();
-      await settings.setReduceMotion(true);
-      await pumpGame(
-        tester,
-        BloriqApp(settings: settings, loadLevels: () async => levels),
-        levelId: 14,
-      );
-      await _ready(tester);
-      for (final id in [14, 20]) {
-        final game = _game(tester);
-        expect(game.controller.state.level.id, id);
-        await _solve(tester);
-        expect(find.text('Next level'), findsOneWidget);
-        final progress = (await ProgressRepository.load()).forLevel(id)!;
-        expect(progress.bestMoves, game.controller.state.level.minimumMoves);
-        expect(progress.bestStars, 3);
-        expect(progress.completionCount, 1);
-        await _tapNext(tester);
-      }
-      expect(_game(tester).controller.state.level.id, 21);
-      expect(tester.takeException(), isNull);
-      await tester.pumpWidget(const SizedBox());
-      settings.dispose();
-    });
+  for (final mode in [ThemeMode.dark]) {
+    testWidgets(
+      '${mode.name}: stage 14 and 20 complete through real gestures',
+      (tester) async {
+        final raw = jsonDecode(
+          await rootBundle.loadString('assets/levels/levels.json'),
+        ) as List<dynamic>;
+        final levels = raw
+            .map((json) => Level.fromJson(json as Map<String, dynamic>))
+            .where((level) => {14, 20, 21}.contains(level.id))
+            .toList();
+        final settings = await GameSettings.load();
+        await settings.setReduceMotion(true);
+        await pumpGame(
+          tester,
+          BloriqApp(settings: settings, loadLevels: () async => levels),
+          levelId: 14,
+        );
+        await _ready(tester);
+        for (final id in [14, 20]) {
+          final game = _game(tester);
+          expect(game.controller.state.level.id, id);
+          await _solve(tester);
+          expect(find.text('Next level'), findsOneWidget);
+          final progress = (await ProgressRepository.load()).forLevel(id)!;
+          expect(progress.bestMoves, game.controller.state.level.minimumMoves);
+          expect(progress.bestStars, 3);
+          expect(progress.completionCount, 1);
+          await _tapNext(tester);
+        }
+        expect(_game(tester).controller.state.level.id, 21);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox());
+        settings.dispose();
+      },
+    );
   }
 }

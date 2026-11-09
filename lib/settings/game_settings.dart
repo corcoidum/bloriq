@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// 퍼즐 상태를 소유하지 않는 표시 설정. 예전 테마 값이 저장돼 있어도 무시한다.
+/// 퍼즐 상태를 소유하지 않는 표시 설정. 테마는 늘 다크라 설정하지 않는다.
 class GameSettings extends ChangeNotifier {
   GameSettings({SharedPreferences? preferences, bool reduceMotion = false})
     : // 외부 주입용 매개변수와 읽기 전용 getter를 내부 상태에서 분리한다.
@@ -30,7 +30,7 @@ class GameSettings extends ChangeNotifier {
         reduceMotion = preferences.getBool(reduceMotionKey) ?? false;
       } catch (_) {}
     } catch (_) {
-      // 저장소를 사용할 수 없어도 기본 설정으로 실행할 수 있다.
+      // 저장소를 사용할 수 없어도 기본 야간 테마로 실행할 수 있다.
     }
     return GameSettings(preferences: preferences, reduceMotion: reduceMotion);
   }

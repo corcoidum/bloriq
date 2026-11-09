@@ -5,7 +5,6 @@ import 'package:bloriq/game/bloriq_game.dart';
 import 'package:bloriq/main.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -31,6 +30,11 @@ void main() {
       oneWays: {const Position(2, 1): const Position(1, 0)},
       goalOnlyTiles: {const Position(3, 1)},
     );
+    // 키 큰 폰에서는 기믹 설명을 모두 펼쳐 보여 준다.
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     await pumpGame(tester, BloriqApp(loadLevels: () async => [level]));
     final boardFinder = find.byType(GameWidget<BloriqGame>);
     for (var i = 0; i < 100 && boardFinder.evaluate().isEmpty; i++) {
@@ -38,16 +42,10 @@ void main() {
     }
     expect(boardFinder, findsOneWidget);
     await tester.pump(const Duration(milliseconds: 100));
-    for (final (kind, rule) in [
-      ('eraser', 'washes the echo away'),
-      ('hold', 'keeps the previous echo'),
-      ('oneWay', 'only the way the leaves point'),
-      ('goalOnly', "Riq's Moss"),
-    ]) {
-      await tester.tap(find.byKey(ValueKey('device-$kind')));
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(find.textContaining(rule), findsOneWidget);
-    }
+    expect(find.textContaining('Dandelion tile'), findsOneWidget);
+    expect(find.textContaining('Amber tile'), findsOneWidget);
+    expect(find.textContaining('Stream tile'), findsOneWidget);
+    expect(find.textContaining('Clover tile'), findsOneWidget);
 
     final game = tester.widget<GameWidget<BloriqGame>>(boardFinder).game!;
     final board = tester.getRect(boardFinder);

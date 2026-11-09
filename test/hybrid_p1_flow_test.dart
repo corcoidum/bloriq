@@ -71,7 +71,6 @@ void main() {
       'test build choice $consent precedes tutorial and never forces tracking',
       (tester) async {
         await tester.pumpWidget(const BloriqApp(playtestMode: true));
-        await skipIntro(tester);
         await waitKey(tester, 'consent-accept');
         expect(board, findsNothing);
         expect(
@@ -84,7 +83,6 @@ void main() {
           tester,
           find.byKey(ValueKey(consent ? 'consent-accept' : 'consent-decline')),
         );
-        await startFromHome(tester);
         await waitKey(tester, 'skip-tutorial');
         final session = tester
             .widget<GameScreen>(find.byType(GameScreen))
@@ -114,8 +112,6 @@ void main() {
       var now = DateTime(2026, 10, 29, 23, 59);
       await tester.pumpWidget(BloriqApp(clock: () => now));
       await waitForHome(tester);
-      expect(find.byKey(const ValueKey('home-daily-badge')), findsOneWidget);
-      await tapVisible(tester, find.byKey(const ValueKey('home-daily')));
       await tapVisible(tester, find.byKey(const ValueKey('daily-play')));
       await tester.pump(const Duration(milliseconds: 350));
       final screen = tester.widget<GameScreen>(find.byType(GameScreen));
@@ -126,20 +122,13 @@ void main() {
         challenge.level.minimumMoves,
       );
       expect((await ProgressRepository.load()).hasAnyProgress, false);
-      await tapVisible(tester, find.byKey(const ValueKey('result-home')));
+      await tapVisible(tester, find.byKey(const ValueKey('game-home')));
       await tester.pump(const Duration(milliseconds: 350));
-      expect(find.byKey(const ValueKey('home-daily-badge')), findsNothing);
-      await tapVisible(tester, find.byKey(const ValueKey('home-daily')));
       expect(find.text('Replay today’s Echo'), findsOneWidget);
-      await tester.tapAt(const Offset(10, 10));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 350));
       now = DateTime(2026, 10, 30);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await tester.pump();
-      expect(find.byKey(const ValueKey('home-daily-badge')), findsOneWidget);
-      await tapVisible(tester, find.byKey(const ValueKey('home-daily')));
       expect(find.text('Play Daily Echo'), findsOneWidget);
       expect(screen.session.daily.completed(challenge.date), true);
       await tester.pumpWidget(const SizedBox());

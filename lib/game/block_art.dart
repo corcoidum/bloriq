@@ -21,6 +21,26 @@ abstract final class BlockArt {
     ui.Image? face,
   }) {
     final material = BoardMaterial(colors);
+    if (!goal && StarArt.runeImage != null) {
+      // 달빛 룬이 새겨진 돌. 바닥 그림자 위에 그림 그대로 올린다.
+      _contactShadow(
+        canvas,
+        at + Offset(0, cell * .3 * scale),
+        cell * scale,
+        opacity,
+      );
+      StarArt.draw(
+        canvas,
+        StarArt.runeImage!,
+        Rect.fromCenter(
+          center: at + Offset(0, -cell * .02 * scale),
+          width: cell * .92 * scale,
+          height: cell * .92 * scale,
+        ),
+        opacity: opacity,
+      );
+      return;
+    }
     if (!goal) {
       final rect = Rect.fromCenter(
         center: at,
@@ -31,7 +51,9 @@ abstract final class BlockArt {
         canvas,
         rect,
         cell * scale,
-        const Color(0xff416795),
+        colors == GameColors.dark
+            ? const Color(0xff416795)
+            : const Color(0xff557bae),
         opacity: opacity,
       );
       canvas.drawCircle(
@@ -53,6 +75,27 @@ abstract final class BlockArt {
       return;
     }
     final image = face ?? StarArt.riqImage;
+    final cushion = StarArt.garden['riq_cushion'];
+    if (image != null && cushion != null) {
+      // 민트 이끼 방석 위에 앉은 리크.
+      StarArt.draw(
+        canvas,
+        cushion,
+        Rect.fromCenter(
+          center: at + Offset(0, cell * .14 * scale),
+          width: cell * .96 * scale,
+          height: cell * .96 * scale,
+        ),
+        opacity: opacity,
+      );
+      StarArt.draw(
+        canvas,
+        image,
+        goalSpriteRect(at, cell, scale: scale),
+        opacity: opacity,
+      );
+      return;
+    }
     if (image != null) {
       material.raised(
         canvas,
@@ -154,6 +197,34 @@ abstract final class BlockArt {
     GameColors colors, {
     double opacity = 1,
   }) {
+    if (StarArt.riqImage case final riq? when StarArt.garden.isNotEmpty) {
+      // 보랏빛 안개로 남은 리크의 실루엣과 발밑의 빛.
+      final mist = Rect.fromCenter(
+        center: at + Offset(0, cell * .08),
+        width: cell * .92,
+        height: cell * .7,
+      );
+      canvas.drawOval(
+        mist,
+        Paint()
+          ..shader = RadialGradient(
+            colors: [
+              colors.echo.withValues(alpha: .42 * opacity),
+              colors.echo.withValues(alpha: 0),
+            ],
+          ).createShader(mist),
+      );
+      final rect = goalSpriteRect(at, cell, scale: .94);
+      StarArt.draw(
+        canvas,
+        riq,
+        rect,
+        opacity: .62 * opacity,
+        tint: colors == GameColors.light ? colors.echoInk : colors.echo,
+      );
+      StarArt.draw(canvas, riq, rect, opacity: .16 * opacity);
+      return;
+    }
     if (StarArt.echoImage case final image?) {
       StarArt.draw(
         canvas,
@@ -164,6 +235,9 @@ abstract final class BlockArt {
           height: cell * BoardGeometry.spriteFraction,
         ),
         opacity: opacity * .72,
+        tint: colors == GameColors.light
+            ? colors.echoInk.withValues(alpha: .85)
+            : null,
       );
       return;
     }
@@ -221,6 +295,9 @@ abstract final class BlockArt {
         canvas,
         image,
         Rect.fromCenter(center: at, width: cell, height: cell),
+        tint: colors == GameColors.light
+            ? colors.rewardInk.withValues(alpha: .65)
+            : null,
       );
       return;
     }
@@ -247,6 +324,186 @@ abstract final class BlockArt {
         ..strokeWidth = math.max(1.2, cell * .012),
     );
     label(canvas, '★', at, cell * .38, colors.rewardInk);
+  }
+
+  static void _contactShadow(
+    Canvas canvas,
+    Offset at,
+    double cell,
+    double opacity,
+  ) {
+    canvas.drawOval(
+      Rect.fromCenter(center: at, width: cell * .74, height: cell * .16),
+      Paint()..color = Colors.black.withValues(alpha: .28 * opacity),
+    );
+  }
+
+  /// 이끼 바위 또는 그루터기. 칸 위치로 고정 선택하며 그림이 없으면 null.
+  static bool obstacle(Canvas canvas, Offset at, double cell, int variant) {
+    final image =
+        StarArt.garden[variant % 3 == 0 ? 'stump' : 'rock'] ??
+        StarArt.garden['rock'];
+    if (image == null) return false;
+    _contactShadow(canvas, at + Offset(0, cell * .28), cell, 1);
+    StarArt.draw(
+      canvas,
+      image,
+      Rect.fromCenter(
+        center: at + Offset(0, -cell * .02),
+        width: cell * .94,
+        height: cell * .94,
+      ),
+    );
+    return true;
+  }
+
+  /// 기믹 칸 바닥 그림. 물길은 진행 방향으로 회전한다. 그림이 없으면 false.
+  static bool mechanic(
+    Canvas canvas,
+    String kind,
+    Offset at,
+    double cell, {
+    Offset direction = const Offset(1, 0),
+    double pulse = 0,
+  }) {
+    final image = StarArt.garden[kind];
+    if (image == null) return false;
+    final extent = switch (kind) {
+      'tile_amber' => cell * .74,
+      'tile_stream' => cell * .98,
+      _ => cell * .9,
+    };
+    canvas.save();
+    canvas.translate(at.dx, at.dy);
+    canvas.rotate(math.atan2(direction.dy, direction.dx));
+    final height = extent * image.height / image.width;
+    StarArt.draw(
+      canvas,
+      image,
+      Rect.fromCenter(center: Offset.zero, width: extent, height: height),
+      opacity: .92 + .08 * pulse,
+    );
+    canvas.restore();
+    return true;
+  }
+
+  /// 달 수정 발판. 잔상이 올라가 문을 열면 빛이 차오른다.
+  static bool switchPlate(
+    Canvas canvas,
+    Offset at,
+    double cell,
+    GameColors colors, {
+    required double glow,
+  }) {
+    final image = StarArt.garden['switch_crystal'];
+    if (image == null) return false;
+    if (glow > 0) {
+      final rect = Rect.fromCircle(center: at, radius: cell * .62);
+      canvas.drawCircle(
+        at,
+        cell * .62,
+        Paint()
+          ..shader = RadialGradient(
+            colors: [
+              colors.cyan.withValues(alpha: .55 * glow),
+              colors.cyan.withValues(alpha: 0),
+            ],
+          ).createShader(rect),
+      );
+    }
+    StarArt.draw(
+      canvas,
+      image,
+      Rect.fromCenter(center: at, width: cell * .94, height: cell * .94),
+    );
+    return true;
+  }
+
+  /// 덩굴 문. [open]이 1에 가까울수록 덩굴이 양옆으로 말려 가운데가 열린다.
+  static bool gate(
+    Canvas canvas,
+    Offset at,
+    double cell,
+    GameColors colors, {
+    required double open,
+  }) {
+    final image = StarArt.garden['gate_closed'];
+    if (image == null) return false;
+    final rect = Rect.fromCenter(
+      center: at,
+      width: cell * .92,
+      height: cell * .92,
+    );
+    final source = Rect.fromLTWH(
+      0,
+      0,
+      image.width.toDouble(),
+      image.height.toDouble(),
+    );
+    final paint = Paint()..filterQuality = FilterQuality.medium;
+    canvas.drawCircle(
+      at,
+      cell * .46,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            colors.cyan.withValues(alpha: .10 + .22 * open),
+            colors.cyan.withValues(alpha: 0),
+          ],
+        ).createShader(Rect.fromCircle(center: at, radius: cell * .46)),
+    );
+    for (final side in [-1.0, 1.0]) {
+      final half = side < 0
+          ? Rect.fromLTRB(
+              source.left,
+              source.top,
+              source.center.dx,
+              source.bottom,
+            )
+          : Rect.fromLTRB(
+              source.center.dx,
+              source.top,
+              source.right,
+              source.bottom,
+            );
+      final target = side < 0
+          ? Rect.fromLTRB(rect.left, rect.top, rect.center.dx, rect.bottom)
+          : Rect.fromLTRB(rect.center.dx, rect.top, rect.right, rect.bottom);
+      final hinge = Offset(side < 0 ? rect.left : rect.right, rect.bottom);
+      canvas.save();
+      canvas.translate(hinge.dx, hinge.dy);
+      canvas.rotate(side * .16 * open);
+      canvas.scale(1 - .45 * open, 1 - .06 * open);
+      canvas.translate(-hinge.dx, -hinge.dy);
+      canvas.drawImageRect(image, half, target, paint);
+      canvas.restore();
+    }
+    if (open > 0) {
+      // 열린 덩굴에 작은 꽃이 핀다.
+      for (final (dx, dy) in [
+        (-.36, -.22),
+        (-.30, .12),
+        (.34, -.12),
+        (.38, .2),
+      ]) {
+        final bloom = at + Offset(dx * cell, dy * cell);
+        for (var i = 0; i < 5; i++) {
+          final angle = i * math.pi * 2 / 5;
+          canvas.drawCircle(
+            bloom +
+                Offset(math.cos(angle), math.sin(angle)) * cell * .028 * open,
+            cell * .024 * open,
+            Paint()..color = const Color(0xffc9e4ff).withValues(alpha: open),
+          );
+        }
+        canvas.drawCircle(
+          bloom,
+          cell * .016 * open,
+          Paint()..color = colors.reward.withValues(alpha: open),
+        );
+      }
+    }
+    return true;
   }
 
   static void label(

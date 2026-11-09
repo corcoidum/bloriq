@@ -5,7 +5,7 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
-from tools.validate_levels import validate_level
+from tools.validate_levels import available_powers, expansion_worlds, validate_level
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -66,7 +66,10 @@ def inspect(levels: list[dict]) -> list[dict]:
     previous_states = 0
     for index, level in enumerate(levels):
         stats: dict[str, int] = {}
-        solution = validate_level(level, stats=stats)
+        # 월드 2 스테이지는 네 권능을 한 번씩 쓸 수 있는 상태로 최단 해를 잰다.
+        powers = available_powers(level) if level.get('world', 1) >= 2 else ()
+        budget = 2_000_000 if powers else 200000
+        solution = validate_level(level, stats=stats, powers=powers, max_states=budget)
         if len(solution) != level['minimumMoves']:
             raise ValueError(f"Level {level['id']}: minimumMoves mismatch")
         identity = canonical(level)
@@ -86,7 +89,8 @@ def inspect(levels: list[dict]) -> list[dict]:
                 warnings.append(f"similar_to_{other['id']}")
         for rule in level['specialRules']:
             try:
-                alternative = validate_level(level, gate_locked=rule['type'] == 'echoGate', disabled_rule=rule['type'])
+                alternative = validate_level(level, gate_locked=rule['type'] == 'echoGate', disabled_rule=rule['type'],
+                                             powers=powers, max_states=budget)
             except ValueError:
                 continue
             if len(alternative) == len(solution):
@@ -104,9 +108,15 @@ def inspect(levels: list[dict]) -> list[dict]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument('--include-drafts', action='store_true')
+    parser.add_argument('--world', type=int, default=1,
+                        help='검토할 세계 번호(assets/worlds/saga.json 기준). 기본 1')
+    parser.add_argument('--world2', action='store_const', const=2, dest='world', help='--world 2 와 같다')
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
-    levels = json.loads((ROOT / 'assets/levels/levels.json').read_text(encoding='utf-8'))
+    path = ROOT / 'assets/levels/levels.json'
+    if args.world >= 2:
+        path = dict(expansion_worlds())[args.world]
+    levels = json.loads(path.read_text(encoding='utf-8'))
     if args.include_drafts:
         levels += json.loads((ROOT / 'assets/levels/draft_levels_26_40.json').read_text(encoding='utf-8'))
     reports = inspect(levels)

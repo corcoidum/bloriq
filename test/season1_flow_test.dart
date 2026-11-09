@@ -65,7 +65,6 @@ void main() {
           1,
         );
         final chapter = session.story.chapterForLevel(id);
-        await tapVisible(tester, find.byKey(const ValueKey('result-reward')));
         if (id % 5 == 0) {
           expect(find.text(chapter.endingTitle.en), findsOneWidget);
           expect(find.text(chapter.ending.en), findsOneWidget);
@@ -74,8 +73,19 @@ void main() {
         await tapVisible(tester, find.byKey(const ValueKey('skip-story')));
         if (id < 25) await tapVisible(tester, find.text('Next level'));
       }
-      expect(find.text('Every light in Season 1 is home.'), findsOneWidget);
-      await tapVisible(tester, find.byTooltip('More'));
+      // 세계 1을 다 마치면 "첫 스테이지로" 대신 다음 세계 안내가 나온다.
+      expect(find.byKey(const ValueKey('world-clear')), findsOneWidget);
+      expect(find.text('Moonlit Forest Garden complete!'), findsOneWidget);
+      expect(
+        find.text('The star gate to the Cloud-Sea Lighthouse is open'),
+        findsOneWidget,
+      );
+      expect(find.text('To the Cloud-Sea Lighthouse'), findsOneWidget);
+      expect(find.text('First level'), findsNothing);
+      // 정령 도감은 결과 팝업의 더 보기 메뉴 안에 있다.
+      await tapVisible(tester, find.byKey(const ValueKey('result-more')));
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
       await tapVisible(tester, find.byKey(const ValueKey('result-album')));
       await tapVisible(tester, find.byKey(const ValueKey('album-chapter-5')));
       await tapVisible(tester, find.byKey(const ValueKey('spirit-s1-25')));
@@ -83,7 +93,7 @@ void main() {
       expect(session.collection.companion?.id, 's1-25');
       await tapVisible(tester, find.text('Close').last);
       await tapVisible(tester, find.byTooltip('Close'));
-      await tapVisible(tester, find.byTooltip('Try again'));
+      await tapVisible(tester, find.text('Try again'));
       final level = game().controller.state.level;
       for (final move in const PuzzleSolver().solve(level)!) {
         await tester.ensureVisible(board);
@@ -107,7 +117,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 20));
       }
       expect(session.collection.owned.length, 25);
-      expect(find.byKey(const ValueKey('result-reward')), findsNothing);
+      expect(find.byKey(const ValueKey('skip-story')), findsNothing);
       expect(
         session.progress
             .forLevel(25, revision: level.revision)!

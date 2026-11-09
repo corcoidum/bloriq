@@ -1,241 +1,182 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../domain/puzzle.dart';
-import 'puzzle_generator.dart';
+import 'endless_rules.dart';
+import 'endless_run.dart';
 
-/// [compute]로 넘기는 요청. 격리 공간으로 보낼 수 있는 값만 담는다.
-class EndlessRequest {
-  const EndlessRequest({
-    required this.seed,
-    required this.id,
-    required this.cleared,
-    required this.recent,
+/// 항해 한 번을 마친 결과. 기록 갱신과 처음 넘은 이정표를 담는다.
+class VoyageSummary {
+  const VoyageSummary({
+    required this.score,
+    required this.boards,
+    required this.perfects,
+    required this.newBestScore,
+    required this.newBestDepth,
+    required this.newWeekBest,
+    required this.milestones,
+    required this.stardust,
+    required this.xp,
   });
-  final int seed, id, cleared;
-  final Set<String> recent;
+  final int score, boards, perfects, stardust, xp;
+  final bool newBestScore, newBestDepth, newWeekBest;
+  final List<VoyageMilestone> milestones;
 }
 
-Level? runEndlessRequest(EndlessRequest request) => generatePuzzle(
-  seed: request.seed,
-  id: request.id,
-  cleared: request.cleared,
-  recent: request.recent,
-);
-
-/// 무한 모드 기록. 캠페인·별자리·정령 기록과 완전히 분리한다.
+/// 별바다 항해 기록(최고 점수·깊이, 주간 최고, 이정표)과 진행 중인 항해.
+/// 서버 없이 이 기기에만 남는다.
 class EndlessRepository {
-  EndlessRepository._(this._preferences, this._pool, this.writer);
+  EndlessRepository._(this._preferences, this.clock);
 
   static const storageKey = 'bloriq.endless.v1';
-  static const schemaVersion = 1;
-  static const firstId = 100000;
-
-  /// 생성이 늦으면 이 시간만 기다리고 대체 판을 보여 준다.
-  static const generationWait = Duration(milliseconds: 1500);
-  static const maxCombo = 1.5;
-
-  /// 테스트의 가짜 시간에서는 격리 공간 결과가 오지 않으므로 바로 실행한다.
-  @visibleForTesting
-  static bool runInline = false;
 
   final SharedPreferences? _preferences;
-  final List<Map<String, dynamic>> _pool;
-  final Future<bool> Function(String, String)? writer;
+  final DateTime Function() clock;
   Future<void> _queue = Future.value();
-  bool _writable = true;
   bool saveFailed = false;
 
-  int _baseSeed = 0;
-  int cleared = 0;
-  int streak = 0;
-  int bestStreak = 0;
-  bool _usedFallback = false;
-  final List<String> _recent = [];
-  final Set<String> _seenDevices = {};
+  int bestScore = 0, bestDepth = 0, voyages = 0, totalBoards = 0;
+  String? _weekKey;
+  int _weekBest = 0;
+  final Set<String> _milestones = {};
+  VoyageRun? _run;
 
-  Level? _current;
-  Future<Level?>? _prefetch;
-
-  int get round => cleared + 1;
-
-  /// 이번 판을 깼을 때 적용할 콤보. 연속으로 깰수록 판마다 0.1씩 오른다.
-  double get combo => math.min(maxCombo, 1 + streak * .1);
-  bool seenDevice(String name) => _seenDevices.contains(name);
-
-  static Future<EndlessRepository> load(
-    List<Map<String, dynamic>> pool, {
-    Future<bool> Function(String, String)? writer,
-    math.Random? random,
-  }) async {
+  static Future<EndlessRepository> load({DateTime Function()? clock}) async {
     SharedPreferences? preferences;
     try {
       preferences = await SharedPreferences.getInstance();
     } catch (_) {}
-    final repo = EndlessRepository._(preferences, pool, writer);
-    try {
-      final raw = preferences?.getString(storageKey);
-      if (raw == null) {
-        // 설치마다 다른 시드로 시작해 첫판부터 서로 다르다.
-        repo._baseSeed = (random ?? math.Random()).nextInt(1 << 30);
-      } else {
-        final data = jsonDecode(raw);
-        if (data is! Map || data['version'] != schemaVersion) {
-          throw const FormatException('Endless schema');
-        }
-        repo._baseSeed = data['seed'] as int;
-        repo.cleared = data['cleared'] as int;
-        repo.streak = data['streak'] as int;
-        repo.bestStreak = data['bestStreak'] as int;
-        repo._usedFallback = data['fallback'] == true;
-        repo._recent.addAll((data['recent'] as List).cast<String>());
-        repo._seenDevices.addAll((data['seen'] as List).cast<String>());
+    final repository = EndlessRepository._(preferences, clock ?? DateTime.now);
+    final raw = preferences?.getString(storageKey);
+    if (raw != null) {
+      try {
+        repository._read(jsonDecode(raw) as Map<String, dynamic>);
+      } catch (_) {
+        // 깨진 기록은 버리고 새로 시작한다. 항해 기록은 다시 쌓을 수 있다.
       }
-    } catch (_) {
-      // 손상되거나 미래 버전인 기록은 덮어쓰지 않는다.
-      repo._writable = false;
-      repo.saveFailed = true;
-      repo._baseSeed = (random ?? math.Random()).nextInt(1 << 30);
     }
-    if (preferences == null) repo.saveFailed = true;
-    return repo;
+    return repository;
   }
 
-  EndlessRequest _request(int number, Set<String> recent) => EndlessRequest(
-    seed: _baseSeed * 31 + number * 7919,
-    id: firstId + number,
-    cleared: number,
-    recent: recent,
-  );
-
-  Future<Level?> _generate(EndlessRequest request) async {
-    if (runInline) return runEndlessRequest(request);
-    try {
-      return await compute(runEndlessRequest, request);
-    } catch (_) {
-      return null;
+  void _read(Map<String, dynamic> data) {
+    if (data['version'] != 1) return;
+    int count(String key) =>
+        data[key] is int && (data[key] as int) >= 0 ? data[key] as int : 0;
+    bestScore = count('bestScore');
+    bestDepth = count('bestDepth');
+    voyages = count('voyages');
+    totalBoards = count('totalBoards');
+    if (data['weekKey'] is String) {
+      _weekKey = data['weekKey'] as String;
+      _weekBest = count('weekBest');
+    }
+    for (final id in data['milestones'] as List? ?? const []) {
+      if (id is String) _milestones.add(id);
+    }
+    if (data['run'] case final Map<String, dynamic> run) {
+      try {
+        _run = VoyageRun.fromJson(run);
+      } catch (_) {
+        _run = null;
+      }
     }
   }
 
-  /// 지금 판. 앱을 다시 켜도 같은 시드로 같은 판이 나온다.
-  Future<Level> currentPuzzle() async {
-    if (_current case final level?) return level;
-    Level? level;
-    if (!_usedFallback) {
-      level = await _generate(_request(cleared, _recent.toSet()))
-          .timeout(generationWait, onTimeout: () => null);
+  /// 이번 주(월요일 시작)를 가리키는 키.
+  String get currentWeek {
+    final now = clock();
+    final day = DateTime.utc(now.year, now.month, now.day);
+    final monday = day.subtract(Duration(days: day.weekday - 1));
+    return '${monday.year.toString().padLeft(4, '0')}-'
+        '${monday.month.toString().padLeft(2, '0')}-'
+        '${monday.day.toString().padLeft(2, '0')}';
+  }
+
+  int get weekBest => _weekKey == currentWeek ? _weekBest : 0;
+  Set<String> get claimedMilestones => Set.unmodifiable(_milestones);
+
+  /// 저장된, 아직 끝나지 않은 항해.
+  VoyageRun? get savedRun => _run;
+
+  /// 항해 진행을 저장한다(판을 깰 때, 밀 때마다).
+  Future<void> saveRun(VoyageRun run) {
+    _run = run;
+    return _save();
+  }
+
+  Future<void> discardRun() {
+    _run = null;
+    return _save();
+  }
+
+  /// 등불이 꺼져 항해를 마친다. 기록을 갱신하고 처음 넘은 이정표를 돌려준다.
+  Future<VoyageSummary> finish(VoyageRun run) async {
+    final boards = run.cleared;
+    final week = currentWeek;
+    if (_weekKey != week) {
+      _weekKey = week;
+      _weekBest = 0;
     }
-    _usedFallback = level == null;
-    return _current = level ?? fallbackPuzzle(cleared);
-  }
-
-  /// 다음 판을 미리 만들어 "다음"을 누르면 바로 보이게 한다.
-  void prefetchNext() {
-    final current = _current;
-    if (current == null || _prefetch != null) return;
-    final recent = {..._recent, puzzleFingerprint(current)};
-    _prefetch = _generate(_request(cleared + 1, recent));
-  }
-
-  /// 현재 판을 깼다. 기록을 저장하고 저장 성공 여부를 돌려준다.
-  Future<bool> recordClear() async {
-    if (_current case final level?) {
-      _recent.add(puzzleFingerprint(level));
-      if (_recent.length > 30) _recent.removeAt(0);
-    }
-    cleared++;
-    streak++;
-    bestStreak = math.max(bestStreak, streak);
-    return retrySave();
-  }
-
-  /// [recordClear] 다음에 부른다.
-  Future<Level> nextPuzzle() async {
-    final pending = _prefetch;
-    _prefetch = null;
-    _current = null;
-    Level? level;
-    if (pending != null) {
-      level = await pending.timeout(generationWait, onTimeout: () => null);
-    }
-    if (level != null && level.id == firstId + cleared) {
-      _usedFallback = false;
-      return _current = level;
-    }
-    _usedFallback = true;
-    unawaited(retrySave());
-    return _current = fallbackPuzzle(cleared);
-  }
-
-  /// 다시 시작하면 연속 기록이 끊긴다.
-  void breakStreak() {
-    if (streak == 0) return;
-    streak = 0;
-    unawaited(retrySave());
-  }
-
-  void markDeviceSeen(String name) {
-    if (_seenDevices.add(name)) unawaited(retrySave());
-  }
-
-  /// 생성이 늦거나 실패했을 때 쓰는 판. 검증된 Daily 판을 돌리고 뒤집어 재사용한다.
-  Level fallbackPuzzle(int number) {
-    final tier = EndlessTier.forCleared(number);
-    final levels = _pool.map(Level.fromJson).toList();
-    bool hasDevice(Level level) =>
-        level.echoGate != null ||
-        level.echoErasers.isNotEmpty ||
-        level.echoHolds.isNotEmpty ||
-        level.oneWays.isNotEmpty ||
-        level.goalOnlyTiles.isNotEmpty;
-    final simple = levels.where((level) => !hasDevice(level)).toList();
-    final choices = tier.devices == 0 && simple.isNotEmpty ? simple : levels;
-    final mix = (_baseSeed + number * 13).abs();
-    for (var offset = 0; offset < choices.length; offset++) {
-      final level = transformLevel(
-        choices[(mix + offset) % choices.length],
-        id: firstId + number,
-        rotation: (mix + offset) % 4,
-        mirror: (mix + offset).isOdd,
-      );
-      if (!_recent.contains(puzzleFingerprint(level))) return level;
-    }
-    return transformLevel(
-      choices[mix % choices.length],
-      id: firstId + number,
-      rotation: mix % 4,
-      mirror: mix.isOdd,
+    final newBestScore = run.score > bestScore;
+    final newBestDepth = boards > bestDepth;
+    final newWeekBest = run.score > _weekBest;
+    if (newBestScore) bestScore = run.score;
+    if (newBestDepth) bestDepth = boards;
+    if (newWeekBest) _weekBest = run.score;
+    voyages++;
+    totalBoards += boards;
+    final milestones = [
+      for (final milestone in voyageMilestones)
+        if (boards >= milestone.depth && _milestones.add(milestone.id))
+          milestone,
+    ];
+    _run = null;
+    await _save();
+    return VoyageSummary(
+      score: run.score,
+      boards: boards,
+      perfects: run.perfects,
+      newBestScore: newBestScore && run.score > 0,
+      newBestDepth: newBestDepth,
+      newWeekBest: newWeekBest && run.score > 0,
+      milestones: milestones,
+      stardust: EndlessRules.voyageStardust(
+        boards: boards,
+        perfects: run.perfects,
+      ),
+      xp: EndlessRules.voyageXp(boards),
     );
   }
 
-  Future<bool> retrySave() async {
-    final snapshot = jsonEncode({
-      'version': schemaVersion,
-      'seed': _baseSeed,
-      'cleared': cleared,
-      'streak': streak,
-      'bestStreak': bestStreak,
-      'fallback': _usedFallback,
-      'recent': _recent,
-      'seen': _seenDevices.toList()..sort(),
-    });
-    var saved = false;
+  Map<String, dynamic> _snapshot() => {
+    'version': 1,
+    'bestScore': bestScore,
+    'bestDepth': bestDepth,
+    'voyages': voyages,
+    'totalBoards': totalBoards,
+    'weekKey': _weekKey,
+    'weekBest': _weekBest,
+    'milestones': _milestones.toList()..sort(),
+    'run': _run?.toJson(),
+  };
+
+  Future<void> _save() {
+    final snapshot = jsonEncode(_snapshot());
     final task = _queue.then((_) async {
-      if (!_writable || _preferences == null) return;
+      final preferences = _preferences;
+      if (preferences == null) {
+        saveFailed = true;
+        return;
+      }
       try {
-        saved =
-            await (writer?.call(storageKey, snapshot) ??
-                _preferences.setString(storageKey, snapshot));
-      } catch (_) {}
+        saveFailed = !await preferences.setString(storageKey, snapshot);
+      } catch (_) {
+        saveFailed = true;
+      }
     });
     _queue = task;
-    await task;
-    saveFailed = !saved;
-    return saved;
+    return task;
   }
 
   Future<void> flush() => _queue;

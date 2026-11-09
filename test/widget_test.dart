@@ -8,6 +8,7 @@ import 'package:bloriq/domain/puzzle.dart';
 import 'package:bloriq/main.dart';
 import 'package:bloriq/game/bloriq_game.dart';
 import 'package:flame/game.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -38,7 +39,7 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.textContaining('An echo on the Moonbloom opens the Vine Gate'),
+      find.textContaining('an echo on the diamond opens the gate'),
       findsOneWidget,
     );
     await tester.tap(find.text('Close'));
@@ -92,7 +93,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1600));
     await tester.pump();
     expect(find.text('Our star, at last!'), findsOneWidget);
-    expect(find.text('Solved in the fewest moves!'), findsOneWidget);
+    // 첫 최소 이동 클리어는 기록 갱신 배지 하나로만 칭찬한다.
+    expect(find.text('New personal best!'), findsOneWidget);
+    expect(find.text('Solved in the fewest moves!'), findsNothing);
     await tester.ensureVisible(find.text('Next level'));
     await tester.pump();
     await tester.tap(find.text('Next level'));
@@ -140,9 +143,19 @@ void main() {
     await move(1, 1, 1, 0);
     await tester.pump(const Duration(milliseconds: 1600));
     await tester.pump();
-    expect(find.text('Can you escape in 2 moves?'), findsOneWidget);
+    // 결과 팝업은 이번 이동 수와 최소 이동 수를 큰 숫자로 나란히 보여 준다.
+    expect(
+      tester.widget<Text>(find.byKey(const ValueKey('result-moves'))).data,
+      '4',
+    );
+    expect(
+      tester.widget<Text>(find.byKey(const ValueKey('result-fewest'))).data,
+      '2',
+    );
+    expect(find.text('Solved in the fewest moves!'), findsNothing);
+    await tester.ensureVisible(find.text('Restart'));
     await tester.pump();
-    await tester.tap(find.byTooltip('Try again'));
+    await tester.tap(find.text('Restart'));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Moves: 0'), findsOneWidget);
   });
@@ -285,7 +298,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump(const Duration(milliseconds: 300));
     expect(
-      find.text('Leave an echo on the Moonbloom to open the Vine Gate.'),
+      find.text('Leave an echo on the diamond to open the gate.'),
       findsOneWidget,
     );
 
@@ -311,7 +324,7 @@ void main() {
     await move(level.startPosition, level.echoGate!);
     expect(find.text('Moves: 0'), findsOneWidget);
     expect(
-      find.text('The Vine Gate is closed. Leave an echo on the Moonbloom.'),
+      find.text('The gate is closed. Leave an echo on the diamond.'),
       findsOneWidget,
     );
 
@@ -347,24 +360,28 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1600));
     await tester.pump();
     expect(find.text('Our star, at last!'), findsOneWidget);
-    // 결과 화면에는 되돌리기가 없으므로 컨트롤러로 문 상태 복원을 확인한다.
-    final finished = tester
-        .widget<GameWidget<BloriqGame>>(find.byType(GameWidget<BloriqGame>))
-        .game!
-        .controller;
-    expect(finished.undo(), isTrue);
+    await tester.ensureVisible(find.text('Undo'));
+    await tester.pump();
+    await tester.tap(find.text('Undo'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
     expect(
-      finished.state.blocks.any(
-        (block) => block.position == finished.state.level.echoGate,
-      ),
-      isTrue,
+      find.text('A block on a closed gate can still leave.'),
+      findsOneWidget,
     );
-    expect(finished.state.isGateOpen, isFalse);
-    expect(finished.undo(), isTrue);
-    expect(finished.state.isGateOpen, isTrue);
+    await tester.ensureVisible(find.text('Undo'));
+    await tester.pump();
+    await tester.tap(find.text('Undo'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Gate open! Move through on this turn.'), findsOneWidget);
   });
 
   testWidgets('a position with no legal move suggests undo', (tester) async {
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     await pumpGame(tester, BloriqApp(loadLevels: loadLegacyLevels));
     for (
       var i = 0;
@@ -373,7 +390,7 @@ void main() {
     ) {
       await tester.pump(const Duration(milliseconds: 20));
     }
-    await tapVisible(tester, find.byTooltip('Levels'));
+    await tapVisible(tester, find.byKey(const ValueKey('game-levels')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     await selectOpenLevel(tester, 11);

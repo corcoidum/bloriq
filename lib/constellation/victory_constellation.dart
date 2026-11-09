@@ -19,7 +19,6 @@ class VictoryConstellation extends StatelessWidget {
     this.event,
     this.pending = false,
     this.onOpen,
-    this.compact = false,
   });
 
   final ChapterConstellation chapter;
@@ -33,25 +32,6 @@ class VictoryConstellation extends StatelessWidget {
   final bool pending;
   final VoidCallback? onOpen;
 
-  /// 친구 카드 안에 들어가는 작은 그림 형태. 문구는 카드가 보여 준다.
-  final bool compact;
-
-  /// 이번 판에서 별자리에 일어난 일. 보여 줄 것이 없으면 null.
-  static String? caption(
-    AppLocalizations t,
-    ChapterConstellation chapter, {
-    ConstellationEvent? event,
-    bool pending = false,
-  }) {
-    final name = chapter.definition.name(t);
-    if (pending) return t.constellationPending;
-    if (event == null) return null;
-    if (event.becameGolden) return t.constellationGoldenTitle(name);
-    if (event.chapterCompleted) return t.constellationCompleteTitle(name);
-    if (event.newNode) return t.constellationNewStar(name);
-    return null;
-  }
-
   static double _seg(double value, double start, double end) =>
       ((value - start) / (end - start)).clamp(0.0, 1.0);
 
@@ -59,36 +39,23 @@ class VictoryConstellation extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
     final colors = GameTheme.colorsOf(context);
+    final name = chapter.definition.name(t);
     final event = this.event;
     final p = reduceMotion ? 1.0 : progress.clamp(0.0, 1.0);
     final node = chapter.nodeIndexOf(levelId);
-    final caption = VictoryConstellation.caption(
-      t,
-      chapter,
-      event: event,
-      pending: pending,
-    );
+    final caption = pending
+        ? t.constellationPending
+        : event == null
+        ? null
+        : event.becameGolden
+        ? t.constellationGoldenTitle(name)
+        : event.chapterCompleted
+        ? t.constellationCompleteTitle(name)
+        : event.newNode
+        ? t.constellationNewStar(name)
+        : null;
     if (caption == null) return const SizedBox.shrink();
     final animatingNode = event != null && event.newNode;
-    final art = SizedBox(
-      key: const ValueKey('victory-constellation'),
-      height: compact ? 62 : 76,
-      width: compact ? 88 : 168,
-      child: ConstellationArt(
-        chapter: chapter,
-        guardianAsset: guardianAsset,
-        pendingNode: pending ? node : null,
-        highlightNode: animatingNode ? node : null,
-        spark: animatingNode ? _seg(p, .78, .90) : null,
-        nodeReveal: animatingNode ? _seg(p, .88, .97) : 1,
-        lineReveal: animatingNode ? _seg(p, .90, 1) : 1,
-        silhouetteReveal: event?.chapterCompleted == true ? _seg(p, .92, 1) : 1,
-        golden: event?.becameGolden == true
-            ? _seg(p, .86, 1)
-            : (chapter.golden ? 1 : 0),
-      ),
-    );
-    if (compact) return ExcludeSemantics(child: art);
     return Semantics(
       container: true,
       liveRegion: true,
@@ -99,11 +66,40 @@ class VictoryConstellation extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            art,
-            Text(
-              caption,
-              textAlign: TextAlign.center,
-              style: GameTypography.label.copyWith(color: colors.rewardInk),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  key: const ValueKey('victory-constellation'),
+                  height: 40,
+                  width: 84,
+                  child: ConstellationArt(
+                    chapter: chapter,
+                    guardianAsset: guardianAsset,
+                    pendingNode: pending ? node : null,
+                    highlightNode: animatingNode ? node : null,
+                    spark: animatingNode ? _seg(p, .78, .90) : null,
+                    nodeReveal: animatingNode ? _seg(p, .88, .97) : 1,
+                    lineReveal: animatingNode ? _seg(p, .90, 1) : 1,
+                    silhouetteReveal: event?.chapterCompleted == true
+                        ? _seg(p, .92, 1)
+                        : 1,
+                    golden: event?.becameGolden == true
+                        ? _seg(p, .86, 1)
+                        : (chapter.golden ? 1 : 0),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    caption,
+                    style: GameTypography.label.copyWith(
+                      color: colors.rewardInk,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+              ],
             ),
             if (onOpen != null &&
                 (event?.chapterCompleted == true ||

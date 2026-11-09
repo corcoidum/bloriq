@@ -19,16 +19,16 @@
   },
   "instruction": "Slide RIQ, marked in mint, to the star gate.",
   "echoInstruction": "An echo disappears after your next move.",
-  "gateInstruction": "Leave an echo on the Moonbloom to open the Vine Gate.",
+  "gateInstruction": "Leave an echo on the diamond to open the gate.",
   "gateOpen": "Gate open! Move through on this turn.",
-  "gateClosed": "The Vine Gate is closed. Leave an echo on the Moonbloom.",
+  "gateClosed": "The gate is closed. Leave an echo on the diamond.",
   "gateOccupied": "A block on a closed gate can still leave.",
   "noMoves": "No moves left. Undo and try another way.",
   "boardLabel": "Slide RIQ and the rune stones one square at a time. Guide mint-marked RIQ to the star gate.",
   "soundOn": "Turn sound effects off",
   "soundOff": "Turn sound effects on",
   "help": "How to play",
-  "helpBody": "Slide one block one square at a time. Move Riq to the star gate.\n\nThe square a block leaves behind becomes an echo. It blocks movement until another valid move finishes.\n\nAn echo on the Moonbloom opens the Vine Gate for the next move. A block on a closed gate can still leave.\n\nUse Undo to try a different move.\n\nThe Stardust Spring washes the echo away and the Amber Dew holds the previous one. Wind Leaves let a block leave only the way they point, and only Riq can step onto Riq's Moss. Tap the icons under the board for a reminder.",
+  "helpBody": "Slide one block one square at a time. Move the mint-marked RIQ to the star.\n\nThe square a block leaves behind becomes an echo. It blocks movement until another valid move finishes.\n\nOn diamond stages, an echo on the diamond opens the gate for the next move. A block on a closed gate can still leave.\n\nUse Undo to try a different move.\n\nSpecial tiles have rules shown beneath the board: × erases the echo, Ⅱ keeps it, arrows restrict the exit direction, and ▶ admits only the mint-marked RIQ.",
   "undo": "Undo",
   "undoLastMove": "Undo last move",
   "restart": "Restart",
@@ -82,10 +82,10 @@
   },
   "musicOn": "Turn music off",
   "musicOff": "Turn music on",
-  "eraserRule": "Leaving the Stardust Spring washes the echo away.",
-  "holdRule": "Leaving the Amber Dew keeps the previous echo in place.",
-  "oneWayRule": "On Wind Leaves, a block can leave only the way the leaves point.",
-  "goalOnlyRule": "Only Riq can step onto Riq's Moss.",
+  "eraserRule": "Dandelion tile: leaving it scatters the echo.",
+  "holdRule": "Amber tile: leaving it keeps the previous echo.",
+  "oneWayRule": "Stream tile: a block can leave only the way the water flows.",
+  "goalOnlyRule": "Clover tile: only RIQ may step in.",
   "settings": "Settings",
   "reduceMotion": "Reduce motion",
   "reduceMotionDescription": "Use quiet, instant transitions. System reduced motion is always respected.",
@@ -425,112 +425,72 @@
   "constellationPlay": "Play",
   "constellationBack": "All constellations",
   "viewConstellation": "View constellation",
-  "startGame": "Start",
-  "menuMap": "Map",
-  "menuAlbum": "Spirits",
-  "menuAtlas": "Stars",
-  "menuDaily": "Daily",
-  "deviceGate": "Vine Gate",
-  "deviceMoonbloom": "Moonbloom",
-  "deviceEraser": "Stardust Spring",
-  "deviceHold": "Amber Dew",
-  "deviceOneWay": "Wind Leaves",
-  "deviceGoalOnly": "Riq's Moss",
-  "playerTitle1": "Little Courier",
-  "playerTitle2": "Forest Runner",
-  "playerTitle3": "Moon Guide",
-  "playerTitle4": "Echo Explorer",
-  "playerTitle5": "Star Warden",
-  "playerTitle6": "Last Lantern",
-  "playerLevel": "Lv.{level}",
-  "@playerLevel": {
-    "placeholders": {
-      "level": {
-        "type": "int"
-      }
-    }
-  },
-  "playerProgress": "Level {level}, {into} of {needed} experience to the next level",
-  "@playerProgress": {
-    "placeholders": {
-      "level": {
-        "type": "int"
-      },
-      "into": {
-        "type": "int"
-      },
-      "needed": {
-        "type": "int"
-      }
-    }
-  },
-  "levelUp": "Level up!",
-  "xpGained": "+{count} XP",
-  "@xpGained": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "resultScore": "{count} points",
-  "@resultScore": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "scoreDetail": "Base {base} × {stars} for stars",
-  "@scoreDetail": {
-    "placeholders": {
-      "base": {
-        "type": "String"
-      },
-      "stars": {
-        "type": "String"
-      }
-    }
-  },
-  "scoreDetailCombo": "Base {base} × {stars} for stars × {combo} combo",
-  "@scoreDetailCombo": {
-    "placeholders": {
-      "base": {
-        "type": "String"
-      },
-      "stars": {
-        "type": "String"
-      },
-      "combo": {
-        "type": "String"
-      }
-    }
-  },
-  "readMemory": "Read the memory",
-  "moreActions": "More",
-  "endlessTitle": "Endless Path",
-  "endlessBest": "Endless Path · best streak {count}",
-  "@endlessBest": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "endlessRound": "Path {round}",
-  "@endlessRound": {
-    "placeholders": {
-      "round": {
-        "type": "int"
-      }
-    }
-  },
-  "comboLabel": "Combo ×{combo}",
-  "@comboLabel": {
-    "placeholders": {
-      "combo": {
-        "type": "String"
-      }
-    }
-  }
+  "journey": "Journey",
+  "journeyStatus": "Status",
+  "journeyConstellations": "Stars",
+  "journeyCompanions": "Friends",
+  "journeyRewards": "Rewards",
+  "journeyMenu": "Menu",
+  "journeyCleared": "{count} / {total} stages",
+  "@journeyCleared": {"placeholders": {"count": {"type": "int"}, "total": {"type": "int"}}},
+  "journeyStarCount": "Stars {count} / {total}",
+  "@journeyStarCount": {"placeholders": {"count": {"type": "int"}, "total": {"type": "int"}}},
+  "journeyFriends": "Friends {count} / {total}",
+  "@journeyFriends": {"placeholders": {"count": {"type": "int"}, "total": {"type": "int"}}},
+  "journeyStreak": "{days}-day streak",
+  "@journeyStreak": {"placeholders": {"days": {"type": "int"}}},
+  "companionEquip": "Travel together",
+  "companionEquipped": "Traveling with you",
+  "companionUnknown": "A friend not met yet",
+  "journeyPageHint": "Swipe to see more",
+  "playerLevel": "Lv {level}",
+  "@playerLevel": {"placeholders": {"level": {"type": "int"}}},
+  "stardustCount": "Stardust {count}",
+  "@stardustCount": {"placeholders": {"count": {"type": "int"}}},
+  "rewardXp": "+{xp} XP",
+  "@rewardXp": {"placeholders": {"xp": {"type": "int"}}},
+  "rewardStardust": "+{count} stardust",
+  "@rewardStardust": {"placeholders": {"count": {"type": "int"}}},
+  "rewardLevelUp": "Level up! Lv {level}",
+  "@rewardLevelUp": {"placeholders": {"level": {"type": "int"}}},
+  "rewardPower": "New power: {name}",
+  "@rewardPower": {"placeholders": {"name": {"type": "String"}}},
+  "rewardBond": "Bond with {name} Lv {level}",
+  "@rewardBond": {"placeholders": {"name": {"type": "String"}, "level": {"type": "int"}}},
+  "rewardBareHanded": "Bare-handed star! No hints, fewest moves",
+  "rewardTrail": "New move trail: {name}",
+  "@rewardTrail": {"placeholders": {"name": {"type": "String"}}},
+  "rewardTitle": "New title: {name}",
+  "@rewardTitle": {"placeholders": {"name": {"type": "String"}}},
+  "rewardCharge": "Starlight path pass +{count}",
+  "@rewardCharge": {"placeholders": {"count": {"type": "int"}}},
+  "starlightPath": "Starlight path",
+  "starlightFree": "Free",
+  "starlightPass": "Pass",
+  "starlightShort": "Not enough stardust",
+  "starlightNoMove": "No path from here. Try undoing.",
+  "starlightCapped": "Using the starlight path caps this clear at 2 stars",
+  "minimumMovesChip": "Best {count}",
+  "@minimumMovesChip": {"placeholders": {"count": {"type": "int"}}},
+  "rewardsPowers": "Constellation powers",
+  "rewardsTrack": "Level rewards",
+  "rewardsTrails": "Move trails",
+  "rewardsTitles": "Titles",
+  "powerLocked": "Wakes when {constellation} is complete",
+  "@powerLocked": {"placeholders": {"constellation": {"type": "String"}}},
+  "powerWorld2": "Usable in the Cloud-Sea Lighthouse",
+  "powerActive": "Ready to use",
+  "trackClaimed": "Claimed",
+  "equip": "Equip",
+  "equipped": "Equipped",
+  "bondLevel": "Bond Lv {level}",
+  "@bondLevel": {"placeholders": {"level": {"type": "int"}}},
+  "nextWorldTeaser": "The star gate is open · Cloud-Sea Lighthouse — coming soon",
+  "xpToNext": "{xp} XP to next level",
+  "@xpToNext": {"placeholders": {"xp": {"type": "int"}}},
+  "resultMoves": "This run",
+  "resultBest": "Best",
+  "resultFewest": "Fewest",
+  "watchReplayShort": "Replay",
+  "moreActions": "More"
 }

@@ -30,24 +30,17 @@ void main() {
       settings.setReduceMotion(true),
       settings.setReduceMotion(false),
       settings.setReduceMotion(true),
-      settings.setReduceMotion(false),
     ]);
     settings.dispose();
     final restored = await GameSettings.load();
-    expect(restored.reduceMotion, isFalse);
+    expect(restored.reduceMotion, isTrue);
     restored.dispose();
   });
 
-  test('an old saved theme is ignored and malformed motion is safe', () async {
+  test('a stale theme value and malformed motion fall back safely', () async {
+    // 예전 버전이 남긴 테마 값은 무시한다(테마는 늘 다크).
     SharedPreferences.setMockInitialValues({
       'bloriq.settings.themeMode': 'light',
-      GameSettings.reduceMotionKey: true,
-    });
-    final old = await GameSettings.load();
-    expect(old.reduceMotion, isTrue);
-    old.dispose();
-
-    SharedPreferences.setMockInitialValues({
       GameSettings.reduceMotionKey: 'invalid',
     });
     final malformed = await GameSettings.load();

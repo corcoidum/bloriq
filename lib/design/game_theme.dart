@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// 색의 역할은 모든 스테이지에서 고정한다. 게임은 밤숲 다크 테마 하나만 쓴다.
+/// 색의 역할은 모든 스테이지에서 고정하고 테마별 명도만 조정한다.
 @immutable
 class GameColors {
   const GameColors({
@@ -51,6 +51,30 @@ class GameColors {
   final Color highlight;
   final Color blockSymbol;
 
+  static const light = GameColors(
+    background: Color(0xFFF6F2E9),
+    surface: Color(0xFFFFFAF2),
+    boardSurface: Color(0xFFB6BCD1),
+    tileTop: Color(0xFFF6F2E9),
+    tileBottom: Color(0xFFE5E6EE),
+    primary: Color(0xFF6C83BE),
+    echo: Color(0xFF9472CC),
+    goal: Color(0xFF8BDBB9),
+    reward: Color(0xFFF0C97E),
+    text: Color(0xFF25314B),
+    secondaryText: Color(0xFF515C75),
+    slate: Color(0xFF687891),
+    cyan: Color(0xFF236A79),
+    error: Color(0xFFB43E52),
+    primaryInk: Color(0xFF3F5590),
+    echoInk: Color(0xFF68429B),
+    goalInk: Color(0xFF22654F),
+    rewardInk: Color(0xFF75500D),
+    outline: Color(0xFF707B9C),
+    highlight: Color(0xFFFFFAF2),
+    blockSymbol: Color(0xFF101827),
+  );
+
   static const dark = GameColors(
     background: Color(0xFF101C38),
     surface: Color(0xFF1B2947),
@@ -76,24 +100,44 @@ class GameColors {
   );
 }
 
+/// 글꼴 세 단계:
+/// - 제목·숫자·버튼·라벨: 주아(Jua) — 둥글고 통통한 게임 글씨.
+/// - 본문·대사·설명: 감자꽃(Gamja Flower) — 동글동글한 동화책 손글씨.
+///   글자가 작게 그려지는 글꼴이라 크기를 조금 키우고 줄 간격을 줄였다.
+/// - 두 글꼴에 없는 기호(가운뎃점 등)는 고운돋움 → 나눔고딕 순으로 채운다.
 abstract final class GameTypography {
   static const canvasFontFamily = 'Jua';
+  static const storyFontFamily = 'GamjaFlower';
+  static const fallback = ['GowunDodum', 'NanumGothic'];
+
   static const brand = TextStyle(
     fontFamily: canvasFontFamily,
-    fontFamilyFallback: ['NanumGothic'],
+    fontFamilyFallback: fallback,
     fontSize: 23,
     fontWeight: FontWeight.w400,
     letterSpacing: 2,
   );
   static const reward = TextStyle(
     fontFamily: canvasFontFamily,
+    fontFamilyFallback: fallback,
     fontSize: 28,
     fontWeight: FontWeight.w400,
   );
+
+  /// 판 아래 설명·결과 팝업 본문·정령 대사용 손글씨 글꼴.
+  static const body = TextStyle(
+    fontFamily: storyFontFamily,
+    fontFamilyFallback: fallback,
+    fontSize: 17,
+    height: 1.2,
+  );
+
+  /// 버튼·라벨·작은 수치. 주아는 굵기가 하나라 가짜 굵게를 쓰지 않는다.
   static const label = TextStyle(
-    fontFamily: 'NanumGothic',
+    fontFamily: canvasFontFamily,
+    fontFamilyFallback: fallback,
     fontSize: 15,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w400,
   );
 }
 
@@ -110,7 +154,6 @@ abstract final class GameSpacing {
 abstract final class GameEffects {
   static const dragThresholdFraction = .24;
   static const introDuration = Duration(seconds: 4);
-  static const quickIntroDuration = Duration(milliseconds: 1500);
   static const moveDuration = Duration(milliseconds: 220);
   static const celebrationDuration = Duration(milliseconds: 1450);
 
@@ -121,9 +164,13 @@ abstract final class GameEffects {
 }
 
 abstract final class GameTheme {
+  static ThemeData get light => _build(Brightness.light, GameColors.light);
   static ThemeData get dark => _build(Brightness.dark, GameColors.dark);
 
-  static GameColors colorsOf(BuildContext context) => GameColors.dark;
+  static GameColors colorsOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+      ? GameColors.dark
+      : GameColors.light;
 
   static BoxDecoration surfaceDecoration(GameColors colors, {Color? accent}) =>
       BoxDecoration(
@@ -149,12 +196,18 @@ abstract final class GameTheme {
           seedColor: colors.primary,
           brightness: brightness,
         ).copyWith(
-          primary: colors.reward,
-          onPrimary: colors.blockSymbol,
+          primary: brightness == Brightness.dark
+              ? colors.reward
+              : colors.primaryInk,
+          onPrimary: brightness == Brightness.dark
+              ? colors.blockSymbol
+              : colors.surface,
           secondary: colors.echo,
           onSecondary: colors.blockSymbol,
           tertiary: colors.goalInk,
-          onTertiary: colors.blockSymbol,
+          onTertiary: brightness == Brightness.dark
+              ? colors.blockSymbol
+              : colors.surface,
           surface: colors.surface,
           onSurface: colors.text,
           onSurfaceVariant: colors.secondaryText,
@@ -164,17 +217,37 @@ abstract final class GameTheme {
         );
     final base = ThemeData(
       useMaterial3: true,
-      fontFamily: 'NanumGothic',
+      // 기본 글은 손글씨(감자꽃), 제목·라벨은 아래에서 주아로 바꾼다.
+      fontFamily: GameTypography.storyFontFamily,
+      fontFamilyFallback: GameTypography.fallback,
       brightness: brightness,
       colorScheme: scheme,
       scaffoldBackgroundColor: colors.background,
       canvasColor: colors.surface,
     );
+    TextStyle? jua(TextStyle? style) => style?.copyWith(
+      fontFamily: GameTypography.canvasFontFamily,
+      fontFamilyFallback: GameTypography.fallback,
+      fontWeight: FontWeight.w400,
+    );
+    final text = base.textTheme;
     return base.copyWith(
-      textTheme: base.textTheme.apply(
-        bodyColor: colors.text,
-        displayColor: colors.text,
-      ),
+      textTheme: text
+          .copyWith(
+            displayLarge: jua(text.displayLarge),
+            displayMedium: jua(text.displayMedium),
+            displaySmall: jua(text.displaySmall),
+            headlineLarge: jua(text.headlineLarge),
+            headlineMedium: jua(text.headlineMedium),
+            headlineSmall: jua(text.headlineSmall),
+            titleLarge: jua(text.titleLarge),
+            titleMedium: jua(text.titleMedium),
+            titleSmall: jua(text.titleSmall),
+            labelLarge: jua(text.labelLarge),
+            labelMedium: jua(text.labelMedium),
+            labelSmall: jua(text.labelSmall),
+          )
+          .apply(bodyColor: colors.text, displayColor: colors.text),
       iconTheme: IconThemeData(color: colors.rewardInk),
       iconButtonTheme: IconButtonThemeData(
         style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
@@ -184,10 +257,8 @@ abstract final class GameTheme {
         insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         backgroundColor: colors.surface,
         surfaceTintColor: Colors.transparent,
-        titleTextStyle: base.textTheme.titleLarge?.copyWith(
-          color: colors.text,
-          fontWeight: FontWeight.w400,
-        ),
+        titleTextStyle: jua(base.textTheme.titleLarge)
+            ?.copyWith(color: colors.text),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(GameSpacing.radius),
         ),
