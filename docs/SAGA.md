@@ -34,7 +34,7 @@
 
 - 세계 7의 부제 "마지막 잔상"은 게임의 옛 제목(The Last Echo)과 이어진다.
 - 새 규칙은 세계마다 하나만 더한다. 이미 배운 규칙과 권능은 다음 세계에서도 섞어 쓴다.
-- 세계 3~6의 규칙은 아직 `lib/domain/puzzle.dart`와 `tools/validate_levels.py`에 없다. 세계를 공개할 때 두 solver에 같이 넣는다.
+- 세계 3~6의 규칙은 세계를 공개할 때 Dart와 Python 기믹 레지스트리에 함께 등록한다.
 
 ## 세계 하나의 모양
 
@@ -72,7 +72,17 @@
 
 세계 3을 예로 든다.
 
-1. **규칙 코드:** 새 기믹을 `lib/domain/puzzle.dart`(Dart solver)와 `tools/validate_levels.py`(Python BFS)에 같은 규칙으로 넣고, `test/power_solver_agreement_test.dart`처럼 두 solver가 같은 답을 내는지 테스트한다.
+1. **규칙 코드**
+   - `lib/domain/mechanics/`에 기믹 파일을 하나 만든다. `board_mechanic.dart`의 훅을 구현하고 `mechanic_registry.dart`에 JSON의 `type`과 파서를 등록한다. `tools/mechanics.py`에도 같은 이름과 훅을 등록한다. 두 레지스트리의 적용 순서를 맞춘다.
+   - 이동은 진입·출발 판정 → 일반 이동 또는 권능 착지 → `transformMove`로 배치 변환 → `nextEcho`로 잔상 처리 순이다. 기존 봉인과 빛 교대의 잔상 규칙은 마지막에 우선한다. 위치 외에 탐색 결과를 바꾸는 값이 있다면 `stateKey`에 넣는다.
+   - 같은 `type` 키로 `lib/game/board_badge.dart`에 배지, `lib/game/bloriq_game.dart`에 보드 그리기, `lib/game/mechanic_legend.dart`에 범례를 등록한다. 문구는 `lib/l10n/app_ko.arb`와 `app_en.arb`에 넣는다.
+   - Python 기믹의 `randomRule`로 검증 표본을 만들고 두 solver의 최단 수를 비교한다. `python3 tools/validate_levels.py --write-solutions`로 공개 판과 이전 코스 보관본의 풀이 데이터를 갱신한다.
+
+     ```bash
+     python3 -m tools.power_fuzz_fixture --mechanics echoHold echoGate --count 100 --output /tmp/bloriq-fuzz.json
+     flutter test test/power_solver_agreement_test.dart --dart-define=MECHANIC_FIXTURE=/tmp/bloriq-fuzz.json
+     ```
+
 2. **판 생성:** `tools/design_world2.py`를 `tools/design_world3.py`로 복사해 `SLOTS`, 출력 경로(`assets/levels/world3.json`), id 시작(201), `world: 3`을 바꾸고 생성한다.
 3. **이야기:** `assets/story/world3.json`을 `world2.json`과 같은 모양으로 쓴다. `worldId: "w3"`, 장마다 `globalChapter` 11–15, 별자리 좌표 `stars`(노드 5개, 0..1), 정령 25명.
 4. **사가 등록:** `assets/worlds/saga.json`에서 세계 3의 `status`를 `"playable"`로 바꾸고 `levels`, `story` 경로를 적는다. 공개된 세계는 앞에서부터 이어져야 한다(세계 3을 건너뛰고 세계 4만 열 수 없다).

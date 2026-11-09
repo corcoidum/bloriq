@@ -4,20 +4,24 @@ import 'dart:io';
 import 'package:bloriq/domain/puzzle.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// tools/power_fuzz_fixture.py 가 Python 검증기로 푼 무작위 판을 Dart solver 로
-/// 다시 풀어, 두 구현의 권능 규칙이 같은지 확인한다.
+/// Python이 만든 기본 또는 지정한 기믹 표본을 같은 권능 조합으로 다시 푼다.
 void main() {
-  final cases = jsonDecode(
-    File('test/fixtures/power_fuzz.json').readAsStringSync(),
-  ) as List<dynamic>;
+  const fixture = String.fromEnvironment(
+    'MECHANIC_FIXTURE',
+    defaultValue: 'test/fixtures/power_fuzz.json',
+  );
+  final cases = jsonDecode(File(fixture).readAsStringSync()) as List<dynamic>;
   const solver = PuzzleSolver(maxStates: 400000);
 
   test('fixture exercises the powers', () {
-    expect(cases, hasLength(40));
-    expect(
-      cases.where((c) => c['bare'] == null || c['powered'] < c['bare']),
-      hasLength(greaterThan(20)),
-    );
+    expect(cases, isNotEmpty);
+    if (fixture == 'test/fixtures/power_fuzz.json') {
+      expect(cases, hasLength(40));
+      expect(
+        cases.where((c) => c['bare'] == null || c['powered'] < c['bare']),
+        hasLength(greaterThan(20)),
+      );
+    }
   });
 
   for (final raw in cases) {

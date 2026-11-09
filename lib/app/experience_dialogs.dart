@@ -66,15 +66,7 @@ Future<bool?> showGameHelp(BuildContext context, GameSettings settings) {
           children: [
             Text(t.helpBody),
             const SizedBox(height: 8),
-            MechanicLegend(
-              items: [
-                LegendItem(LegendKind.eraser, t.eraserRule),
-                LegendItem(LegendKind.hold, t.holdRule),
-                LegendItem(LegendKind.oneWay, t.oneWayRule),
-                LegendItem(LegendKind.goalOnly, t.goalOnlyRule),
-                LegendItem(LegendKind.gate, t.gateInstruction),
-              ],
-            ),
+            MechanicLegend(items: MechanicLegend.instructions(t)),
           ],
         ),
       ),

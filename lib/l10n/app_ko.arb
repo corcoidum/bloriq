@@ -230,6 +230,8 @@
   "starlightPass": "사용권",
   "starlightShort": "별가루가 모자라요",
   "starlightNoMove": "지금은 갈 길이 보이지 않아요. 되돌려 보세요.",
+  "starlightSearchLimit": "처음부터 다시 하면 별빛 길을 쓸 수 있어요.",
+  "starlightCalculating": "다음 수를 찾는 중",
   "starlightCapped": "별빛 길을 쓴 판은 별 2개까지 받아요",
   "minimumMovesChip": "최소 {count}수",
   "rewardsPowers": "별자리 권능",

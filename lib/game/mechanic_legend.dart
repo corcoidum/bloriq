@@ -4,15 +4,43 @@ import 'package:flutter/material.dart';
 
 import '../design/game_theme.dart';
 import '../design/keep_all_text.dart';
+import '../domain/mechanics/echo_eraser.dart';
+import '../domain/mechanics/echo_gate.dart';
+import '../domain/mechanics/echo_hold.dart';
+import '../domain/mechanics/goal_only.dart';
+import '../domain/mechanics/one_way.dart';
+import '../domain/puzzle.dart';
+import '../l10n/app_localizations.dart';
 import 'board_badge.dart';
 
 /// 판 아래 설명 한 줄의 종류. 보드 그림과 같은 아이콘을 쓴다.
-enum LegendKind { eraser, hold, oneWay, goalOnly, gate, note }
+abstract final class LegendKind {
+  static const eraser = EchoEraser.typeId;
+  static const hold = EchoHold.typeId;
+  static const oneWay = OneWay.typeId;
+  static const goalOnly = GoalOnly.typeId;
+  static const gate = EchoGate.typeId;
+  static const note = 'note';
+}
 
 class LegendItem {
   const LegendItem(this.kind, this.text);
-  final LegendKind kind;
+  final String kind;
   final String text;
+
+  // 기존 범례 탭의 위젯 키를 유지한다.
+  String get _keyKind => switch (kind) {
+    LegendKind.eraser => 'eraser',
+    LegendKind.hold => 'hold',
+    LegendKind.gate => 'gate',
+    _ => kind,
+  };
+}
+
+class _LegendText {
+  const _LegendText(this.variants, [this.select]);
+  final List<String> Function(AppLocalizations, bool) variants;
+  final int Function(PuzzleState, bool)? select;
 }
 
 /// 현재 스테이지의 기믹을 아이콘과 한 줄 설명으로 보여준다.
@@ -36,6 +64,58 @@ class MechanicLegend extends StatelessWidget {
   static const _rowPadding = 3.0;
   static const _chipSize = 48.0;
   static const _noteFontSize = 16.5;
+
+  // 첫 문구는 게임 방법에서도 쓰는 기본 설명이다.
+  static final _mechanics = <String, _LegendText>{
+    EchoEraser.typeId: _LegendText((t, _) => [t.eraserRule]),
+    EchoHold.typeId: _LegendText((t, _) => [t.holdRule]),
+    OneWay.typeId: _LegendText((t, _) => [t.oneWayRule]),
+    GoalOnly.typeId: _LegendText((t, _) => [t.goalOnlyRule]),
+    EchoGate.typeId: _LegendText(
+      (t, includeBlocked) => [
+        t.gateInstruction,
+        t.gateOccupied,
+        t.gateOpen,
+        if (includeBlocked) t.gateClosed,
+      ],
+      (state, blocked) => blocked
+          ? 3
+          : state.isGateOpen
+          ? 2
+          : state.blocks.any((block) => block.position == state.level.echoGate)
+          ? 1
+          : 0,
+    ),
+  };
+
+  static List<LegendItem> itemsFor(
+    PuzzleState state,
+    AppLocalizations t, {
+    bool gateBlocked = false,
+  }) => [
+    for (final type in state.level.mechanics.keys)
+      if (_mechanics[type] case final text?)
+        LegendItem(
+          type,
+          text.variants(t, gateBlocked)[text.select?.call(state, gateBlocked) ??
+              0],
+        ),
+  ];
+
+  static List<List<String>> possibleTexts(
+    Level level,
+    AppLocalizations t, {
+    bool includeBlockedGate = true,
+  }) => [
+    for (final type in level.mechanics.keys)
+      if (_mechanics[type] case final text?)
+        text.variants(t, includeBlockedGate),
+  ];
+
+  static List<LegendItem> instructions(AppLocalizations t) => [
+    for (final entry in _mechanics.entries)
+      LegendItem(entry.key, entry.value.variants(t, false).first),
+  ];
 
   /// [notes]와 [mechanics]에서 나올 수 있는 가장 긴 설명이 들어가는 높이.
   /// [mechanics]의 항목 하나는 그 기믹이 상황에 따라 보여 주는 문구들이다.
@@ -134,19 +214,9 @@ class MechanicLegend extends StatelessWidget {
     );
   }
 
-  static Widget _icon(LegendKind kind) {
-    final mark = switch (kind) {
-      LegendKind.eraser => BoardMark.eraser,
-      LegendKind.hold => BoardMark.hold,
-      LegendKind.oneWay => BoardMark.oneWay,
-      LegendKind.goalOnly => BoardMark.goalOnly,
-      LegendKind.gate => BoardMark.crystal,
-      LegendKind.note => null,
-    };
-    return mark == null
-        ? const SizedBox.shrink()
-        : CustomPaint(painter: BoardBadge(mark));
-  }
+  static Widget _icon(String kind) => kind == LegendKind.note
+      ? const SizedBox.shrink()
+      : CustomPaint(painter: BoardBadge(kind));
 }
 
 /// 기믹 아이콘 한 줄과 설명 한 칸. 아이콘을 누르면 그 기믹의 설명으로 바뀐다.
@@ -160,7 +230,7 @@ class _CompactLegend extends StatefulWidget {
 }
 
 class _CompactLegendState extends State<_CompactLegend> {
-  LegendKind? _selected;
+  String? _selected;
 
   @override
   Widget build(BuildContext context) {
@@ -194,7 +264,7 @@ class _CompactLegendState extends State<_CompactLegend> {
               label: item.text,
               child: ExcludeSemantics(
                 child: InkResponse(
-                  key: ValueKey('legend-${item.kind.name}'),
+                  key: ValueKey('legend-${item._keyKind}'),
                   radius: 24,
                   onTap: () => setState(() => _selected = item.kind),
                   child: SizedBox.square(

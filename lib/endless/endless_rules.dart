@@ -118,7 +118,7 @@ abstract final class EndlessText {
 
   static ProgressionText endVoyageBody(int depth, int cleared, int score) =>
       ProgressionText(
-        '$depth번째 바다에서 진행 중이에요. $cleared판 클리어와 ${score}점은 '
+        '$depth번째 바다에서 진행 중이에요. $cleared판 클리어와 $score점은 '
             '최고 기록에 반영돼요. 새 항해는 1번째 바다에서 시작해요.',
         'You are on Sea $depth. Your $cleared clears and $score points count '
             'toward your records. A new voyage starts at Sea 1.',
@@ -126,7 +126,7 @@ abstract final class EndlessText {
 
   static ProgressionText voyageProgress(int cleared, int score) =>
       ProgressionText(
-        '$cleared판 클리어 · ${score}점',
+        '$cleared판 클리어 · $score점',
         '$cleared cleared · $score pts',
       );
 

@@ -235,8 +235,15 @@ class LoadedWorld {
   int get number => info.number;
 
   static Future<LoadedWorld> load(SagaWorld info) async {
+    // 풀이가 포함된 JSON도 이야기와 같은 바이트 경로로 읽는다.
+    final levelBytes = await rootBundle.load(info.levelsAsset!);
     final levels = Worlds.parseLevels(
-      await rootBundle.loadString(info.levelsAsset!),
+      utf8.decode(
+        levelBytes.buffer.asUint8List(
+          levelBytes.offsetInBytes,
+          levelBytes.lengthInBytes,
+        ),
+      ),
       info.number,
     );
     final bytes = await rootBundle.load(info.storyAsset!);

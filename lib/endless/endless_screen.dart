@@ -13,8 +13,10 @@ import '../design/game_theme.dart';
 import '../design/keep_all_text.dart';
 import '../design/star_art.dart';
 import '../domain/puzzle.dart';
+import '../game/assist.dart';
 import '../game/bloriq_game.dart';
 import '../game/board_geometry.dart';
+import '../game/hint_search.dart';
 import '../game/mechanic_legend.dart';
 import '../l10n/app_localizations.dart';
 import '../progression/progression_repository.dart';
@@ -60,6 +62,7 @@ class _EndlessScreenState extends State<EndlessScreen> {
   ClearReward? _reward;
   bool _finishing = false;
   bool _starting = false;
+  bool _hintBusy = false;
 
   /// 아주 작은 화면이나 큰 글자에서 보드 칸이 너무 작아지면 스크롤 배치로 바꾼다.
   bool _scrollLayout = false;
@@ -238,8 +241,8 @@ class _EndlessScreenState extends State<EndlessScreen> {
     });
   }
 
-  void _hint(AppLocalizations t) {
-    if (_busy) return;
+  Future<void> _hint(AppLocalizations t) async {
+    if (_busy || _hintBusy) return;
     final run = _run!;
     final messenger = ScaffoldMessenger.of(context);
     if (!run.canHint(_minimum)) {
@@ -249,19 +252,32 @@ class _EndlessScreenState extends State<EndlessScreen> {
       return;
     }
     final state = _controller!.state;
-    final move = const PuzzleSolver().solveFromState(state)?.firstOrNull;
-    if (move == null) {
-      messenger.showSnackBar(SnackBar(content: Text(t.starlightNoMove)));
-      return;
+    setState(() => _hintBusy = true);
+    try {
+      final result = await const HintSearch().solve(state);
+      if (!mounted || _busy || !identical(state, _controller?.state)) return;
+      final move = result.moves?.firstOrNull;
+      if (move == null) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              result.limited ? t.starlightSearchLimit : t.starlightNoMove,
+            ),
+          ),
+        );
+        return;
+      }
+      setState(() {
+        run.hinted();
+        _game!.hintMove = (
+          from: state.positionOf(move.blockId)!,
+          to: move.target,
+        );
+      });
+      unawaited(_repo.saveRun(run));
+    } finally {
+      if (mounted) setState(() => _hintBusy = false);
     }
-    final from = state.blocks
-        .firstWhere((block) => block.id == move.blockId)
-        .position;
-    setState(() {
-      run.hinted();
-      _game!.hintMove = (from: from, to: move.target);
-    });
-    unawaited(_repo.saveRun(run));
   }
 
   // ---- 입력 ----------------------------------------------------------------
@@ -660,14 +676,11 @@ class _EndlessScreenState extends State<EndlessScreen> {
         width: area.maxWidth,
         compact: compact,
         notes: [t.instruction, t.echoInstruction],
-        mechanics: [
-          if (level.echoErasers.isNotEmpty) [t.eraserRule],
-          if (level.echoHolds.isNotEmpty) [t.holdRule],
-          if (level.oneWays.isNotEmpty) [t.oneWayRule],
-          if (level.goalOnlyTiles.isNotEmpty) [t.goalOnlyRule],
-          if (level.echoGate != null)
-            [t.gateOpen, t.gateOccupied, t.gateInstruction],
-        ],
+        mechanics: MechanicLegend.possibleTexts(
+          level,
+          t,
+          includeBlockedGate: false,
+        ),
       );
       _compactLegend = room < legendHeight(false);
       if (!_scrollLayout && room < legendHeight(true)) _scrollLayout = true;
@@ -864,8 +877,10 @@ class _EndlessScreenState extends State<EndlessScreen> {
                   minimumSize: const Size(48, 48),
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                 ),
-                onPressed: _busy ? null : () => _hint(t),
-                icon: const Icon(Icons.flare_rounded),
+                onPressed: _busy || _hintBusy ? null : () => _hint(t),
+                icon: _hintBusy
+                    ? HintProgress(t.starlightCalculating)
+                    : const Icon(Icons.flare_rounded),
                 label: FittedBox(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -892,23 +907,7 @@ class _EndlessScreenState extends State<EndlessScreen> {
   }
 
   List<LegendItem> _legend(AppLocalizations t, PuzzleState state) {
-    final level = state.level;
-    final gate = level.echoGate == null
-        ? null
-        : state.isGateOpen
-        ? t.gateOpen
-        : state.blocks.any((block) => block.position == level.echoGate)
-        ? t.gateOccupied
-        : t.gateInstruction;
-    final items = [
-      if (level.echoErasers.isNotEmpty)
-        LegendItem(LegendKind.eraser, t.eraserRule),
-      if (level.echoHolds.isNotEmpty) LegendItem(LegendKind.hold, t.holdRule),
-      if (level.oneWays.isNotEmpty) LegendItem(LegendKind.oneWay, t.oneWayRule),
-      if (level.goalOnlyTiles.isNotEmpty)
-        LegendItem(LegendKind.goalOnly, t.goalOnlyRule),
-      if (gate != null) LegendItem(LegendKind.gate, gate),
-    ];
+    final items = MechanicLegend.itemsFor(state, t);
     return items.isNotEmpty
         ? items
         : [

@@ -55,15 +55,14 @@ Level transformLevel(Level level, int symmetry) {
     obstacles: [for (final o in level.obstacles) point(o)],
     minimumMoves: level.minimumMoves,
     difficulty: level.difficulty,
-    echoSwitch: level.echoSwitch == null ? null : point(level.echoSwitch!),
-    echoGate: level.echoGate == null ? null : point(level.echoGate!),
-    echoErasers: {for (final p in level.echoErasers) point(p)},
-    echoHolds: {for (final p in level.echoHolds) point(p)},
-    oneWays: {
-      for (final entry in level.oneWays.entries)
-        point(entry.key): direction(entry.value),
-    },
-    goalOnlyTiles: {for (final p in level.goalOnlyTiles) point(p)},
+    mechanics: [
+      for (final mechanic in level.mechanics.values)
+        mechanic.reorient(point, direction),
+    ],
+    solution: [
+      for (final move in level.solution)
+        PuzzleMove(move.blockId, point(move.target), power: move.power),
+    ],
     world: level.world,
     bareHandedMoves: level.bareHandedMoves,
     requiredPowers: level.requiredPowers,

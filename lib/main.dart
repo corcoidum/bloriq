@@ -14,6 +14,7 @@ import 'game/bloriq_game.dart';
 import 'game/mechanic_legend.dart';
 import 'design/keep_all_text.dart';
 import 'game/board_geometry.dart';
+import 'game/hint_search.dart';
 import 'game/victory_panel.dart';
 import 'l10n/app_localizations.dart';
 import 'postcard/echo_postcard.dart';
@@ -147,12 +148,14 @@ class GameScreen extends StatefulWidget {
     required this.initialLevelId,
     this.play = const PlayContext.campaign(),
     required this.settings,
+    this.hintSearch = const HintSearch(),
   });
 
   final GameSession session;
   final PlayContext play;
   final int initialLevelId;
   final GameSettings settings;
+  final HintSearch hintSearch;
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -196,6 +199,9 @@ class _GameScreenState extends State<GameScreen>
 
   /// 이번 시도에서 별빛 길을 썼는지(2별 상한), 무료 사용을 이미 했는지.
   bool _starlightUsed = false;
+  bool _hintBusy = false;
+  PuzzleState? _guideState;
+  List<PuzzleMove>? _guidePath;
 
   /// 이번 클리어로 지금 세계의 다섯 별자리가 모두 완성됐는지.
   bool _worldCleared = false;
@@ -647,6 +653,8 @@ class _GameScreenState extends State<GameScreen>
     _starlightUsed = false;
     _starlightFreeUsed = false;
     _guided = false;
+    _guideState = null;
+    _guidePath = null;
     _worldCleared = false;
     _game?.hintMove = null;
   }
@@ -675,19 +683,66 @@ class _GameScreenState extends State<GameScreen>
   /// 풀이 따라 하기: 지금 상태의 다음 최단 수를 비추고, 권능 수면 권능을 골라 둔다.
   void _refreshGuide() {
     if (!_guided) return;
-    final state = _controller!.state;
-    final move = state.isComplete
-        ? null
-        : const PuzzleSolver().solveFromState(state)?.firstOrNull;
+    final controller = _controller!;
+    final state = controller.state;
+    if (state.isComplete) {
+      _showGuideMove(state, null);
+      return;
+    }
+    if (!identical(_guideState, state)) {
+      final last = controller.lastMove;
+      final step = _guidePath?.firstOrNull;
+      // 최단 풀이를 따라왔다면 남은 경로도 최단이다.
+      _guidePath =
+          last != null &&
+              step != null &&
+              identical(last.before, _guideState) &&
+              last.blockId == step.blockId &&
+              last.landing == step.target &&
+              last.power == step.power
+          ? _guidePath!.sublist(1)
+          : widget.hintSearch.storedSolution(state);
+      _guideState = state;
+    }
+    _showGuideMove(state, _guidePath?.firstOrNull);
+    if (_guidePath == null && !_hintBusy) unawaited(_findGuidePath(state));
+  }
+
+  void _showGuideMove(PuzzleState state, PuzzleMove? move) {
     if (move == null) {
       _game?.hintMove = null;
       return;
     }
-    final from = state.blocks
-        .firstWhere((block) => block.id == move.blockId)
-        .position;
     _armedPower = move.power;
-    _game?.hintMove = (from: from, to: move.target);
+    _game?.hintMove = (from: state.positionOf(move.blockId)!, to: move.target);
+  }
+
+  Future<T?> _withHint<T>(Future<T> Function() action) async {
+    if (_hintBusy) return null;
+    setState(() => _hintBusy = true);
+    try {
+      return await action();
+    } finally {
+      if (mounted) setState(() => _hintBusy = false);
+    }
+  }
+
+  void _hintSearchLimit(AppLocalizations t) =>
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(t.starlightSearchLimit)));
+
+  Future<void> _findGuidePath(PuzzleState state) async {
+    final result = await _withHint(() => widget.hintSearch.solve(state));
+    if (!mounted || !_guided || result == null) return;
+    if (!identical(state, _controller!.state)) {
+      setState(_refreshGuide);
+      return;
+    }
+    setState(() {
+      _guidePath = result.moves ?? const [];
+      _showGuideMove(state, _guidePath!.firstOrNull);
+    });
+    if (result.limited) _hintSearchLimit(AppLocalizations.of(context)!);
   }
 
   /// 막혔을 때의 도움: 열쇠 한 줄(무료) → 별빛 길 → 풀이 따라 하기.
@@ -695,21 +750,29 @@ class _GameScreenState extends State<GameScreen>
     AppLocalizations t,
     PuzzleController controller,
   ) async {
+    if (_hintBusy || _modalOpen) return;
     final level = controller.state.level;
-    final solution =
-        const PuzzleSolver(maxStates: 2000000)
-            .solve(level, powers: _stagePowers(level)) ??
-        const <PuzzleMove>[];
+    final initial = PuzzleState.initial(level, powers: _stagePowers(level));
+    var solution = widget.hintSearch.storedSolution(initial);
+    if (solution == null) {
+      final result = await _withHint(() => widget.hintSearch.solve(initial));
+      if (!mounted || !identical(controller, _controller) || result == null) {
+        return;
+      }
+      if (result.limited) {
+        _hintSearchLimit(t);
+        return;
+      }
+      solution = result.moves ?? const [];
+    }
+    final clue = keyHint(level, solution).resolve(t.localeName);
     final lang = t.localeName;
     final choice = await _withModal<_HelpChoice>(
       () => showModalBottomSheet<_HelpChoice>(
         context: context,
         showDragHandle: true,
         isScrollControlled: true,
-        builder: (context) => _HelpSheet(
-          keyHint: keyHint(level, solution).resolve(lang),
-          lang: lang,
-        ),
+        builder: (context) => _HelpSheet(keyHint: clue, lang: lang),
       ),
     );
     if (!mounted || !identical(controller, _controller)) return;
@@ -720,6 +783,8 @@ class _GameScreenState extends State<GameScreen>
         setState(() {
           _restartBoard(controller, countStruggle: false);
           _guided = true;
+          _guideState = controller.state;
+          _guidePath = solution;
           _refreshGuide();
         });
       case null:
@@ -730,43 +795,58 @@ class _GameScreenState extends State<GameScreen>
   /// 별빛 길: 지금 상태에서 가장 짧은 다음 한 수를 보드에 비춘다.
   Future<void> _useStarlight(AppLocalizations t) async {
     final controller = _controller!;
-    if (controller.state.isComplete || _replaying || _modalOpen) return;
-    final messenger = ScaffoldMessenger.of(context);
-    final solution = const PuzzleSolver().solveFromState(controller.state);
-    if (solution == null || solution.isEmpty) {
-      messenger.showSnackBar(SnackBar(content: Text(t.starlightNoMove)));
-      return;
-    }
-    final companion = widget.session.collection.companion;
-    final quote = await widget.session.progression.useStarlightPath(
-      freeUsedThisAttempt: _starlightFreeUsed,
-      companionId: companion?.id,
-      companionFamily: companion?.family,
-    );
-    if (!mounted || !identical(_controller, controller)) return;
-    if (quote == null) {
-      messenger.showSnackBar(SnackBar(content: Text(t.starlightShort)));
-      return;
-    }
-    final move = solution.first;
-    final from = controller.state.blocks
-        .firstWhere((block) => block.id == move.blockId)
-        .position;
-    if (move.power case final power?) {
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(WorldText.hintPower(power).resolve(t.localeName)),
-        ),
-      );
-    }
-    setState(() {
-      if (quote.source == StarlightPathSource.free) _starlightFreeUsed = true;
-      if (!_starlightUsed) {
-        messenger.showSnackBar(SnackBar(content: Text(t.starlightCapped)));
+    final state = controller.state;
+    if (state.isComplete || _replaying || _modalOpen) return;
+    bool current() => identical(state, _controller?.state);
+
+    await _withHint(() async {
+      final result = await widget.hintSearch.solve(state);
+      if (!mounted || !current()) return;
+      if (result.limited) {
+        _hintSearchLimit(t);
+        return;
       }
-      _starlightUsed = true;
-      _game!.hintMove = (from: from, to: move.target);
+      final messenger = ScaffoldMessenger.of(context);
+      final move = result.moves?.firstOrNull;
+      if (move == null) {
+        messenger.showSnackBar(SnackBar(content: Text(t.starlightNoMove)));
+        return;
+      }
+      final companion = widget.session.collection.companion;
+      final quote = await widget.session.progression.useStarlightPath(
+        freeUsedThisAttempt: _starlightFreeUsed,
+        companionId: companion?.id,
+        companionFamily: companion?.family,
+        onUsed: (used) {
+          if (move.power case final power?) {
+            messenger.showSnackBar(
+              SnackBar(
+                content: Text(WorldText.hintPower(power).resolve(t.localeName)),
+              ),
+            );
+          }
+          setState(() {
+            if (used.source == StarlightPathSource.free) {
+              _starlightFreeUsed = true;
+            }
+            if (!_starlightUsed) {
+              messenger.showSnackBar(
+                SnackBar(content: Text(t.starlightCapped)),
+              );
+            }
+            _starlightUsed = true;
+            _game!.hintMove = (
+              from: state.positionOf(move.blockId)!,
+              to: move.target,
+            );
+          });
+        },
+      );
+      if (quote == null && mounted && current()) {
+        messenger.showSnackBar(SnackBar(content: Text(t.starlightShort)));
+      }
     });
+    if (mounted && !current() && _guided) setState(_refreshGuide);
   }
 
   Future<void> _retryProgressSave() async {
@@ -1521,26 +1601,11 @@ class _GameScreenState extends State<GameScreen>
     if (_armedPower case final power?) {
       return [note(WorldText.armed(power).resolve(t.localeName))];
     }
-    final gate = state.level.echoGate == null
-        ? null
-        : _gateBlocked
-        ? t.gateClosed
-        : state.isGateOpen
-        ? t.gateOpen
-        : state.blocks.any((block) => block.position == state.level.echoGate)
-        ? t.gateOccupied
-        : t.gateInstruction;
-    final mechanics = [
-      if (state.level.echoErasers.isNotEmpty)
-        LegendItem(LegendKind.eraser, t.eraserRule),
-      if (state.level.echoHolds.isNotEmpty)
-        LegendItem(LegendKind.hold, t.holdRule),
-      if (state.level.oneWays.isNotEmpty)
-        LegendItem(LegendKind.oneWay, t.oneWayRule),
-      if (state.level.goalOnlyTiles.isNotEmpty)
-        LegendItem(LegendKind.goalOnly, t.goalOnlyRule),
-      if (gate != null) LegendItem(LegendKind.gate, gate),
-    ];
+    final mechanics = MechanicLegend.itemsFor(
+      state,
+      t,
+      gateBlocked: _gateBlocked,
+    );
     if (mechanics.isNotEmpty) return mechanics;
     return [note(state.echo == null ? t.instruction : t.echoInstruction)];
   }
@@ -1949,11 +2014,19 @@ class _GameScreenState extends State<GameScreen>
                                             const SizedBox(height: 6),
                                             FilledButton.tonalIcon(
                                               key: const ValueKey('stuck-help'),
-                                              onPressed: () =>
-                                                  _openHelp(t, controller),
-                                              icon: const Icon(
-                                                Icons.lightbulb_rounded,
-                                              ),
+                                              onPressed: _hintBusy
+                                                  ? null
+                                                  : () => _openHelp(
+                                                      t,
+                                                      controller,
+                                                    ),
+                                              icon: _hintBusy
+                                                  ? HintProgress(
+                                                      t.starlightCalculating,
+                                                    )
+                                                  : const Icon(
+                                                      Icons.lightbulb_rounded,
+                                                    ),
                                               label: Text(
                                                 AssistText.offer.resolve(
                                                   t.localeName,
@@ -2208,7 +2281,14 @@ class _GameScreenState extends State<GameScreen>
     ),
     child: Row(
       children: [
-        Icon(Icons.auto_awesome_rounded, size: 18, color: colors.rewardInk),
+        if (_hintBusy)
+          HintProgress(
+            t.starlightCalculating,
+            size: 18,
+            color: colors.rewardInk,
+          )
+        else
+          Icon(Icons.auto_awesome_rounded, size: 18, color: colors.rewardInk),
         const SizedBox(width: 6),
         Expanded(
           child: KeepAllText(
@@ -2243,7 +2323,10 @@ class _GameScreenState extends State<GameScreen>
       StarlightPathSource.stardust => '${quote.cost}',
     };
     final enabled =
-        !controller.state.isComplete && !_replaying && !_celebrating;
+        !controller.state.isComplete &&
+        !_replaying &&
+        !_celebrating &&
+        !_hintBusy;
     return Tooltip(
       message: t.starlightPath,
       child: Material(
@@ -2261,7 +2344,10 @@ class _GameScreenState extends State<GameScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.auto_awesome, size: 20, color: colors.rewardInk),
+                if (_hintBusy)
+                  HintProgress(t.starlightCalculating, color: colors.rewardInk)
+                else
+                  Icon(Icons.auto_awesome, size: 20, color: colors.rewardInk),
                 Text(
                   price,
                   style: GameTypography.label.copyWith(
@@ -2546,14 +2632,7 @@ class _GameScreenState extends State<GameScreen>
             ],
       mechanics: _tutorial != null
           ? const []
-          : [
-              if (level.echoErasers.isNotEmpty) [t.eraserRule],
-              if (level.echoHolds.isNotEmpty) [t.holdRule],
-              if (level.oneWays.isNotEmpty) [t.oneWayRule],
-              if (level.goalOnlyTiles.isNotEmpty) [t.goalOnlyRule],
-              if (level.echoGate != null)
-                [t.gateClosed, t.gateOpen, t.gateOccupied, t.gateInstruction],
-            ],
+          : MechanicLegend.possibleTexts(level, t),
     );
   }
 

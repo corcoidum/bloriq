@@ -1,5 +1,13 @@
 import 'dart:collection';
 
+import 'mechanics/board_mechanic.dart';
+import 'mechanics/echo_eraser.dart';
+import 'mechanics/echo_gate.dart';
+import 'mechanics/echo_hold.dart';
+import 'mechanics/goal_only.dart';
+import 'mechanics/mechanic_registry.dart';
+import 'mechanics/one_way.dart';
+
 /// 격자 좌표. 왼쪽 위가 (0, 0)이다.
 class Position {
   const Position(this.x, this.y);
@@ -90,12 +98,14 @@ class Level {
     required this.minimumMoves,
     required this.difficulty,
     this.revision = 1,
-    this.echoSwitch,
-    this.echoGate,
+    Position? echoSwitch,
+    Position? echoGate,
     Set<Position> echoErasers = const {},
     Set<Position> echoHolds = const {},
     Map<Position, Position> oneWays = const {},
     Set<Position> goalOnlyTiles = const {},
+    Iterable<BoardMechanic> mechanics = const [],
+    List<PuzzleMove> solution = const [],
     this.world = 1,
     this.bareHandedMoves,
     Set<PuzzlePower> requiredPowers = const {},
@@ -107,10 +117,16 @@ class Level {
          availablePowers ?? PuzzlePower.values.toSet(),
        ),
        obstacles = List.unmodifiable(obstacles),
-       echoErasers = Set.unmodifiable(echoErasers),
-       echoHolds = Set.unmodifiable(echoHolds),
-       oneWays = Map.unmodifiable(oneWays),
-       goalOnlyTiles = Set.unmodifiable(goalOnlyTiles) {
+       solution = List.unmodifiable(solution),
+       mechanics = MechanicRegistry.index([
+         ...mechanics,
+         if (echoErasers.isNotEmpty) EchoEraser(echoErasers),
+         if (echoHolds.isNotEmpty) EchoHold(echoHolds),
+         if (oneWays.isNotEmpty) OneWay(oneWays),
+         if (goalOnlyTiles.isNotEmpty) GoalOnly(goalOnlyTiles),
+         if (echoSwitch != null && echoGate != null)
+           EchoGate(echoSwitch, echoGate),
+       ]) {
     if (revision < 1 ||
         id < 1 ||
         boardWidth < 1 ||
@@ -138,45 +154,20 @@ class Level {
         throw const FormatException('Invalid or overlapping block');
       }
     }
-    // A switch can start under a block; a gate starts empty and closed.
     if ((echoSwitch == null) != (echoGate == null)) {
       throw const FormatException(
         'A switch and gate must be provided together',
       );
     }
-    if (echoSwitch != null && echoGate != null) {
-      if (!contains(echoSwitch!) ||
-          !contains(echoGate!) ||
-          echoSwitch == echoGate ||
-          echoSwitch == exitPosition ||
-          echoGate == exitPosition ||
-          this.obstacles.contains(echoSwitch) ||
-          this.obstacles.contains(echoGate) ||
-          echoGate == startPosition ||
-          this.blocks.any((block) => block.position == echoGate)) {
-        throw const FormatException('Invalid switch or gate position');
-      }
-    }
     // 서로 다른 기믹은 서로 겹치지 않게 하여 판정과 표시를 명확히 한다.
-    final mechanismPositions = <Position>{};
-    for (final tile in [
-      ...this.echoErasers,
-      ...this.echoHolds,
-      ...this.oneWays.keys,
-      ...this.goalOnlyTiles,
-    ]) {
-      if (!contains(tile) ||
-          this.obstacles.contains(tile) ||
-          tile == echoSwitch ||
-          tile == echoGate ||
-          !mechanismPositions.add(tile)) {
-        throw const FormatException('Invalid or overlapping mechanism tile');
+    final mechanismPositions = this.obstacles.toSet();
+    for (final mechanic in this.mechanics.values) {
+      for (final tile in mechanic.cells) {
+        if (!contains(tile) || !mechanismPositions.add(tile)) {
+          throw const FormatException('Invalid or overlapping mechanism tile');
+        }
       }
-    }
-    for (final direction in this.oneWays.values) {
-      if (direction.x.abs() + direction.y.abs() != 1) {
-        throw const FormatException('One-way direction must be cardinal');
-      }
+      mechanic.validate(this);
     }
     if (world < 1 ||
         (bareHandedMoves != null && bareHandedMoves! < minimumMoves)) {
@@ -195,14 +186,23 @@ class Level {
   final List<Position> obstacles;
   final int minimumMoves;
   final String difficulty;
-  final Position? echoSwitch;
-  final Position? echoGate;
-  final Set<Position> echoErasers;
-  final Set<Position> echoHolds;
+  final Map<String, BoardMechanic> mechanics;
+  final List<PuzzleMove> solution;
 
-  /// 칸과 해당 칸에서 나갈 수 있는 상대 방향 (dx, dy).
-  final Map<Position, Position> oneWays;
-  final Set<Position> goalOnlyTiles;
+  T? mechanic<T extends BoardMechanic>(String type) => mechanics[type] as T?;
+
+  // 기존 호출부도 같은 기믹 설정을 읽는다.
+  Position? get echoSwitch =>
+      mechanic<EchoGate>(EchoGate.typeId)?.switchPosition;
+  Position? get echoGate => mechanic<EchoGate>(EchoGate.typeId)?.gatePosition;
+  Set<Position> get echoErasers =>
+      mechanic<EchoEraser>(EchoEraser.typeId)?.cells ?? const {};
+  Set<Position> get echoHolds =>
+      mechanic<EchoHold>(EchoHold.typeId)?.cells ?? const {};
+  Map<Position, Position> get oneWays =>
+      mechanic<OneWay>(OneWay.typeId)?.arrows ?? const {};
+  Set<Position> get goalOnlyTiles =>
+      mechanic<GoalOnly>(GoalOnly.typeId)?.cells ?? const {};
 
   /// 1 = 달빛 숲(기본), 2 = 구름바다 등대.
   final int world;
@@ -224,71 +224,9 @@ class Level {
   bool get solvableBareHanded => world == 1 || bareHandedMoves != null;
 
   factory Level.fromJson(Map<String, dynamic> json) {
-    final rules = json['specialRules'] as List<dynamic>;
-    Position? echoSwitch;
-    Position? echoGate;
-    final erasers = <Position>{};
-    final holds = <Position>{};
-    final oneWays = <Position, Position>{};
-    final goalOnly = <Position>{};
-    final seenTypes = <String>{};
-    for (final rule in rules) {
-      if (rule is! Map<String, dynamic> || rule['type'] is! String) {
-        throw const FormatException('Unsupported special rule');
-      }
-      final type = rule['type'] as String;
-      if (!seenTypes.add(type)) {
-        throw const FormatException('Duplicate special rule');
-      }
-      if (type == 'echoGate') {
-        final switchData = rule['switch'];
-        final gateData = rule['gate'];
-        if (switchData is! Map<String, dynamic> ||
-            gateData is! Map<String, dynamic>) {
-          throw const FormatException(
-            'Echo gate requires switch and gate positions',
-          );
-        }
-        echoSwitch = Position.fromJson(switchData);
-        echoGate = Position.fromJson(gateData);
-      } else if (type == 'oneWay') {
-        final tiles = rule['tiles'];
-        if (tiles is! List || tiles.isEmpty) {
-          throw const FormatException('One-way rule requires tiles');
-        }
-        for (final item in tiles) {
-          if (item is! Map<String, dynamic> ||
-              item['dx'] is! int ||
-              item['dy'] is! int) {
-            throw const FormatException('Invalid one-way tile');
-          }
-          final position = Position.fromJson(item);
-          if (oneWays.containsKey(position)) {
-            throw const FormatException('Duplicate one-way tile');
-          }
-          oneWays[position] = Position(item['dx'] as int, item['dy'] as int);
-        }
-      } else if (type == 'echoEraser' ||
-          type == 'echoHold' ||
-          type == 'goalOnly') {
-        final positions = rule['positions'];
-        if (positions is! List || positions.isEmpty) {
-          throw const FormatException('Mechanism rule requires positions');
-        }
-        final output = type == 'echoEraser'
-            ? erasers
-            : type == 'echoHold'
-            ? holds
-            : goalOnly;
-        for (final item in positions) {
-          if (item is! Map<String, dynamic> ||
-              !output.add(Position.fromJson(item))) {
-            throw const FormatException('Invalid or duplicate mechanism tile');
-          }
-        }
-      } else {
-        throw const FormatException('Unsupported special rule');
-      }
+    final solution = json['solution'];
+    if (solution != null && solution is! List) {
+      throw const FormatException('Solution must be a list');
     }
     return Level(
       id: json['id'] as int,
@@ -309,12 +247,10 @@ class Level {
           .toList(),
       minimumMoves: json['minimumMoves'] as int,
       difficulty: json['difficulty'] as String,
-      echoSwitch: echoSwitch,
-      echoGate: echoGate,
-      echoErasers: erasers,
-      echoHolds: holds,
-      oneWays: oneWays,
-      goalOnlyTiles: goalOnly,
+      mechanics: MechanicRegistry.parse(json['specialRules']),
+      solution: solution is List
+          ? solution.map(PuzzleMove.fromJson).toList()
+          : const [],
       world: json['world'] as int? ?? 1,
       bareHandedMoves: json['bareHandedMoves'] as int?,
       requiredPowers: {
@@ -377,20 +313,37 @@ class PuzzleState {
 
   Block get goal => blocks.firstWhere((block) => block.id == Level.goalBlockId);
   bool get isComplete => goal.position == level.exitPosition;
-  bool get isGateOpen => level.echoSwitch != null && echo == level.echoSwitch;
+  bool get isGateOpen =>
+      level.mechanic<EchoGate>(EchoGate.typeId)?.isOpen(echo) ?? false;
 
-  bool isBlocked(Position position) =>
+  bool _occupied(Position position) =>
       level.obstacles.contains(position) ||
-      (level.echoGate == position && !isGateOpen) ||
       echo == position ||
       blocks.any((block) => block.position == position);
+
+  bool _canEnter(String? blockId, Position target) {
+    for (final mechanic in level.mechanics.values) {
+      if (!mechanic.canEnter(this, blockId, target)) return false;
+    }
+    return true;
+  }
+
+  bool isBlocked(Position position) =>
+      _occupied(position) || !_canEnter(null, position);
 
   /// 칸 하나에 블록이 들어설 수 있는지(출발 칸·방향과 무관한 조건).
   bool canOccupy(String blockId, Position target) =>
       level.contains(target) &&
       !(target == level.exitPosition && blockId != Level.goalBlockId) &&
-      !(level.goalOnlyTiles.contains(target) && blockId != Level.goalBlockId) &&
-      !isBlocked(target);
+      !_occupied(target) &&
+      _canEnter(blockId, target);
+
+  bool canLeave(Position from, Position direction) {
+    for (final mechanic in level.mechanics.values) {
+      if (!mechanic.canLeave(this, from, direction)) return false;
+    }
+    return true;
+  }
 
   Position? positionOf(String blockId) {
     for (final block in blocks) {
@@ -405,10 +358,8 @@ class MoveValidator {
     if (state.isComplete || !state.canOccupy(blockId, target)) return false;
     final from = state.positionOf(blockId);
     if (from == null) return false;
-    final direction = state.level.oneWays[from];
     return from.isAdjacentTo(target) &&
-        (direction == null ||
-            target == Position(from.x + direction.x, from.y + direction.y));
+        state.canLeave(from, Position(target.x - from.x, target.y - from.y));
   }
 }
 
@@ -426,12 +377,11 @@ abstract final class PowerRules {
     final from = state.positionOf(blockId);
     if (from == null) return null;
     final level = state.level;
-    final arrow = level.oneWays[from];
     final cardinal = direction.x.abs() + direction.y.abs() == 1;
     Position step(Position p) => Position(p.x + direction.x, p.y + direction.y);
     switch (power) {
       case PuzzlePower.moonflowerLeap:
-        if (!cardinal || (arrow != null && arrow != direction)) return null;
+        if (!cardinal || !state.canLeave(from, direction)) return null;
         final over = step(from);
         final land = step(over);
         if (!level.obstacles.contains(over)) return null;
@@ -445,8 +395,8 @@ abstract final class PowerRules {
           blocks: state.blocks,
           echo: null,
           moves: state.moves,
+          powers: state.powers,
         );
-        if (level.echoGate == echo) return null;
         return probe.canOccupy(blockId, echo) ? echo : null;
       case PuzzlePower.seal:
         if (!cardinal || state.echo == null) return null;
@@ -456,8 +406,7 @@ abstract final class PowerRules {
         if (!cardinal) return null;
         var current = from;
         while (true) {
-          final currentArrow = level.oneWays[current];
-          if (currentArrow != null && currentArrow != direction) break;
+          if (!state.canLeave(current, direction)) break;
           final next = step(current);
           if (!state.canOccupy(blockId, next)) break;
           current = next;
@@ -473,7 +422,7 @@ abstract final class PowerRules {
 /// 미리보기와 재생 모두 실제 controller 상태를 변경하지 않는다.
 PuzzleState? previewMove(PuzzleState state, String blockId, Position target) {
   if (!MoveValidator.canMove(state, blockId, target)) return null;
-  return _move(state, blockId, target);
+  return _move(state, PuzzleMove(blockId, target));
 }
 
 /// 권능 한 번을 적용한 다음 상태. 쓸 수 없으면 null.
@@ -485,7 +434,7 @@ PuzzleState? previewPower(
 ) {
   final land = PowerRules.landing(state, power, blockId, direction);
   if (land == null) return null;
-  return _move(state, blockId, land, power: power);
+  return _move(state, PuzzleMove(blockId, land, power: power));
 }
 
 /// 유효한 한 이동의 전후 스냅샷. Undo한 이동은 목록에서 제거한다.
@@ -497,11 +446,15 @@ class MoveRecord {
     required this.before,
     required this.after,
     this.power,
-  });
+    Position? landing,
+  }) : landing = landing ?? to;
 
   final String blockId;
   final Position from;
   final Position to;
+
+  /// 기믹으로 착지가 바뀌기 전의 입력. 힌트와 solver는 이 칸을 쓴다.
+  final Position landing;
   final PuzzleState before;
   final PuzzleState after;
 
@@ -512,32 +465,32 @@ class MoveRecord {
 }
 
 /// Controller와 solver가 같은 상태 전이를 사용한다.
-PuzzleState _move(
-  PuzzleState state,
-  String blockId,
-  Position target, {
-  PuzzlePower? power,
-}) {
-  final moving = state.blocks.firstWhere((block) => block.id == blockId);
-  final source = moving.position;
-  final Position? echo = switch (power) {
+PuzzleState _move(PuzzleState state, PuzzleMove move) {
+  final PuzzleMove(:blockId, :target, :power) = move;
+  final source = state.positionOf(blockId)!;
+  final mechanics = state.level.mechanics.values;
+  var blocks = [
+    for (final block in state.blocks)
+      block.id == blockId ? block.at(target) : block,
+  ];
+  // 일반/권능 착지 → 기믹 배치 변환 → 잔상. 봉인·교대의 잔상 규칙은 마지막에 우선한다.
+  for (final mechanic in mechanics) {
+    blocks = mechanic.transformMove(state, move, blocks);
+  }
+  Position? echo = source;
+  for (final mechanic in mechanics) {
+    echo = mechanic.nextEcho(state, move, blocks, echo);
+  }
+  echo = switch (power) {
     // 봉인은 이전 잔상을 한 턴 더 붙잡는다.
     PuzzlePower.seal => state.echo,
     // 교대는 블록이 잔상 자리를 차지하므로 떠난 칸이 새 잔상이 된다.
     PuzzlePower.lightSwap => source,
-    // 보존 칸은 이전 Echo를 유지하며, 지우개 칸은 이전 Echo를 제거한다.
-    _ =>
-      state.level.echoHolds.contains(source)
-          ? state.echo
-          : state.level.echoErasers.contains(source)
-          ? null
-          : source,
+    _ => echo,
   };
   return PuzzleState(
     level: state.level,
-    blocks: state.blocks
-        .map((block) => block.id == blockId ? block.at(target) : block)
-        .toList(),
+    blocks: blocks,
     moves: state.moves + 1,
     echo: echo,
     powers: power == null ? state.powers : ({...state.powers}..remove(power)),
@@ -556,6 +509,7 @@ class PuzzleController {
   final List<MoveRecord> _moves = [];
   PuzzleState get state => _state;
   bool get canUndo => _history.isNotEmpty;
+  MoveRecord? get lastMove => _moves.lastOrNull;
   List<MoveRecord> get moveHistory => List.unmodifiable(_moves);
 
   /// 이번 시도에서 권능을 한 번이라도 썼는지(Undo로 되돌린 수는 제외).
@@ -595,12 +549,13 @@ class PuzzleController {
     final before = _state;
     final from = before.positionOf(blockId)!;
     _history.add(_state);
-    _state = _move(_state, blockId, target, power: power);
+    _state = _move(_state, PuzzleMove(blockId, target, power: power));
     _moves.add(
       MoveRecord(
         blockId: blockId,
         from: from,
-        to: target,
+        to: _state.positionOf(blockId)!,
+        landing: target,
         before: before,
         after: _state,
         power: power,
@@ -624,10 +579,34 @@ class PuzzleController {
 
 class PuzzleMove {
   const PuzzleMove(this.blockId, this.target, {this.power});
+
+  factory PuzzleMove.fromJson(Object? raw) {
+    if (raw is! Map<String, dynamic> ||
+        raw['blockId'] is! String ||
+        (raw['blockId'] as String).isEmpty) {
+      throw const FormatException('Invalid solution move');
+    }
+    final target = raw['target'];
+    if (target is! Map<String, dynamic> ||
+        target['x'] is! int ||
+        target['y'] is! int) {
+      throw const FormatException('Invalid solution target');
+    }
+    final powerId = raw['power'];
+    final power = powerId is String ? PuzzlePower.byId(powerId) : null;
+    if (powerId != null && power == null) {
+      throw const FormatException('Unknown solution power');
+    }
+    return PuzzleMove(
+      raw['blockId'] as String,
+      Position.fromJson(target),
+      power: power,
+    );
+  }
   final String blockId;
   final Position target;
 
-  /// 권능을 쓴 수이면 그 권능. [target]은 블록이 내리는 칸이다.
+  /// 권능을 쓴 수이면 그 권능. [target]은 기믹으로 변환되기 전 착지 칸이다.
   final PuzzlePower? power;
 
   @override
@@ -681,7 +660,8 @@ class PuzzleSolver {
           block.position.y + direction.y,
         );
         if (MoveValidator.canMove(state, block.id, target)) {
-          yield (PuzzleMove(block.id, target), _move(state, block.id, target));
+          final move = PuzzleMove(block.id, target);
+          yield (move, _move(state, move));
         }
       }
     }
@@ -694,10 +674,8 @@ class PuzzleSolver {
         for (final direction in directions) {
           final land = PowerRules.landing(state, power, block.id, direction);
           if (land == null) continue;
-          yield (
-            PuzzleMove(block.id, land, power: power),
-            _move(state, block.id, land, power: power),
-          );
+          final move = PuzzleMove(block.id, land, power: power);
+          yield (move, _move(state, move));
         }
       }
     }
@@ -707,30 +685,96 @@ class PuzzleSolver {
   List<PuzzleMove>? solveFromState(
     PuzzleState initial, {
     PuzzlePower? mustUse,
+    Duration? timeLimit,
   }) {
-    final keyOf = _StateKey(initial);
-    final root = _SearchNode(initial, null, null);
-    if (initial.isComplete) return const [];
-    final queue = Queue<_SearchNode>()..add(root);
-    final visited = <Object>{keyOf(initial)};
-    while (queue.isNotEmpty) {
-      final node = queue.removeFirst();
-      for (final (move, next) in successors(node.state)) {
-        if (!visited.add(keyOf(next))) continue;
-        if (visited.length > maxStates) {
-          throw StateError('Solver state limit exceeded: $maxStates');
+    final search = _PuzzleSearch(initial, maxStates, mustUse);
+    if (timeLimit == null) {
+      search.advance();
+    } else {
+      final watch = Stopwatch()..start();
+      while (!search.done) {
+        _checkTime(watch, timeLimit);
+        search.advance(32);
+      }
+      _checkTime(watch, timeLimit);
+    }
+    return search.solution;
+  }
+
+  /// 웹의 compute는 같은 이벤트 루프를 쓴다. 짧게 탐색하고 프레임을 양보한다.
+  Future<List<PuzzleMove>?> solveCooperatively(
+    PuzzleState initial, {
+    required Duration timeLimit,
+  }) async {
+    final search = _PuzzleSearch(initial, maxStates, null);
+    final watch = Stopwatch()..start();
+    final slice = Stopwatch()..start();
+    while (!search.done) {
+      _checkTime(watch, timeLimit);
+      search.advance(32);
+      if (!search.done && slice.elapsedMicroseconds >= 4000) {
+        await Future<void>.delayed(Duration.zero);
+        slice.reset();
+      }
+    }
+    _checkTime(watch, timeLimit);
+    return search.solution;
+  }
+
+  static void _checkTime(Stopwatch watch, Duration limit) {
+    if (watch.elapsed >= limit) {
+      throw PuzzleSearchLimit('Solver time limit exceeded');
+    }
+  }
+}
+
+class PuzzleSearchLimit extends StateError {
+  PuzzleSearchLimit(super.message);
+}
+
+/// 같은 BFS를 동기 검증, isolate 힌트, 웹의 분할 탐색에 사용한다.
+class _PuzzleSearch {
+  _PuzzleSearch(PuzzleState initial, this.maxStates, this.mustUse)
+    : _keyOf = _StateKey(initial) {
+    if (initial.isComplete) {
+      solution = const [];
+    } else {
+      _queue.add(_SearchNode(initial, null, null));
+      _visited.add(_keyOf(initial));
+    }
+  }
+
+  final int maxStates;
+  final PuzzlePower? mustUse;
+  final _StateKey _keyOf;
+  final _queue = Queue<_SearchNode>();
+  final _visited = <Object>{};
+  List<PuzzleMove>? solution;
+  bool get done => solution != null || _queue.isEmpty;
+
+  void advance([int? maxNodes]) {
+    for (
+      var count = 0;
+      _queue.isNotEmpty && (maxNodes == null || count < maxNodes);
+      count++
+    ) {
+      final node = _queue.removeFirst();
+      for (final (move, next) in PuzzleSolver.successors(node.state)) {
+        if (!_visited.add(_keyOf(next))) continue;
+        if (_visited.length > maxStates) {
+          throw PuzzleSearchLimit('Solver state limit exceeded: $maxStates');
         }
         final child = _SearchNode(next, node, move);
         if (next.isComplete) {
           if (mustUse == null || !next.powers.contains(mustUse)) {
-            return child.path;
+            solution = child.path;
+            return;
           }
           continue;
         }
-        queue.add(child);
+        _queue.add(child);
       }
     }
-    return null;
   }
 }
 
@@ -758,6 +802,17 @@ class _StateKey {
   }
 
   Object call(PuzzleState state) {
+    final positions = _positionKey(state);
+    StringBuffer? extra;
+    for (final mechanic in state.level.mechanics.values) {
+      if (mechanic.stateKey(state) case final value?) {
+        (extra ??= StringBuffer(positions)).write('|${mechanic.type}:$value');
+      }
+    }
+    return extra?.toString() ?? positions;
+  }
+
+  Object _positionKey(PuzzleState state) {
     if (!_packable) {
       return '${state.blocks.map((block) => '${block.position.x},${block.position.y}').join(';')}'
           '|${state.echo?.x},${state.echo?.y}'

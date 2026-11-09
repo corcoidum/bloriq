@@ -469,6 +469,8 @@
   "starlightPass": "Pass",
   "starlightShort": "Not enough stardust",
   "starlightNoMove": "No path from here. Try undoing.",
+  "starlightSearchLimit": "Restart the board to try a Starlight hint from the start.",
+  "starlightCalculating": "Finding the next move",
   "starlightCapped": "Using the starlight path caps this clear at 2 stars",
   "minimumMovesChip": "Best {count}",
   "@minimumMovesChip": {"placeholders": {"count": {"type": "int"}}},

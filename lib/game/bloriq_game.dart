@@ -10,7 +10,29 @@ import '../design/star_art.dart';
 import 'block_art.dart';
 import 'board_geometry.dart';
 import 'board_badge.dart';
+import '../domain/mechanics/board_mechanic.dart';
+import '../domain/mechanics/echo_eraser.dart';
+import '../domain/mechanics/echo_gate.dart';
+import '../domain/mechanics/echo_hold.dart';
+import '../domain/mechanics/goal_only.dart';
+import '../domain/mechanics/one_way.dart';
 import '../domain/puzzle.dart';
+
+typedef _MechanicCanvas = ({
+  Canvas canvas,
+  Paint paint,
+  PuzzleState state,
+  PuzzleState? preview,
+  Offset Function(Position) center,
+  double cell,
+  double pulse,
+});
+typedef _MechanicPainter = void Function(
+  BloriqGame game,
+  _MechanicCanvas board,
+  BoardMechanic mechanic,
+  bool badges,
+);
 
 /// 드래그 중 표시할 가상 이동. 실제 게임 상태에는 적용하지 않는다.
 class DragPreview {
@@ -301,165 +323,17 @@ class BloriqGame extends FlameGame {
     final material = BoardMaterial(_colors);
     material.floor(canvas, layout);
 
-    // 기믹은 색과 모양을 함께 사용하고, 블록이 덮어도 아래 모서리 표시를 남긴다.
-    final mechanicTiles = <(Position, BoardMark, Offset)>[
-      for (final p in state.level.echoErasers)
-        (p, BoardMark.eraser, Offset.zero),
-      for (final p in state.level.echoHolds) (p, BoardMark.hold, Offset.zero),
-      for (final entry in state.level.oneWays.entries)
-        (
-          entry.key,
-          BoardMark.oneWay,
-          Offset(entry.value.x.toDouble(), entry.value.y.toDouble()),
-        ),
-      for (final p in state.level.goalOnlyTiles)
-        (p, BoardMark.goalOnly, Offset.zero),
-    ];
-    final breathe = _reduceMotion ? 0.0 : .5 + .5 * math.sin(_hintTime * 2.2);
-    for (final (position, mark, direction) in mechanicTiles) {
-      final kind = switch (mark) {
-        BoardMark.eraser => 'tile_dandelion',
-        BoardMark.hold => 'tile_amber',
-        BoardMark.goalOnly => 'tile_clover',
-        _ => 'tile_stream',
-      };
-      if (BlockArt.mechanic(
-        canvas,
-        kind,
-        center(position),
-        cell,
-        direction: direction,
-        pulse: breathe,
-      )) {
-        if (kind == 'tile_stream' && !_reduceMotion) {
-          _drawCurrent(canvas, center(position), direction, cell);
-        }
-        continue;
-      }
-      BoardBadge.draw(
-        canvas,
-        center(position),
-        cell * .38,
-        mark,
-        direction: direction,
-      );
-    }
-
-    // Matching cyan outlines connect the echo plate and its gate even while
-    // a block is covering the plate. The gate state comes from the domain.
-    final switchPosition = state.level.echoSwitch;
-    final gatePosition = state.level.echoGate;
+    final mechanicCanvas = (
+      canvas: canvas,
+      paint: paint,
+      state: state,
+      preview: previewState,
+      center: center,
+      cell: cell,
+      pulse: _reduceMotion ? 0.0 : .5 + .5 * math.sin(_hintTime * 2.2),
+    );
     _gateTarget = state.isGateOpen;
-    if (switchPosition != null && gatePosition != null) {
-      _drawVineLink(canvas, center(switchPosition), center(gatePosition), cell);
-    }
-    if (switchPosition != null &&
-        BlockArt.switchPlate(
-          canvas,
-          center(switchPosition),
-          cell,
-          _colors,
-          glow: _gateOpen,
-        )) {
-      // 수정 발판 그림이 있으면 아래의 코드 그림을 건너뛴다.
-    } else if (switchPosition != null) {
-      final switchCenter = center(switchPosition);
-      final plateRect = Rect.fromCenter(
-        center: switchCenter,
-        width: cell * .94,
-        height: cell * .94,
-      );
-      final plate = RRect.fromRectAndRadius(
-        plateRect,
-        Radius.circular(cell * .18),
-      );
-      canvas.drawRRect(
-        plate,
-        paint
-          ..color = _colors.cyan.withValues(alpha: .18)
-          ..style = PaintingStyle.fill,
-      );
-      canvas.drawRRect(
-        plate.deflate(cell * .015),
-        paint
-          ..color = _colors.cyan
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = math.max(2.0, cell * .025),
-      );
-      paint.style = PaintingStyle.fill;
-      BoardBadge.draw(canvas, switchCenter, cell * .38, BoardMark.crystal);
-    }
-
-    if (gatePosition != null &&
-        BlockArt.gate(
-          canvas,
-          center(gatePosition),
-          cell,
-          _colors,
-          open: _gateOpen,
-        )) {
-      // 덩굴 문 그림이 있으면 아래의 코드 그림을 건너뛴다.
-    } else if (gatePosition != null) {
-      final gateCenter = center(gatePosition);
-      final gateRect = Rect.fromCenter(
-        center: gateCenter,
-        width: cell * .88,
-        height: cell * .88,
-      );
-      final gate = RRect.fromRectAndRadius(
-        gateRect,
-        Radius.circular(cell * .14),
-      );
-      final gateColor = _colors.cyan;
-      canvas.drawRRect(
-        gate,
-        paint
-          ..color = gateColor.withValues(alpha: state.isGateOpen ? .10 : .18)
-          ..style = PaintingStyle.fill,
-      );
-      canvas.drawRRect(
-        gate,
-        paint
-          ..color = gateColor
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = math.max(2.5, cell * .035),
-      );
-      // Closed gates have visible bars. An open gate is an unobstructed frame.
-      if (!state.isGateOpen) {
-        paint
-          ..strokeWidth = math.max(2.0, cell * .035)
-          ..strokeCap = StrokeCap.round;
-        for (final offset in [-.19, 0.0, .19]) {
-          canvas.drawLine(
-            gateCenter + Offset(cell * offset, -cell * .29),
-            gateCenter + Offset(cell * offset, cell * .29),
-            paint,
-          );
-        }
-      }
-      paint.style = PaintingStyle.fill;
-    }
-    // 실제 문의 상태는 유지하고, 이동 후 바뀔 상태만 바깥 테두리에 표시한다.
-    final previewGateOpen = previewState?.isGateOpen;
-    final showGatePreview =
-        gatePosition != null &&
-        previewGateOpen != null &&
-        previewGateOpen != state.isGateOpen;
-    if (showGatePreview) {
-      final rect = Rect.fromCenter(
-        center: center(gatePosition),
-        width: cell * .98,
-        height: cell * .98,
-      );
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(rect, Radius.circular(cell * .18)),
-        paint
-          ..color = previewGateOpen ? _colors.cyan : _colors.error
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = math.max(3.0, cell * .045),
-      );
-      paint.style = PaintingStyle.fill;
-    }
+    _drawMechanics(mechanicCanvas, badges: false);
     for (final p in state.level.obstacles) {
       if (BlockArt.obstacle(canvas, center(p), cell, p.x * 7 + p.y * 3)) {
         continue;
@@ -608,31 +482,7 @@ class BloriqGame extends FlameGame {
       canvas.restore();
     }
     if (!_reduceMotion) _drawImpact(canvas, layout);
-    for (final (position, mark, direction) in mechanicTiles) {
-      BoardBadge.draw(
-        canvas,
-        center(position) + Offset(cell * .34, -cell * .34),
-        cell * .27,
-        mark,
-        direction: direction,
-      );
-    }
-    if (switchPosition != null) {
-      BoardBadge.draw(
-        canvas,
-        center(switchPosition) + Offset(-cell * .34, -cell * .34),
-        cell * .27,
-        BoardMark.crystal,
-      );
-    }
-    if (showGatePreview) {
-      BoardBadge.draw(
-        canvas,
-        center(gatePosition) + Offset(cell * .34, -cell * .34),
-        cell * .27,
-        previewGateOpen ? BoardMark.gateOpen : BoardMark.gateClosed,
-      );
-    }
+    _drawMechanics(mechanicCanvas, badges: true);
     if (state.isComplete && !isReplaying && !_reduceMotion) {
       _drawCelebration(canvas, exit, cell);
     }
@@ -694,6 +544,206 @@ class BloriqGame extends FlameGame {
   }
 
   /// 별빛 길 화살표: 블록에서 다음 칸까지 금빛 길과 도착 고리.
+  static final _mechanicPainters = <String, _MechanicPainter>{
+    EchoEraser.typeId: (game, board, mechanic, badges) =>
+        game._drawTileMechanic(board, mechanic, badges, 'tile_dandelion'),
+    EchoHold.typeId: (game, board, mechanic, badges) =>
+        game._drawTileMechanic(board, mechanic, badges, 'tile_amber'),
+    OneWay.typeId: (game, board, mechanic, badges) => game._drawTileMechanic(
+      board,
+      mechanic,
+      badges,
+      'tile_stream',
+      arrows: (mechanic as OneWay).arrows,
+    ),
+    GoalOnly.typeId: (game, board, mechanic, badges) =>
+        game._drawTileMechanic(board, mechanic, badges, 'tile_clover'),
+    EchoGate.typeId: (game, board, mechanic, badges) =>
+        game._drawGateMechanic(board, mechanic as EchoGate, badges),
+  };
+
+  /// 먼저 판석을 그리고, 블록 위에 남는 작은 배지는 나중에 그린다.
+  void _drawMechanics(_MechanicCanvas board, {required bool badges}) {
+    for (final mechanic in board.state.level.mechanics.values) {
+      _mechanicPainters[mechanic.type]?.call(this, board, mechanic, badges);
+    }
+  }
+
+  void _drawTileMechanic(
+    _MechanicCanvas board,
+    BoardMechanic mechanic,
+    bool badges,
+    String art, {
+    Map<Position, Position>? arrows,
+  }) {
+    final canvas = board.canvas;
+    final cell = board.cell;
+    for (final position in mechanic.cells) {
+      final arrow = arrows?[position];
+      final direction = arrow == null
+          ? Offset.zero
+          : Offset(arrow.x.toDouble(), arrow.y.toDouble());
+      final at = board.center(position);
+      if (badges) {
+        BoardBadge.draw(
+          canvas,
+          at + Offset(cell * .34, -cell * .34),
+          cell * .27,
+          mechanic.type,
+          direction: direction,
+        );
+      } else if (BlockArt.mechanic(
+        canvas,
+        art,
+        at,
+        cell,
+        direction: direction,
+        pulse: board.pulse,
+      )) {
+        if (arrows != null && !_reduceMotion) {
+          _drawCurrent(canvas, at, direction, cell);
+        }
+      } else {
+        BoardBadge.draw(
+          canvas,
+          at,
+          cell * .38,
+          mechanic.type,
+          direction: direction,
+        );
+      }
+    }
+  }
+
+  void _drawGateMechanic(
+    _MechanicCanvas board,
+    EchoGate mechanic,
+    bool badges,
+  ) {
+    final (:canvas, :paint, :state, :preview, :center, :cell, pulse: _) = board;
+    final switchPosition = mechanic.switchPosition;
+    final gatePosition = mechanic.gatePosition;
+    final previewGateOpen = preview?.isGateOpen;
+    final showGatePreview =
+        previewGateOpen != null && previewGateOpen != state.isGateOpen;
+    if (badges) {
+      BoardBadge.draw(
+        canvas,
+        center(switchPosition) + Offset(-cell * .34, -cell * .34),
+        cell * .27,
+        mechanic.type,
+      );
+      if (showGatePreview) {
+        BoardBadge.draw(
+          canvas,
+          center(gatePosition) + Offset(cell * .34, -cell * .34),
+          cell * .27,
+          mechanic.type,
+          gate: previewGateOpen ? GateBadge.open : GateBadge.closed,
+        );
+      }
+      return;
+    }
+
+    _drawVineLink(canvas, center(switchPosition), center(gatePosition), cell);
+    if (!BlockArt.switchPlate(
+      canvas,
+      center(switchPosition),
+      cell,
+      _colors,
+      glow: _gateOpen,
+    )) {
+      final switchCenter = center(switchPosition);
+      final plateRect = Rect.fromCenter(
+        center: switchCenter,
+        width: cell * .94,
+        height: cell * .94,
+      );
+      final plate = RRect.fromRectAndRadius(
+        plateRect,
+        Radius.circular(cell * .18),
+      );
+      canvas.drawRRect(
+        plate,
+        paint
+          ..color = _colors.cyan.withValues(alpha: .18)
+          ..style = PaintingStyle.fill,
+      );
+      canvas.drawRRect(
+        plate.deflate(cell * .015),
+        paint
+          ..color = _colors.cyan
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = math.max(2.0, cell * .025),
+      );
+      paint.style = PaintingStyle.fill;
+      BoardBadge.draw(canvas, switchCenter, cell * .38, mechanic.type);
+    }
+
+    if (!BlockArt.gate(
+      canvas,
+      center(gatePosition),
+      cell,
+      _colors,
+      open: _gateOpen,
+    )) {
+      final gateCenter = center(gatePosition);
+      final gateRect = Rect.fromCenter(
+        center: gateCenter,
+        width: cell * .88,
+        height: cell * .88,
+      );
+      final gate = RRect.fromRectAndRadius(
+        gateRect,
+        Radius.circular(cell * .14),
+      );
+      final gateColor = _colors.cyan;
+      canvas.drawRRect(
+        gate,
+        paint
+          ..color = gateColor.withValues(alpha: state.isGateOpen ? .10 : .18)
+          ..style = PaintingStyle.fill,
+      );
+      canvas.drawRRect(
+        gate,
+        paint
+          ..color = gateColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = math.max(2.5, cell * .035),
+      );
+      // Closed gates have visible bars. An open gate is an unobstructed frame.
+      if (!state.isGateOpen) {
+        paint
+          ..strokeWidth = math.max(2.0, cell * .035)
+          ..strokeCap = StrokeCap.round;
+        for (final offset in [-.19, 0.0, .19]) {
+          canvas.drawLine(
+            gateCenter + Offset(cell * offset, -cell * .29),
+            gateCenter + Offset(cell * offset, cell * .29),
+            paint,
+          );
+        }
+      }
+      paint.style = PaintingStyle.fill;
+    }
+    // 실제 문의 상태는 유지하고, 이동 후 바뀔 상태만 바깥 테두리에 표시한다.
+    if (showGatePreview) {
+      final rect = Rect.fromCenter(
+        center: center(gatePosition),
+        width: cell * .98,
+        height: cell * .98,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect, Radius.circular(cell * .18)),
+        paint
+          ..color = previewGateOpen ? _colors.cyan : _colors.error
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = math.max(3.0, cell * .045),
+      );
+      paint.style = PaintingStyle.fill;
+    }
+  }
+
   void _drawHint(Canvas canvas, Offset from, Offset to, double cell) {
     final pulse = _reduceMotion ? 1.0 : .6 + .4 * math.sin(_hintTime * 4);
     final direction = (to - from) / (to - from).distance;

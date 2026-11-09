@@ -557,10 +557,12 @@ class ProgressionRepository {
 
   /// 별빛 길을 결제한다. 별가루가 모자라면 null(변화 없음).
   /// 성공하면 이번 클리어는 [recordClear] 에 `usedStarlightPath: true` 로 넘긴다.
+  /// [onUsed]는 비용을 확정한 직후 저장을 기다리기 전에 실행된다.
   Future<StarlightPathQuote?> useStarlightPath({
     required bool freeUsedThisAttempt,
     String? companionId,
     String? companionFamily,
+    void Function(StarlightPathQuote)? onUsed,
   }) async {
     if (!_writable) return null;
     final quote = quoteStarlightPath(
@@ -570,6 +572,7 @@ class ProgressionRepository {
     );
     switch (quote.source) {
       case StarlightPathSource.free:
+        onUsed?.call(quote);
         return quote;
       case StarlightPathSource.charge:
         _charges--;
@@ -577,6 +580,7 @@ class ProgressionRepository {
         if (quote.cost > _stardust) return null;
         _stardust -= quote.cost;
     }
+    onUsed?.call(quote);
     await retrySave();
     return quote;
   }

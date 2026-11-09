@@ -1,20 +1,26 @@
 #!/usr/bin/env python3
 """독립 BFS로 스테이지의 규칙, 해결 가능성 및 최단 이동 수를 확인한다."""
+import argparse
 from collections import deque
 import json
 from pathlib import Path
+from textwrap import indent
 from typing import Any
+
+if __package__:
+    from .mechanics import Board, DIRECTIONS, MechanicMove, Position, State, parse_mechanics
+else:
+    from mechanics import Board, DIRECTIONS, MechanicMove, Position, State, parse_mechanics
 
 ROOT = Path(__file__).resolve().parents[1]
 LEVELS_FILE = ROOT / 'assets/levels/levels.json'
+COURSE2_BASELINE_FILE = ROOT / 'assets/levels/course2_baseline.json'
 SAGA_FILE = ROOT / 'assets/worlds/saga.json'
-Position = tuple[int, int]
 Move = tuple[str, Position, Position] | tuple[str, Position, Position, str]
 
 # 확장 세계 권능. lib/domain/puzzle.dart 의 PuzzlePower 순서·규칙과 같다.
 LEAP, SWAP, SEAL, WIND = 'moonflower_leap', 'light_swap', 'seal', 'wind'
 POWERS = (LEAP, SWAP, SEAL, WIND)
-DIRECTIONS = ((1, 0), (-1, 0), (0, 1), (0, -1))
 
 
 def validate_level(
@@ -30,15 +36,10 @@ def validate_level(
     assert type(width) is int and type(height) is int and width > 0 and height > 0
 
     def point(value: dict[str, int]) -> Position:
-        x, y = value['x'], value['y']
+        assert isinstance(value, dict), 'Invalid position'
+        x, y = value.get('x'), value.get('y')
         assert type(x) is int and type(y) is int and 0 <= x < width and 0 <= y < height
         return x, y
-
-    def adjacent(p: Position):
-        x, y = p
-        for q in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
-            if 0 <= q[0] < width and 0 <= q[1] < height:
-                yield q
 
     start, exit_point = point(level['startPosition']), point(level['exitPosition'])
     assert start != exit_point
@@ -51,156 +52,100 @@ def validate_level(
     assert len(set(blocks)) == len(blocks) and len(walls) == len(level['obstacles'])
     assert not (set(blocks) & walls)
     assert not ({start, exit_point} & (set(blocks) | walls))
-    rules = level['specialRules']
-    assert isinstance(rules, list)
-    erasers: set[Position] = set()
-    holds: set[Position] = set()
-    goal_only: set[Position] = set()
-    arrows: dict[Position, Position] = {}
-    switch = gate = None
-    occupied_tiles: set[Position] = set()
-    rule_types: set[str] = set()
-    for rule in rules:
-        kind = rule['type']
-        assert kind not in rule_types
-        rule_types.add(kind)
-        if kind == 'echoGate':
-            switch, gate = point(rule['switch']), point(rule['gate'])
-            assert switch != gate and switch != exit_point and gate != exit_point
-            assert gate != start and gate not in blocks
-            places = [switch, gate]
-        elif kind == 'oneWay':
-            places = []
-            for tile in rule['tiles']:
-                loc = point(tile)
-                direction = (tile['dx'], tile['dy'])
-                assert direction in ((1, 0), (-1, 0), (0, 1), (0, -1))
-                assert loc not in arrows
-                arrows[loc] = direction
-                places.append(loc)
-        elif kind in ('echoEraser', 'echoHold', 'goalOnly'):
-            places = [point(tile) for tile in rule['positions']]
-            assert len(places) == len(set(places))
-            target = {'echoEraser': erasers, 'echoHold': holds, 'goalOnly': goal_only}[kind]
-            target.update(places)
-        else:
-            raise AssertionError(f'Unknown rule: {kind}')
-        assert places and not (set(places) & (walls | occupied_tiles))
-        occupied_tiles.update(places)
-
+    mechanics = parse_mechanics(level, point, walls=walls, disabled_rule=disabled_rule,
+                                gate_locked=gate_locked)
+    board = Board(width, height, exit_point, walls, ('goal', *ids), mechanics)
     assert all(power in POWERS for power in powers)
 
-    def inside(p: Position) -> bool:
-        return 0 <= p[0] < width and 0 <= p[1] < height
-
-    def gate_open(echo) -> bool:
-        return not gate_locked and switch is not None and echo == switch
-
-    def can_occupy(index: int, dest: Position, positions, echo) -> bool:
-        if not inside(dest) or dest in walls or dest == echo or dest in positions:
-            return False
-        if index != 0 and dest == exit_point:
-            return False
-        if disabled_rule != 'goalOnly' and index != 0 and dest in goal_only:
-            return False
-        if dest == gate and not gate_open(echo):
-            return False
-        return True
-
-    def arrow_at(p: Position):
-        return None if disabled_rule == 'oneWay' else arrows.get(p)
-
-    def echo_after(source: Position, echo):
-        # 지우기·유지는 출발 칸을 확인하고 유효한 이동 뒤에만 적용한다.
-        if not use_echo or (disabled_rule != 'echoEraser' and source in erasers):
-            return None
-        if disabled_rule != 'echoHold' and source in holds:
-            return echo
-        return source
-
-    def successors(positions, echo, left):
-        """(block_index, dest, next_echo, power) 를 Dart solver 와 같은 순서로 낸다."""
-        for index, source in enumerate(positions):
+    def successors(state: State):
+        """기믹 변환 전의 일반/권능 착지를 Dart solver와 같은 순서로 낸다."""
+        for index, source in enumerate(state.positions):
             for d in DIRECTIONS:
                 dest = (source[0] + d[0], source[1] + d[1])
-                if not can_occupy(index, dest, positions, echo):
-                    continue
-                arrow = arrow_at(source)
-                if arrow is not None and arrow != d:
-                    continue
-                yield index, dest, echo_after(source, echo), None
+                if state.canOccupy(index, dest) and state.canLeave(source, d):
+                    yield MechanicMove(index, dest, None)
         for power in POWERS:
-            if power not in left:
+            if power not in state.powers:
                 continue
-            for index, source in enumerate(positions):
-                arrow = arrow_at(source)
+            for index, source in enumerate(state.positions):
                 if power == SWAP:
                     # 블록이 잔상 칸으로 옮겨 가고 떠난 칸이 새 잔상이 된다. 방향·화살표는 보지 않는다.
-                    if echo is None or echo == gate:
-                        continue
-                    others = positions[:index] + positions[index + 1:]
-                    if can_occupy(index, echo, others, None):
-                        yield index, echo, source, power
+                    if state.echo is not None and state._replace(echo=None).canOccupy(index, state.echo):
+                        yield MechanicMove(index, state.echo, power)
                     continue
                 for d in DIRECTIONS:
                     step = (source[0] + d[0], source[1] + d[1])
                     if power == LEAP:
-                        if arrow is not None and arrow != d:
-                            continue
                         land = (step[0] + d[0], step[1] + d[1])
-                        if step in walls and can_occupy(index, land, positions, echo):
-                            yield index, land, echo_after(source, echo), power
+                        if step in walls and state.canLeave(source, d) and state.canOccupy(index, land):
+                            yield MechanicMove(index, land, power)
                     elif power == SEAL:
-                        if echo is None or (arrow is not None and arrow != d):
-                            continue
-                        if can_occupy(index, step, positions, echo):
-                            yield index, step, echo, power
+                        if state.echo is not None and state.canLeave(source, d) and state.canOccupy(index, step):
+                            yield MechanicMove(index, step, power)
                     else:  # WIND: 막히거나 화살표가 다른 칸, 목표는 출구에서 멈춘다.
                         current = source
-                        while True:
-                            current_arrow = arrow_at(current)
-                            if current_arrow is not None and current_arrow != d:
-                                break
+                        while state.canLeave(current, d):
                             nxt = (current[0] + d[0], current[1] + d[1])
-                            if not can_occupy(index, nxt, positions, echo):
+                            if not state.canOccupy(index, nxt):
                                 break
                             current = nxt
                             if index == 0 and current == exit_point:
                                 break
                         if current != source:
-                            yield index, current, echo_after(source, echo), power
+                            yield MechanicMove(index, current, power)
 
-    initial = ((start, *blocks), None, frozenset(powers))
-    if start == exit_point:
-        return []
-    parents: dict = {initial: None}
-    pending = deque([initial])
+    def apply(state: State, move: MechanicMove) -> State:
+        index, dest, power = move
+        source = state.positions[index]
+        positions = state.positions[:index] + (dest,) + state.positions[index + 1:]
+        # 일반/권능 착지 → 기믹 배치 변환 → 잔상. 봉인·교대의 잔상 규칙이 우선한다.
+        for mechanic in mechanics:
+            positions = mechanic.transformMove(state, move, positions)
+        echo = source
+        for mechanic in mechanics:
+            echo = mechanic.nextEcho(state, move, positions, echo)
+        if power == SEAL:
+            echo = state.echo
+        elif power == SWAP:
+            echo = source
+        return State(positions, echo if use_echo else None,
+                     state.powers - {power} if power else state.powers, state.moves + 1, board)
+
+    def state_key(state: State) -> tuple:
+        key = (state.positions, state.echo, state.powers)
+        extra = tuple((mechanic.type, value) for mechanic in mechanics
+                      if (value := mechanic.stateKey(state)) is not None)
+        return (*key, extra) if extra else key
+
+    initial = State((start, *blocks), None, frozenset(powers), 0, board)
+    initial_key = state_key(initial)
+    parents: dict[tuple, tuple[tuple, Move] | None] = {initial_key: None}
+    pending = deque([(initial, initial_key)])
     while pending:
-        state = pending.popleft()
-        positions, echo, left = state
-        for index, dest, next_echo, power in successors(positions, echo, left):
-            updated = list(positions)
-            updated[index] = dest
-            next_state = (tuple(updated), next_echo, left - {power} if power else left)
-            if next_state in parents:
+        state, key = pending.popleft()
+        for candidate in successors(state):
+            next_state = apply(state, candidate)
+            next_key = state_key(next_state)
+            if next_key in parents:
                 continue
-            block_id = 'goal' if index == 0 else ids[index - 1]
-            move = (block_id, positions[index], dest) if power is None else (block_id, positions[index], dest, power)
-            parents[next_state] = (state, move)
+            index, dest, power = candidate
+            push = (board.block_ids[index], state.positions[index], dest)
+            move = push if power is None else (*push, power)
+            parents[next_key] = (key, move)
             if len(parents) > max_states:
                 raise RuntimeError(f"Level {level['id']} search budget exceeded: {max_states}")
-            if index == 0 and dest == exit_point:
-                if must_use is not None and must_use in next_state[2]:
+            if next_state.positions[0] == exit_point:
+                if must_use is not None and must_use in next_state.powers:
                     continue  # 권능을 쓰지 않은 도착은 이 탐색에서 정답이 아니다.
                 if stats is not None:
                     stats['visited'] = len(parents)
                 path = []
-                cursor = next_state
-                while parents[cursor] is not None:
-                    cursor, step_move = parents[cursor]
+                cursor = next_key
+                while (link := parents[cursor]) is not None:
+                    cursor, step_move = link
                     path.append(step_move)
                 return path[::-1]
-            pending.append(next_state)
+            pending.append((next_state, next_key))
     raise ValueError(f"Level {level['id']} has no solution")
 
 
@@ -245,7 +190,32 @@ def expansion_worlds() -> list[tuple[int, Path]]:
             if world['status'] == 'playable' and world['number'] >= 2]
 
 
-def check_world(levels: list[dict], world: int) -> None:
+def record_solution(level: dict, moves: list[Move], *, write: bool) -> None:
+    solution = []
+    for block_id, _, (x, y), *power in moves:
+        step = {'blockId': block_id, 'target': {'x': x, 'y': y}}
+        if power:
+            step['power'] = power[0]
+        solution.append(step)
+    if write:
+        level['solution'] = solution
+    elif 'solution' in level:
+        assert level['solution'] == solution, (
+            f"Level {level['id']}: run --write-solutions to refresh the recorded path")
+
+
+def write_levels(path: Path, levels: list[dict]) -> None:
+    entries = []
+    for level in levels:
+        board = {key: value for key, value in level.items() if key != 'solution'}
+        body = json.dumps(board, ensure_ascii=False, indent=2).removesuffix('\n}')
+        moves = ',\n'.join('    ' + json.dumps(move, ensure_ascii=False)
+                           for move in level['solution'])
+        entries.append(indent(body + ',\n  "solution": [\n' + moves + '\n  ]\n}', '  '))
+    path.write_text('[\n' + ',\n'.join(entries) + '\n]\n', encoding='utf-8')
+
+
+def check_world(levels: list[dict], world: int, *, write_solutions: bool = False) -> None:
     first = first_level_id(world)
     assert len(levels) == 25, f'World {world} needs 25 stages'
     assert [level['id'] for level in levels] == list(range(first, first + len(levels)))
@@ -256,6 +226,7 @@ def check_world(levels: list[dict], world: int) -> None:
         for key in ('minimumMoves', 'bareHandedMoves', 'requiredPowers'):
             assert level.get(key, [] if key == 'requiredPowers' else None) == profile[key], (
                 f"Level {level['id']}: {key} expected {level.get(key)}, got {profile[key]}")
+        record_solution(level, profile['solution'], write=write_solutions)
         powers = available_powers(level)
         featured = level.get('featuredPower')
         assert featured is None or featured in powers
@@ -282,6 +253,10 @@ def check_world(levels: list[dict], world: int) -> None:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--write-solutions', action='store_true',
+                        help='공개 캠페인 레벨 JSON에 검증한 최단 풀이를 기록한다')
+    args = parser.parse_args()
     levels = json.loads(LEVELS_FILE.read_text(encoding='utf-8'))
     assert [level['id'] for level in levels] == list(range(1, len(levels) + 1))
     for level in levels:
@@ -289,6 +264,7 @@ def main() -> None:
         assert len(moves) == level['minimumMoves'], (
             f"Level {level['id']}: expected {level['minimumMoves']}, got {len(moves)}"
         )
+        record_solution(level, moves, write=args.write_solutions)
         # 각 기믹의 실질적 영향: 비활성화 시 최단 해가 달라지거나 해가 없어야 한다.
         for rule in level['specialRules']:
             kind = rule['type']
@@ -300,8 +276,25 @@ def main() -> None:
         types = ', '.join(rule['type'] for rule in level['specialRules']) or 'basic'
         print(f"Level {level['id']}: minimum={len(moves)}, {types}")
     print(f'{len(levels)}/{len(levels)} levels valid and solvable; recorded minima match BFS.')
+    verified = {LEVELS_FILE: levels}
     for world, path in expansion_worlds():
-        check_world(json.loads(path.read_text(encoding='utf-8')), world)
+        world_levels = json.loads(path.read_text(encoding='utf-8'))
+        check_world(world_levels, world, write_solutions=args.write_solutions)
+        verified[path] = world_levels
+
+    # 공개판과 같은 JSON 스키마를 쓰는 보관본도 해당 revision의 해를 기록한다.
+    archived = json.loads(COURSE2_BASELINE_FILE.read_text(encoding='utf-8'))
+    for level in archived:
+        moves = validate_level(level)
+        assert len(moves) == level['minimumMoves'], f"Archived level {level['id']}: minimum mismatch"
+        record_solution(level, moves, write=args.write_solutions)
+    verified[COURSE2_BASELINE_FILE] = archived
+    print(f'{len(archived)} archived levels valid.')
+
+    if args.write_solutions:
+        for path, verified_levels in verified.items():
+            write_levels(path, verified_levels)
+        print(f'Wrote {sum(map(len, verified.values()))} solutions to {len(verified)} level files.')
 
 
 if __name__ == '__main__':

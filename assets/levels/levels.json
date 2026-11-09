@@ -15,7 +15,11 @@
     "obstacles": [],
     "specialRules": [],
     "minimumMoves": 2,
-    "difficulty": "beginner"
+    "difficulty": "beginner",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}}
+    ]
   },
   {
     "id": 2,
@@ -49,7 +53,13 @@
     "specialRules": [],
     "minimumMoves": 4,
     "difficulty": "beginner",
-    "revision": 2
+    "revision": 2,
+    "solution": [
+      {"blockId": "b1", "target": {"x": 1, "y": 2}},
+      {"blockId": "b1", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}}
+    ]
   },
   {
     "id": 3,
@@ -92,7 +102,13 @@
     "specialRules": [],
     "minimumMoves": 4,
     "difficulty": "beginner",
-    "revision": 2
+    "revision": 2,
+    "solution": [
+      {"blockId": "b1", "target": {"x": 0, "y": 0}},
+      {"blockId": "b1", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}}
+    ]
   },
   {
     "id": 4,
@@ -127,7 +143,14 @@
     "specialRules": [],
     "minimumMoves": 5,
     "difficulty": "beginner",
-    "revision": 2
+    "revision": 2,
+    "solution": [
+      {"blockId": "b2", "target": {"x": 1, "y": 1}},
+      {"blockId": "b2", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}}
+    ]
   },
   {
     "id": 5,
@@ -170,7 +193,15 @@
     "specialRules": [],
     "minimumMoves": 6,
     "difficulty": "beginner",
-    "revision": 2
+    "revision": 2,
+    "solution": [
+      {"blockId": "b1", "target": {"x": 0, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "b2", "target": {"x": 0, "y": 2}},
+      {"blockId": "b2", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}}
+    ]
   },
   {
     "id": 6,
@@ -215,7 +246,15 @@
       }
     ],
     "minimumMoves": 6,
-    "difficulty": "beginner"
+    "difficulty": "beginner",
+    "solution": [
+      {"blockId": "b1", "target": {"x": 1, "y": 0}},
+      {"blockId": "b1", "target": {"x": 0, "y": 0}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}}
+    ]
   },
   {
     "id": 7,
@@ -273,7 +312,16 @@
       }
     ],
     "minimumMoves": 7,
-    "difficulty": "intermediate"
+    "difficulty": "intermediate",
+    "solution": [
+      {"blockId": "b1", "target": {"x": 2, "y": 1}},
+      {"blockId": "b1", "target": {"x": 1, "y": 1}},
+      {"blockId": "b1", "target": {"x": 1, "y": 2}},
+      {"blockId": "b1", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}}
+    ]
   },
   {
     "id": 8,
@@ -338,7 +386,16 @@
       }
     ],
     "minimumMoves": 7,
-    "difficulty": "intermediate"
+    "difficulty": "intermediate",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "b1", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}}
+    ]
   },
   {
     "id": 9,
@@ -427,7 +484,16 @@
       }
     ],
     "minimumMoves": 7,
-    "difficulty": "intermediate"
+    "difficulty": "intermediate",
+    "solution": [
+      {"blockId": "b2", "target": {"x": 2, "y": 0}},
+      {"blockId": "b3", "target": {"x": 1, "y": 0}},
+      {"blockId": "b1", "target": {"x": 1, "y": 1}},
+      {"blockId": "b2", "target": {"x": 3, "y": 0}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 0}}
+    ]
   },
   {
     "id": 10,
@@ -509,7 +575,16 @@
       }
     ],
     "minimumMoves": 7,
-    "difficulty": "intermediate"
+    "difficulty": "intermediate",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "b2", "target": {"x": 2, "y": 2}},
+      {"blockId": "b2", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}}
+    ]
   },
   {
     "id": 11,
@@ -589,7 +664,16 @@
       }
     ],
     "minimumMoves": 7,
-    "difficulty": "intermediate"
+    "difficulty": "intermediate",
+    "solution": [
+      {"blockId": "b2", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}}
+    ]
   },
   {
     "id": 12,
@@ -653,7 +737,17 @@
       }
     ],
     "minimumMoves": 8,
-    "difficulty": "intermediate"
+    "difficulty": "intermediate",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 1, "y": 3}},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}},
+      {"blockId": "b3", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}}
+    ]
   },
   {
     "id": 13,
@@ -738,7 +832,17 @@
       }
     ],
     "minimumMoves": 8,
-    "difficulty": "intermediate"
+    "difficulty": "intermediate",
+    "solution": [
+      {"blockId": "b1", "target": {"x": 3, "y": 0}},
+      {"blockId": "b3", "target": {"x": 1, "y": 0}},
+      {"blockId": "b3", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}}
+    ]
   },
   {
     "id": 14,
@@ -820,7 +924,17 @@
       }
     ],
     "minimumMoves": 8,
-    "difficulty": "intermediate"
+    "difficulty": "intermediate",
+    "solution": [
+      {"blockId": "b2", "target": {"x": 1, "y": 0}},
+      {"blockId": "b2", "target": {"x": 2, "y": 0}},
+      {"blockId": "b2", "target": {"x": 2, "y": 1}},
+      {"blockId": "b2", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "b1", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}}
+    ]
   },
   {
     "id": 15,
@@ -895,7 +1009,18 @@
       }
     ],
     "minimumMoves": 9,
-    "difficulty": "intermediate"
+    "difficulty": "intermediate",
+    "solution": [
+      {"blockId": "b2", "target": {"x": 1, "y": 2}},
+      {"blockId": "b2", "target": {"x": 2, "y": 2}},
+      {"blockId": "b2", "target": {"x": 3, "y": 2}},
+      {"blockId": "b2", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}}
+    ]
   },
   {
     "id": 16,
@@ -977,7 +1102,19 @@
       }
     ],
     "minimumMoves": 10,
-    "difficulty": "challenge"
+    "difficulty": "challenge",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 1, "y": 0}},
+      {"blockId": "b1", "target": {"x": 0, "y": 0}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "b3", "target": {"x": 0, "y": 3}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "b2", "target": {"x": 1, "y": 1}},
+      {"blockId": "b1", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}}
+    ]
   },
   {
     "id": 17,
@@ -1032,7 +1169,19 @@
       }
     ],
     "minimumMoves": 10,
-    "difficulty": "challenge"
+    "difficulty": "challenge",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 2, "y": 0}},
+      {"blockId": "b2", "target": {"x": 1, "y": 2}},
+      {"blockId": "b2", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "b2", "target": {"x": 1, "y": 0}},
+      {"blockId": "b2", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "b2", "target": {"x": 3, "y": 0}},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 0, "y": 0}}
+    ]
   },
   {
     "id": 18,
@@ -1109,7 +1258,19 @@
       }
     ],
     "minimumMoves": 10,
-    "difficulty": "challenge"
+    "difficulty": "challenge",
+    "solution": [
+      {"blockId": "b3", "target": {"x": 0, "y": 0}},
+      {"blockId": "b2", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "b3", "target": {"x": 0, "y": 1}},
+      {"blockId": "b2", "target": {"x": 1, "y": 1}},
+      {"blockId": "b1", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 0}}
+    ]
   },
   {
     "id": 19,
@@ -1191,7 +1352,19 @@
       }
     ],
     "minimumMoves": 10,
-    "difficulty": "challenge"
+    "difficulty": "challenge",
+    "solution": [
+      {"blockId": "b2", "target": {"x": 3, "y": 1}},
+      {"blockId": "b2", "target": {"x": 3, "y": 2}},
+      {"blockId": "b2", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "b2", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}},
+      {"blockId": "b1", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}}
+    ]
   },
   {
     "id": 20,
@@ -1271,7 +1444,21 @@
       }
     ],
     "minimumMoves": 12,
-    "difficulty": "challenge"
+    "difficulty": "challenge",
+    "solution": [
+      {"blockId": "b3", "target": {"x": 2, "y": 1}},
+      {"blockId": "b3", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "b1", "target": {"x": 3, "y": 2}},
+      {"blockId": "b3", "target": {"x": 2, "y": 1}},
+      {"blockId": "b3", "target": {"x": 2, "y": 0}},
+      {"blockId": "b1", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}}
+    ]
   },
   {
     "id": 21,
@@ -1339,7 +1526,21 @@
       }
     ],
     "minimumMoves": 12,
-    "difficulty": "challenge"
+    "difficulty": "challenge",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "b1", "target": {"x": 3, "y": 1}},
+      {"blockId": "b1", "target": {"x": 3, "y": 2}},
+      {"blockId": "b1", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "b1", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 0}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}}
+    ]
   },
   {
     "id": 22,
@@ -1409,7 +1610,22 @@
       }
     ],
     "minimumMoves": 13,
-    "difficulty": "challenge"
+    "difficulty": "challenge",
+    "solution": [
+      {"blockId": "b2", "target": {"x": 3, "y": 1}},
+      {"blockId": "b1", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "b1", "target": {"x": 2, "y": 0}},
+      {"blockId": "b2", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "b3", "target": {"x": 3, "y": 1}},
+      {"blockId": "b1", "target": {"x": 3, "y": 0}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 0, "y": 0}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}}
+    ]
   },
   {
     "id": 23,
@@ -1482,7 +1698,22 @@
       }
     ],
     "minimumMoves": 13,
-    "difficulty": "challenge"
+    "difficulty": "challenge",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 1, "y": 3}},
+      {"blockId": "b1", "target": {"x": 3, "y": 1}},
+      {"blockId": "b2", "target": {"x": 2, "y": 2}},
+      {"blockId": "b2", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "b2", "target": {"x": 2, "y": 2}},
+      {"blockId": "b1", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 0}}
+    ]
   },
   {
     "id": 24,
@@ -1562,7 +1793,23 @@
       }
     ],
     "minimumMoves": 14,
-    "difficulty": "challenge"
+    "difficulty": "challenge",
+    "solution": [
+      {"blockId": "b2", "target": {"x": 0, "y": 2}},
+      {"blockId": "b2", "target": {"x": 0, "y": 1}},
+      {"blockId": "b1", "target": {"x": 2, "y": 2}},
+      {"blockId": "b2", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 0}},
+      {"blockId": "b2", "target": {"x": 0, "y": 1}},
+      {"blockId": "b2", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}}
+    ]
   },
   {
     "id": 25,
@@ -1633,6 +1880,24 @@
       }
     ],
     "minimumMoves": 16,
-    "difficulty": "challenge"
+    "difficulty": "challenge",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 0, "y": 0}},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}},
+      {"blockId": "b2", "target": {"x": 0, "y": 1}},
+      {"blockId": "b1", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "b2", "target": {"x": 0, "y": 0}},
+      {"blockId": "b2", "target": {"x": 1, "y": 0}},
+      {"blockId": "b1", "target": {"x": 0, "y": 1}},
+      {"blockId": "b1", "target": {"x": 0, "y": 0}},
+      {"blockId": "b2", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}}
+    ]
   }
 ]

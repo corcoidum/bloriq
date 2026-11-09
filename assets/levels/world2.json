@@ -53,7 +53,16 @@
     "featuredPower": "moonflower_leap",
     "difficulty": "world2-easy",
     "learningIntent": "바위를 뛰어넘으면 돌아가는 길이 짧아진다",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b2", "target": {"x": 3, "y": 1}},
+      {"blockId": "b2", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 0}},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}, "power": "moonflower_leap"},
+      {"blockId": "goal", "target": {"x": 0, "y": 0}}
+    ]
   },
   {
     "id": 102,
@@ -123,7 +132,19 @@
     "featuredPower": "moonflower_leap",
     "difficulty": "world2-easy",
     "learningIntent": "Hold 와 도약 중 무엇이 먼저인지",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b2", "target": {"x": 3, "y": 1}},
+      {"blockId": "b2", "target": {"x": 3, "y": 0}},
+      {"blockId": "b2", "target": {"x": 1, "y": 0}, "power": "moonflower_leap"},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}}
+    ]
   },
   {
     "id": 103,
@@ -193,7 +214,20 @@
     "featuredPower": "moonflower_leap",
     "difficulty": "world2-easy",
     "learningIntent": "전용 칸 너머로 착지하기",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b1", "target": {"x": 4, "y": 0}},
+      {"blockId": "b1", "target": {"x": 4, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 0}},
+      {"blockId": "goal", "target": {"x": 4, "y": 0}},
+      {"blockId": "b1", "target": {"x": 4, "y": 2}},
+      {"blockId": "b1", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 4, "y": 1}},
+      {"blockId": "goal", "target": {"x": 4, "y": 2}},
+      {"blockId": "goal", "target": {"x": 4, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}, "power": "moonflower_leap"}
+    ]
   },
   {
     "id": 104,
@@ -265,7 +299,21 @@
     "featuredPower": "moonflower_leap",
     "difficulty": "world2-easy",
     "learningIntent": "도약한 자리도 잔상이 된다",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 4, "y": 2}},
+      {"blockId": "goal", "target": {"x": 4, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "b1", "target": {"x": 4, "y": 3}},
+      {"blockId": "b1", "target": {"x": 4, "y": 2}},
+      {"blockId": "b1", "target": {"x": 4, "y": 1}},
+      {"blockId": "b1", "target": {"x": 4, "y": 0}},
+      {"blockId": "goal", "target": {"x": 4, "y": 1}},
+      {"blockId": "goal", "target": {"x": 4, "y": 2}},
+      {"blockId": "goal", "target": {"x": 4, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}, "power": "moonflower_leap"}
+    ]
   },
   {
     "id": 105,
@@ -335,7 +383,21 @@
     "featuredPower": "moonflower_leap",
     "difficulty": "world2-easy",
     "learningIntent": "수호 정령: 도약 없이는 닿지 않는 섬",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b1", "target": {"x": 3, "y": 2}},
+      {"blockId": "b1", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}},
+      {"blockId": "b1", "target": {"x": 4, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 0}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 0, "y": 0}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}, "power": "moonflower_leap"}
+    ]
   },
   {
     "id": 106,
@@ -387,7 +449,17 @@
     "featuredPower": "light_swap",
     "difficulty": "world2-medium",
     "learningIntent": "잔상 자리로 블록을 불러오기",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b1", "target": {"x": 2, "y": 3}},
+      {"blockId": "b1", "target": {"x": 2, "y": 2}},
+      {"blockId": "b1", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}, "power": "light_swap"},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 0, "y": 0}}
+    ]
   },
   {
     "id": 107,
@@ -457,7 +529,20 @@
     "featuredPower": "light_swap",
     "difficulty": "world2-medium",
     "learningIntent": "Hold 로 남긴 잔상과 교대",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b2", "target": {"x": 3, "y": 0}},
+      {"blockId": "b2", "target": {"x": 4, "y": 0}},
+      {"blockId": "b2", "target": {"x": 4, "y": 1}},
+      {"blockId": "b2", "target": {"x": 4, "y": 2}},
+      {"blockId": "b2", "target": {"x": 3, "y": 2}},
+      {"blockId": "b2", "target": {"x": 4, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}, "power": "light_swap"},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}}
+    ]
   },
   {
     "id": 108,
@@ -533,7 +618,22 @@
     "featuredPower": "light_swap",
     "difficulty": "world2-medium",
     "learningIntent": "리크만 갈 수 있는 길에서 잔상과 바꾸기",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 0, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}},
+      {"blockId": "b2", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}},
+      {"blockId": "b1", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 0}, "power": "light_swap"},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 4, "y": 2}},
+      {"blockId": "goal", "target": {"x": 4, "y": 3}}
+    ]
   },
   {
     "id": 109,
@@ -607,7 +707,22 @@
     "featuredPower": "light_swap",
     "difficulty": "world2-medium",
     "learningIntent": "지우개로 잔상을 고르고 교대",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b1", "target": {"x": 4, "y": 1}},
+      {"blockId": "b1", "target": {"x": 4, "y": 2}},
+      {"blockId": "goal", "target": {"x": 4, "y": 0}},
+      {"blockId": "b1", "target": {"x": 4, "y": 1}},
+      {"blockId": "goal", "target": {"x": 4, "y": 2}, "power": "light_swap"},
+      {"blockId": "goal", "target": {"x": 4, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 0}}
+    ]
   },
   {
     "id": 110,
@@ -685,7 +800,24 @@
     "featuredPower": "light_swap",
     "difficulty": "world2-medium",
     "learningIntent": "수호 정령: 문 앞 잔상과 자리를 바꾼다",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b2", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 4, "y": 3}, "power": "light_swap"},
+      {"blockId": "b2", "target": {"x": 3, "y": 2}},
+      {"blockId": "b1", "target": {"x": 0, "y": 4}},
+      {"blockId": "b2", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 4, "y": 2}},
+      {"blockId": "goal", "target": {"x": 4, "y": 1}},
+      {"blockId": "goal", "target": {"x": 4, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 0}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 0, "y": 0}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}}
+    ]
   },
   {
     "id": 111,
@@ -749,7 +881,19 @@
     "featuredPower": "seal",
     "difficulty": "world2-hard",
     "learningIntent": "봉인으로 문을 한 턴 더 열어 두기",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b1", "target": {"x": 1, "y": 1}},
+      {"blockId": "b1", "target": {"x": 0, "y": 1}},
+      {"blockId": "b1", "target": {"x": 0, "y": 2}, "power": "seal"},
+      {"blockId": "b1", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 0, "y": 0}}
+    ]
   },
   {
     "id": 112,
@@ -823,7 +967,24 @@
     "featuredPower": "seal",
     "difficulty": "world2-hard",
     "learningIntent": "두 번 지나가야 하는 문",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b2", "target": {"x": 1, "y": 2}},
+      {"blockId": "b2", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}},
+      {"blockId": "b2", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}},
+      {"blockId": "b1", "target": {"x": 2, "y": 3}},
+      {"blockId": "b2", "target": {"x": 0, "y": 2}},
+      {"blockId": "b1", "target": {"x": 1, "y": 3}},
+      {"blockId": "b1", "target": {"x": 1, "y": 2}, "power": "seal"},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 4, "y": 3}},
+      {"blockId": "goal", "target": {"x": 4, "y": 2}},
+      {"blockId": "goal", "target": {"x": 4, "y": 1}}
+    ]
   },
   {
     "id": 113,
@@ -904,7 +1065,25 @@
     "featuredPower": "seal",
     "difficulty": "world2-hard",
     "learningIntent": "봉인과 전용 칸의 순서",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 0, "y": 3}},
+      {"blockId": "b2", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "b1", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}, "power": "seal"},
+      {"blockId": "b1", "target": {"x": 2, "y": 2}},
+      {"blockId": "b1", "target": {"x": 1, "y": 2}},
+      {"blockId": "b1", "target": {"x": 0, "y": 2}},
+      {"blockId": "b1", "target": {"x": 0, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "b1", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 4, "y": 2}},
+      {"blockId": "goal", "target": {"x": 4, "y": 3}}
+    ]
   },
   {
     "id": 114,
@@ -985,7 +1164,22 @@
     "featuredPower": "seal",
     "difficulty": "world2-hard",
     "learningIntent": "지우개를 피해 잔상 붙잡기",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b1", "target": {"x": 3, "y": 3}},
+      {"blockId": "b1", "target": {"x": 3, "y": 2}},
+      {"blockId": "b1", "target": {"x": 3, "y": 1}},
+      {"blockId": "b1", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}, "power": "seal"},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 0}}
+    ]
   },
   {
     "id": 115,
@@ -1068,7 +1262,26 @@
     "featuredPower": "seal",
     "difficulty": "world2-hard",
     "learningIntent": "수호 정령: Hold 와 봉인의 이중 잠금",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b2", "target": {"x": 4, "y": 1}},
+      {"blockId": "b2", "target": {"x": 4, "y": 0}},
+      {"blockId": "b2", "target": {"x": 3, "y": 0}},
+      {"blockId": "b2", "target": {"x": 4, "y": 0}},
+      {"blockId": "b2", "target": {"x": 4, "y": 1}},
+      {"blockId": "b2", "target": {"x": 4, "y": 2}},
+      {"blockId": "b2", "target": {"x": 4, "y": 3}, "power": "seal"},
+      {"blockId": "b2", "target": {"x": 4, "y": 2}},
+      {"blockId": "b1", "target": {"x": 1, "y": 2}},
+      {"blockId": "b1", "target": {"x": 2, "y": 2}},
+      {"blockId": "b2", "target": {"x": 4, "y": 3}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "b2", "target": {"x": 4, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}}
+    ]
   },
   {
     "id": 116,
@@ -1124,7 +1337,20 @@
     "featuredPower": "wind",
     "difficulty": "world2-hard",
     "learningIntent": "바람으로 긴 복도를 한 번에",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 0, "y": 3}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "b1", "target": {"x": 1, "y": 0}},
+      {"blockId": "b1", "target": {"x": 4, "y": 0}, "power": "wind"},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}}
+    ]
   },
   {
     "id": 117,
@@ -1196,7 +1422,22 @@
     "featuredPower": "wind",
     "difficulty": "world2-hard",
     "learningIntent": "화살표 칸에서 멈추는 바람",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 1, "y": 0}},
+      {"blockId": "b1", "target": {"x": 2, "y": 4}},
+      {"blockId": "b2", "target": {"x": 4, "y": 2}},
+      {"blockId": "b2", "target": {"x": 3, "y": 2}},
+      {"blockId": "b2", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 4, "y": 0}, "power": "wind"},
+      {"blockId": "goal", "target": {"x": 4, "y": 1}},
+      {"blockId": "goal", "target": {"x": 4, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 4}}
+    ]
   },
   {
     "id": 118,
@@ -1274,7 +1515,24 @@
     "featuredPower": "wind",
     "difficulty": "world2-hard",
     "learningIntent": "바람이 멈출 벽 만들기",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 0, "y": 4}},
+      {"blockId": "b1", "target": {"x": 2, "y": 4}},
+      {"blockId": "b1", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 4}},
+      {"blockId": "goal", "target": {"x": 2, "y": 4}},
+      {"blockId": "b1", "target": {"x": 3, "y": 3}},
+      {"blockId": "b1", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 4, "y": 3}},
+      {"blockId": "goal", "target": {"x": 4, "y": 2}},
+      {"blockId": "b2", "target": {"x": 3, "y": 0}},
+      {"blockId": "goal", "target": {"x": 4, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}, "power": "wind"},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}}
+    ]
   },
   {
     "id": 119,
@@ -1365,7 +1623,26 @@
     "featuredPower": "wind",
     "difficulty": "world2-hard",
     "learningIntent": "바람과 지우개의 통로",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 4}},
+      {"blockId": "goal", "target": {"x": 1, "y": 4}},
+      {"blockId": "goal", "target": {"x": 0, "y": 4}},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "b2", "target": {"x": 2, "y": 0}},
+      {"blockId": "b2", "target": {"x": 1, "y": 0}},
+      {"blockId": "b2", "target": {"x": 1, "y": 1}},
+      {"blockId": "b1", "target": {"x": 1, "y": 0}, "power": "wind"},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 0}},
+      {"blockId": "goal", "target": {"x": 4, "y": 0}},
+      {"blockId": "goal", "target": {"x": 4, "y": 1}}
+    ]
   },
   {
     "id": 120,
@@ -1464,7 +1741,27 @@
     "featuredPower": "wind",
     "difficulty": "world2-hard",
     "learningIntent": "수호 정령: 바람만 닿는 문",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}},
+      {"blockId": "b2", "target": {"x": 1, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 4}},
+      {"blockId": "b2", "target": {"x": 1, "y": 4}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}, "power": "wind"},
+      {"blockId": "b2", "target": {"x": 1, "y": 3}},
+      {"blockId": "b2", "target": {"x": 2, "y": 3}},
+      {"blockId": "b2", "target": {"x": 3, "y": 3}},
+      {"blockId": "b2", "target": {"x": 3, "y": 4}},
+      {"blockId": "b2", "target": {"x": 4, "y": 4}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}},
+      {"blockId": "b2", "target": {"x": 3, "y": 4}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 0}}
+    ]
   },
   {
     "id": 121,
@@ -1550,7 +1847,22 @@
     "featuredPower": "seal",
     "difficulty": "world2-master",
     "learningIntent": "봉인과 도약, 무엇을 먼저 쓸까",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b1", "target": {"x": 3, "y": 3}},
+      {"blockId": "b2", "target": {"x": 0, "y": 2}},
+      {"blockId": "b1", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "b1", "target": {"x": 1, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 4, "y": 3}, "power": "seal"},
+      {"blockId": "goal", "target": {"x": 4, "y": 2}},
+      {"blockId": "goal", "target": {"x": 4, "y": 1}},
+      {"blockId": "goal", "target": {"x": 4, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 0}}
+    ]
   },
   {
     "id": 122,
@@ -1627,7 +1939,23 @@
     "featuredPower": "wind",
     "difficulty": "world2-master",
     "learningIntent": "교대한 뒤 바람에 실어 보내기",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b2", "target": {"x": 2, "y": 3}},
+      {"blockId": "b2", "target": {"x": 2, "y": 4}},
+      {"blockId": "b2", "target": {"x": 1, "y": 4}},
+      {"blockId": "b2", "target": {"x": 0, "y": 4}},
+      {"blockId": "b2", "target": {"x": 0, "y": 3}},
+      {"blockId": "b2", "target": {"x": 0, "y": 2}},
+      {"blockId": "b2", "target": {"x": 0, "y": 1}},
+      {"blockId": "b2", "target": {"x": 1, "y": 1}},
+      {"blockId": "b2", "target": {"x": 2, "y": 1}},
+      {"blockId": "b2", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}, "power": "light_swap"},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 4, "y": 0}, "power": "wind"},
+      {"blockId": "goal", "target": {"x": 4, "y": 1}}
+    ]
   },
   {
     "id": 123,
@@ -1726,7 +2054,22 @@
     "featuredPower": "light_swap",
     "difficulty": "world2-master",
     "learningIntent": "교대 없이는 닫힌 꼭대기",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b2", "target": {"x": 0, "y": 3}},
+      {"blockId": "b2", "target": {"x": 0, "y": 4}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "b2", "target": {"x": 0, "y": 1}, "power": "light_swap"},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}},
+      {"blockId": "goal", "target": {"x": 0, "y": 4}},
+      {"blockId": "goal", "target": {"x": 1, "y": 4}},
+      {"blockId": "goal", "target": {"x": 2, "y": 4}},
+      {"blockId": "goal", "target": {"x": 3, "y": 4}},
+      {"blockId": "goal", "target": {"x": 4, "y": 4}},
+      {"blockId": "goal", "target": {"x": 4, "y": 3}},
+      {"blockId": "goal", "target": {"x": 4, "y": 2}},
+      {"blockId": "goal", "target": {"x": 4, "y": 0}, "power": "moonflower_leap"}
+    ]
   },
   {
     "id": 124,
@@ -1804,7 +2147,25 @@
     "featuredPower": "wind",
     "difficulty": "world2-master",
     "learningIntent": "두 권능을 아껴 쓰기",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b1", "target": {"x": 0, "y": 2}},
+      {"blockId": "b1", "target": {"x": 1, "y": 2}},
+      {"blockId": "b1", "target": {"x": 1, "y": 3}},
+      {"blockId": "b2", "target": {"x": 0, "y": 0}},
+      {"blockId": "b2", "target": {"x": 0, "y": 3}, "power": "wind"},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 0, "y": 0}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}, "power": "seal"},
+      {"blockId": "b2", "target": {"x": 0, "y": 2}},
+      {"blockId": "b2", "target": {"x": 0, "y": 1}},
+      {"blockId": "b1", "target": {"x": 0, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}}
+    ]
   },
   {
     "id": 125,
@@ -1901,6 +2262,27 @@
     "featuredPower": "moonflower_leap",
     "difficulty": "world2-master",
     "learningIntent": "수호 정령: 등불을 켜는 마지막 길",
-    "reviewStatus": "awaiting_manual_play"
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 4, "y": 3}},
+      {"blockId": "goal", "target": {"x": 4, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}},
+      {"blockId": "b1", "target": {"x": 4, "y": 4}},
+      {"blockId": "b1", "target": {"x": 4, "y": 3}},
+      {"blockId": "b1", "target": {"x": 4, "y": 2}},
+      {"blockId": "b1", "target": {"x": 4, "y": 1}},
+      {"blockId": "b1", "target": {"x": 3, "y": 1}},
+      {"blockId": "b1", "target": {"x": 2, "y": 1}},
+      {"blockId": "b1", "target": {"x": 1, "y": 1}},
+      {"blockId": "b1", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 0}, "power": "moonflower_leap"},
+      {"blockId": "b1", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}, "power": "light_swap"},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}}
+    ]
   }
 ]

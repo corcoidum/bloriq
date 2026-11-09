@@ -1,5 +1,25 @@
+import 'package:flutter/material.dart';
+
 import '../domain/puzzle.dart';
 import '../progression/progression_rules.dart';
+
+class HintProgress extends StatelessWidget {
+  const HintProgress(this.label, {super.key, this.size = 20, this.color});
+
+  final String label;
+  final double size;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) => SizedBox.square(
+    dimension: size,
+    child: CircularProgressIndicator(
+      strokeWidth: 2,
+      color: color,
+      semanticsLabel: label,
+    ),
+  );
+}
 
 /// 한 판에서 얼마나 막혀 있는지 기억한다(앱을 켜 둔 동안만, 저장하지 않음).
 /// 같은 판을 여러 번 다시 시작했거나 오래 붙잡고 있으면 도움을 권한다.
