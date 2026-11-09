@@ -8,12 +8,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class FakeBackend implements AudioBackend {
   final events = <String>[];
+  final tracks = <String>[];
   Completer<void>? startGate;
   bool failNextStart = false;
 
   @override
-  Future<void> startMusic() async {
+  Future<void> startMusic(String asset) async {
     events.add('start');
+    tracks.add(asset);
     if (failNextStart) {
       failNextStart = false;
       throw StateError('playback blocked');
@@ -149,8 +151,49 @@ void main() {
     await audio.dispose();
   });
 
+  test('world music switches once and returns to the default loop', () async {
+    const worldTrack = 'assets/audio/bgm_w2.wav';
+    final backend = FakeBackend();
+    final audio = await GameAudio.load(backend: backend);
+    audio.setGameVisible(false);
+    audio.setMusicTrack(worldTrack);
+    audio.onUserInteraction();
+    await flush();
+    expect(backend.tracks, isEmpty);
+    audio.setGameVisible(true);
+    await flush();
+    audio.setMusicTrack(worldTrack);
+    await flush();
+    audio.setMusicTrack(null);
+    await flush();
+    expect(backend.events.where((event) => event != 'stop effects'), [
+      'start',
+      'stop',
+      'start',
+    ]);
+    expect(backend.tracks, [worldTrack, GameAudio.defaultMusicAsset]);
+    await audio.dispose();
+  });
+
+  test('unavailable world music plays the default loop', () async {
+    const worldTrack = 'assets/audio/missing.wav';
+    final backend = FakeBackend()..failNextStart = true;
+    final audio = await GameAudio.load(backend: backend);
+    audio.setMusicTrack(worldTrack);
+    audio.onUserInteraction();
+    await flush();
+    audio.onUserInteraction();
+    await flush();
+    expect(backend.tracks, [worldTrack, GameAudio.defaultMusicAsset]);
+    await audio.dispose();
+  });
+
   test('bundled effects and music have WAV headers and nonempty samples', () {
-    for (final name in ['bgm', ...SoundEffect.values.map((e) => e.name)]) {
+    for (final name in [
+      'bgm',
+      'bgm_w2',
+      ...SoundEffect.values.map((e) => e.name),
+    ]) {
       final bytes = File('assets/audio/$name.wav').readAsBytesSync();
       expect(String.fromCharCodes(bytes.take(4)), 'RIFF');
       expect(String.fromCharCodes(bytes.skip(8).take(4)), 'WAVE');

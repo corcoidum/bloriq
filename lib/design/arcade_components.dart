@@ -72,11 +72,15 @@ class GameWordmark extends StatelessWidget {
 }
 
 class ArcadeBackdrop extends StatelessWidget {
-  const ArcadeBackdrop({super.key, required this.child});
+  const ArcadeBackdrop({super.key, required this.child, this.background});
   final Widget child;
+  final Color? background;
 
   @override
   Widget build(BuildContext context) {
+    if (background case final color?) {
+      return ColoredBox(color: color, child: child);
+    }
     final colors = GameTheme.colorsOf(context);
     final dark = Theme.of(context).brightness == Brightness.dark;
     return Stack(

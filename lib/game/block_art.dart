@@ -338,11 +338,21 @@ abstract final class BlockArt {
     );
   }
 
-  /// 이끼 바위 또는 그루터기. 칸 위치로 고정 선택하며 그림이 없으면 null.
-  static bool obstacle(Canvas canvas, Offset at, double cell, int variant) {
+  /// 세계의 바위 또는 기본 이끼 바위와 그루터기.
+  static bool obstacle(
+    Canvas canvas,
+    Offset at,
+    double cell,
+    int variant, {
+    ui.Image? customRock,
+    bool useGarden = true,
+  }) {
     final image =
-        StarArt.garden[variant % 3 == 0 ? 'stump' : 'rock'] ??
-        StarArt.garden['rock'];
+        customRock ??
+        (useGarden
+            ? StarArt.garden[variant % 3 == 0 ? 'stump' : 'rock'] ??
+                  StarArt.garden['rock']
+            : null);
     if (image == null) return false;
     _contactShadow(canvas, at + Offset(0, cell * .28), cell, 1);
     StarArt.draw(

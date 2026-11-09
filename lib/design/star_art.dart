@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../game/board_geometry.dart';
+import '../world/world_theme.dart';
 import 'game_theme.dart';
 import 'board_material.dart';
 
@@ -188,9 +189,15 @@ class CourierPortrait extends StatelessWidget {
 
 /// 테두리는 좌표계 밖에 둔다. 그림이 가장자리 정령이나 터치를 덮지 않는다.
 class StarBoardFrame extends StatelessWidget {
-  const StarBoardFrame({super.key, required this.child, this.geometry});
+  const StarBoardFrame({
+    super.key,
+    required this.child,
+    this.geometry,
+    this.skin,
+  });
   final Widget child;
   final BoardGeometry? geometry;
+  final WorldBoardSkin? skin;
   @override
   Widget build(BuildContext context) {
     final layout = geometry;
@@ -203,7 +210,11 @@ class StarBoardFrame extends StatelessWidget {
     }
     return RepaintBoundary(
       child: CustomPaint(
-        painter: MoonstoneFramePainter(layout, GameTheme.colorsOf(context)),
+        painter: MoonstoneFramePainter(
+          layout,
+          GameTheme.colorsOf(context),
+          skin: skin,
+        ),
         child: Padding(
           padding: EdgeInsets.all(layout.frameInset),
           child: ClipRRect(

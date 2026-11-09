@@ -167,6 +167,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
       _opening = true;
       _startingTutorial = false;
     });
+    session.audio.setMusicTrack(session.saga?.world(play.world).theme?.bgm);
     session.audio.setGameVisible(true);
     if (userInitiated) session.audio.onUserInteraction();
     final transition =
@@ -213,6 +214,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
       return;
     }
     setState(() => _opening = true);
+    session.audio.setMusicTrack(null);
     session.audio.setGameVisible(true);
     session.audio.onUserInteraction();
     final transition = prefersReducedMotion(context, widget.settings)
@@ -245,12 +247,16 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
       return;
     }
     _choosing = true;
+    session.audio.setMusicTrack(session.world(world)?.info.theme?.bgm);
+    session.audio.setGameVisible(true);
+    session.audio.onUserInteraction();
     try {
       final id = await showWorldMap(context, session, world);
       if (id != null && mounted) {
         await _open(id, play: PlayContext.world(world));
       }
     } finally {
+      session.audio.setGameVisible(false);
       _choosing = false;
       if (mounted) setState(() {});
     }

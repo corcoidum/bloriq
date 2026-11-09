@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 
 import '../story/story_catalog.dart';
+import 'world_theme.dart';
 
 /// 세계 하나의 공개 상태. 계획만 된 세계는 사가 지도에 예고로만 보인다.
 enum SagaWorldStatus { playable, planned }
@@ -21,6 +22,7 @@ class SagaWorld {
       lighthouse = data['lighthouse'] as int?,
       levelsAsset = data['levels'] as String?,
       storyAsset = data['story'] as String?,
+      theme = WorldTheme.parse(data['theme']),
       title = StoryText.fromJson(data['title']),
       subtitle = StoryText.fromJson(data['subtitle']),
       mechanic = StoryText.fromJson(data['mechanic']),
@@ -34,6 +36,7 @@ class SagaWorld {
   /// 몇째 등대인지(1..5). 서막과 종장은 null.
   final int? lighthouse;
   final String? levelsAsset, storyAsset;
+  final WorldTheme? theme;
 
   /// [teaser]는 앞 세계를 마칠 때 보여 주는 다음 이야기 한 줄,
   /// [reveal]은 이 세계를 마치면 풀리는 수수께끼(작가용, 화면에는 완료 후만).

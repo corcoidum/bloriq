@@ -23,6 +23,17 @@
       "lighthouse": 1,
       "levels": "assets/levels/world2.json",
       "story": "assets/story/world2.json",
+      "theme": {
+        "palette": {
+          "background": "#263B58",
+          "board": "#95C5E5",
+          "border": "#E8F5FF",
+          "accent": "#B7F2FA"
+        },
+        "floor": null,
+        "rock": null,
+        "bgm": "assets/audio/bgm_w2.wav"
+      },
       "title": { "ko": "구름바다 등대", "en": "Cloud-Sea Lighthouse" },
       "subtitle": { "ko": "첫째 등대 · 첫 불씨의 귀환", "en": "First lighthouse · The First Spark Returns" },
       "mechanic": { "ko": "별자리 권능 네 가지: 도약, 빛 교대, 봉인, 바람.", "en": "Four constellation powers: Leap, Light Swap, Seal and Wind." },

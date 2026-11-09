@@ -17,6 +17,7 @@ import '../domain/mechanics/echo_hold.dart';
 import '../domain/mechanics/goal_only.dart';
 import '../domain/mechanics/one_way.dart';
 import '../domain/puzzle.dart';
+import '../world/world_theme.dart';
 
 typedef _MechanicCanvas = ({
   Canvas canvas,
@@ -105,6 +106,7 @@ class BloriqGame extends FlameGame {
   Offset _dragOffset = Offset.zero;
   double _hintTime = 0;
   GameColors _colors = GameColors.light;
+  WorldBoardSkin? _skin;
   bool _reduceMotion = false;
   double _celebrationProgress = 1;
   bool _isNewBest = false;
@@ -121,8 +123,10 @@ class BloriqGame extends FlameGame {
   void configureAppearance({
     required GameColors colors,
     required bool reduceMotion,
+    WorldBoardSkin? skin,
   }) {
     _colors = colors;
+    _skin = skin;
     _reduceMotion = reduceMotion;
     if (reduceMotion) _motion = 1;
   }
@@ -320,7 +324,8 @@ class BloriqGame extends FlameGame {
       }
     }
 
-    final material = BoardMaterial(_colors);
+    final material = BoardMaterial(_colors, skin: _skin);
+    final palette = _skin?.palette;
     material.floor(canvas, layout);
 
     final mechanicCanvas = (
@@ -335,7 +340,14 @@ class BloriqGame extends FlameGame {
     _gateTarget = state.isGateOpen;
     _drawMechanics(mechanicCanvas, badges: false);
     for (final p in state.level.obstacles) {
-      if (BlockArt.obstacle(canvas, center(p), cell, p.x * 7 + p.y * 3)) {
+      if (BlockArt.obstacle(
+        canvas,
+        center(p),
+        cell,
+        p.x * 7 + p.y * 3,
+        customRock: _skin?.rock,
+        useGarden: palette == null,
+      )) {
         continue;
       }
       material.raised(
@@ -346,7 +358,9 @@ class BloriqGame extends FlameGame {
           height: cell * .76,
         ),
         cell,
-        _colors.slate,
+        palette == null
+            ? _colors.slate
+            : Color.lerp(palette.background, palette.board, .28)!,
       );
     }
 

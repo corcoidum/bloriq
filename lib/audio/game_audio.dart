@@ -8,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 enum SoundEffect { move, echo, blocked, gate, complete }
 
 abstract interface class AudioBackend {
-  Future<void> startMusic();
+  Future<void> startMusic(String asset);
   Future<void> stopMusic();
   Future<void> playEffect(SoundEffect effect);
   Future<void> stopEffects();
@@ -23,10 +23,14 @@ class PlayerAudioBackend implements AudioBackend {
   ).build();
 
   @override
-  Future<void> startMusic() async {
+  Future<void> startMusic(String asset) async {
     final player = _music ??= AudioPlayer();
     await player.setReleaseMode(ReleaseMode.loop);
-    await player.play(AssetSource('audio/bgm.wav'), volume: .25, ctx: _context);
+    await player.play(
+      AssetSource(asset.substring('assets/'.length)),
+      volume: .25,
+      ctx: _context,
+    );
   }
 
   @override
@@ -76,6 +80,7 @@ class GameAudio with WidgetsBindingObserver {
 
   static const musicKey = 'bloriq.audio.music';
   static const effectsKey = 'bloriq.audio.effects';
+  static const defaultMusicAsset = 'assets/audio/bgm.wav';
   final AudioBackend backend;
   final SharedPreferences? _preferences;
   bool _musicEnabled;
@@ -83,7 +88,8 @@ class GameAudio with WidgetsBindingObserver {
   bool _active = true;
   bool _gameVisible = true;
   bool _interacted = false;
-  bool _musicPlaying = false;
+  String _musicTrack = defaultMusicAsset;
+  String? _playingTrack;
   bool _disposed = false;
   Future<void> _queue = Future.value();
   Future<void> _effectQueue = Future.value();
@@ -91,6 +97,13 @@ class GameAudio with WidgetsBindingObserver {
 
   bool get musicEnabled => _musicEnabled;
   bool get effectsEnabled => _effectsEnabled;
+
+  void setMusicTrack(String? asset) {
+    final track = asset ?? defaultMusicAsset;
+    if (_disposed || _musicTrack == track) return;
+    _musicTrack = track;
+    _syncMusic();
+  }
 
   /// 홈/인트로에서는 저장된 설정을 바꾸지 않고 소리만 일시 중단한다.
   void setGameVisible(bool visible) {
@@ -151,20 +164,31 @@ class GameAudio with WidgetsBindingObserver {
     _syncMusic();
   }
 
+  String? get _requestedMusic =>
+      !_disposed && _active && _gameVisible && _interacted && _musicEnabled
+      ? _musicTrack
+      : null;
+
   void _syncMusic() {
     _enqueue(() async {
-      final shouldPlay =
-          !_disposed && _active && _gameVisible && _interacted && _musicEnabled;
-      if (shouldPlay && !_musicPlaying) {
-        await backend.startMusic();
-        _musicPlaying = true;
-      } else if (!shouldPlay && _musicPlaying) {
+      if (_requestedMusic == _playingTrack) return;
+      if (_playingTrack != null) {
         try {
           await backend.stopMusic();
         } finally {
-          _musicPlaying = false;
+          _playingTrack = null;
         }
       }
+      final nextTrack = _requestedMusic;
+      if (nextTrack == null) return;
+      try {
+        await backend.startMusic(nextTrack);
+      } catch (_) {
+        if (nextTrack == defaultMusicAsset) rethrow;
+        if (_requestedMusic != nextTrack) return;
+        await backend.startMusic(defaultMusicAsset);
+      }
+      _playingTrack = nextTrack;
     });
   }
 

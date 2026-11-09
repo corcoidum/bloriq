@@ -66,3 +66,20 @@ for bar, chord in enumerate(chords):
 for i in range(len(music)):
     music[i] *= min(1., i / (RATE * .04), (len(music) - i) / (RATE * .08))
 write('bgm.wav', music)
+
+# 구름바다의 16초 루프. 높은 종소리 아래로 낮은 화음을 길게 깐다.
+cloud_sea = [0.] * round(length * RATE)
+for bar, chord in enumerate([
+    (293.66, 369.99, 440.00, 554.37, 659.25),
+    (246.94, 293.66, 369.99, 440.00, 554.37),
+    (196.00, 246.94, 293.66, 369.99, 440.00),
+    (220.00, 277.18, 329.63, 440.00, 493.88),
+]):
+    for step, note in enumerate((0, 2, 4, 3, 1, 2)):
+        start = bar * 4 + step * .6
+        mix(cloud_sea, tone(chord[note] * 2, .88, .075, 3.2), start)
+    for note in (0, 2):
+        mix(cloud_sea, tone(chord[note] / 2, 3.9, .045, .52, False), bar * 4)
+for i in range(len(cloud_sea)):
+    cloud_sea[i] *= min(1., i / (RATE * .06), (len(cloud_sea) - i - 1) / (RATE * .12))
+write('bgm_w2.wav', cloud_sea)

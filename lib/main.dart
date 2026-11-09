@@ -49,6 +49,7 @@ import 'world/world_catalog.dart';
 import 'world/world_map.dart';
 import 'world/world_progress.dart';
 import 'world/world_text.dart';
+import 'world/world_theme.dart';
 
 void main() => runApp(const BloriqApp());
 
@@ -222,6 +223,7 @@ class _GameScreenState extends State<GameScreen>
   /// 세계 2부터는 [LoadedWorld] 데이터와 권능 막대를 쓴다.
   bool get _expansion => widget.play.world >= 2;
   LoadedWorld? get _world => widget.session.world(widget.play.world);
+  WorldBoardSkin? get _boardSkin => widget.session.boardSkin(widget.play.world);
 
   /// 확장 세계에서 쓸 수 있는 권능(성장 기록 기준). 세계 1은 늘 비어 있다.
   Set<PuzzlePower> get _ownedPowers => _expansion
@@ -1137,18 +1139,29 @@ class _GameScreenState extends State<GameScreen>
     await _withModal<void>(() async {
       final replay = await showGameHelp(context, widget.settings);
       if (replay == true && mounted) {
-        await Navigator.of(context).push<void>(
-          MaterialPageRoute(
-            builder: (_) => GameScreen(
-              session: widget.session,
-              initialLevelId: 1,
-              settings: widget.settings,
-              play: PlayContext.tutorialReplay(
-                widget.session.levels.firstWhere((level) => level.id == 1),
+        final session = widget.session;
+        final saga = session.saga;
+        session.audio.setMusicTrack(saga?.world(1).theme?.bgm);
+        try {
+          await Navigator.of(context).push<void>(
+            MaterialPageRoute(
+              builder: (_) => GameScreen(
+                session: session,
+                initialLevelId: 1,
+                settings: widget.settings,
+                play: PlayContext.tutorialReplay(
+                  session.levels.firstWhere((level) => level.id == 1),
+                ),
               ),
             ),
-          ),
-        );
+          );
+        } finally {
+          if (mounted) {
+            session.audio.setMusicTrack(
+              saga?.world(widget.play.world).theme?.bgm,
+            );
+          }
+        }
       }
     });
   }
@@ -1620,7 +1633,11 @@ class _GameScreenState extends State<GameScreen>
         if (mounted && _reduceMotion && _celebrating) _skipCelebration();
       });
     }
-    _game!.configureAppearance(colors: colors, reduceMotion: _reduceMotion);
+    _game!.configureAppearance(
+      colors: colors,
+      reduceMotion: _reduceMotion,
+      skin: _boardSkin,
+    );
     final controller = _controller!;
     final legend = _legend(t, controller);
     final hint = legend.map((item) => item.text).join('\n');
@@ -1641,6 +1658,7 @@ class _GameScreenState extends State<GameScreen>
       },
       child: Scaffold(
         body: ArcadeBackdrop(
+          background: _boardSkin?.palette?.background,
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -2689,6 +2707,7 @@ class _GameScreenState extends State<GameScreen>
           alignment: Alignment.topLeft,
           child: StarBoardFrame(
             geometry: geometry,
+            skin: _boardSkin,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(GameSpacing.radius),
               child: SizedBox(
