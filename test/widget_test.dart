@@ -39,7 +39,7 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.textContaining('an echo on the diamond opens the gate'),
+      find.textContaining('an echo on the moon crystal opens the gate'),
       findsOneWidget,
     );
     await tester.tap(find.text('Close'));
@@ -298,7 +298,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump(const Duration(milliseconds: 300));
     expect(
-      find.text('Leave an echo on the diamond to open the gate.'),
+      find.text('Leave an echo on the moon crystal to open the gate.'),
       findsOneWidget,
     );
 
@@ -324,7 +324,7 @@ void main() {
     await move(level.startPosition, level.echoGate!);
     expect(find.text('Moves: 0'), findsOneWidget);
     expect(
-      find.text('The gate is closed. Leave an echo on the diamond.'),
+      find.text('The gate is closed. Leave an echo on the moon crystal.'),
       findsOneWidget,
     );
 

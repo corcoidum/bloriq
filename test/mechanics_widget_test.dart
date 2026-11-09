@@ -43,7 +43,7 @@ void main() {
     expect(boardFinder, findsOneWidget);
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.textContaining('Dandelion tile'), findsOneWidget);
-    expect(find.textContaining('Amber tile'), findsOneWidget);
+    expect(find.textContaining('Aurora amber tile'), findsOneWidget);
     expect(find.textContaining('Stream tile'), findsOneWidget);
     expect(find.textContaining('Clover tile'), findsOneWidget);
 
