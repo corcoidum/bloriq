@@ -4,10 +4,17 @@ import 'package:bloriq/domain/puzzle.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('the five published mechanics are registered by JSON type', () {
+  test('all six mechanics are registered by JSON type', () {
     expect(
       MechanicRegistry.parsers.keys,
-      containsAll(['echoEraser', 'echoHold', 'oneWay', 'goalOnly', 'echoGate']),
+      containsAll([
+        'echoEraser',
+        'echoHold',
+        'oneWay',
+        'goalOnly',
+        'echoGate',
+        'mirrorPair',
+      ]),
     );
   });
 

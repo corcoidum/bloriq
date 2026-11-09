@@ -41,7 +41,7 @@ def orientations(level: dict) -> list[frozenset[str]]:
             tokens.update(token('block', block) for block in level['blocks'])
             tokens.update(token('wall', wall) for wall in level['obstacles'])
             for rule in level['specialRules']:
-                tokens.update(REGISTRY[rule['type']].auditTokens(rule, token, direction))
+                tokens.update(REGISTRY[rule['type']].auditTokens(level, rule, token, direction))
             result.append(frozenset(tokens))
     return result
 

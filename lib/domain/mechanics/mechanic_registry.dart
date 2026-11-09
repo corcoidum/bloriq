@@ -3,6 +3,7 @@ import 'echo_eraser.dart';
 import 'echo_gate.dart';
 import 'echo_hold.dart';
 import 'goal_only.dart';
+import 'mirror_pair.dart';
 import 'one_way.dart';
 
 typedef MechanicParser = BoardMechanic Function(Map<String, dynamic>);
@@ -15,6 +16,7 @@ abstract final class MechanicRegistry {
     OneWay.typeId: OneWay.parse,
     GoalOnly.typeId: GoalOnly.parse,
     EchoGate.typeId: EchoGate.parse,
+    MirrorPair.typeId: MirrorPair.parse,
   };
 
   static List<BoardMechanic> parse(Object? rules) {
@@ -38,10 +40,8 @@ abstract final class MechanicRegistry {
   static Map<String, BoardMechanic> index(Iterable<BoardMechanic> mechanics) {
     final byType = <String, BoardMechanic>{};
     for (final mechanic in mechanics) {
-      if (byType.containsKey(mechanic.type)) {
-        throw FormatException('Duplicate special rule: ${mechanic.type}');
-      }
-      byType[mechanic.type] = mechanic;
+      byType[mechanic.type] =
+          byType[mechanic.type]?.combine(mechanic) ?? mechanic;
     }
     return Map.unmodifiable({
       for (final type in parsers.keys) type: ?byType.remove(type),

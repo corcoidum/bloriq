@@ -8,6 +8,7 @@ import logging
 import os
 import random
 import signal
+from collections import Counter
 from contextlib import contextmanager
 from multiprocessing import TimeoutError as WorkerTimeout
 from multiprocessing import get_context
@@ -17,7 +18,7 @@ from time import monotonic
 from typing import Iterator, NamedTuple
 
 from tools.level_audit import canonical, similarity
-from tools.mechanics import DIRECTIONS, REGISTRY, Position
+from tools.mechanics import DIRECTIONS, REGISTRY, Position, populate_random_rules
 from tools.validate_levels import (
     SearchBudgetExceeded,
     available_powers,
@@ -84,7 +85,7 @@ def random_level(world: int, index: int, slot: Slot, rng: random.Random) -> dict
         'blocks': [{'id': f'b{i + 1}', **take()} for i in range(slot.blocks)],
         'obstacles': [take() for _ in range(rng.randint(*slot.walls))],
     }
-    level['specialRules'] = [REGISTRY[kind].randomRule(level, rng, take) for kind in slot.mechanics]
+    populate_random_rules(level, slot.mechanics, rng, take)
     level['availablePowers'] = list(slot.powers)
     return level
 
@@ -249,7 +250,7 @@ def check_existing(existing: dict[int, dict], world: int, slots: tuple[Slot, ...
                 or len(level['blocks']) != slot.blocks
                 or not slot.walls[0] <= len(level['obstacles']) <= slot.walls[1]
                 or set(available_powers(level)) != set(slot.powers)
-                or {rule['type'] for rule in level['specialRules']} != set(slot.mechanics)
+                or Counter(rule['type'] for rule in level['specialRules']) != Counter(slot.mechanics)
                 or level.get('featuredPower') != slot.featured
                 or 'solution' not in level):
             raise ValueError(f"Level {level['id']}: slot metadata or solution mismatch")
@@ -357,9 +358,11 @@ def main(argv: list[str] | None = None) -> None:
     try:
         slots = load_slots(args.world)
         for index, slot in enumerate(slots, 1):
-            unknown = set(slot.mechanics) - REGISTRY.keys()
-            if unknown:
-                raise ValueError(f'Slot {index}: unknown mechanics {sorted(unknown)}')
+            for kind, count in Counter(slot.mechanics).items():
+                if kind not in REGISTRY:
+                    raise ValueError(f'Slot {index}: unknown mechanic {kind}')
+                if count > REGISTRY[kind].max_instances:
+                    raise ValueError(f'Slot {index}: too many {kind} rules')
         selected = sorted(set(args.only or range(1, len(slots) + 1)))
         if any(not 1 <= number <= len(slots) for number in selected):
             parser.error(f'슬롯 번호는 1..{len(slots)}입니다.')

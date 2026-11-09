@@ -20,14 +20,16 @@ class State(NamedTuple):
     moves: int
     board: Board
 
-    def canOccupy(self, index: int, target: Position) -> bool:
+    def canOccupy(self, index: int, target: Position, *,
+                  positions: Positions | None = None, allow_non_goal_exit: bool = False) -> bool:
         board = self.board
         x, y = target
         if not (0 <= x < board.width and 0 <= y < board.height):
             return False
-        if target in board.walls or target == self.echo or target in self.positions:
+        occupied = self.positions if positions is None else positions
+        if target in board.walls or target == self.echo or target in occupied:
             return False
-        if index != 0 and target == board.exit_point:
+        if not allow_non_goal_exit and index != 0 and target == board.exit_point:
             return False
         for mechanic in board.mechanics:
             if not mechanic.canEnter(self, index, target):
@@ -50,7 +52,11 @@ class MechanicMove(NamedTuple):
 class BoardMechanic:
     # 훅 이름은 Dart의 BoardMechanic과 맞춘다.
     type: ClassVar[str]
+    max_instances: ClassVar[int] = 1
     cells: Positions = ()
+
+    def combine(self, other: BoardMechanic) -> BoardMechanic:
+        raise AssertionError(f'Duplicate special rule: {self.type}')
 
     def validate(self, level: dict) -> None:
         pass
@@ -72,7 +78,8 @@ class BoardMechanic:
         return None
 
     @classmethod
-    def auditTokens(cls, rule: dict, token: AuditToken, direction: AuditDirection) -> Iterable[str]:
+    def auditTokens(cls, level: dict, rule: dict, token: AuditToken,
+                    direction: AuditDirection) -> Iterable[str]:
         """회전·대칭에서 같은 판을 찾기 위한 칸별 표식."""
         return (token(cls.type, point) for point in rule['positions'])
 
@@ -162,7 +169,8 @@ class OneWay(BoardMechanic):
         ]}
 
     @classmethod
-    def auditTokens(cls, rule: dict, token: AuditToken, direction: AuditDirection) -> Iterable[str]:
+    def auditTokens(cls, level: dict, rule: dict, token: AuditToken,
+                    direction: AuditDirection) -> Iterable[str]:
         for tile in rule['tiles']:
             dx, dy = direction(tile['dx'], tile['dy'])
             yield token(f'arrow{dx},{dy}', tile)
@@ -200,14 +208,88 @@ class EchoGate(BoardMechanic):
         return {'type': cls.type, 'switch': take(), 'gate': take()}
 
     @classmethod
-    def auditTokens(cls, rule: dict, token: AuditToken, direction: AuditDirection) -> Iterable[str]:
+    def auditTokens(cls, level: dict, rule: dict, token: AuditToken,
+                    direction: AuditDirection) -> Iterable[str]:
         return (token('switch', rule['switch']), token('gate', rule['gate']))
+
+
+@dataclass(frozen=True)
+class MirrorPair(BoardMechanic):
+    type = 'mirrorPair'
+    max_instances = 2
+    pairs: tuple[tuple[str, str], ...]
+
+    @classmethod
+    def parse(cls, rule: dict, point: PointParser) -> MirrorPair:
+        ids = rule.get('blocks')
+        assert isinstance(ids, list) and len(ids) == 2 and all(isinstance(id_, str) for id_ in ids), (
+            'A mirror pair requires two block IDs')
+        return cls(((ids[0], ids[1]),))
+
+    def combine(self, other: BoardMechanic) -> MirrorPair:
+        assert isinstance(other, MirrorPair)
+        return MirrorPair(self.pairs + other.pairs)
+
+    def validate(self, level: dict) -> None:
+        assert len(self.pairs) <= self.max_instances, 'At most two mirror pairs are allowed'
+        ids = {'goal', *(block['id'] for block in level['blocks'])}
+        for first, second in self.pairs:
+            assert first != second and first in ids and second in ids, 'Invalid or repeated mirror pair block ID'
+            ids.difference_update((first, second))
+
+    def transformMove(self, before: State, move: MechanicMove, blocks: Positions) -> Positions:
+        if move.power is not None:
+            return blocks
+        ids = before.board.block_ids
+        moved = ids[move.index]
+        for first, second in self.pairs:
+            if moved == first:
+                partner = ids.index(second)
+                break
+            if moved == second:
+                partner = ids.index(first)
+                break
+        else:
+            return blocks
+        source = before.positions[move.index]
+        direction = source[0] - move.target[0], source[1] - move.target[1]
+        start = blocks[partner]
+        target = start[0] + direction[0], start[1] + direction[1]
+        # 새 잔상 자리와 이동 전 잔상은 짝이 밟을 수 없다.
+        if (target == source
+                or not before.canOccupy(partner, target, positions=blocks, allow_non_goal_exit=True)
+                or not before.canLeave(start, direction)):
+            return blocks
+        return blocks[:partner] + (target,) + blocks[partner + 1:]
+
+    @classmethod
+    def randomRule(cls, level: dict, rng: Random, take: Callable[[], dict]) -> dict:
+        paired = {id_ for rule in level['specialRules'] if rule['type'] == cls.type
+                  for id_ in rule['blocks']}
+        ids = ['goal', *(block['id'] for block in level['blocks'])]
+        return {'type': cls.type, 'blocks': rng.sample([id_ for id_ in ids if id_ not in paired], 2)}
+
+    @classmethod
+    def auditTokens(cls, level: dict, rule: dict, token: AuditToken,
+                    direction: AuditDirection) -> Iterable[str]:
+        starts = {'goal': level['startPosition'], **{block['id']: block for block in level['blocks']}}
+        endpoints = sorted(token('member', starts[id_]) for id_ in rule['blocks'])
+        return (f"{cls.type}:{'/'.join(endpoints)}",)
 
 
 # 순서는 Dart MechanicRegistry와 같아야 한다.
 REGISTRY = {
-    mechanic.type: mechanic for mechanic in (EchoEraser, EchoHold, OneWay, GoalOnly, EchoGate)
+    mechanic.type: mechanic
+    for mechanic in (EchoEraser, EchoHold, OneWay, GoalOnly, EchoGate, MirrorPair)
 }
+
+
+def populate_random_rules(level: dict, kinds: Iterable[str], rng: Random,
+                          take: Callable[[], dict]) -> None:
+    rules: list[dict] = []
+    level['specialRules'] = rules
+    for kind in kinds:
+        rules.append(REGISTRY[kind].randomRule(level, rng, take))
 
 
 def parse_mechanics(level: dict, point: PointParser, *, walls: frozenset[Position],
@@ -220,15 +302,17 @@ def parse_mechanics(level: dict, point: PointParser, *, walls: frozenset[Positio
         assert isinstance(rule, dict) and isinstance(rule.get('type'), str)
         kind = rule['type']
         assert kind in REGISTRY, f'Unknown rule: {kind}'
-        assert kind not in parsed, f'Duplicate special rule: {kind}'
         mechanic = REGISTRY[kind].parse(rule, point)
+        if kind in parsed:
+            mechanic = parsed[kind].combine(mechanic)
         for tile in mechanic.cells:
             assert tile not in occupied, 'Overlapping mechanism tile'
             occupied.add(tile)
-        mechanic.validate(level)
         if isinstance(mechanic, EchoGate) and gate_locked:
             mechanic = EchoGate(mechanic.switch, mechanic.gate, locked=True)
         parsed[kind] = mechanic
+    for mechanic in parsed.values():
+        mechanic.validate(level)
     # 문 효과를 비교할 때는 문을 없애지 않고 잠근 채로 둔다.
     return tuple(parsed[kind] for kind in REGISTRY
                  if kind in parsed and (kind != disabled_rule or kind == EchoGate.type))

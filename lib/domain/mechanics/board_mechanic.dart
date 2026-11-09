@@ -8,6 +8,9 @@ abstract class BoardMechanic {
   Iterable<Position> get cells => const [];
   void validate(Level level) {}
 
+  BoardMechanic combine(BoardMechanic other) =>
+      throw FormatException('Duplicate special rule: $type');
+
   /// blockId가 null이면 블록 종류와 관계없는 장애물인지 확인한다.
   bool canEnter(PuzzleState state, String? blockId, Position target) => true;
 

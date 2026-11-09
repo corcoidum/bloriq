@@ -316,10 +316,10 @@ class PuzzleState {
   bool get isGateOpen =>
       level.mechanic<EchoGate>(EchoGate.typeId)?.isOpen(echo) ?? false;
 
-  bool _occupied(Position position) =>
+  bool _occupied(Position position, [List<Block>? occupiedBlocks]) =>
       level.obstacles.contains(position) ||
       echo == position ||
-      blocks.any((block) => block.position == position);
+      (occupiedBlocks ?? blocks).any((block) => block.position == position);
 
   bool _canEnter(String? blockId, Position target) {
     for (final mechanic in level.mechanics.values) {
@@ -332,10 +332,18 @@ class PuzzleState {
       _occupied(position) || !_canEnter(null, position);
 
   /// 칸 하나에 블록이 들어설 수 있는지(출발 칸·방향과 무관한 조건).
-  bool canOccupy(String blockId, Position target) =>
+  /// 배치 변환 중에는 갱신된 블록 위치와 이동 전 잔상을 함께 검사한다.
+  bool canOccupy(
+    String blockId,
+    Position target, {
+    List<Block>? occupiedBlocks,
+    bool allowNonGoalExit = false,
+  }) =>
       level.contains(target) &&
-      !(target == level.exitPosition && blockId != Level.goalBlockId) &&
-      !_occupied(target) &&
+      (allowNonGoalExit ||
+          target != level.exitPosition ||
+          blockId == Level.goalBlockId) &&
+      !_occupied(target, occupiedBlocks) &&
       _canEnter(blockId, target);
 
   bool canLeave(Position from, Position direction) {

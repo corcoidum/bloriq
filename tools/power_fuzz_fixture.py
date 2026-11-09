@@ -8,10 +8,11 @@ from __future__ import annotations
 import argparse
 import json
 import random
+from collections import Counter
 from pathlib import Path
 
 from tools.design_world import cells, pt, random_level
-from tools.mechanics import REGISTRY
+from tools.mechanics import REGISTRY, populate_random_rules
 from tools.validate_levels import POWERS, solve_or_none
 from tools.worlds.w2 import SLOTS as WORLD2_SLOTS
 
@@ -36,7 +37,7 @@ def random_mechanic_level(kinds: list[str], rng: random.Random) -> dict:
         'blocks': [{'id': f'b{i + 1}', **take()} for i in range(rng.randint(2, 3))],
         'obstacles': [take() for _ in range(rng.randint(1, 3))],
     }
-    level['specialRules'] = [REGISTRY[kind].randomRule(level, rng, take) for kind in kinds]
+    populate_random_rules(level, kinds, rng, take)
     return level
 
 
@@ -44,13 +45,16 @@ def generate_cases(count: int, seed: int, mechanics: list[str] | None) -> list[d
     rng = random.Random(seed)
     cases = []
     for _ in range(count * 100):
-        # 인자가 없으면 기존 월드 2 생성기로 권능 교차 검증 표본을 만든다.
-        if mechanics is None:
-            index = rng.randrange(15)
-            level = random_level(2, index, WORLD2_SLOTS[index], rng)
-            level.pop('availablePowers')
-        else:
-            level = random_mechanic_level(mechanics, rng)
+        try:
+            # 인자가 없으면 기존 월드 2 설정으로 권능 표본을 만든다.
+            if mechanics is None:
+                index = rng.randrange(15)
+                level = random_level(2, index, WORLD2_SLOTS[index], rng)
+                level.pop('availablePowers')
+            else:
+                level = random_mechanic_level(mechanics, rng)
+        except ValueError:
+            continue  # 두 쌍을 놓을 블록이 모자란 판은 다시 뽑는다.
         level.update(id=900 + len(cases), minimumMoves=0, difficulty='fuzz')
         try:
             powered = solve_or_none(level, powers=POWERS, max_states=MAX_STATES)
@@ -79,10 +83,12 @@ def main() -> None:
     args = parser.parse_args()
     if args.count < 1:
         parser.error('--count must be positive')
-    if args.mechanics is not None and len(args.mechanics) != len(set(args.mechanics)):
-        parser.error('--mechanics cannot contain duplicates')
+    for kind, count in Counter(args.mechanics or []).items():
+        if count > REGISTRY[kind].max_instances:
+            parser.error(f'--mechanics allows at most {REGISTRY[kind].max_instances} {kind} rules')
     cases = generate_cases(args.count, args.seed, args.mechanics)
-    args.output.write_text(json.dumps(cases, ensure_ascii=False) + '\n', encoding='utf-8')
+    rows = ',\n'.join('  ' + json.dumps(case, ensure_ascii=False) for case in cases)
+    args.output.write_text('[\n' + rows + '\n]\n', encoding='utf-8')
     print(f'{len(cases)} cases; powered<bare in {sum(1 for c in cases if c["bare"] is None or c["powered"] < c["bare"])}')
 
 

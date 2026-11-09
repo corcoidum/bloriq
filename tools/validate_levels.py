@@ -202,8 +202,7 @@ def decorative_mechanic(
     max_states: int = 200_000, deadline: float | None = None,
 ) -> str | None:
     """하나씩 끄고 다시 풀어도 최단 수가 같은 첫 기믹을 찾는다."""
-    for rule in level['specialRules']:
-        kind = rule['type']
+    for kind in dict.fromkeys(rule['type'] for rule in level['specialRules']):
         alternative = solve_or_none(
             level, powers=powers, disabled_rule=kind, gate_locked=kind == 'echoGate',
             max_states=max_states, deadline=deadline,
