@@ -1,0 +1,1229 @@
+{
+  "version": 1,
+  "worldId": "w6",
+  "title": {
+    "ko": "꿈의 서고 등대",
+    "en": "Dream Library Lighthouse"
+  },
+  "prologue": {
+    "ko": "녹아 나온 기억들이 한 방향을 가리켰어. 그 끝에 다섯째 등대, 꿈의 서고가 있었어. 마지막 책장에 '첫 잔상'이라는 빈 책이 꽂혀 있었어.",
+    "en": "The thawed memories pointed in one direction. At the end stood the Dream Library, the fifth lighthouse. An empty book titled The First Echo sat on the last shelf."
+  },
+  "chapters": [
+    {
+      "number": 1,
+      "globalChapter": 26,
+      "power": null,
+      "family": "bookworm",
+      "name": {
+        "ko": "열람실",
+        "en": "Reading Room"
+      },
+      "familyName": {
+        "ko": "책벌레 가문",
+        "en": "Bookworm Family"
+      },
+      "constellation": {
+        "ko": "책갈피자리",
+        "en": "The Bookmark"
+      },
+      "stars": {
+        "nodes": [
+          [
+            0.35,
+            0.21
+          ],
+          [
+            0.66,
+            0.21
+          ],
+          [
+            0.66,
+            0.75
+          ],
+          [
+            0.35,
+            0.75
+          ],
+          [
+            0.51,
+            0.57
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            4
+          ],
+          [
+            4,
+            3
+          ],
+          [
+            3,
+            0
+          ]
+        ]
+      },
+      "intro": {
+        "ko": "열람실에는 책 넘기는 소리만 들렸어. 책벌레들은 책 사이에 조용히 갈피를 끼웠어.",
+        "en": "Only turning pages could be heard in the reading room. The bookworms quietly slipped bookmarks between the pages."
+      },
+      "endingTitle": {
+        "ko": "누군가 꾼 꿈",
+        "en": "Someone’s Dream"
+      },
+      "ending": {
+        "ko": "책을 펼치자 잠든 친구의 밤이 펼쳐졌어. 서고의 책은 누군가가 꾼 꿈의 기록이었어.",
+        "en": "A sleeping friend’s night unfolded as RIQ opened a book. Each book in the library held the record of someone’s dream."
+      }
+    },
+    {
+      "number": 2,
+      "globalChapter": 27,
+      "power": null,
+      "family": "paper_bird",
+      "name": {
+        "ko": "접힌 복도",
+        "en": "Folded Corridor"
+      },
+      "familyName": {
+        "ko": "종이새 가문",
+        "en": "Paper Bird Family"
+      },
+      "constellation": {
+        "ko": "종이새자리",
+        "en": "The Paper Bird"
+      },
+      "stars": {
+        "nodes": [
+          [
+            0.14,
+            0.55
+          ],
+          [
+            0.37,
+            0.28
+          ],
+          [
+            0.54,
+            0.53
+          ],
+          [
+            0.81,
+            0.24
+          ],
+          [
+            0.71,
+            0.66
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            2,
+            4
+          ],
+          [
+            3,
+            4
+          ]
+        ]
+      },
+      "intro": {
+        "ko": "종이새가 날개를 접자 복도 한쪽이 포개졌어. 리크는 바스락거리는 길을 따라갔어.",
+        "en": "A paper bird folded its wings, and one side of the corridor folded over. RIQ followed the rustling path."
+      },
+      "endingTitle": {
+        "ko": "등대를 세운 꿈",
+        "en": "The Builders’ Dreams"
+      },
+      "ending": {
+        "ko": "다섯 등대를 세운 이들의 꿈이 한 권씩 꽂혀 있었어. 꿈속에서 그들은 서로의 불빛을 알아봤어.",
+        "en": "The builders of the five lighthouses each had a dream on the shelf. In their dreams, they recognized one another’s lights."
+      }
+    },
+    {
+      "number": 3,
+      "globalChapter": 28,
+      "power": null,
+      "family": "ink",
+      "name": {
+        "ko": "거꾸로 꽂힌 책",
+        "en": "Upside-Down Books"
+      },
+      "familyName": {
+        "ko": "잉크 가문",
+        "en": "Ink Family"
+      },
+      "constellation": {
+        "ko": "잉크자리",
+        "en": "The Ink Drop"
+      },
+      "stars": {
+        "nodes": [
+          [
+            0.49,
+            0.17
+          ],
+          [
+            0.28,
+            0.47
+          ],
+          [
+            0.3,
+            0.68
+          ],
+          [
+            0.7,
+            0.64
+          ],
+          [
+            0.53,
+            0.79
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            4
+          ],
+          [
+            4,
+            3
+          ],
+          [
+            3,
+            0
+          ]
+        ]
+      },
+      "intro": {
+        "ko": "책등이 거꾸로 놓인 칸에서 잉크 냄새가 났어. 페이지 사이로 작은 빛이 비쳤어.",
+        "en": "The shelf of upside-down books smelled of ink. A little light shone between the pages."
+      },
+      "endingTitle": {
+        "ko": "페이지 사이의 조각",
+        "en": "Pieces Between the Pages"
+      },
+      "ending": {
+        "ko": "페이지 사이에 리크의 기억 조각들이 끼워져 있었어. 리크는 정원에서 듣던 친구들의 웃음을 알아봤어.",
+        "en": "Pieces of RIQ’s memories were tucked between the pages. RIQ recognized the laughter of friends from the garden."
+      }
+    },
+    {
+      "number": 4,
+      "globalChapter": 29,
+      "power": null,
+      "family": "hourglass",
+      "name": {
+        "ko": "시계 서가",
+        "en": "Clock Shelves"
+      },
+      "familyName": {
+        "ko": "모래시계 가문",
+        "en": "Hourglass Family"
+      },
+      "constellation": {
+        "ko": "모래시계자리",
+        "en": "The Hourglass"
+      },
+      "stars": {
+        "nodes": [
+          [
+            0.28,
+            0.2
+          ],
+          [
+            0.73,
+            0.2
+          ],
+          [
+            0.28,
+            0.78
+          ],
+          [
+            0.73,
+            0.78
+          ],
+          [
+            0.5,
+            0.48
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            4
+          ],
+          [
+            1,
+            4
+          ],
+          [
+            2,
+            4
+          ],
+          [
+            3,
+            4
+          ],
+          [
+            2,
+            3
+          ]
+        ]
+      },
+      "intro": {
+        "ko": "모래가 떨어질 때마다 책장이 한 칸씩 울렸어. 리크는 빈 책을 모래시계 옆에 놓았어.",
+        "en": "The shelves chimed in turn as the sand fell. RIQ set the empty book beside the hourglass."
+      },
+      "endingTitle": {
+        "ko": "별빛으로 쓴 날짜",
+        "en": "A Date in Starlight"
+      },
+      "ending": {
+        "ko": "'첫 잔상'의 첫 장에 별빛으로 쓴 날짜가 떠올랐어. 등대가 하나도 세워지기 전의 날이었어.",
+        "en": "A date written in starlight appeared on the first page of The First Echo. It was from before any lighthouse had been built."
+      }
+    },
+    {
+      "number": 5,
+      "globalChapter": 30,
+      "power": "light_swap",
+      "family": "star_librarian",
+      "name": {
+        "ko": "첫 잔상의 책",
+        "en": "Book of the First Echo"
+      },
+      "familyName": {
+        "ko": "별지기 사서 가문",
+        "en": "Star Librarian Family"
+      },
+      "constellation": {
+        "ko": "첫책자리",
+        "en": "The First Book"
+      },
+      "stars": {
+        "nodes": [
+          [
+            0.15,
+            0.31
+          ],
+          [
+            0.15,
+            0.61
+          ],
+          [
+            0.85,
+            0.31
+          ],
+          [
+            0.85,
+            0.61
+          ],
+          [
+            0.5,
+            0.72
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            4
+          ],
+          [
+            4,
+            3
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            2,
+            4
+          ],
+          [
+            0,
+            4
+          ]
+        ]
+      },
+      "intro": {
+        "ko": "사서들이 빈 책 곁에 모였어. 리크가 책을 펼치자 첫 장의 날짜가 다시 빛났어.",
+        "en": "The librarians gathered around the empty book. When RIQ opened it, the date on the first page began to shine again."
+      },
+      "endingTitle": {
+        "ko": "다섯째 등대가 켜지는 밤",
+        "en": "The Fifth Lighthouse Shines"
+      },
+      "ending": {
+        "ko": "첫 잔상을 만든 건 첫 별 자신이었어. 빈 책이 빛으로 차오르며 다섯째 등대가 켜졌어. 리크가 손을 떼자 책 끝의 빛이 한 박자 늦게 흔들렸어.",
+        "en": "The First Star had made the first echo. The empty book filled with light, and the fifth lighthouse lit up. When RIQ lifted a hand, the light at the book’s edge trembled a beat later."
+      }
+    }
+  ],
+  "spirits": [
+    {
+      "id": "s6-01",
+      "levelId": 501,
+      "chapter": 1,
+      "family": "bookworm",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "갈피",
+        "en": "Galpi"
+      },
+      "levelTitle": {
+        "ko": "같은 무늬",
+        "en": "Matching Patterns"
+      },
+      "appearance": {
+        "ko": "보랏빛 등 위에 달무늬 갈피를 달고 있어.",
+        "en": "A moon bookmark rests on a violet back."
+      },
+      "personality": {
+        "ko": "돌아올 친구를 위해 자리를 남겨 둬.",
+        "en": "Always saves a seat for a friend who will return."
+      },
+      "memory": {
+        "ko": "달무늬를 따라가니 따뜻한 책상 앞이었어.",
+        "en": "Following the moon pattern led to a warm desk."
+      },
+      "quote": {
+        "ko": "같은 무늬가 저쪽에도 있어.",
+        "en": "There’s a matching pattern over there."
+      }
+    },
+    {
+      "id": "s6-02",
+      "levelId": 502,
+      "chapter": 1,
+      "family": "bookworm",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "북실",
+        "en": "Buksil"
+      },
+      "levelTitle": {
+        "ko": "잠깐 닫힌 책장",
+        "en": "A Shelf to Wait At"
+      },
+      "appearance": {
+        "ko": "둥근 몸에 붉은 실 한 올을 감고 있어.",
+        "en": "A red thread curls around a round body."
+      },
+      "personality": {
+        "ko": "차례를 기다리며 조용히 실을 고쳐 매.",
+        "en": "Reties the thread quietly while waiting for a turn."
+      },
+      "memory": {
+        "ko": "자리를 내 준 룬석 덕에 복도가 열렸어.",
+        "en": "A rune slid aside and left the corridor clear."
+      },
+      "quote": {
+        "ko": "이 칸에서 잠깐 쉬어 가자.",
+        "en": "Let’s rest on this tile for a moment."
+      }
+    },
+    {
+      "id": "s6-03",
+      "levelId": 503,
+      "chapter": 1,
+      "family": "bookworm",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "돋보",
+        "en": "Dotbo"
+      },
+      "levelTitle": {
+        "ko": "방금 비운 자리",
+        "en": "The Space Just Left"
+      },
+      "appearance": {
+        "ko": "작은 렌즈 너머로 두 눈이 크게 보여.",
+        "en": "Two eyes look huge through a tiny lens."
+      },
+      "personality": {
+        "ko": "흔적이 얼마나 남아 있는지 살펴봐.",
+        "en": "Watches to see how long a trace will linger."
+      },
+      "memory": {
+        "ko": "방금 떠난 책장에 잔상이 잠시 앉아 있었어.",
+        "en": "An echo sat briefly on the shelf someone had just left."
+      },
+      "quote": {
+        "ko": "아직 그 자리에 흔적이 보여.",
+        "en": "I can still see a trace on that shelf."
+      }
+    },
+    {
+      "id": "s6-04",
+      "levelId": 504,
+      "chapter": 1,
+      "family": "bookworm",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "여백",
+        "en": "Yeobaek"
+      },
+      "levelTitle": {
+        "ko": "책등 뒤의 길",
+        "en": "Behind the Spines"
+      },
+      "appearance": {
+        "ko": "크림색 망토 끝에 점 하나가 찍혀 있어.",
+        "en": "A single dot marks the hem of a cream cloak."
+      },
+      "personality": {
+        "ko": "책이 빽빽하면 가만히 한 칸을 비워 둬.",
+        "en": "Keeps one space free when the shelves are crowded."
+      },
+      "memory": {
+        "ko": "한 줄을 비워 두니 짧은 꿈이 들어왔어.",
+        "en": "A little dream slipped in where a line was left blank."
+      },
+      "quote": {
+        "ko": "여기 한 칸은 네 자리야.",
+        "en": "This space is yours."
+      }
+    },
+    {
+      "id": "s6-05",
+      "levelId": 505,
+      "chapter": 1,
+      "family": "bookworm",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "문온",
+        "en": "Munon"
+      },
+      "levelTitle": {
+        "ko": "열람실의 갈피",
+        "en": "Bookmark of the Reading Room"
+      },
+      "appearance": {
+        "ko": "두툼한 갈색 책에 금실 갈피를 물고 있어.",
+        "en": "A thick brown book holds a gold-thread bookmark."
+      },
+      "personality": {
+        "ko": "누구의 꿈이든 첫 줄부터 천천히 읽어.",
+        "en": "Reads every dream slowly from its first line."
+      },
+      "memory": {
+        "ko": "친구가 꿈을 꾸는 밤마다 서고에 새 책이 생겼어.",
+        "en": "Whenever a friend dreamed, a new book appeared in the library."
+      },
+      "quote": {
+        "ko": "책을 펴면 누군가의 밤을 만날 수 있어.",
+        "en": "Open a book and you’ll meet someone’s night."
+      }
+    },
+    {
+      "id": "s6-06",
+      "levelId": 506,
+      "chapter": 2,
+      "family": "paper_bird",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "접새",
+        "en": "Jeopsae"
+      },
+      "levelTitle": {
+        "ko": "종이 위 얼음길",
+        "en": "Ice on Paper"
+      },
+      "appearance": {
+        "ko": "한쪽 날개 끝이 세모로 접혀 있어.",
+        "en": "One wingtip folds into a small triangle."
+      },
+      "personality": {
+        "ko": "길이 막히면 종이를 반듯하게 다시 접어.",
+        "en": "Folds the paper neatly again when a path closes."
+      },
+      "memory": {
+        "ko": "서리가 종이의 접힌 선을 따라 번졌어.",
+        "en": "Frost spread along the crease in the paper."
+      },
+      "quote": {
+        "ko": "접힌 선 끝에 책장이 있어.",
+        "en": "There’s a shelf at the end of the crease."
+      }
+    },
+    {
+      "id": "s6-07",
+      "levelId": 507,
+      "chapter": 2,
+      "family": "paper_bird",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "날루",
+        "en": "Nallu"
+      },
+      "levelTitle": {
+        "ko": "접힌 끝자락",
+        "en": "The Folded Edge"
+      },
+      "appearance": {
+        "ko": "파란 종이 깃에 흰 점들이 박혀 있어.",
+        "en": "White dots speckle the blue paper feathers."
+      },
+      "personality": {
+        "ko": "멀리 갈 때도 뒤에 오는 친구를 기다려.",
+        "en": "Waits for friends to catch up, even on a long flight."
+      },
+      "memory": {
+        "ko": "먼 등대의 등불이 꿈속 바다에도 닿았어.",
+        "en": "A distant lighthouse reached the sea in a dream."
+      },
+      "quote": {
+        "ko": "여기서는 먼 곳도 한 번에 닿아.",
+        "en": "From here, even far places are a step away."
+      }
+    },
+    {
+      "id": "s6-08",
+      "levelId": 508,
+      "chapter": 2,
+      "family": "paper_bird",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "종달",
+        "en": "Jongdal"
+      },
+      "levelTitle": {
+        "ko": "나란한 종이길",
+        "en": "Parallel Paper Paths"
+      },
+      "appearance": {
+        "ko": "접힌 종이 가슴에 조그만 종을 달았어.",
+        "en": "A tiny bell hangs from a folded paper chest."
+      },
+      "personality": {
+        "ko": "앞서 날고도 작은 소리로 차례를 알려 줘.",
+        "en": "Flies ahead and rings softly to call the next turn."
+      },
+      "memory": {
+        "ko": "한 사람은 꿈속에서 가장 높은 곳에 불을 달았어.",
+        "en": "One builder dreamed of setting a light at the highest point."
+      },
+      "quote": {
+        "ko": "내가 먼저 가면 뒤를 따라와.",
+        "en": "I’ll go first, then you can follow."
+      }
+    },
+    {
+      "id": "s6-09",
+      "levelId": 509,
+      "chapter": 2,
+      "family": "paper_bird",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "펴리",
+        "en": "Pyeori"
+      },
+      "levelTitle": {
+        "ko": "돌아 접는 길",
+        "en": "The Path That Folds Back"
+      },
+      "appearance": {
+        "ko": "날개를 펼치면 옅은 금줄이 보여.",
+        "en": "A pale gold line appears when the wings open."
+      },
+      "personality": {
+        "ko": "길을 잃은 친구 곁으로 되돌아와.",
+        "en": "Flies back to anyone who loses the way."
+      },
+      "memory": {
+        "ko": "둘째 등대의 설계도가 종이배처럼 접혀 있었어.",
+        "en": "The second lighthouse’s plans were folded like a paper boat."
+      },
+      "quote": {
+        "ko": "길을 펴면 다시 이쪽으로 이어져.",
+        "en": "Unfold the path and it leads back here."
+      }
+    },
+    {
+      "id": "s6-10",
+      "levelId": 510,
+      "chapter": 2,
+      "family": "paper_bird",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "비람",
+        "en": "Biram"
+      },
+      "levelTitle": {
+        "ko": "다섯 빛의 책등",
+        "en": "Spines of Five Lights"
+      },
+      "appearance": {
+        "ko": "넓은 종이 날개에 등불 다섯 개를 그렸어.",
+        "en": "Five lamps are painted across broad paper wings."
+      },
+      "personality": {
+        "ko": "먼 불빛도 하나씩 세어 모두 챙겨.",
+        "en": "Counts every light, even those far away."
+      },
+      "memory": {
+        "ko": "다섯 등대를 세운 이들의 꿈이 한 권씩 남았어.",
+        "en": "Each builder of the five lighthouses left a dream in a book."
+      },
+      "quote": {
+        "ko": "서로 다른 빛이 한 길을 비췄어.",
+        "en": "Their different lights lit the same path."
+      }
+    },
+    {
+      "id": "s6-11",
+      "levelId": 511,
+      "chapter": 3,
+      "family": "ink",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "먹빛",
+        "en": "Meokbit"
+      },
+      "levelTitle": {
+        "ko": "나뉜 잉크길",
+        "en": "Two Ink Paths"
+      },
+      "appearance": {
+        "ko": "까만 잉크 방울 두 개가 붙어 있어.",
+        "en": "Two drops of black ink cling together."
+      },
+      "personality": {
+        "ko": "친구와 나뉘어도 다시 만날 곳을 정해.",
+        "en": "Picks a meeting place before parting from a friend."
+      },
+      "memory": {
+        "ko": "호수에 먼저 닿았던 그림자가 한 장에 비쳤어.",
+        "en": "The shadow that reached the lake first appeared on a page."
+      },
+      "quote": {
+        "ko": "서로 다른 칸으로 가도 만날 수 있어.",
+        "en": "We can meet even if we take different paths."
+      }
+    },
+    {
+      "id": "s6-12",
+      "levelId": 512,
+      "chapter": 3,
+      "family": "ink",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "번짐",
+        "en": "Beonjim"
+      },
+      "levelTitle": {
+        "ko": "거꾸로 읽는 장",
+        "en": "The Upside-Down Page"
+      },
+      "appearance": {
+        "ko": "잉크 자락이 몸보다 넓게 퍼져 있어.",
+        "en": "A fringe of ink spreads wider than the body."
+      },
+      "personality": {
+        "ko": "책이 거꾸로 놓여도 조용히 돌려 봐.",
+        "en": "Turns an upside-down book gently to read it."
+      },
+      "memory": {
+        "ko": "책을 돌리자 잃었던 목소리가 들렸어.",
+        "en": "Turning the book brought back a lost voice."
+      },
+      "quote": {
+        "ko": "이번 장은 이쪽에서 읽어 볼까?",
+        "en": "Shall we read this page from this side?"
+      }
+    },
+    {
+      "id": "s6-13",
+      "levelId": 513,
+      "chapter": 3,
+      "family": "ink",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "점묵",
+        "en": "Jeommuk"
+      },
+      "levelTitle": {
+        "ko": "두 곳에 찍힌 점",
+        "en": "Two Ink Marks"
+      },
+      "appearance": {
+        "ko": "검은 점 두 개가 발밑을 따라다녀.",
+        "en": "Two black dots follow close behind."
+      },
+      "personality": {
+        "ko": "중요한 길에는 작은 점을 하나 찍어 둬.",
+        "en": "Leaves a small mark on every important path."
+      },
+      "memory": {
+        "ko": "시계탑의 마지막 종소리가 잉크점에 남아 있었어.",
+        "en": "The Clocktower’s last bell lingered in a dot of ink."
+      },
+      "quote": {
+        "ko": "두 점이 서로 다른 책장을 가리켜.",
+        "en": "The two dots point to different shelves."
+      }
+    },
+    {
+      "id": "s6-14",
+      "levelId": 514,
+      "chapter": 3,
+      "family": "ink",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "글새",
+        "en": "Geulsae"
+      },
+      "levelTitle": {
+        "ko": "한 줄씩 엇갈려",
+        "en": "Lines That Cross"
+      },
+      "appearance": {
+        "ko": "두 날개 끝이 작은 펜촉을 닮았어.",
+        "en": "Both wingtips look like little pen nibs."
+      },
+      "personality": {
+        "ko": "다른 정령이 쓸 줄을 넉넉히 남겨 줘.",
+        "en": "Leaves plenty of space for another spirit to write."
+      },
+      "memory": {
+        "ko": "서리 속에 갇혔던 웃음이 종이에 번졌어.",
+        "en": "Laughter once caught in frost spread across the paper."
+      },
+      "quote": {
+        "ko": "내가 쓴 줄 아래에 네 줄을 적어 줘.",
+        "en": "Write your line just below mine."
+      }
+    },
+    {
+      "id": "s6-15",
+      "levelId": 515,
+      "chapter": 3,
+      "family": "ink",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "묵선",
+        "en": "Mukseon"
+      },
+      "levelTitle": {
+        "ko": "페이지 사이의 빛",
+        "en": "Light Between Pages"
+      },
+      "appearance": {
+        "ko": "잉크로 짠 띠 안에 작은 별점이 있어.",
+        "en": "A little star glints inside a ribbon of ink."
+      },
+      "personality": {
+        "ko": "부서진 글자도 버리지 않고 다시 맞춰.",
+        "en": "Gathers broken letters and fits them together again."
+      },
+      "memory": {
+        "ko": "페이지 사이에 리크가 잃었던 기억들이 끼워져 있었어.",
+        "en": "The memories RIQ had lost were tucked between the pages."
+      },
+      "quote": {
+        "ko": "이 웃음은 네가 기억하는 소리야.",
+        "en": "This laughter is a sound you remember."
+      }
+    },
+    {
+      "id": "s6-16",
+      "levelId": 516,
+      "chapter": 4,
+      "family": "hourglass",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "모알",
+        "en": "Moal"
+      },
+      "levelTitle": {
+        "ko": "한 알의 시각",
+        "en": "A Grain of Time"
+      },
+      "appearance": {
+        "ko": "맑은 모래 한 알을 머리에 얹었어.",
+        "en": "A clear grain of sand rests on the head."
+      },
+      "personality": {
+        "ko": "작은 변화도 서두르지 않고 지켜봐.",
+        "en": "Watches even the smallest changes without hurrying."
+      },
+      "memory": {
+        "ko": "한 알이 떨어지자 바늘이 길을 가리켰어.",
+        "en": "One grain fell, and the hand pointed down a path."
+      },
+      "quote": {
+        "ko": "한 알만 더 떨어지면 길이 보여.",
+        "en": "One more grain, and the path will show."
+      }
+    },
+    {
+      "id": "s6-17",
+      "levelId": 517,
+      "chapter": 4,
+      "family": "hourglass",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "찰나",
+        "en": "Chalna"
+      },
+      "levelTitle": {
+        "ko": "바늘이 오는 자리",
+        "en": "Where the Hand Points"
+      },
+      "appearance": {
+        "ko": "모래색 모자에 얇은 바늘이 꽂혀 있어.",
+        "en": "A slim clock hand is tucked into a sand-colored cap."
+      },
+      "personality": {
+        "ko": "고개를 기울여 다음 박자를 들어.",
+        "en": "Tilts the head to listen for the next beat."
+      },
+      "memory": {
+        "ko": "책장을 건너도 모래는 한 알만 떨어졌어.",
+        "en": "Only one grain fell as the shelf carried us across."
+      },
+      "quote": {
+        "ko": "이번에 돌아올 방향을 잘 봐.",
+        "en": "Watch which way it turns this time."
+      }
+    },
+    {
+      "id": "s6-18",
+      "levelId": 518,
+      "chapter": 4,
+      "family": "hourglass",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "사르",
+        "en": "Saru"
+      },
+      "levelTitle": {
+        "ko": "책등을 스치는 바늘",
+        "en": "The Hand by the Shelf"
+      },
+      "appearance": {
+        "ko": "유리 몸속에 분홍 모래가 사르르 흘러.",
+        "en": "Pink sand trickles through a glass body."
+      },
+      "personality": {
+        "ko": "기다리는 동안 서가를 하나씩 정돈해.",
+        "en": "Tidies one shelf at a time while waiting."
+      },
+      "memory": {
+        "ko": "옛 기록은 시계탑의 종보다 훨씬 앞섰어.",
+        "en": "The old record came long before the Clocktower’s bells."
+      },
+      "quote": {
+        "ko": "기다리는 수에도 할 일이 있어.",
+        "en": "There’s something to do while we wait."
+      }
+    },
+    {
+      "id": "s6-19",
+      "levelId": 519,
+      "chapter": 4,
+      "family": "hourglass",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "반각",
+        "en": "Bangak"
+      },
+      "levelTitle": {
+        "ko": "서로 다른 시각",
+        "en": "Hours Apart"
+      },
+      "appearance": {
+        "ko": "모래시계의 두 유리에 별점이 박혀 있어.",
+        "en": "A speck of starlight sits in each bulb of an hourglass."
+      },
+      "personality": {
+        "ko": "두 시계가 어긋나면 먼저 하나를 맞춰.",
+        "en": "Sets one clock first when two disagree."
+      },
+      "memory": {
+        "ko": "별빛 글씨는 바늘이 멈춘 뒤에도 남았어.",
+        "en": "The starlit writing stayed after the hands stopped."
+      },
+      "quote": {
+        "ko": "이 바늘을 먼저 보고, 그다음은 저쪽이야.",
+        "en": "Watch this hand first, then the one over there."
+      }
+    },
+    {
+      "id": "s6-20",
+      "levelId": 520,
+      "chapter": 4,
+      "family": "hourglass",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "사온",
+        "en": "Saon"
+      },
+      "levelTitle": {
+        "ko": "첫 장의 날짜",
+        "en": "The Date on the First Page"
+      },
+      "appearance": {
+        "ko": "낡은 금빛 틀 안에서 모래가 은은하게 빛나.",
+        "en": "Sand glows softly inside a worn golden frame."
+      },
+      "personality": {
+        "ko": "먼저 흐른 시간을 한 알도 빠뜨리지 않아.",
+        "en": "Keeps track of every grain of time that has passed."
+      },
+      "memory": {
+        "ko": "첫 장의 날짜는 등대가 세워지기 전이었어.",
+        "en": "The date on the first page was from before the lighthouses."
+      },
+      "quote": {
+        "ko": "이 날짜에는 아직 등대 불빛이 없었어.",
+        "en": "On this date, the lighthouses had yet to shine."
+      }
+    },
+    {
+      "id": "s6-21",
+      "levelId": 521,
+      "chapter": 5,
+      "family": "star_librarian",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "서명",
+        "en": "Seomyeong"
+      },
+      "levelTitle": {
+        "ko": "문 앞에 놓인 책",
+        "en": "A Book by the Door"
+      },
+      "appearance": {
+        "ko": "자주색 사서 옷에 금실 이름표를 달았어.",
+        "en": "A gold name tag is sewn onto a plum librarian’s coat."
+      },
+      "personality": {
+        "ko": "먼 곳에서 온 책은 먼저 먼지를 털어 줘.",
+        "en": "Dusts off books that have traveled a long way."
+      },
+      "memory": {
+        "ko": "닫힌 문 너머에서 종이가 움직이는 소리가 났어.",
+        "en": "Paper rustled on the other side of the closed door."
+      },
+      "quote": {
+        "ko": "책과 문에 닿는 순서를 떠올려 봐.",
+        "en": "Think about which comes first, the book or the door."
+      }
+    },
+    {
+      "id": "s6-22",
+      "levelId": 522,
+      "chapter": 5,
+      "family": "star_librarian",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "금엽",
+        "en": "Geumyeop"
+      },
+      "levelTitle": {
+        "ko": "수정에 남은 갈피",
+        "en": "Bookmark at the Crystal"
+      },
+      "appearance": {
+        "ko": "책 모서리에 바랜 금박 잎이 붙어 있어.",
+        "en": "A faded gold leaf clings to a book’s corner."
+      },
+      "personality": {
+        "ko": "맡은 자리를 친구에게 조용히 넘겨 줘.",
+        "en": "Quietly makes room for a friend to take over."
+      },
+      "memory": {
+        "ko": "수정 위에 잔상이 남자 금박 문이 열렸어.",
+        "en": "The gilt door opened when an echo lingered on the crystal."
+      },
+      "quote": {
+        "ko": "내가 수정에 흔적을 두고 올게.",
+        "en": "I’ll leave a trace on the crystal."
+      }
+    },
+    {
+      "id": "s6-23",
+      "levelId": 523,
+      "chapter": 5,
+      "family": "star_librarian",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "권지",
+        "en": "Gwonji"
+      },
+      "levelTitle": {
+        "ko": "빛 교대의 빈칸",
+        "en": "A Place for Light Swap"
+      },
+      "appearance": {
+        "ko": "두 장의 종이 사이에 분홍빛이 스며 있어.",
+        "en": "Pink light seeps between two sheets of paper."
+      },
+      "personality": {
+        "ko": "누군가 비운 자리를 잊지 않고 기억해.",
+        "en": "Always remembers the place someone just left."
+      },
+      "memory": {
+        "ko": "빛 교대로 들어선 책장에서 리크는 가만히 섰어.",
+        "en": "RIQ used Light Swap to take a place on a shelf and stayed there."
+      },
+      "quote": {
+        "ko": "빈 자리에 빛을 건네 봐.",
+        "en": "Try sending your light into the space left behind."
+      }
+    },
+    {
+      "id": "s6-24",
+      "levelId": 524,
+      "chapter": 5,
+      "family": "star_librarian",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "등표",
+        "en": "Deungpyo"
+      },
+      "levelTitle": {
+        "ko": "책과 문 사이",
+        "en": "Between Shelf and Door"
+      },
+      "appearance": {
+        "ko": "작은 등불 모양 갈피를 등에 달았어.",
+        "en": "A lantern-shaped bookmark hangs from the back."
+      },
+      "personality": {
+        "ko": "친구가 지나갈 때까지 불빛을 지켜 줘.",
+        "en": "Keeps a light burning until a friend has passed."
+      },
+      "memory": {
+        "ko": "책에서 나온 빛이 서고 꼭대기까지 번졌어.",
+        "en": "Light from a book spread all the way to the library’s roof."
+      },
+      "quote": {
+        "ko": "네가 닿을 때까지 여기서 비출게.",
+        "en": "I’ll keep shining here until you reach it."
+      }
+    },
+    {
+      "id": "s6-25",
+      "levelId": 525,
+      "chapter": 5,
+      "family": "star_librarian",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "책별",
+        "en": "Chaekbyeol"
+      },
+      "levelTitle": {
+        "ko": "다섯째 등불",
+        "en": "The Fifth Light"
+      },
+      "appearance": {
+        "ko": "금박이 닳은 책 위에 작은 등불을 들었어.",
+        "en": "A small lamp rests on a book with worn gold leaf."
+      },
+      "personality": {
+        "ko": "조용히 다음 독자가 올 때까지 책을 지켜.",
+        "en": "Looks after the book quietly until the next reader arrives."
+      },
+      "memory": {
+        "ko": "빈 책에 첫 별이 만든 첫 잔상의 기록이 빛으로 쓰였어.",
+        "en": "The First Star’s first echo appeared in the empty book, written in light."
+      },
+      "quote": {
+        "ko": "이제 다섯째 등대의 불을 켤 수 있어.",
+        "en": "Now we can light the fifth lighthouse."
+      }
+    }
+  ]
+}

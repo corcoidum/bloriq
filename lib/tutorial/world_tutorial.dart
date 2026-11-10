@@ -5,6 +5,7 @@ import '../design/game_theme.dart';
 import '../domain/mechanics/clock_arrow.dart';
 import '../domain/mechanics/ice.dart';
 import '../domain/mechanics/mirror_pair.dart';
+import '../domain/mechanics/shelf_door.dart';
 import '../game/board_badge.dart';
 import '../game/mechanic_legend.dart';
 import '../l10n/app_localizations.dart';
@@ -13,7 +14,8 @@ import '../settings/game_settings.dart';
 enum WorldTutorial {
   mirror(3, 'mirror-guide', MirrorPair.typeId),
   clock(4, 'clock-guide', ClockArrow.typeId),
-  ice(5, 'ice-guide', Ice.typeId);
+  ice(5, 'ice-guide', Ice.typeId),
+  shelf(6, 'shelf-guide', ShelfDoor.typeId);
 
   const WorldTutorial(this.world, this.keyPrefix, this.mechanic);
 
@@ -40,12 +42,18 @@ enum WorldTutorial {
       (t.iceGuideStop, t.iceGuideStopBody),
       (t.iceGuideSetStop, t.iceGuideSetStopBody),
     ],
+    shelf => [
+      (t.shelfGuideEnter, t.shelfGuideEnterBody),
+      (t.shelfGuideBlocked, t.shelfGuideBlockedBody),
+      (t.shelfGuideLeave, t.shelfGuideLeaveBody),
+    ],
   };
 
   String replayLabel(AppLocalizations t) => switch (this) {
     mirror => t.mirrorGuideReplay,
     clock => t.clockGuideReplay,
     ice => t.iceGuideReplay,
+    shelf => t.shelfGuideReplay,
   };
 }
 

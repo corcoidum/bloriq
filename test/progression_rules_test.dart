@@ -211,7 +211,7 @@ void main() {
         'gold_mirror',
       ]);
       expect(defaultTrailId, 'moonlight');
-      expect(titles.length, 19);
+      expect(titles.length, 20);
       for (final text in [
         ...trails.map((t) => t.name),
         ...titles.map((t) => t.name),
@@ -232,6 +232,9 @@ void main() {
       final iceCave = titleById('frost_memory_keeper')!.name;
       expect(iceCave.ko, '서리 속 기억 지기');
       expect(iceCave.en, 'Keeper of Frostbound Memories');
+      final librarian = titleById('first_echo_librarian')!.name;
+      expect(librarian.ko, '첫 잔상의 사서');
+      expect(librarian.en, 'Librarian of the First Echo');
     });
   });
 

@@ -115,13 +115,26 @@
     {
       "number": 6,
       "id": "w6",
-      "status": "planned",
+      "status": "playable",
       "lighthouse": 5,
+      "levels": "assets/levels/world6.json",
+      "story": "assets/story/world6.json",
+      "theme": {
+        "palette": {
+          "background": "#271829",
+          "board": "#55304B",
+          "border": "#C7A568",
+          "accent": "#F4A9CB"
+        },
+        "floor": null,
+        "rock": null,
+        "bgm": "assets/audio/bgm_w6.wav"
+      },
       "title": { "ko": "꿈의 서고 등대", "en": "Dream Library Lighthouse" },
       "subtitle": { "ko": "다섯째 등대 · 첫 잔상의 기록", "en": "Fifth lighthouse · The Record of the First Echo" },
       "mechanic": { "ko": "책장 문: 짝지은 두 책장 칸 사이를 블록이 순식간에 건너가요.", "en": "Bookshelf doors: blocks jump instantly between paired shelf cells." },
       "teaser": { "ko": "서고의 마지막 책장에 '첫 잔상'이라는 빈 책 한 권이 꽂혀 있어.", "en": "On the last shelf of the library sits an empty book titled \"The First Echo\"." },
-      "reveal": { "ko": "첫 잔상을 만든 건 첫 별 자신이었다.", "en": "The first echo was made by the First Star itself." }
+      "reveal": { "ko": "첫 별이 첫 잔상을 만들었다. 빈 책이 빛으로 차오르며 다섯째 등대가 켜졌다.", "en": "The First Star made the first echo. As the empty book filled with light, the fifth lighthouse lit up." }
     },
     {
       "number": 7,

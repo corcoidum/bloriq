@@ -137,3 +137,21 @@ for bar, (bass, first_bell, answer) in enumerate([
 for i in range(len(ice_cave)):
     ice_cave[i] *= min(1., i / (RATE * .045), (len(ice_cave) - i - 1) / (RATE * .10))
 write('bgm_w5.wav', ice_cave)
+
+# 꿈의 서고의 18초 오르골 루프. 높은 철편 소리 사이로 한 박자씩 쉰다.
+library_length = 18.0
+dream_library = [0.] * round(library_length * RATE)
+for bar, (bass, notes) in enumerate([
+    (261.63, (523.25, 659.25, 783.99, 659.25)),
+    (220.00, (440.00, 523.25, 659.25, 880.00)),
+    (174.61, (698.46, 880.00, 783.99, 523.25)),
+    (196.00, (587.33, 493.88, 392.00, 523.25)),
+]):
+    start = bar * 4.5
+    mix(dream_library, tone(bass, 2.6, .055, 1.25, False), start)
+    for offset, note in zip((0., .92, 2.05, 3.22), notes):
+        mix(dream_library, tone(note, 1.13, .15, 3.0), start + offset)
+        mix(dream_library, tone(note * 3.07, .26, .028, 11, False), start + offset)
+for i in range(len(dream_library)):
+    dream_library[i] *= min(1., i / (RATE * .035), (len(dream_library) - i - 1) / (RATE * .11))
+write('bgm_w6.wav', dream_library)

@@ -3,7 +3,6 @@ import 'package:bloriq/design/star_art.dart';
 import 'package:bloriq/domain/mechanics/ice.dart';
 import 'package:bloriq/progress/progress_repository.dart';
 import 'package:bloriq/progression/progression_repository.dart';
-import 'package:bloriq/world/saga_map.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -170,51 +169,6 @@ void main() {
     );
     await closeReleaseApp(tester);
   });
-
-  testWidgets(
-    'clearing 425 completes Ice Cave and previews the Dream Library',
-    (tester) async {
-      seedCampaign({
-        ..._chaptersThroughWorld4,
-        21,
-        22,
-        23,
-        24,
-      }, cleared: releaseLevels(5).take(24));
-      await openReleaseApp(tester);
-      await enterReleaseWorld(tester, 5);
-      await tapVisible(tester, releaseKey('world-continue'));
-      expect(releaseGame(tester).controller.state.level.id, 425);
-      await solveVisibleBoard(tester);
-      final cleared = releaseKey('world-clear');
-      await waitForReleaseWidget(tester, cleared);
-      expect(
-        find.descendant(of: cleared, matching: _storyText('꿈의 서고 등대')),
-        findsOneWidget,
-      );
-      expect(
-        (await ProgressionRepository.load()).completedChapters,
-        contains(25),
-      );
-      await tapVisible(tester, releaseKey('result-next'));
-      final saga = find.byType(SagaMap);
-      await waitForReleaseWidget(tester, saga);
-      final library = releaseKey('saga-world-6');
-      await tester.scrollUntilVisible(
-        library,
-        170,
-        scrollable: find
-            .descendant(of: saga, matching: find.byType(Scrollable))
-            .first,
-      );
-      expect(
-        find.descendant(of: library, matching: _storyText("'첫 잔상'이라는 빈 책")),
-        findsOneWidget,
-      );
-      expect(releaseKey('saga-enter-6'), findsNothing);
-      await closeReleaseApp(tester);
-    },
-  );
 
   testWidgets('all three unlocked guides fit home help at 200% text', (
     tester,

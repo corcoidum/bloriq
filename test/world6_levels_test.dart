@@ -29,6 +29,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/mechanic_solver.dart';
+import 'support/start_game.dart';
 import 'support/story_session.dart';
 import 'support/world_release.dart';
 
@@ -61,41 +62,38 @@ void main() {
   final levels = releaseLevels(_world);
   const solver = PuzzleSolver(maxStates: 200000);
 
-  test(
-    'all 25 draft stages match the five slots without publishing world 6',
-    () async {
-      final saga = Saga.parse(File(Saga.asset).readAsStringSync());
-      expect(saga.world(_world).playable, isFalse);
-      final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
-      expect(manifest.listAssets(), isNot(contains(_levelAsset)));
+  test('all 25 published stages match the five slots', () async {
+    final saga = Saga.parse(File(Saga.asset).readAsStringSync());
+    expect(saga.world(_world).playable, isTrue);
+    final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+    expect(manifest.listAssets(), contains(_levelAsset));
+    expect(
+      levels.map((level) => level.id),
+      List.generate(25, (index) => 501 + index),
+    );
+    expect(
+      levels.map((level) => level.minimumMoves),
+      _targets.expand((chapter) => chapter),
+    );
+    for (final (index, level) in levels.indexed) {
+      final chapter = index ~/ Worlds.stagesPerChapter;
       expect(
-        levels.map((level) => level.id),
-        List.generate(25, (index) => 501 + index),
+        (level.boardWidth, level.boardHeight),
+        (level.id >= 519 ? 6 : 5, 5),
       );
+      expect(level.blocks, hasLength(2));
+      expect(level.mechanics.keys.toSet(), {
+        ShelfDoor.typeId,
+        ?_extras[chapter],
+      });
+      final shelf = level.mechanic<ShelfDoor>(ShelfDoor.typeId)!;
+      expect(shelf.pairs, hasLength(chapter == 2 || chapter == 4 ? 2 : 1));
       expect(
-        levels.map((level) => level.minimumMoves),
-        _targets.expand((chapter) => chapter),
+        level.availablePowers,
+        level.id == 523 ? {PuzzlePower.lightSwap} : isEmpty,
       );
-      for (final (index, level) in levels.indexed) {
-        final chapter = index ~/ Worlds.stagesPerChapter;
-        expect(
-          (level.boardWidth, level.boardHeight),
-          (level.id >= 519 ? 6 : 5, 5),
-        );
-        expect(level.blocks, hasLength(2));
-        expect(level.mechanics.keys.toSet(), {
-          ShelfDoor.typeId,
-          ?_extras[chapter],
-        });
-        final shelf = level.mechanic<ShelfDoor>(ShelfDoor.typeId)!;
-        expect(shelf.pairs, hasLength(chapter == 2 || chapter == 4 ? 2 : 1));
-        expect(
-          level.availablePowers,
-          level.id == 523 ? {PuzzlePower.lightSwap} : isEmpty,
-        );
-      }
-    },
-  );
+    }
+  });
 
   for (final (index, level) in levels.indexed) {
     test(
@@ -245,6 +243,9 @@ void main() {
         return slot == 1 || slot == 0;
       })) {
         final boundary = await _pumpStage(tester, session, settings, level);
+        if (level.id == Worlds.firstLevelId(_world)) {
+          await tapVisible(tester, releaseKey('shelf-guide-skip'));
+        }
         final state = releaseGame(tester).controller.state;
         expect(state.moves, 0);
         expect(state.powers, level.availablePowers);

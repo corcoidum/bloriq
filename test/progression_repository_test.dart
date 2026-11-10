@@ -809,6 +809,7 @@ void main() {
       (3, 'mirror_lake_keeper'),
       (4, 'clocktower_bellkeeper'),
       (5, 'frost_memory_keeper'),
+      (6, 'first_echo_librarian'),
     ]) {
       test(
         'world $world awards all milestones and restores its title',
