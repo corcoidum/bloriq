@@ -181,6 +181,7 @@ class ProgressionRepository {
   bool saveFailed = false, corrupt = false, futureSchema = false;
   bool _writable = true;
   Future<void> _queue = Future.value();
+  int _reservedStardust = 0;
 
   // ---- 읽기 -----------------------------------------------------------------
 
@@ -565,15 +566,16 @@ class ProgressionRepository {
 
   /// 별가루가 충분하면 차감하고 true.
   Future<bool> spendStardust(int amount) async {
-    if (!_writable || amount < 0 || amount > _stardust) return false;
+    if (!_writable || amount < 0 || amount > _stardust - _reservedStardust) {
+      return false;
+    }
     _stardust -= amount;
     await retrySave();
     return true;
   }
 
-  /// 별빛 공방에서 잔영을 산다. 이미 가졌거나 별가루가 모자라면 false.
-  /// 사면 바로 장착한다.
-  Future<bool> buyTrail(String trailId) async {
+  /// 별빛 공방에서 잔영을 산다. 구매를 저장한 뒤에 차감하고 장착한다.
+  Future<bool> buyTrail(String trailId) => _enqueueSave(() async {
     final item = shopItemFor(trailId);
     if (!_writable ||
         item == null ||
@@ -581,12 +583,30 @@ class ProgressionRepository {
         item.price > _stardust) {
       return false;
     }
-    _stardust -= item.price;
-    _ownedTrails.add(trailId);
-    _equippedTrail = trailId;
-    await retrySave();
-    return true;
-  }
+    // 저장 중 다른 소비가 같은 별가루를 쓰지 못하도록 예약한다.
+    _reservedStardust = item.price;
+    try {
+      final snapshot = _snapshot()
+        ..['stardust'] = _stardust - item.price
+        ..['ownedTrails'] = ([..._ownedTrails, trailId]..sort())
+        ..['equippedTrail'] = trailId;
+      if (!await _writeSnapshot(snapshot)) {
+        // SharedPreferences는 쓰기 결과를 받기 전에 캐시를 갱신한다.
+        if (writer == null && _preferences != null) {
+          try {
+            await _preferences.reload();
+          } catch (_) {}
+        }
+        return false;
+      }
+      _stardust -= item.price;
+      _ownedTrails.add(trailId);
+      _equippedTrail = trailId;
+      return true;
+    } finally {
+      _reservedStardust = 0;
+    }
+  });
 
   /// 풀이 따라 하기처럼 별빛 길 밖의 도움을 이 판에 기록한다.
   /// 상한은 더 낮은 쪽을 남긴다.
@@ -637,7 +657,7 @@ class ProgressionRepository {
       companionFamily: companionFamily,
     );
     if (quote.source == StarlightPathSource.stardust &&
-        quote.cost > _stardust) {
+        quote.cost > _stardust - _reservedStardust) {
       return null;
     }
     if (levelKey != null) {
@@ -664,6 +684,9 @@ class ProgressionRepository {
   }
 
   Future<bool> equipTrail(String id) async {
+    while (_reservedStardust > 0) {
+      await _queue;
+    }
     if (!_writable || !_ownedTrails.contains(id)) return false;
     _equippedTrail = id;
     return retrySave();
@@ -812,19 +835,24 @@ class ProgressionRepository {
     'freeStarlightUsed': _freeStarlightUsed.toList()..sort(),
   };
 
-  Future<bool> retrySave() async {
-    final snapshot = jsonEncode(_snapshot());
+  Future<bool> retrySave() => _enqueueSave(() => _writeSnapshot(_snapshot()));
+
+  Future<bool> _enqueueSave(Future<bool> Function() save) {
+    final task = _queue.then((_) => save());
+    _queue = task.then<void>((_) {}, onError: (Object _, StackTrace _) {});
+    return task;
+  }
+
+  Future<bool> _writeSnapshot(Map<String, dynamic> snapshot) async {
     var saved = false;
-    final task = _queue.then((_) async {
-      if (!_writable || _preferences == null) return;
+    if (_writable && _preferences != null) {
       try {
+        final encoded = jsonEncode(snapshot);
         saved =
-            await (writer?.call(storageKey, snapshot) ??
-                _preferences.setString(storageKey, snapshot));
+            await (writer?.call(storageKey, encoded) ??
+                _preferences.setString(storageKey, encoded));
       } catch (_) {}
-    });
-    _queue = task;
-    await task;
+    }
     saveFailed = !saved;
     return saved;
   }

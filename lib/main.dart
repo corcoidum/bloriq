@@ -192,7 +192,8 @@ class _GameScreenState extends State<GameScreen>
   GameAudio? _audio;
   bool _gateBlocked = false;
   ProgressRepository? _progress;
-  CompletionResult? _completion;
+  bool _dailySaveFailed = false;
+  Future<void> Function()? _retryCampaignSave;
   bool _replaying = false;
   bool _reduceMotion = false;
   bool _isNewBest = false;
@@ -241,9 +242,6 @@ class _GameScreenState extends State<GameScreen>
 
   /// 확장 세계: 권능 막대에서 고른 권능. 다음 밀기가 이 권능으로 움직인다.
   PuzzlePower? _armedPower;
-
-  /// 확장 세계 별자리를 저장 전에 떠 둔다.
-  WorldAtlas? _worldBefore;
 
   /// 세계 2부터는 [LoadedWorld] 데이터와 권능 막대를 쓴다.
   bool get _expansion => widget.play.world >= 2;
@@ -445,9 +443,6 @@ class _GameScreenState extends State<GameScreen>
     _atlasBefore = widget.play.mode == PlayMode.campaign
         ? ConstellationAtlas.derive(widget.session.levels, _progress!)
         : null;
-    _worldBefore = _expansion
-        ? widget.session.worldAtlas(widget.play.world)
-        : null;
     _armedPower = null;
     final chapter = _atlasBefore?.forLevel(state.level.id);
     final lightsStar = chapter != null && !chapter.isLit(state.level.id);
@@ -520,7 +515,7 @@ class _GameScreenState extends State<GameScreen>
       _dragBlock = null;
       _dragStart = null;
       _gateBlocked = false;
-      _completion = null;
+      _dailySaveFailed = false;
       _attempt = null;
       _startAttempt();
     });
@@ -592,7 +587,7 @@ class _GameScreenState extends State<GameScreen>
           : null;
       if (mounted && identical(_controller, controller)) {
         setState(() {
-          _completion = result;
+          _dailySaveFailed = !result.saved;
           _reward = reward;
         });
       }
@@ -601,99 +596,117 @@ class _GameScreenState extends State<GameScreen>
     if (widget.play.mode != PlayMode.campaign) return;
     widget.session.struggle.cleared(state.level.id);
     _stuckTimer?.cancel();
-    final previousStars = _progress!
-        .forLevel(state.level.id, revision: state.level.revision)
+    final session = widget.session;
+    final progress = _progress!;
+    final level = state.level;
+    final previousStars = progress
+        .forLevel(level.id, revision: level.revision)
         ?.bestStars;
-    final guided = _guided;
     final starCap = _starCap;
     _clearCap = starCap;
-    final usedStarlight = _starlightUsed || guided || starCap < 3;
+    final usedStarlight = _starlightUsed || _guided || starCap < 3;
     final usedPower = controller.usedPower;
-    final worldBefore = _worldBefore;
-    final worldWasComplete = Worlds.isComplete(
-      widget.play.world,
-      widget.session.progression.completedChapters,
-    );
-    final result = await _progress!.recordCompletion(
-      levelId: state.level.id,
-      revision: state.level.revision,
+    final world = widget.play.world;
+    final atlasBefore = _atlasBefore!;
+    bool current() =>
+        mounted &&
+        identical(_controller, controller) &&
+        identical(controller.state, state);
+
+    Future<void> finish(int stars) async {
+      // 달빛 숲의 별자리는 저장이 성공한 스테이지만 켠다.
+      final atlasAfter = ConstellationAtlas.derive(session.levels, progress);
+      final event = ConstellationAtlas.diff(atlasBefore, atlasAfter, level.id);
+      final chapter = atlasAfter.forLevel(level.id);
+      final worldChapter = session.worldAtlas(world)?.forLevel(level.id);
+      final chapterNumber =
+          worldChapter?.definition.chapter ?? chapter?.chapter;
+      final worldWasComplete = Worlds.isComplete(
+        world,
+        session.progression.completedChapters,
+      );
+      final added = await session.collection.reconcile(
+        progress.completedCampaignLevelIds,
+      );
+      final companion = session.collection.companion;
+      final recording = session.progression.recordClear(
+        levelKey: '${level.id}:${level.revision}',
+        stars: stars,
+        previousBestStars: previousStars,
+        usedStarlightPath: usedStarlight,
+        companionId: companion?.id,
+        companionFamily: companion?.family,
+        // 성장 저장소가 장별 중복을 막으므로, 이전에 기록이 빠진 장도
+        // 다시 클리어하면 완성·황금 상태를 반영할 수 있다.
+        constellationCompletedChapter:
+            (worldChapter?.complete ?? chapter?.complete ?? false)
+            ? chapterNumber
+            : null,
+        constellationGoldenChapter:
+            (worldChapter?.golden ?? chapter?.golden ?? false)
+            ? chapterNumber
+            : null,
+        bareHandedClear: level.world >= 2
+            ? isBareHandedClear(
+                level: level,
+                moves: state.moves,
+                usedPower: usedPower,
+                usedStarlightPath: usedStarlight,
+              )
+            : null,
+      );
+      if (current()) {
+        setState(() {
+          _discovery = added.where((f) => f.levelId == level.id).firstOrNull;
+          _atlasAfter = atlasAfter;
+          _constellationPending = false;
+          _constellation = event;
+          _worldCleared =
+              !worldWasComplete &&
+              Worlds.isComplete(world, session.progression.completedChapters);
+        });
+      }
+      final reward = await recording;
+      if (!current()) return;
+      _game?.trailStyle = session.progression.equippedTrail;
+      setState(() {
+        _reward = reward;
+        // recordClear는 이미 보상을 반영했다. 재시도는 저장만 반복한다.
+        _retryCampaignSave = reward.saved
+            ? null
+            : () async {
+                if (await session.progression.retrySave() && current()) {
+                  setState(() => _retryCampaignSave = null);
+                }
+              };
+      });
+    }
+
+    final result = await progress.recordCompletion(
+      levelId: level.id,
+      revision: level.revision,
       moves: state.moves,
-      minimumMoves: state.level.minimumMoves,
+      minimumMoves: level.minimumMoves,
       maxStars: starCap,
     );
-    final added = result.saved
-        ? await widget.session.collection.reconcile(
-            _progress!.completedCampaignLevelIds,
-          )
-        : <SpiritDefinition>[];
-    if (!mounted ||
-        !identical(_controller, controller) ||
-        !identical(controller.state, state)) {
+    if (result.saved) {
+      await finish(result.stars);
       return;
     }
+    if (!current()) return;
     setState(() {
-      _completion = result;
-      _discovery = added.where((f) => f.levelId == state.level.id).firstOrNull;
-      _updateConstellation(state.level.id, saved: result.saved);
-    });
-    if (!result.saved) return;
-    final event = _constellation;
-    final chapter = _atlasAfter?.forLevel(state.level.id);
-    final companion = widget.session.collection.companion;
-    final worldAfter = worldBefore == null
-        ? null
-        : widget.session.worldAtlas(worldBefore.world);
-    final worldEvent = worldBefore == null || worldAfter == null
-        ? null
-        : WorldAtlas.diff(worldBefore, worldAfter, state.level.id);
-    final reward = await widget.session.progression.recordClear(
-      levelKey: '${state.level.id}:${state.level.revision}',
-      stars: math.min(
-        starRating(moves: state.moves, minimumMoves: state.level.minimumMoves),
-        starCap,
-      ),
-      previousBestStars: previousStars,
-      usedStarlightPath: usedStarlight,
-      companionId: companion?.id,
-      companionFamily: companion?.family,
-      constellationCompletedChapter: worldEvent != null
-          ? worldEvent.completed
-          : event?.chapterCompleted == true
-          ? chapter?.definition.chapter
-          : null,
-      constellationGoldenChapter: worldEvent != null
-          ? worldEvent.golden
-          : event?.becameGolden == true
-          ? chapter?.definition.chapter
-          : null,
-      bareHandedClear: state.level.world >= 2
-          ? isBareHandedClear(
-              level: state.level,
-              moves: state.moves,
-              usedPower: usedPower,
-              usedStarlightPath: usedStarlight,
-            )
-          : null,
-    );
-    if (!mounted ||
-        !identical(_controller, controller) ||
-        !identical(controller.state, state)) {
-      return;
-    }
-    _game?.trailStyle = widget.session.progression.equippedTrail;
-    setState(() {
-      _reward = reward;
-      _worldCleared =
-          !worldWasComplete &&
-          Worlds.isComplete(
-            widget.play.world,
-            widget.session.progression.completedChapters,
-          );
+      _constellationPending =
+          atlasBefore.forLevel(level.id)?.isLit(level.id) == false;
+      _retryCampaignSave = () async {
+        if (!await progress.retrySave()) return;
+        await finish(result.stars);
+      };
     });
   }
 
   void _resetAssist() {
     _reward = null;
+    _retryCampaignSave = null;
     _armedPower = null;
     _starlightUsed = false;
     _starlightFreeUsed = false;
@@ -723,7 +736,7 @@ class _GameScreenState extends State<GameScreen>
     _startAttempt();
     _game!.clearEffects();
     _gateBlocked = false;
-    _completion = null;
+    _dailySaveFailed = false;
   }
 
   /// 풀이 따라 하기: 지금 상태의 다음 최단 수를 비추고, 권능 수면 권능을 골라 둔다.
@@ -900,46 +913,14 @@ class _GameScreenState extends State<GameScreen>
   }
 
   Future<void> _retryProgressSave() async {
-    if (_retryingSave) return;
+    final retry = _retryCampaignSave;
+    if (_retryingSave || retry == null) return;
     setState(() => _retryingSave = true);
-    final controller = _controller;
-    final result = _completion;
-    final saved = await _progress!.retrySave();
-    final added = saved
-        ? await widget.session.collection.reconcile(
-            _progress!.completedCampaignLevelIds,
-          )
-        : <SpiritDefinition>[];
-    if (!mounted) return;
-    setState(() {
-      _retryingSave = false;
-      if (identical(controller, _controller) && result != null) {
-        _completion = CompletionResult(
-          progress: result.progress,
-          stars: result.stars,
-          isNewBest: result.isNewBest,
-          saved: saved,
-        );
-        _discovery ??= added
-            .where((f) => f.levelId == controller!.state.level.id)
-            .firstOrNull;
-        _updateConstellation(controller!.state.level.id, saved: saved);
-      }
-    });
-  }
-
-  /// 저장 결과로만 별을 켠다. 실패하면 점선 고리로 대기 상태를 보여 준다.
-  void _updateConstellation(int levelId, {required bool saved}) {
-    final before = _atlasBefore;
-    if (before == null) return;
-    if (!saved) {
-      _constellationPending = before.forLevel(levelId)?.isLit(levelId) == false;
-      return;
+    try {
+      await retry();
+    } finally {
+      if (mounted) setState(() => _retryingSave = false);
     }
-    final after = ConstellationAtlas.derive(widget.session.levels, _progress!);
-    _atlasAfter = after;
-    _constellationPending = false;
-    _constellation = ConstellationAtlas.diff(before, after, levelId);
   }
 
   Widget? _constellationView(PuzzleController controller) {
@@ -1161,7 +1142,8 @@ class _GameScreenState extends State<GameScreen>
       _attempt?.undo();
       _game!.clearEffects();
       _gateBlocked = false;
-      _completion = null;
+      _dailySaveFailed = false;
+      _retryCampaignSave = null;
       _refreshGuide();
     });
   }
@@ -1366,9 +1348,9 @@ class _GameScreenState extends State<GameScreen>
                     ),
                   ),
                 ),
-              if (_completion?.saved == false) ...[
+              if (_dailySaveFailed || _retryCampaignSave != null) ...[
                 Text(t.saveError),
-                if (widget.play.mode == PlayMode.campaign)
+                if (_retryCampaignSave != null)
                   TextButton(
                     key: const ValueKey('retry-progress'),
                     onPressed: _retryingSave ? null : _retryProgressSave,

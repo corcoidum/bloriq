@@ -2,6 +2,7 @@ import 'package:bloriq/audio/game_audio.dart';
 import 'package:bloriq/domain/puzzle.dart';
 import 'package:bloriq/game/bloriq_game.dart';
 import 'package:bloriq/main.dart';
+import 'package:bloriq/progress/progress_repository.dart';
 import 'package:bloriq/progression/progression_repository.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/start_game.dart';
+import 'support/failing_save_store.dart';
 
 final _board = find.byType(GameWidget<BloriqGame>);
 BloriqGame _game(WidgetTester tester) =>
@@ -115,4 +117,44 @@ void main() {
     expect(saved.bareHanded, isEmpty);
     expect(saved.assistCap('1:1'), 3);
   });
+
+  testWidgets(
+    'retrying both clear writes grants rewards once and clears help',
+    (tester) async {
+      final preferences = await SharedPreferences.getInstance();
+      await preferences.setString(
+        ProgressionRepository.storageKey,
+        '{"version":1,"xp":0,"stardust":40,"backfilled":true}',
+      );
+      final store = await FailingSaveStore.install();
+      await pumpGame(tester, const BloriqApp());
+      await tapVisible(tester, find.byKey(const ValueKey('starlight-path')));
+      expect(_game(tester).hintMove, isNotNull);
+
+      store.rejectedKeys.add(ProgressRepository.storageKey);
+      await _solve(tester);
+      final retry = find.byKey(const ValueKey('retry-progress'));
+      expect(retry, findsOneWidget);
+      await tapVisible(tester, retry);
+      expect(retry, findsOneWidget);
+
+      store.rejectedKeys
+        ..remove(ProgressRepository.storageKey)
+        ..add(ProgressionRepository.storageKey);
+      await tapVisible(tester, retry);
+      expect(retry, findsOneWidget);
+
+      store.rejectedKeys.clear();
+      await tapVisible(tester, retry);
+      expect(retry, findsNothing);
+      final campaign = await ProgressRepository.load();
+      final growth = await ProgressionRepository.load();
+      expect(campaign.forLevel(1)?.completionCount, 1);
+      expect(campaign.forLevel(1)?.bestStars, 2);
+      expect(growth.xp, 60);
+      expect(growth.stardust, 40);
+      expect(growth.assistCap('1:1'), 3);
+      expect(growth.bareHanded, isEmpty);
+    },
+  );
 }

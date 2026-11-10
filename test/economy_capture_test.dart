@@ -1,4 +1,5 @@
 // 검토용 화면: flutter test test/economy_capture_test.dart --dart-define=CAPTURE_ECONOMY=true
+// 공방 저장 실패만 캡처하려면 --dart-define=CAPTURE_WORKSHOP_FAILURE=true
 // 도움 상한 표시, 별빛 공방, 황금 별자리 수호 정령을 360×740에서 찍는다.
 // 일반 테스트 실행에서는 캡처와 파일 쓰기를 수행하지 않는다.
 import 'dart:convert';
@@ -16,13 +17,18 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'support/failing_save_store.dart';
 import 'support/start_game.dart';
+
+const _captureFailure = bool.fromEnvironment('CAPTURE_WORKSHOP_FAILURE');
 
 void main() {
   testWidgets('capture assist cap, workshop and golden guardian', (
     tester,
   ) async {
-    if (!const bool.fromEnvironment('CAPTURE_ECONOMY')) return;
+    if (!const bool.fromEnvironment('CAPTURE_ECONOMY') && !_captureFailure) {
+      return;
+    }
     tester.view.physicalSize = const Size(360, 740);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -51,6 +57,7 @@ void main() {
     final key = GlobalKey();
 
     Future<void> capture(String name) async {
+      if (_captureFailure && name != 'ko-workshop-save-error') return;
       await tester.pump();
       expect(tester.takeException(), isNull, reason: name);
       await tester.runAsync(() async {
@@ -146,6 +153,33 @@ void main() {
     await next();
     await next();
     await capture('ko-rewards-workshop');
+    if (_captureFailure) {
+      final store = await FailingSaveStore.install();
+      final buy = find.byKey(const ValueKey('shop-buy-ember'));
+      final balance = find.byKey(const ValueKey('shop-balance'));
+      store.rejectedKeys.add(ProgressionRepository.storageKey);
+      await tester.tap(buy);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      expect(find.text('구매를 저장하지 못했어요\n다시 시도해 주세요'), findsOneWidget);
+      expect(tester.widget<Text>(balance).data, '650');
+      await capture('ko-workshop-save-error');
+      await tapVisible(
+        tester,
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.byType(TextButton),
+        ),
+      );
+      store.rejectedKeys.clear();
+      await tester.tap(buy);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      expect(tester.widget<Text>(balance).data, '250');
+      expect(buy, findsNothing);
+      await tester.pumpWidget(const SizedBox());
+      return;
+    }
     await next();
     await capture('ko-rewards-trails');
     await tester.pumpWidget(const SizedBox());

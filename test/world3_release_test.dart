@@ -23,6 +23,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/start_game.dart';
+import 'support/failing_save_store.dart';
 
 const _capture = bool.fromEnvironment('CAPTURE_WORLD3_RELEASE');
 const _chaptersThroughWorld2 = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
@@ -93,45 +94,72 @@ void main() {
     },
   );
 
-  testWidgets('the last Cloud-Sea clear opens the second lighthouse', (
+  for (final retrySave in [false, true]) {
+    testWidgets('the last Cloud-Sea clear opens the second lighthouse '
+        '${retrySave ? 'after retrying the save' : 'on the first save'}', (
+      tester,
+    ) async {
+      _seed(
+        _chaptersThroughWorld2.difference({10}),
+        cleared: _levels(2).take(24),
+      );
+      final store = await FailingSaveStore.install();
+      await _openApp(tester);
+      await _openLightroad(tester);
+      expect(_key('saga-enter-3'), findsNothing);
+      await tapVisible(tester, _key('saga-close'));
+
+      await _enterWorld(tester, 2);
+      await tapVisible(tester, _key('world-continue'));
+      expect(_game(tester).controller.state.level.id, 125);
+      if (retrySave) store.rejectedKeys.add(ProgressRepository.storageKey);
+      await _solveVisibleBoard(tester);
+      if (retrySave) {
+        await _waitFor(tester, _key('retry-progress'));
+        expect(_key('world-clear'), findsNothing);
+        store.rejectedKeys.clear();
+        await tapVisible(tester, _key('retry-progress'));
+      }
+      await _waitFor(tester, _key('world-clear'));
+      expect(
+        (await ProgressionRepository.load()).completedChapters,
+        contains(10),
+      );
+      await tapVisible(tester, _key('result-next'));
+      await _waitFor(tester, _worldMap(3));
+      expect(find.text('거울 호수 등대'), findsOneWidget);
+      await tapVisible(tester, _key('world-close'));
+      await waitForHome(tester);
+      expect(
+        find.descendant(
+          of: _key('world-entry'),
+          matching: find.text('거울 호수 등대로'),
+        ),
+        findsOneWidget,
+      );
+      final world3 = await _openLightroad(tester);
+      expect(_key('saga-enter-3'), findsOneWidget);
+      expect(
+        find.descendant(of: world3, matching: find.text('0 / 25 스테이지')),
+        findsOneWidget,
+      );
+      await _closeApp(tester);
+    });
+  }
+
+  testWidgets('replaying a completed chapter repairs an older missing unlock', (
     tester,
   ) async {
-    _seed(
-      _chaptersThroughWorld2.difference({10}),
-      cleared: _levels(2).take(24),
-    );
+    _seed(_chaptersThroughWorld2.difference({6}), cleared: _levels(2));
     await _openApp(tester);
-    await _openLightroad(tester);
-    expect(_key('saga-enter-3'), findsNothing);
-    await tapVisible(tester, _key('saga-close'));
-
     await _enterWorld(tester, 2);
     await tapVisible(tester, _key('world-continue'));
-    expect(_game(tester).controller.state.level.id, 125);
+    expect(_game(tester).controller.state.level.id, 101);
     await _solveVisibleBoard(tester);
     await _waitFor(tester, _key('world-clear'));
-    expect(
-      (await ProgressionRepository.load()).completedChapters,
-      contains(10),
-    );
+    expect((await ProgressionRepository.load()).completedChapters, contains(6));
     await tapVisible(tester, _key('result-next'));
     await _waitFor(tester, _worldMap(3));
-    expect(find.text('거울 호수 등대'), findsOneWidget);
-    await tapVisible(tester, _key('world-close'));
-    await waitForHome(tester);
-    expect(
-      find.descendant(
-        of: _key('world-entry'),
-        matching: find.text('거울 호수 등대로'),
-      ),
-      findsOneWidget,
-    );
-    final world3 = await _openLightroad(tester);
-    expect(_key('saga-enter-3'), findsOneWidget);
-    expect(
-      find.descendant(of: world3, matching: find.text('0 / 25 스테이지')),
-      findsOneWidget,
-    );
     await _closeApp(tester);
   });
 

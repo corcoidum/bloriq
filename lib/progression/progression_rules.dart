@@ -252,6 +252,10 @@ abstract final class ShopText {
   static const owned = ProgressionText('가졌어요', 'Owned');
   static const bought = ProgressionText('새 잔영을 달았어요', 'New trail equipped');
   static const short = ProgressionText('별가루가 모자라요', 'Not enough stardust');
+  static const saveFailed = ProgressionText(
+    '구매를 저장하지 못했어요\n다시 시도해 주세요',
+    'Could not save the purchase\nPlease try again',
+  );
 }
 
 TrailDefinition? trailById(String? id) {

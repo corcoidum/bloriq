@@ -874,8 +874,30 @@ class _RewardsTab extends StatelessWidget {
                 owned: progression.ownedTrails.contains(item.trailId),
                 affordable: progression.stardust >= item.price,
                 onBuy: () async {
-                  await progression.buyTrail(item.trailId);
+                  final bought = await progression.buyTrail(item.trailId);
+                  if (!context.mounted) return;
                   onChanged();
+                  if (bought ||
+                      progression.ownedTrails.contains(item.trailId)) {
+                    return;
+                  }
+                  await showDialog<void>(
+                    context: context,
+                    builder: (dialogContext) => AlertDialog(
+                      content: Text(
+                        progression.stardust < item.price
+                            ? ShopText.short.resolve(lang)
+                            : ShopText.saveFailed.resolve(lang),
+                        style: GameTypography.body.copyWith(color: colors.text),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(dialogContext),
+                          child: Text(t.close),
+                        ),
+                      ],
+                    ),
+                  );
                 },
               ),
             ),

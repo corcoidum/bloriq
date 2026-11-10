@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:bloriq/progression/progression_repository.dart';
 import 'package:bloriq/progression/progression_rules.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'support/failing_save_store.dart';
 
 Future<ProgressionRepository> _load() async =>
     ProgressionRepository.load(await SharedPreferences.getInstance());
@@ -553,6 +556,63 @@ void main() {
       expect(await repo.buyTrail(TrailIds.aurora), false);
       expect(repo.stardust, 25);
       expect(repo.ownedTrails, {'moonlight'});
+    });
+
+    test(
+      'failed purchase preserves the stored balance and equipped trail',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          ProgressionRepository.storageKey: '{"version":1,"stardust":350,"ownedTrails":["tide"],"equippedTrail":"tide"}',
+        });
+        final store = await FailingSaveStore.install();
+        final repo = await _load();
+        store.rejectedKeys.add(ProgressionRepository.storageKey);
+        expect(await repo.buyTrail(TrailIds.rose), false);
+        expect(repo.saveFailed, true);
+        expect(repo.stardust, 350);
+        expect(repo.ownedTrails, isNot(contains(TrailIds.rose)));
+        expect(repo.equippedTrail, TrailIds.tide);
+        final reloaded = await _load();
+        expect(reloaded.stardust, 350);
+        expect(reloaded.ownedTrails, isNot(contains(TrailIds.rose)));
+        expect(reloaded.equippedTrail, TrailIds.tide);
+
+        store.rejectedKeys.clear();
+        expect(await repo.buyTrail(TrailIds.rose), true);
+        expect((await _load()).stardust, 50);
+      },
+    );
+
+    test('a concurrent save cannot persist a rejected purchase', () async {
+      SharedPreferences.setMockInitialValues({
+        ProgressionRepository.storageKey: '{"version":1,"stardust":350}',
+      });
+      final preferences = await SharedPreferences.getInstance();
+      final writing = Completer<void>();
+      final rejected = Completer<bool>();
+      final repo = await ProgressionRepository.load(preferences, (key, value) {
+        if (!writing.isCompleted) {
+          writing.complete();
+          return rejected.future;
+        }
+        return preferences.setString(key, value);
+      });
+      final purchase = repo.buyTrail(TrailIds.rose);
+      await writing.future;
+      expect(repo.stardust, 350);
+      expect(await repo.spendStardust(60), false);
+      final clear = repo.recordClear(
+        levelKey: '1:1',
+        stars: 3,
+        previousBestStars: null,
+      );
+      rejected.complete(false);
+      expect(await purchase, false);
+      expect((await clear).saved, true);
+      final reloaded = await _load();
+      expect(reloaded.stardust, 375);
+      expect(reloaded.ownedTrails, isNot(contains(TrailIds.rose)));
+      expect(reloaded.equippedTrail, TrailIds.moonlight);
     });
   });
 
