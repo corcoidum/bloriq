@@ -1,11 +1,15 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
+import '../domain/mechanics/clock_arrow.dart';
 import '../domain/mechanics/echo_eraser.dart';
 import '../domain/mechanics/echo_gate.dart';
 import '../domain/mechanics/echo_hold.dart';
 import '../domain/mechanics/goal_only.dart';
 import '../domain/mechanics/mirror_pair.dart';
 import '../domain/mechanics/one_way.dart';
+import 'clock_arrow_art.dart';
 import 'mirror_pair_art.dart';
 
 enum GateBadge { crystal, open, closed }
@@ -72,6 +76,15 @@ class BoardBadge extends CustomPainter {
     Offset direction = const Offset(1, 0),
     GateBadge gate = GateBadge.crystal,
   }) {
+    if (type == ClockArrow.typeId) {
+      ClockArrowArt.draw(
+        canvas,
+        center,
+        diameter,
+        angle: math.atan2(direction.dy, direction.dx),
+      );
+      return;
+    }
     final glyph = _glyphs[type];
     if (glyph == null) return;
     canvas.save();

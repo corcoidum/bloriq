@@ -4,24 +4,8 @@ import 'board_mechanic.dart';
 class OneWay extends BoardMechanic {
   OneWay(Map<Position, Position> arrows) : arrows = Map.unmodifiable(arrows);
 
-  factory OneWay.parse(Map<String, dynamic> rule) {
-    final tiles = rule['tiles'];
-    if (tiles is! List || tiles.isEmpty) {
-      throw const FormatException('One-way rule requires tiles');
-    }
-    final arrows = <Position, Position>{};
-    for (final tile in tiles) {
-      final point = parseMechanicPoint(tile);
-      if (tile is! Map<String, dynamic> ||
-          tile['dx'] is! int ||
-          tile['dy'] is! int ||
-          arrows.containsKey(point)) {
-        throw const FormatException('Invalid or duplicate one-way tile');
-      }
-      arrows[point] = Position(tile['dx'] as int, tile['dy'] as int);
-    }
-    return OneWay(arrows);
-  }
+  factory OneWay.parse(Map<String, dynamic> rule) =>
+      OneWay(parseMechanicArrows(rule, 'One-way'));
 
   static const typeId = 'oneWay';
   @override

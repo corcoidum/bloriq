@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 
 import 'audio/game_audio.dart';
 import 'domain/puzzle.dart';
+import 'domain/mechanics/clock_arrow.dart';
 import 'domain/mechanics/mirror_pair.dart';
 import 'design/game_theme.dart';
 import 'game/bloriq_game.dart';
@@ -1853,6 +1854,50 @@ class _GameScreenState extends State<GameScreen>
                         ),
                       ),
                     );
+                    final clockPhase = _game!.clockPhase;
+                    final boardHeading = clockPhase == null
+                        ? levelLabel
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(child: levelLabel),
+                              Flexible(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: ValueListenableBuilder<int>(
+                                    valueListenable: clockPhase,
+                                    builder: (_, phase, _) => Semantics(
+                                      key: const ValueKey('clock-phase'),
+                                      label: t.clockPhaseLabel(
+                                        phase + 1,
+                                        ClockArrow.phaseCount,
+                                      ),
+                                      excludeSemantics: true,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.schedule_rounded,
+                                            size: 16,
+                                            color: colors.rewardInk,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '${phase + 1}/${ClockArrow.phaseCount}',
+                                            style: GameTypography.label
+                                                .copyWith(
+                                                  color: colors.rewardInk,
+                                                  fontSize: 13,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
                     return Center(
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 560),
@@ -1956,7 +2001,7 @@ class _GameScreenState extends State<GameScreen>
                                         Expanded(
                                           child: Align(
                                             alignment: Alignment.centerLeft,
-                                            child: levelLabel,
+                                            child: boardHeading,
                                           ),
                                         ),
                                         const SizedBox(width: 6),
@@ -1977,7 +2022,7 @@ class _GameScreenState extends State<GameScreen>
                                     ),
                                   ),
                                 ] else ...[
-                                  levelLabel,
+                                  boardHeading,
                                   SizedBox(height: compact ? 4 : 8),
                                   // 정수 높이로 고정해 아래 보드가 픽셀 경계에 놓이게 한다.
                                   SizedBox(

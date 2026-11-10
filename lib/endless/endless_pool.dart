@@ -6,15 +6,17 @@ import 'package:flutter/services.dart';
 import '../domain/puzzle.dart';
 import 'endless_rules.dart';
 
-/// 판을 돌리고 뒤집는 8가지 방법 중 하나로 옮긴다. 규칙은 방향에 치우치지 않으므로
-/// 최단 수는 그대로다. [symmetry] 0..7: 비트 2는 좌우 뒤집기, 아래 두 비트는 90° 회전 수.
+/// 최단 수를 보존하며 판을 돌리거나 뒤집는다.
+/// [symmetry] 0..7: 비트 2는 좌우 뒤집기, 아래 두 비트는 90° 회전 수.
 Level transformLevel(Level level, int symmetry) {
   if (symmetry < 0 || symmetry > 7) {
     throw ArgumentError.value(symmetry, 'symmetry');
   }
-  if (symmetry == 0) return level;
-  final mirror = symmetry >= 4;
+  final mirror =
+      symmetry >= 4 &&
+      level.mechanics.values.every((mechanic) => mechanic.reflectionSymmetric);
   final turns = symmetry % 4;
+  if (turns == 0 && !mirror) return level;
   final width = level.boardWidth, height = level.boardHeight;
 
   Position point(Position p) {

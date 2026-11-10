@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../design/game_theme.dart';
 import '../design/keep_all_text.dart';
+import '../domain/mechanics/clock_arrow.dart';
 import '../domain/mechanics/echo_eraser.dart';
 import '../domain/mechanics/echo_gate.dart';
 import '../domain/mechanics/echo_hold.dart';
@@ -88,6 +89,7 @@ class MechanicLegend extends StatelessWidget {
           : 0,
     ),
     MirrorPair.typeId: _LegendText((t, _) => [t.mirrorPairRule]),
+    ClockArrow.typeId: _LegendText((t, _) => [t.clockArrowRule]),
   };
 
   static List<LegendItem> itemsFor(

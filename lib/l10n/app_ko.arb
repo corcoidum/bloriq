@@ -45,6 +45,8 @@
   "oneWayRule": "물길 칸: 물이 흐르는 쪽으로만 나갈 수 있어요.",
   "goalOnlyRule": "클로버 칸: 리크만 들어갈 수 있어요.",
   "mirrorPairRule": "거울 짝 — 하나를 밀면 짝은 반대쪽으로 움직여요",
+  "clockArrowRule": "시곗바늘 칸 — 한 수마다 화살표가 시계 방향으로 돌아요, 화살표 쪽으로만 나갈 수 있어요",
+  "clockPhaseLabel": "시곗바늘 시각 {total}칸 중 {phase}번째",
   "mirrorGuidePush": "하나를 밀어 봐요",
   "mirrorGuidePushBody": "같은 고리의 블록 두 개가 짝이에요. 그중 하나를 한 칸 밀어 봐요.",
   "mirrorGuideFollow": "짝은 반대로",

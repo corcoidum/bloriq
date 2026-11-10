@@ -16,7 +16,11 @@ SIMILARITY_THRESHOLD = .8
 
 def orientations(level: dict) -> list[frozenset[str]]:
     result = []
-    for mirror in (False, True):
+    rules = level['specialRules']
+    # 거울 반사는 시계 방향을 반시계 방향으로 바꾸므로 같은 판이 아니다.
+    mirrors = (False, True) if all(REGISTRY[rule['type']].reflection_symmetric
+                                   for rule in rules) else (False,)
+    for mirror in mirrors:
         for rotation in range(4):
             width, height = level['boardWidth'], level['boardHeight']
 
@@ -42,7 +46,7 @@ def orientations(level: dict) -> list[frozenset[str]]:
                       token('start', level['startPosition']), token('exit', level['exitPosition'])}
             tokens.update(token('block', block) for block in level['blocks'])
             tokens.update(token('wall', wall) for wall in level['obstacles'])
-            for rule in level['specialRules']:
+            for rule in rules:
                 tokens.update(REGISTRY[rule['type']].auditTokens(level, rule, token, direction))
             result.append(frozenset(tokens))
     return result

@@ -21,8 +21,11 @@ DEFAULT_OUTPUT = ROOT / 'test/fixtures/power_fuzz.json'
 MAX_STATES = 400_000
 
 
-def random_mechanic_level(kinds: list[str], rng: random.Random) -> dict:
-    width, height = rng.choice([(4, 4), (5, 4), (5, 5)]) if len(kinds) < 5 else (5, 5)
+def random_mechanic_level(kinds: list[str], rng: random.Random,
+                          *, size: tuple[int, int] | None = None) -> dict:
+    if size is None:
+        size = rng.choice([(4, 4), (5, 4), (5, 5)]) if len(kinds) < 5 else (5, 5)
+    width, height = size
     unused = cells(width, height)
     rng.shuffle(unused)
 

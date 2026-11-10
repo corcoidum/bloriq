@@ -53,6 +53,7 @@ class BoardMechanic:
     # 훅 이름은 Dart의 BoardMechanic과 맞춘다.
     type: ClassVar[str]
     max_instances: ClassVar[int] = 1
+    reflection_symmetric: ClassVar[bool] = True
     cells: Positions = ()
 
     def combine(self, other: BoardMechanic) -> BoardMechanic:
@@ -277,10 +278,47 @@ class MirrorPair(BoardMechanic):
         return (f"{cls.type}:{'/'.join(endpoints)}",)
 
 
+class ClockArrow(OneWay):
+    type = 'clockArrow'
+    reflection_symmetric = False
+
+    def canLeave(self, state: State, source: Position, direction: Position) -> bool:
+        arrow = self.arrows.get(source)
+        if arrow is None:
+            return True
+        x, y = arrow
+        phase = self.stateKey(state)
+        if phase == 1:
+            arrow = -y, x
+        elif phase == 2:
+            arrow = -x, -y
+        elif phase == 3:
+            arrow = y, -x
+        return arrow == direction
+
+    def stateKey(self, state: State) -> int:
+        return state.moves % 4
+
+    @classmethod
+    def randomRule(cls, level: dict, rng: Random, take: Callable[[], dict]) -> dict:
+        tiles = []
+        for _ in range(rng.randint(2, 4)):
+            dx, dy = rng.choice(DIRECTIONS)
+            tiles.append({**take(), 'dx': dx, 'dy': dy})
+        return {'type': cls.type, 'tiles': tiles}
+
+    @classmethod
+    def auditTokens(cls, level: dict, rule: dict, token: AuditToken,
+                    direction: AuditDirection) -> Iterable[str]:
+        for tile in rule['tiles']:
+            dx, dy = direction(tile['dx'], tile['dy'])
+            yield token(f'{cls.type}{dx},{dy}', tile)
+
+
 # 순서는 Dart MechanicRegistry와 같아야 한다.
 REGISTRY = {
     mechanic.type: mechanic
-    for mechanic in (EchoEraser, EchoHold, OneWay, GoalOnly, EchoGate, MirrorPair)
+    for mechanic in (EchoEraser, EchoHold, OneWay, GoalOnly, EchoGate, MirrorPair, ClockArrow)
 }
 
 

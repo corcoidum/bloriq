@@ -1,4 +1,5 @@
 import 'board_mechanic.dart';
+import 'clock_arrow.dart';
 import 'echo_eraser.dart';
 import 'echo_gate.dart';
 import 'echo_hold.dart';
@@ -17,6 +18,7 @@ abstract final class MechanicRegistry {
     GoalOnly.typeId: GoalOnly.parse,
     EchoGate.typeId: EchoGate.parse,
     MirrorPair.typeId: MirrorPair.parse,
+    ClockArrow.typeId: ClockArrow.parse,
   };
 
   static List<BoardMechanic> parse(Object? rules) {

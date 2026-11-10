@@ -4,7 +4,7 @@ import 'package:bloriq/domain/puzzle.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('all six mechanics are registered by JSON type', () {
+  test('all seven mechanics are registered by JSON type', () {
     expect(
       MechanicRegistry.parsers.keys,
       containsAll([
@@ -14,6 +14,7 @@ void main() {
         'goalOnly',
         'echoGate',
         'mirrorPair',
+        'clockArrow',
       ]),
     );
   });
@@ -35,6 +36,20 @@ void main() {
         'type': 'oneWay',
         'tiles': [
           {'x': 1, 'y': 0, 'dx': 1, 'dy': 1},
+        ],
+      },
+      {'type': 'clockArrow', 'tiles': []},
+      {
+        'type': 'clockArrow',
+        'tiles': [
+          {'x': 1, 'y': 0, 'dx': 1, 'dy': 1},
+        ],
+      },
+      {
+        'type': 'clockArrow',
+        'tiles': [
+          {'x': 1, 'y': 0, 'dx': 1, 'dy': 0},
+          {'x': 1, 'y': 0, 'dx': 0, 'dy': 1},
         ],
       },
     ]) {

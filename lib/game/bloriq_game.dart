@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flame/game.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../design/game_theme.dart';
@@ -10,7 +11,9 @@ import '../design/star_art.dart';
 import 'block_art.dart';
 import 'board_geometry.dart';
 import 'board_badge.dart';
+import 'clock_arrow_art.dart';
 import '../domain/mechanics/board_mechanic.dart';
+import '../domain/mechanics/clock_arrow.dart';
 import '../domain/mechanics/echo_eraser.dart';
 import '../domain/mechanics/echo_gate.dart';
 import '../domain/mechanics/echo_hold.dart';
@@ -29,6 +32,7 @@ typedef _MechanicCanvas = ({
   Offset Function(Position) center,
   double cell,
   double pulse,
+  double clockTurn,
 });
 typedef _MechanicPainter = void Function(
   BloriqGame game,
@@ -55,8 +59,14 @@ class DragPreview {
 
 /// The domain owns the rules; this renderer only animates their results.
 class BloriqGame extends FlameGame {
-  BloriqGame(this.controller);
+  BloriqGame(this.controller)
+    : _clockPhase =
+          controller.state.level.mechanics.containsKey(ClockArrow.typeId)
+          ? ValueNotifier(ClockArrow.phaseAt(controller.state.moves))
+          : null;
   final PuzzleController controller;
+  final ValueNotifier<int>? _clockPhase;
+  ValueListenable<int>? get clockPhase => _clockPhase;
   BoardGeometry? _geometry;
   BoardGeometry get geometry =>
       _geometry ??
@@ -78,6 +88,8 @@ class BloriqGame extends FlameGame {
   double _motion = 1;
   static const _twinDelay = .1;
   static final _moveSeconds = GameEffects.moveDuration.inMilliseconds / 1000;
+  static const _clockTurnSeconds = .2;
+  double _clockTurn = 1;
   MirrorShift? _twin;
   double _twinTime = 0;
   Position? _blocked;
@@ -137,7 +149,7 @@ class BloriqGame extends FlameGame {
   double _celebrationProgress = 1;
   bool _isNewBest = false;
   List<MoveRecord>? _replay;
-  static const _replayDuration = 2.5;
+  double _replayDuration = 2.5;
   double _replayTime = 0;
   VoidCallback? _onReplayFinished;
 
@@ -157,6 +169,7 @@ class BloriqGame extends FlameGame {
     _reduceMotion = reduceMotion;
     if (reduceMotion) {
       _motion = 1;
+      _clockTurn = 1;
       _twin = null;
     }
   }
@@ -209,7 +222,12 @@ class BloriqGame extends FlameGame {
     clearEffects();
     _replay = moves;
     _replayTime = 0;
+    // 빠른 리플레이에서도 시곗바늘 한 바퀴의 1/4이 잘리지 않게 한다.
+    _replayDuration = _clockPhase == null
+        ? 2.5
+        : math.max(2.5, moves.length * _clockTurnSeconds);
     _onReplayFinished = onFinished;
+    _syncReplayClock();
     return true;
   }
 
@@ -220,6 +238,7 @@ class BloriqGame extends FlameGame {
     _movingId = null;
     _from = null;
     _oldEcho = null;
+    _syncClockPhase();
     final callback = _onReplayFinished;
     _onReplayFinished = null;
     callback?.call();
@@ -247,6 +266,10 @@ class BloriqGame extends FlameGame {
     _from = move.from;
     _oldEcho = move.previousEcho;
     _motion = _reduceMotion ? 1 : 0;
+    if (_clockPhase != null) {
+      _clockTurn = _reduceMotion ? 1 : 0;
+      _syncClockPhase();
+    }
     _twin = _reduceMotion ? null : MirrorPair.recordedShift(move);
     _twinTime = 0;
   }
@@ -288,12 +311,41 @@ class BloriqGame extends FlameGame {
     _movingId = null;
     _dragId = null;
     _motion = 1;
+    _clockTurn = 1;
+    _syncClockPhase();
     _twin = null;
     _blockedTime = 0;
     _impactTime = 0;
     _shakeTime = 0;
     _celebrationProgress = 1;
     _isNewBest = false;
+  }
+
+  void _syncClockPhase([int? moves]) {
+    _clockPhase?.value = ClockArrow.phaseAt(moves ?? controller.state.moves);
+  }
+
+  ({MoveRecord move, double fraction})? get _replayFrame {
+    final replay = _replay;
+    if (replay == null) return null;
+    final progress = _replayTime / _replayDuration * replay.length;
+    final index = math.min(progress.floor(), replay.length - 1);
+    return (move: replay[index], fraction: (progress - index).clamp(0.0, 1.0));
+  }
+
+  double _replayClockTurn(double fraction) => _reduceMotion
+      ? 1
+      : math.min(
+          1.0,
+          fraction * _replayDuration / _replay!.length / _clockTurnSeconds,
+        );
+
+  void _syncReplayClock() {
+    if (_clockPhase == null) return;
+    final (:move, :fraction) = _replayFrame!;
+    _syncClockPhase(
+      _replayClockTurn(fraction) < 1 ? move.before.moves : move.after.moves,
+    );
   }
 
   @override
@@ -303,10 +355,15 @@ class BloriqGame extends FlameGame {
       _replayTime += dt;
       if (_replayTime >= _replayDuration) {
         skipReplay();
+      } else {
+        _syncReplayClock();
       }
     } else {
       final wasMoving = _motion < 1;
       _motion = _reduceMotion ? 1 : math.min(1.0, _motion + dt / _moveSeconds);
+      if (_clockTurn < 1) {
+        _clockTurn = math.min(1.0, _clockTurn + dt / _clockTurnSeconds);
+      }
       if (_twin != null && _twinTime < _twinDelay + _moveSeconds) {
         _twinTime += dt;
       }
@@ -328,25 +385,20 @@ class BloriqGame extends FlameGame {
   @override
   void render(Canvas canvas) {
     super.render(canvas);
-    final replay = _replay;
     var twin = _twin;
     var twinMotion = ((_twinTime - _twinDelay) / _moveSeconds).clamp(0.0, 1.0);
+    var clockTurn = _clockTurn;
     PuzzleState state;
-    if (replay != null) {
-      final progress = (_replayTime / _replayDuration * replay.length).clamp(
-        0.0,
-        replay.length.toDouble(),
-      );
-      final index = math.min(progress.floor(), replay.length - 1);
-      final move = replay[index];
+    if (_replayFrame case (:final move, :final fraction)) {
       state = move.after;
       _movingId = move.blockId;
       _from = move.from;
       _oldEcho = move.previousEcho;
-      _motion = _reduceMotion ? 1 : (progress - index).clamp(0.0, 1.0);
+      _motion = _reduceMotion ? 1 : fraction;
+      if (_clockPhase != null) clockTurn = _replayClockTurn(fraction);
       twin = MirrorPair.recordedShift(move);
       // 짧은 재생 구간에서도 짝의 이동이 다음 수에 잘리지 않게 지연을 줄인다.
-      final lag = math.min(.45, _twinDelay * replay.length / _replayDuration);
+      final lag = math.min(.45, _twinDelay * _replay!.length / _replayDuration);
       twinMotion = ((_motion - lag) / (1 - lag)).clamp(0.0, 1.0);
     } else {
       state = controller.state;
@@ -384,6 +436,7 @@ class BloriqGame extends FlameGame {
       center: center,
       cell: cell,
       pulse: _reduceMotion ? 0.0 : .5 + .5 * math.sin(_hintTime * 2.2),
+      clockTurn: clockTurn,
     );
     _gateTarget = state.isGateOpen;
     _drawMechanics(mechanicCanvas, badges: false);
@@ -651,12 +704,46 @@ class BloriqGame extends FlameGame {
         game._drawTileMechanic(board, mechanic, badges, 'tile_clover'),
     EchoGate.typeId: (game, board, mechanic, badges) =>
         game._drawGateMechanic(board, mechanic as EchoGate, badges),
+    ClockArrow.typeId: (game, board, mechanic, badges) =>
+        game._drawClockMechanic(board, mechanic as ClockArrow, badges),
   };
 
   /// 먼저 판석을 그리고, 블록 위에 남는 작은 배지는 나중에 그린다.
   void _drawMechanics(_MechanicCanvas board, {required bool badges}) {
     for (final mechanic in board.state.level.mechanics.values) {
       _mechanicPainters[mechanic.type]?.call(this, board, mechanic, badges);
+    }
+  }
+
+  void _drawClockMechanic(
+    _MechanicCanvas board,
+    ClockArrow mechanic,
+    bool badges,
+  ) {
+    const quarter = math.pi / 2;
+    final phase = ClockArrow.phaseAt(board.state.moves);
+    // 3 → 0도 앞으로 90°만 돌도록 현재 시각에서 이전 각도를 구한다.
+    final turn = (phase - 1 + board.clockTurn) * quarter;
+    final nextTurn = board.preview == null
+        ? null
+        : ClockArrow.phaseAt(board.preview!.moves) * quarter;
+    for (final MapEntry(key: position, value: arrow)
+        in mechanic.arrows.entries) {
+      final occupied = board.state.blocks.any(
+        (block) => block.position == position,
+      );
+      if (badges != occupied) continue;
+      final center = board.center(position);
+      final base = math.atan2(arrow.y, arrow.x);
+      ClockArrowArt.draw(
+        board.canvas,
+        occupied
+            ? center + Offset(board.cell * .32, -board.cell * .32)
+            : center,
+        board.cell * (occupied ? .32 : .61),
+        angle: base + turn,
+        previewAngle: nextTurn == null ? null : base + nextTurn,
+      );
     }
   }
 
@@ -711,7 +798,16 @@ class BloriqGame extends FlameGame {
     EchoGate mechanic,
     bool badges,
   ) {
-    final (:canvas, :paint, :state, :preview, :center, :cell, pulse: _) = board;
+    final (
+      :canvas,
+      :paint,
+      :state,
+      :preview,
+      :center,
+      :cell,
+      pulse: _,
+      clockTurn: _,
+    ) = board;
     final switchPosition = mechanic.switchPosition;
     final gatePosition = mechanic.gatePosition;
     final previewGateOpen = preview?.isGateOpen;

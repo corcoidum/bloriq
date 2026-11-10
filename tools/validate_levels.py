@@ -160,6 +160,8 @@ def validate_level(
             move = push if power is None else (*push, power)
             parents[next_key] = (key, move)
             if len(parents) > max_states:
+                if stats is not None:
+                    stats['visited'] = len(parents)
                 raise SearchBudgetExceeded(f"Level {level['id']} search budget exceeded: {max_states}")
             if next_state.positions[0] == exit_point:
                 if must_use is not None and must_use in next_state.powers:
@@ -176,6 +178,8 @@ def validate_level(
             if max_moves is None or next_state.moves < max_moves:
                 pending.append((next_state, next_key))
     check_deadline()
+    if stats is not None:
+        stats['visited'] = len(parents)
     limit = f' within {max_moves} moves' if max_moves is not None else ''
     raise ValueError(f"Level {level['id']} has no solution{limit}")
 

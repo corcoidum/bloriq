@@ -6,6 +6,7 @@ abstract class BoardMechanic {
 
   String get type;
   Iterable<Position> get cells => const [];
+  bool get reflectionSymmetric => true;
   void validate(Level level) {}
 
   BoardMechanic combine(BoardMechanic other) =>
@@ -58,4 +59,26 @@ Set<Position> parseMechanicPositions(Map<String, dynamic> rule) {
     throw const FormatException('Duplicate mechanism tile');
   }
   return positions;
+}
+
+Map<Position, Position> parseMechanicArrows(
+  Map<String, dynamic> rule,
+  String name,
+) {
+  final tiles = rule['tiles'];
+  if (tiles is! List || tiles.isEmpty) {
+    throw FormatException('$name rule requires tiles');
+  }
+  final arrows = <Position, Position>{};
+  for (final tile in tiles) {
+    final point = parseMechanicPoint(tile);
+    if (tile is! Map<String, dynamic> ||
+        tile['dx'] is! int ||
+        tile['dy'] is! int ||
+        arrows.containsKey(point)) {
+      throw FormatException('Invalid or duplicate $name tile');
+    }
+    arrows[point] = Position(tile['dx'] as int, tile['dy'] as int);
+  }
+  return arrows;
 }
