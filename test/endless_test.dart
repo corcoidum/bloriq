@@ -84,7 +84,7 @@ void main() {
 
   group('rules', () {
     test('depth climbs through four seas', () {
-      expect([1, 5, 6, 15, 16, 35, 36, 500].map(EndlessRules.tierForDepth), [
+      expect([1, 3, 4, 10, 11, 22, 23, 500].map(EndlessRules.tierForDepth), [
         1,
         1,
         2,
@@ -184,6 +184,54 @@ void main() {
   group('voyage run', () {
     late final EndlessPool pool;
     setUpAll(() => pool = _pool());
+
+    test('the first 30 boards climb from basic moves to paired mechanics', () {
+      for (final seed in [1, 42, 2026]) {
+        final run = VoyageRun.start(pool, seed: seed);
+        final seen = <int>{};
+        for (var depth = 1; depth <= 30; depth++) {
+          final (minMoves, maxMoves, minRules, maxRules) = switch (depth) {
+            <= 3 => (4, 6, 0, 0),
+            <= 10 => (6, 9, 1, 1),
+            <= 22 => (9, 12, 1, 2),
+            _ => (12, 16, 2, 2),
+          };
+          final level = pool.level(run.board)!;
+          final reason = 'seed $seed, sea $depth';
+          expect(run.depth, depth, reason: reason);
+          expect(seen.add(level.id), isTrue, reason: reason);
+          expect(
+            level.minimumMoves,
+            inInclusiveRange(minMoves, maxMoves),
+            reason: reason,
+          );
+          expect(
+            level.mechanics.length,
+            inInclusiveRange(minRules, maxRules),
+            reason: reason,
+          );
+          for (var push = 0; push < level.minimumMoves; push++) {
+            run.pushed();
+          }
+          run.clear(level.minimumMoves, pool);
+        }
+      }
+    });
+
+    test('a saved calm board resumes at sea 5 before picking a new tier', () {
+      // 이전 곡선에서는 5번째 바다도 기믹 없는 판이었다.
+      final oldRun = VoyageRun.start(pool, seed: 42)
+        ..depth = 5
+        ..pushed();
+      final resumed = VoyageRun.fromJson(oldRun.toJson());
+      expect(resumed.board.toJson(), oldRun.board.toJson());
+      expect(resumed.pushes, 1);
+      final oldLevel = pool.level(resumed.board)!;
+      expect(oldLevel.mechanics, isEmpty);
+      resumed.clear(oldLevel.minimumMoves, pool);
+      expect(resumed.depth, 6);
+      expect(pool.level(resumed.board)!.mechanics, hasLength(1));
+    });
 
     test('wasted pushes burn the lantern and a perfect clear refills it', () {
       final run = VoyageRun.start(pool, seed: 5);

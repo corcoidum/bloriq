@@ -30,13 +30,13 @@ abstract final class EndlessRules {
   /// 항해를 열려면 세계 1의 첫 별자리(1장)를 완성해야 한다.
   static const unlockChapter = 1;
 
-  /// 깊이(1부터)에 맞는 판 단계. 1~5판 잔잔한 바다, 6~15판 물결,
-  /// 16~35판 너울, 그 뒤로는 폭풍 바다가 끝없이 이어진다.
+  /// 처음 세 판에서 등불에 적응하고, 4판부터 기믹이 있는 바다로 들어간다.
+  /// 11판부터 너울, 23판부터는 두 기믹을 조합한 폭풍 바다가 이어진다.
   static int tierForDepth(int depth) {
     if (depth < 1) throw ArgumentError.value(depth, 'depth');
-    if (depth <= 5) return 1;
-    if (depth <= 15) return 2;
-    if (depth <= 35) return 3;
+    if (depth <= 3) return 1;
+    if (depth <= 10) return 2;
+    if (depth <= 22) return 3;
     return 4;
   }
 
