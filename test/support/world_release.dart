@@ -63,6 +63,7 @@ Future<GlobalKey> openReleaseApp(
   WidgetTester tester, {
   bool captureArt = false,
   Locale locale = const Locale('ko'),
+  Future<List<Level>> Function()? loadLevels,
 }) async {
   tester.view.physicalSize = const Size(360, 740);
   tester.view.devicePixelRatio = 1;
@@ -81,7 +82,11 @@ Future<GlobalKey> openReleaseApp(
   await tester.pumpWidget(
     RepaintBoundary(
       key: boundary,
-      child: BloriqApp(settings: settings, firstRunIntro: false),
+      child: BloriqApp(
+        settings: settings,
+        firstRunIntro: false,
+        loadLevels: loadLevels,
+      ),
     ),
   );
   await waitForHome(tester);
@@ -181,6 +186,10 @@ Future<void> _loadArt(BuildContext context) async {
   )..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'))).load();
   await StarArt.load();
   await Future.wait([
+    precacheImage(
+      const ResizeImage(AssetImage(StarArt.forest), width: 1080),
+      context,
+    ),
     for (final asset in [StarArt.riq, StarArt.riqHappy])
       precacheImage(ResizeImage(AssetImage(asset), width: 384), context),
   ]);

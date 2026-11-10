@@ -4,7 +4,7 @@ import 'package:bloriq/domain/puzzle.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('all seven mechanics are registered by JSON type', () {
+  test('all eight mechanics are registered by JSON type', () {
     expect(
       MechanicRegistry.parsers.keys,
       containsAll([
@@ -13,6 +13,7 @@ void main() {
         'oneWay',
         'goalOnly',
         'echoGate',
+        'ice',
         'mirrorPair',
         'clockArrow',
       ]),

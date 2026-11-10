@@ -10,10 +10,11 @@ import json
 import random
 from collections import Counter
 from pathlib import Path
+from time import perf_counter
 
 from tools.design_world import cells, pt, random_level
 from tools.mechanics import REGISTRY, populate_random_rules
-from tools.validate_levels import POWERS, solve_or_none
+from tools.validate_levels import Move, POWERS, SearchBudgetExceeded, available_powers, solve_or_none
 from tools.worlds.w2 import SLOTS as WORLD2_SLOTS
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -42,6 +43,20 @@ def random_mechanic_level(kinds: list[str], rng: random.Random,
     }
     populate_random_rules(level, kinds, rng, take)
     return level
+
+
+def measure_solver(level: dict, *, disabled_rule: str | None = None,
+                   max_states: int = 2_000_000) -> tuple[list[Move] | None, dict]:
+    stats: dict[str, int] = {}
+    start = perf_counter()
+    try:
+        moves = solve_or_none(level, powers=available_powers(level), stats=stats,
+                              disabled_rule=disabled_rule, max_states=max_states)
+        outcome = 'unsolved' if moves is None else 'solved'
+    except SearchBudgetExceeded:
+        moves, outcome = None, 'limited'
+    ms = (perf_counter() - start) * 1000
+    return moves, dict(id=level['id'], visited=stats['visited'], ms=ms, outcome=outcome)
 
 
 def generate_cases(count: int, seed: int, mechanics: list[str] | None) -> list[dict]:

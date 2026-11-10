@@ -12,12 +12,14 @@ import 'block_art.dart';
 import 'board_geometry.dart';
 import 'board_badge.dart';
 import 'clock_arrow_art.dart';
+import 'ice_art.dart';
 import '../domain/mechanics/board_mechanic.dart';
 import '../domain/mechanics/clock_arrow.dart';
 import '../domain/mechanics/echo_eraser.dart';
 import '../domain/mechanics/echo_gate.dart';
 import '../domain/mechanics/echo_hold.dart';
 import '../domain/mechanics/goal_only.dart';
+import '../domain/mechanics/ice.dart';
 import '../domain/mechanics/mirror_pair.dart';
 import '../domain/mechanics/one_way.dart';
 import '../domain/puzzle.dart';
@@ -48,12 +50,14 @@ class DragPreview {
     required this.target,
     this.nextState,
     this.twin,
+    this.slides = false,
   });
 
   final Position from;
   final Position target;
   final PuzzleState? nextState;
   final MirrorShift? twin;
+  final bool slides;
   bool get isValid => nextState != null;
 }
 
@@ -86,11 +90,13 @@ class BloriqGame extends FlameGame {
   Position? _from;
   Position? _oldEcho;
   double _motion = 1;
+  IceSlide? _slide;
   static const _twinDelay = .1;
   static final _moveSeconds = GameEffects.moveDuration.inMilliseconds / 1000;
   static const _clockTurnSeconds = .2;
   double _clockTurn = 1;
   MirrorShift? _twin;
+  IceSlide? _twinSlide;
   double _twinTime = 0;
   Position? _blocked;
   double _blockedTime = 0;
@@ -171,6 +177,7 @@ class BloriqGame extends FlameGame {
       _motion = 1;
       _clockTurn = 1;
       _twin = null;
+      _impactTime = 0;
     }
   }
 
@@ -202,10 +209,21 @@ class BloriqGame extends FlameGame {
     final next = power == null
         ? previewMove(state, block.id, target)
         : previewPower(state, power, block.id, Position(dx, dy));
+    final end = next?.positionOf(block.id);
+    final slides =
+        end != null &&
+        state.level.mechanics.containsKey(Ice.typeId) &&
+        switch (power) {
+          PuzzlePower.wind || PuzzlePower.lightSwap => false,
+          PuzzlePower.moonflowerLeap =>
+            IceSlide.distance(block.position, end) > 2,
+          _ => end != target,
+        };
     return DragPreview(
       from: block.position,
-      target: power == null ? target : next?.positionOf(block.id) ?? target,
+      target: end ?? target,
       nextState: next,
+      slides: slides,
       twin: power == null && next != null
           ? state.level
                 .mechanic<MirrorPair>(MirrorPair.typeId)
@@ -226,6 +244,18 @@ class BloriqGame extends FlameGame {
     _replayDuration = _clockPhase == null
         ? 2.5
         : math.max(2.5, moves.length * _clockTurnSeconds);
+    if (!_reduceMotion &&
+        controller.state.level.mechanics.containsKey(Ice.typeId)) {
+      for (final move in moves) {
+        final primary = IceSlide.forMove(move);
+        final twin = IceSlide.forTwin(MirrorPair.recordedShift(move));
+        final seconds = math.max(
+          primary?.seconds ?? 0.0,
+          twin == null ? 0.0 : _twinDelay + twin.seconds,
+        );
+        _replayDuration = math.max(_replayDuration, seconds * moves.length);
+      }
+    }
     _onReplayFinished = onFinished;
     _syncReplayClock();
     return true;
@@ -266,12 +296,15 @@ class BloriqGame extends FlameGame {
     _from = move.from;
     _oldEcho = move.previousEcho;
     _motion = _reduceMotion ? 1 : 0;
+    _slide = IceSlide.forMove(move);
     if (_clockPhase != null) {
       _clockTurn = _reduceMotion ? 1 : 0;
       _syncClockPhase();
     }
     _twin = _reduceMotion ? null : MirrorPair.recordedShift(move);
+    _twinSlide = IceSlide.forTwin(_twin);
     _twinTime = 0;
+    if (_slide != null || _twinSlide != null) _impactTime = 0;
   }
 
   void flashBlocked(Position position, {String? blockId}) {
@@ -293,7 +326,7 @@ class BloriqGame extends FlameGame {
   void _land() {
     final id = _movingId;
     final from = _from;
-    if (id == null || from == null || _reduceMotion) return;
+    if (id == null || from == null || _reduceMotion || _slide != null) return;
     final block = controller.state.blocks
         .where((block) => block.id == id)
         .firstOrNull;
@@ -311,9 +344,11 @@ class BloriqGame extends FlameGame {
     _movingId = null;
     _dragId = null;
     _motion = 1;
+    _slide = null;
     _clockTurn = 1;
     _syncClockPhase();
     _twin = null;
+    _twinSlide = null;
     _blockedTime = 0;
     _impactTime = 0;
     _shakeTime = 0;
@@ -360,11 +395,13 @@ class BloriqGame extends FlameGame {
       }
     } else {
       final wasMoving = _motion < 1;
-      _motion = _reduceMotion ? 1 : math.min(1.0, _motion + dt / _moveSeconds);
+      final seconds = _slide?.seconds ?? _moveSeconds;
+      _motion = _reduceMotion ? 1 : math.min(1.0, _motion + dt / seconds);
       if (_clockTurn < 1) {
         _clockTurn = math.min(1.0, _clockTurn + dt / _clockTurnSeconds);
       }
-      if (_twin != null && _twinTime < _twinDelay + _moveSeconds) {
+      if (_twin != null &&
+          _twinTime < _twinDelay + (_twinSlide?.seconds ?? _moveSeconds)) {
         _twinTime += dt;
       }
       if (wasMoving && _motion >= 1) _land();
@@ -385,8 +422,14 @@ class BloriqGame extends FlameGame {
   @override
   void render(Canvas canvas) {
     super.render(canvas);
+    var slide = _slide;
     var twin = _twin;
-    var twinMotion = ((_twinTime - _twinDelay) / _moveSeconds).clamp(0.0, 1.0);
+    var twinSlide = _twinSlide;
+    var twinMotion =
+        ((_twinTime - _twinDelay) / (twinSlide?.seconds ?? _moveSeconds)).clamp(
+          0.0,
+          1.0,
+        );
     var clockTurn = _clockTurn;
     PuzzleState state;
     if (_replayFrame case (:final move, :final fraction)) {
@@ -394,12 +437,24 @@ class BloriqGame extends FlameGame {
       _movingId = move.blockId;
       _from = move.from;
       _oldEcho = move.previousEcho;
-      _motion = _reduceMotion ? 1 : fraction;
+      slide = IceSlide.forMove(move);
+      final secondsPerMove = _replayDuration / _replay!.length;
+      final elapsed = fraction * secondsPerMove;
+      _motion = _reduceMotion
+          ? 1
+          : slide == null
+          ? fraction
+          : math.min(1.0, elapsed / slide.seconds);
       if (_clockPhase != null) clockTurn = _replayClockTurn(fraction);
       twin = MirrorPair.recordedShift(move);
+      twinSlide = IceSlide.forTwin(twin);
       // 짧은 재생 구간에서도 짝의 이동이 다음 수에 잘리지 않게 지연을 줄인다.
-      final lag = math.min(.45, _twinDelay * _replay!.length / _replayDuration);
-      twinMotion = ((_motion - lag) / (1 - lag)).clamp(0.0, 1.0);
+      final lag = math.min(.45, _twinDelay / secondsPerMove);
+      twinMotion = _reduceMotion
+          ? 1
+          : twinSlide == null
+          ? ((fraction - lag) / (1 - lag)).clamp(0.0, 1.0)
+          : ((elapsed - _twinDelay) / twinSlide.seconds).clamp(0.0, 1.0);
     } else {
       state = controller.state;
     }
@@ -483,6 +538,13 @@ class BloriqGame extends FlameGame {
     if (previewState?.echo != null && previewState!.echo != state.echo) {
       drawEcho(previewState.echo!, .5);
     }
+    if (preview case DragPreview(:final from, :final target, slides: true)) {
+      IceArt.trajectory(canvas, center(from), center(target), cell);
+    }
+    if (preview?.twin case final shift?
+        when IceSlide.distance(shift.from, shift.to) > 1) {
+      IceArt.trajectory(canvas, center(shift.from), center(shift.to), cell);
+    }
     if (previewTarget != null && state.level.contains(previewTarget)) {
       final rect = Rect.fromCenter(
         center: center(previewTarget),
@@ -504,11 +566,10 @@ class BloriqGame extends FlameGame {
       var at = center(block.position);
       final following = twin != null && twin.blockId == block.id;
       if (following && twinMotion < 1) {
-        at = Offset.lerp(
-          center(twin.from),
-          at,
-          Curves.easeOutCubic.transform(twinMotion),
-        )!;
+        final start = center(twin.from);
+        at =
+            twinSlide?.draw(canvas, start, at, cell, twinMotion) ??
+            Offset.lerp(start, at, Curves.easeOutCubic.transform(twinMotion))!;
         if (twinMotion > 0) {
           MirrorPairArt.ripple(canvas, at, cell, twin.pair, twinMotion);
         }
@@ -520,12 +581,14 @@ class BloriqGame extends FlameGame {
         final eased = Curves.easeOutCubic.transform(_motion);
         final start = center(_from!);
         final end = at;
-        at = Offset.lerp(start, end, eased)!;
+        at =
+            slide?.draw(canvas, start, end, cell, _motion) ??
+            Offset.lerp(start, end, eased)!;
         axis = Offset(
           (block.position.x - _from!.x).toDouble(),
           (block.position.y - _from!.y).toDouble(),
         );
-        if (!_reduceMotion) {
+        if (!_reduceMotion && slide == null) {
           _drawTrail(canvas, start, end, at, eased, cell, isGoal);
           // 빠르게 미끄러지는 동안 진행 방향으로 늘어난다.
           final stretch = .14 * math.sin(_motion * math.pi);
@@ -556,7 +619,10 @@ class BloriqGame extends FlameGame {
         );
       }
       final escaping =
-          state.isComplete && isGoal && (!following || twinMotion >= 1);
+          state.isComplete &&
+          isGoal &&
+          (!following || twinMotion >= 1) &&
+          (slide == null || !moving);
       final celebrating = escaping && !isReplaying && !_reduceMotion;
       if (escaping &&
           ((!celebrating && _motion >= 1) ||
@@ -585,6 +651,7 @@ class BloriqGame extends FlameGame {
       }
       final tilt =
           !_reduceMotion &&
+              slide == null &&
               block.id == _movingId &&
               _from != null &&
               _motion < 1
@@ -704,6 +771,8 @@ class BloriqGame extends FlameGame {
         game._drawTileMechanic(board, mechanic, badges, 'tile_clover'),
     EchoGate.typeId: (game, board, mechanic, badges) =>
         game._drawGateMechanic(board, mechanic as EchoGate, badges),
+    Ice.typeId: (_, board, mechanic, badges) =>
+        _drawIceMechanic(board, mechanic as Ice, badges),
     ClockArrow.typeId: (game, board, mechanic, badges) =>
         game._drawClockMechanic(board, mechanic as ClockArrow, badges),
   };
@@ -712,6 +781,20 @@ class BloriqGame extends FlameGame {
   void _drawMechanics(_MechanicCanvas board, {required bool badges}) {
     for (final mechanic in board.state.level.mechanics.values) {
       _mechanicPainters[mechanic.type]?.call(this, board, mechanic, badges);
+    }
+  }
+
+  static void _drawIceMechanic(_MechanicCanvas board, Ice ice, bool badges) {
+    for (final position in ice.positions) {
+      final center = board.center(position);
+      if (!badges) {
+        IceArt.tile(board.canvas, center, board.cell * .94);
+      } else if (board.state.blocks.any(
+        (block) => block.position == position,
+      )) {
+        final at = center + Offset(board.cell * .32, -board.cell * .32);
+        IceArt.tile(board.canvas, at, board.cell * .30);
+      }
     }
   }
 

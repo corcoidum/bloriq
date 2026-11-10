@@ -1,5 +1,6 @@
 import '../puzzle.dart';
 import 'board_mechanic.dart';
+import 'ice.dart';
 
 typedef MirrorShift = ({String blockId, int pair, Position from, Position to});
 
@@ -75,7 +76,19 @@ class MirrorPair extends BoardMechanic {
         !before.canLeave(from, direction)) {
       return blocks;
     }
-    return [...blocks]..[index] = twin.at(target);
+    final end =
+        before.level
+            .mechanic<Ice>(Ice.typeId)
+            ?.finishSlide(
+              before,
+              blocks,
+              blockId: twin.id,
+              landing: target,
+              direction: direction,
+              vacated: source,
+            ) ??
+        target;
+    return [...blocks]..[index] = twin.at(end);
   }
 
   /// 화면은 이미 판정한 두 스냅샷을 읽는다. 제자리면 짝이 막힌 수다.

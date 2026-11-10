@@ -214,6 +214,38 @@ class EchoGate(BoardMechanic):
         return (token('switch', rule['switch']), token('gate', rule['gate']))
 
 
+class Ice(_TileMechanic):
+    type = 'ice'
+
+    def transformMove(self, before: State, move: MechanicMove, blocks: Positions) -> Positions:
+        index, landing, power = move
+        if power in ('wind', 'light_swap') or landing not in self.positions:
+            return blocks
+        source = before.positions[index]
+        dx, dy = landing[0] - source[0], landing[1] - source[1]
+        direction = ((dx > 0) - (dx < 0), (dy > 0) - (dy < 0))
+        end = self.finish_slide(before, blocks, index, landing, direction, source)
+        if end == landing:
+            return blocks
+        return blocks[:index] + (end,) + blocks[index + 1:]
+
+    def finish_slide(self, before: State, blocks: Positions, index: int,
+                     landing: Position, direction: Position, vacated: Position) -> Position:
+        at = landing
+        while at in self.positions:
+            if index == 0 and at == before.board.exit_point:
+                break
+            next_tile = at[0] + direction[0], at[1] + direction[1]
+            if next_tile == vacated or not before.canOccupy(index, next_tile, positions=blocks):
+                break
+            at = next_tile
+        return at
+
+    @classmethod
+    def randomRule(cls, level: dict, rng: Random, take: Callable[[], dict]) -> dict:
+        return {'type': cls.type, 'positions': [take() for _ in range(rng.randint(2, 4))]}
+
+
 @dataclass(frozen=True)
 class MirrorPair(BoardMechanic):
     type = 'mirrorPair'
@@ -261,6 +293,9 @@ class MirrorPair(BoardMechanic):
                 or not before.canOccupy(partner, target, positions=blocks, allow_non_goal_exit=True)
                 or not before.canLeave(start, direction)):
             return blocks
+        ice = next((rule for rule in before.board.mechanics if isinstance(rule, Ice)), None)
+        if ice is not None:
+            target = ice.finish_slide(before, blocks, partner, target, direction, source)
         return blocks[:partner] + (target,) + blocks[partner + 1:]
 
     @classmethod
@@ -318,7 +353,7 @@ class ClockArrow(OneWay):
 # 순서는 Dart MechanicRegistry와 같아야 한다.
 REGISTRY = {
     mechanic.type: mechanic
-    for mechanic in (EchoEraser, EchoHold, OneWay, GoalOnly, EchoGate, MirrorPair, ClockArrow)
+    for mechanic in (EchoEraser, EchoHold, OneWay, GoalOnly, EchoGate, Ice, MirrorPair, ClockArrow)
 }
 
 

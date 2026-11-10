@@ -4,6 +4,7 @@ import 'echo_eraser.dart';
 import 'echo_gate.dart';
 import 'echo_hold.dart';
 import 'goal_only.dart';
+import 'ice.dart';
 import 'mirror_pair.dart';
 import 'one_way.dart';
 
@@ -17,6 +18,8 @@ abstract final class MechanicRegistry {
     OneWay.typeId: OneWay.parse,
     GoalOnly.typeId: GoalOnly.parse,
     EchoGate.typeId: EchoGate.parse,
+    // 먼저 밀린 블록의 미끄러짐을 끝내고 그 배치로 짝 이동을 판정한다.
+    Ice.typeId: Ice.parse,
     MirrorPair.typeId: MirrorPair.parse,
     ClockArrow.typeId: ClockArrow.parse,
   };

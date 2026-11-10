@@ -88,6 +88,7 @@
   "goalOnlyRule": "Clover tile: only RIQ may step in.",
   "mirrorPairRule": "Mirror twins — push one and its twin moves the opposite way",
   "clockArrowRule": "Clock-hand tile — arrows turn clockwise every move; leave only the way it points",
+  "iceRule": "Ice — slide until something stops you",
   "clockPhaseLabel": "Clock phase {phase} of {total}",
   "@clockPhaseLabel": {
     "placeholders": {

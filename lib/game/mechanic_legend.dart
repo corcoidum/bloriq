@@ -9,6 +9,7 @@ import '../domain/mechanics/echo_eraser.dart';
 import '../domain/mechanics/echo_gate.dart';
 import '../domain/mechanics/echo_hold.dart';
 import '../domain/mechanics/goal_only.dart';
+import '../domain/mechanics/ice.dart';
 import '../domain/mechanics/mirror_pair.dart';
 import '../domain/mechanics/one_way.dart';
 import '../domain/puzzle.dart';
@@ -90,6 +91,7 @@ class MechanicLegend extends StatelessWidget {
     ),
     MirrorPair.typeId: _LegendText((t, _) => [t.mirrorPairRule]),
     ClockArrow.typeId: _LegendText((t, _) => [t.clockArrowRule]),
+    Ice.typeId: _LegendText((t, _) => [t.iceRule]),
   };
 
   static List<LegendItem> itemsFor(
