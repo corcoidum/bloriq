@@ -26,6 +26,9 @@ abstract final class XpRules {
   static const dailyStreakBonusCap = 25;
   static const constellationCompleted = 120;
   static const constellationGolden = 200;
+  static const companionFirstClear = 5;
+  static const maxBondFirstClear = 10;
+  static const letterBondFirstClear = 5;
 }
 
 /// 캠페인 클리어 경험치. [previousBestStars] 가 null 이면 첫 클리어다.
@@ -508,14 +511,24 @@ PowerDefinition? powerById(String? id) {
 abstract final class StarlightPathRules {
   static const baseCost = 20;
   static const starlightBondDiscount = 5;
+  static const goldenDiscountPerConstellation = 2;
+  static const goldenDiscountCap = 10;
 
   /// 별빛 길을 쓴 클리어의 최대 별 수.
   static const assistedStarCap = 2;
 }
 
-int starlightPathCost({bool starlightDiscount = false}) =>
+int goldenStarlightDiscount(int goldenConstellations) =>
+    (goldenConstellations * StarlightPathRules.goldenDiscountPerConstellation)
+        .clamp(0, StarlightPathRules.goldenDiscountCap);
+
+int starlightPathCost({
+  bool starlightDiscount = false,
+  int goldenConstellations = 0,
+}) =>
     StarlightPathRules.baseCost -
-    (starlightDiscount ? StarlightPathRules.starlightBondDiscount : 0);
+    (starlightDiscount ? StarlightPathRules.starlightBondDiscount : 0) -
+    goldenStarlightDiscount(goldenConstellations);
 
 enum StarlightPathSource {
   /// `starlight_path` 능력: 시도마다 한 번 무료.
@@ -554,6 +567,7 @@ StarlightPathQuote starlightPathQuote({
   required bool freeUsedThisAttempt,
   required int charges,
   bool starlightDiscount = false,
+  int goldenConstellations = 0,
 }) {
   if (powerUnlocked && !freeUsedThisAttempt) {
     return const StarlightPathQuote(StarlightPathSource.free, 0);
@@ -563,7 +577,10 @@ StarlightPathQuote starlightPathQuote({
   }
   return StarlightPathQuote(
     StarlightPathSource.stardust,
-    starlightPathCost(starlightDiscount: starlightDiscount),
+    starlightPathCost(
+      starlightDiscount: starlightDiscount,
+      goldenConstellations: goldenConstellations,
+    ),
   );
 }
 
@@ -620,6 +637,18 @@ enum SpiritFamily {
     }
     return null;
   }
+}
+
+/// 동행한 정령의 유대 레벨로 캠페인 첫 클리어 보너스를 계산한다.
+int companionFirstClearXp(SpiritFamily? family, int bondLevel) {
+  final bondBonus = bondLevel >= bondMaxLevel
+      ? XpRules.maxBondFirstClear
+      : XpRules.companionFirstClear;
+  final letterBonus =
+      family == SpiritFamily.letter && bondLevel >= bondAbilityLevel
+      ? XpRules.letterBondFirstClear
+      : 0;
+  return bondBonus + letterBonus;
 }
 
 /// 동행 정령의 계열과 유대 레벨이 켜 주는 능력.

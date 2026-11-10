@@ -395,6 +395,12 @@
   "constellationDormant": "Still asleep",
   "constellationRestored": "Restored",
   "constellationGolden": "Golden",
+  "goldenStarlightDiscount": "Paid Starlight Path discount · {amount} stardust",
+  "@goldenStarlightDiscount": {"placeholders": {"amount": {"type": "int"}}},
+  "goldenStarlightRule": "Earn every star in a constellation to make it golden. Save {amount} stardust per golden constellation, up to {cap} total.",
+  "@goldenStarlightRule": {
+    "placeholders": {"amount": {"type": "int"}, "cap": {"type": "int"}}
+  },
   "constellationSummary": "{name} constellation. {lit} of {total} stars lit. Best stars {stars} of {max}. {status}.",
   "@constellationSummary": {
     "placeholders": {
@@ -490,6 +496,8 @@
   "@stardustCount": {"placeholders": {"count": {"type": "int"}}},
   "rewardXp": "+{xp} XP",
   "@rewardXp": {"placeholders": {"xp": {"type": "int"}}},
+  "rewardCompanionXp": "Includes +{xp} companion XP",
+  "@rewardCompanionXp": {"placeholders": {"xp": {"type": "int"}}},
   "rewardStardust": "+{count} stardust",
   "@rewardStardust": {"placeholders": {"count": {"type": "int"}}},
   "rewardLevelUp": "Level up! Lv {level}",
@@ -528,6 +536,23 @@
   "equipped": "Equipped",
   "bondLevel": "Bond Lv {level}",
   "@bondLevel": {"placeholders": {"level": {"type": "int"}}},
+  "companionBenefits": "Companion benefits",
+  "companionFirstClearBenefit": "+{xp} XP on campaign first clears",
+  "@companionFirstClearBenefit": {"placeholders": {"xp": {"type": "int"}}},
+  "companionBondBenefit": "Bond Lv {level} · {benefit}",
+  "@companionBondBenefit": {
+    "placeholders": {"level": {"type": "int"}, "benefit": {"type": "String"}}
+  },
+  "companionNextBond": "Next bond level in {clears, plural, one{1 clear together} other{{clears} clears together}}",
+  "@companionNextBond": {"placeholders": {"clears": {"type": "int"}}},
+  "companionForestBenefit": "+{percent}% stardust on clears",
+  "@companionForestBenefit": {"placeholders": {"percent": {"type": "int"}}},
+  "companionStarlightBenefit": "Save {amount} stardust on paid Starlight Paths",
+  "@companionStarlightBenefit": {"placeholders": {"amount": {"type": "int"}}},
+  "companionLetterBenefit": "+{xp} XP added to the first clear bonus",
+  "@companionLetterBenefit": {"placeholders": {"xp": {"type": "int"}}},
+  "companionCloudBenefit": "Unlocks the Mist Trail",
+  "companionMemoryBenefit": "Shows the minimum move count",
   "nextWorldTeaser": "The star gate is open · Cloud-Sea Lighthouse — coming soon",
   "xpToNext": "{xp} XP to next level",
   "@xpToNext": {"placeholders": {"xp": {"type": "int"}}},

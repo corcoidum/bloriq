@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../app/game_session.dart';
 import '../design/game_theme.dart';
+import '../design/keep_all_text.dart';
 import '../l10n/app_localizations.dart';
+import '../progression/progression_rules.dart';
 import '../settings/game_settings.dart';
 import '../design/arcade_components.dart';
 import 'companion_view.dart';
@@ -269,6 +271,69 @@ class _SpiritDetail extends StatefulWidget {
 
 class _SpiritDetailState extends State<_SpiritDetail> {
   bool _busy = false;
+
+  Widget _companionBenefits(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
+    final colors = GameTheme.colorsOf(context);
+    final friend = widget.friend;
+    final progression = widget.session.progression;
+    final clears = progression.bondClears(friend.id);
+    final level = bondLevelForClears(clears);
+    final next = clearsToNextBond(clears);
+    final family = SpiritFamily.tryParse(friend.family);
+    final benefit = switch (family) {
+      SpiritFamily.forest => t.companionForestBenefit(
+        StardustRules.forestBonusPercent,
+      ),
+      SpiritFamily.starlight => t.companionStarlightBenefit(
+        StarlightPathRules.starlightBondDiscount,
+      ),
+      SpiritFamily.letter => t.companionLetterBenefit(
+        XpRules.letterBondFirstClear,
+      ),
+      SpiritFamily.cloud => t.companionCloudBenefit,
+      SpiritFamily.memory => t.companionMemoryBenefit,
+      null => null,
+    };
+    final body = GameTypography.body.copyWith(color: colors.secondaryText);
+    return ArcadeSurface(
+      key: const ValueKey('spirit-companion-benefits'),
+      padding: const EdgeInsets.all(GameSpacing.small),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${t.companionBenefits} · ${t.bondLevel(level)}',
+            style: GameTypography.label.copyWith(color: colors.echoInk),
+          ),
+          const SizedBox(height: GameSpacing.tiny),
+          KeepAllText(
+            t.companionFirstClearBenefit(companionFirstClearXp(family, level)),
+            style: GameTypography.body,
+          ),
+          if (benefit != null)
+            KeepAllText(
+              t.companionBondBenefit(bondAbilityLevel, benefit),
+              style: body,
+            ),
+          if (next != null) ...[
+            KeepAllText(
+              t.companionBondBenefit(
+                bondMaxLevel,
+                t.companionFirstClearBenefit(
+                  companionFirstClearXp(family, bondMaxLevel),
+                ),
+              ),
+              style: body,
+            ),
+            const SizedBox(height: GameSpacing.tiny),
+            KeepAllText(t.companionNextBond(next), style: body),
+          ],
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!,
@@ -289,6 +354,8 @@ class _SpiritDetailState extends State<_SpiritDetail> {
               style: TextStyle(color: GameTheme.colorsOf(context).goalInk),
             ),
             Text(f.personality.inLocale(t.localeName)),
+            const SizedBox(height: 12),
+            _companionBenefits(context),
             const SizedBox(height: 12),
             Text(t.recoveredMemory, style: GameTypography.label),
             Text(f.memory.inLocale(t.localeName)),
