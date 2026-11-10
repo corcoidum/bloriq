@@ -31,6 +31,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'support/start_game.dart';
 import 'support/story_session.dart';
 
 const _targets = [
@@ -249,6 +250,12 @@ void main() {
           ),
         );
         await tester.pump(const Duration(milliseconds: 100));
+        if (level.id == Worlds.firstLevelId(4)) {
+          await tapVisible(
+            tester,
+            find.byKey(const ValueKey('clock-guide-skip')),
+          );
+        }
         final board = find.byType(GameWidget<BloriqGame>);
         final game = tester.widget<GameWidget<BloriqGame>>(board).game!;
         expect(game.controller.state.level.id, level.id);

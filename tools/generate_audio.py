@@ -101,3 +101,22 @@ for bar, chord in enumerate([
 for i in range(len(mirror_lake)):
     mirror_lake[i] *= min(1., i / (RATE * .06), (len(mirror_lake) - i - 1) / (RATE * .12))
 write('bgm_w3.wav', mirror_lake)
+
+# 시계탑의 12초 루프. 태엽 소리를 번갈아 놓고 그 위에 작은 종을 울린다.
+clocktower = [0.] * (12 * RATE)
+for beat in range(24):
+    tick = 1510 if beat % 2 == 0 else 1140
+    mix(clocktower, tone(tick, .085, .105, 42), beat * .5)
+    mix(clocktower, tone(tick * 1.51, .045, .045, 53), beat * .5)
+for bar, chord in enumerate([
+    (220.00, 261.63, 329.63, 392.00),
+    (174.61, 220.00, 261.63, 349.23),
+    (196.00, 246.94, 293.66, 329.63),
+]):
+    base = bar * 4
+    mix(clocktower, tone(chord[0] / 2, 3.9, .068, .63, False), base)
+    for offset, note in [(0, 0), (.75, 2), (1.5, 1), (2.5, 3), (3.25, 2)]:
+        mix(clocktower, tone(chord[note], .72, .12, 3.1), base + offset)
+for i in range(len(clocktower)):
+    clocktower[i] *= min(1., (len(clocktower) - i - 1) / (RATE * .05))
+write('bgm_w4.wav', clocktower)

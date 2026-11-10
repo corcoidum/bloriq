@@ -7,6 +7,7 @@ import '../game/mechanic_legend.dart';
 import '../l10n/app_localizations.dart';
 import '../settings/game_settings.dart';
 import '../settings/settings_dialog.dart';
+import '../tutorial/world_tutorial.dart';
 import 'intro_screen.dart';
 import '../analytics/local_analytics.dart';
 
@@ -49,12 +50,21 @@ Future<void> showExperienceSettings(
   }
 }
 
-enum GameHelpAction { echo, mirror }
+enum GameHelpAction {
+  echo,
+  mirror(WorldTutorial.mirror),
+  clock(WorldTutorial.clock);
+
+  const GameHelpAction([this.worldGuide]);
+
+  final WorldTutorial? worldGuide;
+}
 
 Future<GameHelpAction?> showGameHelp(
   BuildContext context,
   GameSettings settings, {
   bool showMirrorGuide = false,
+  bool showClockGuide = false,
 }) {
   final t = AppLocalizations.of(context)!;
   return showDialog<GameHelpAction>(
@@ -62,34 +72,40 @@ Future<GameHelpAction?> showGameHelp(
     animationStyle: prefersReducedMotion(context, settings)
         ? AnimationStyle.noAnimation
         : null,
-    builder: (_) => AlertDialog(
+    builder: (dialogContext) => AlertDialog(
+      scrollable: true,
       icon: const Center(child: CourierPortrait(height: 70)),
       title: Text(t.help),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(t.helpBody),
-            const SizedBox(height: 8),
-            MechanicLegend(items: MechanicLegend.instructions(t)),
-          ],
-        ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(t.helpBody),
+          const SizedBox(height: 8),
+          MechanicLegend(items: MechanicLegend.instructions(t)),
+        ],
       ),
       actions: [
         if (showMirrorGuide)
           TextButton(
             key: const ValueKey('replay-mirror-guide'),
-            onPressed: () => Navigator.pop(context, GameHelpAction.mirror),
+            onPressed: () =>
+                Navigator.pop(dialogContext, GameHelpAction.mirror),
             child: Text(t.mirrorGuideReplay),
+          ),
+        if (showClockGuide)
+          TextButton(
+            key: const ValueKey('replay-clock-guide'),
+            onPressed: () => Navigator.pop(dialogContext, GameHelpAction.clock),
+            child: Text(t.clockGuideReplay),
           ),
         TextButton(
           key: const ValueKey('replay-tutorial'),
-          onPressed: () => Navigator.pop(context, GameHelpAction.echo),
+          onPressed: () => Navigator.pop(dialogContext, GameHelpAction.echo),
           child: Text(t.replayTutorial),
         ),
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(dialogContext),
           child: Text(t.close),
         ),
       ],

@@ -28,11 +28,17 @@ class WorldTheme {
         _ => throw const FormatException('Invalid world palette'),
       },
       floor = _asset(data['floor'], 'floor'),
+      woodFloor = switch (data['woodFloor']) {
+        null => false,
+        final bool value => value,
+        _ => throw const FormatException('Invalid wood floor option'),
+      },
       rock = _asset(data['rock'], 'rock'),
       bgm = _asset(data['bgm'], 'bgm');
 
   final WorldPalette? palette;
   final String? floor, rock, bgm;
+  final bool woodFloor;
 
   static WorldTheme? parse(Object? data) => switch (data) {
     null => null,
@@ -53,7 +59,12 @@ class WorldTheme {
 
   Future<WorldBoardSkin> loadBoardSkin() async {
     final images = await Future.wait([_loadImage(floor), _loadImage(rock)]);
-    return WorldBoardSkin(palette: palette, floor: images[0], rock: images[1]);
+    return WorldBoardSkin(
+      palette: palette,
+      floor: images[0],
+      woodFloor: woodFloor,
+      rock: images[1],
+    );
   }
 
   static Future<ui.Image?> _loadImage(String? path) async {
@@ -77,10 +88,16 @@ class WorldTheme {
 }
 
 class WorldBoardSkin {
-  const WorldBoardSkin({this.palette, this.floor, this.rock});
+  const WorldBoardSkin({
+    this.palette,
+    this.floor,
+    this.rock,
+    this.woodFloor = false,
+  });
 
   final WorldPalette? palette;
   final ui.Image? floor, rock;
+  final bool woodFloor;
 
   void dispose() {
     floor?.dispose();

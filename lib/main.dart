@@ -33,7 +33,7 @@ import 'design/arcade_components.dart';
 import 'design/star_art.dart';
 import 'app/play_context.dart';
 import 'tutorial/echo_tutorial.dart';
-import 'tutorial/mirror_tutorial.dart';
+import 'tutorial/world_tutorial.dart';
 import 'analytics/local_analytics.dart';
 import 'story/narrative_controller.dart';
 import 'story/companion_view.dart';
@@ -303,23 +303,28 @@ class _GameScreenState extends State<GameScreen>
     widget.session.analytics.addListener(_analyticsChanged);
     _startAttempt();
     _trackOpened();
-    _maybeShowMirrorGuide();
+    _maybeShowWorldGuide();
   }
 
-  void _maybeShowMirrorGuide() {
+  void _maybeShowWorldGuide() {
     final controller = _controller!;
     final level = controller.state.level;
-    if (widget.play.world != 3 || level.id != Worlds.firstLevelId(3)) return;
+    final tutorial = WorldTutorial.forWorld(widget.play.world);
+    if (tutorial == null || level.id != Worlds.firstLevelId(tutorial.world)) {
+      return;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted ||
           !identical(_controller, controller) ||
           _modalOpen ||
           ModalRoute.of(context)?.isCurrent != true ||
-          !widget.session.takeMirrorGuide(level)) {
+          !widget.session.takeWorldGuide(level)) {
         return;
       }
       unawaited(
-        _withModal<void>(() => showMirrorTutorial(context, widget.settings)),
+        _withModal<void>(
+          () => showWorldTutorial(context, widget.settings, tutorial),
+        ),
       );
     });
   }
@@ -526,7 +531,7 @@ class _GameScreenState extends State<GameScreen>
       _startAttempt();
     });
     _trackOpened();
-    _maybeShowMirrorGuide();
+    _maybeShowWorldGuide();
   }
 
   /// 결과 화면 "다음"이 고를 판. 확장 세계는 아직 잠긴 판 대신
@@ -1199,10 +1204,11 @@ class _GameScreenState extends State<GameScreen>
         context,
         widget.settings,
         showMirrorGuide: widget.play.world == 3,
+        showClockGuide: widget.play.world == 4,
       );
       if (!mounted) return;
-      if (replay == GameHelpAction.mirror) {
-        await showMirrorTutorial(context, widget.settings);
+      if (replay?.worldGuide case final tutorial?) {
+        await showWorldTutorial(context, widget.settings, tutorial);
       } else if (replay == GameHelpAction.echo) {
         final session = widget.session;
         final saga = session.saga;

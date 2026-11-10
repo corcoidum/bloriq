@@ -53,6 +53,7 @@ abstract final class StarArt {
   static ui.Image? echoImage;
   static ui.Image? forestImage;
   static ui.Image? riqImage, runeImage;
+  static ui.Image? plankImage;
 
   /// 인트로 표정. 없으면 기본 얼굴로 그린다.
   static ui.Image? riqHappyImage, riqSurprisedImage, riqSleepImage;
@@ -140,6 +141,7 @@ abstract final class StarArt {
       final image = await optional('assets/art/moon_garden/$name.png');
       if (image != null) garden[name] = image;
     }
+    plankImage ??= await optional('assets/art/moon_garden/plank.png');
     revision.value++;
   }
 

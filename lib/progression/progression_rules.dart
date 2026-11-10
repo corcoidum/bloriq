@@ -292,6 +292,10 @@ const titles = <TitleDefinition>[
     'mirror_lake_keeper',
     ProgressionText('호수의 거울지기', 'Mirror Keeper of the Lake'),
   ),
+  TitleDefinition(
+    'clocktower_bellkeeper',
+    ProgressionText('멈춘 시각의 종지기', 'Bellkeeper of the Still Hour'),
+  ),
   TitleDefinition('golden_first', ProgressionText('첫 황금 별자리', 'First Gold')),
   TitleDefinition(
     'golden_collector',
@@ -787,6 +791,30 @@ const achievements = <Achievement>[
     target: 75,
     name: ProgressionText('거울 호수 별 75개', 'All 75 Mirror Lake stars'),
     rewards: [TitleUnlock('mirror_lake_keeper')],
+  ),
+  Achievement(
+    id: 'w4-stars-25',
+    kind: AchievementKind.worldStars,
+    world: 4,
+    target: 25,
+    name: ProgressionText('시계탑 별 25개', '25 Clocktower stars'),
+    rewards: [StardustBundle(200)],
+  ),
+  Achievement(
+    id: 'w4-stars-50',
+    kind: AchievementKind.worldStars,
+    world: 4,
+    target: 50,
+    name: ProgressionText('시계탑 별 50개', '50 Clocktower stars'),
+    rewards: [StarlightCharge(3)],
+  ),
+  Achievement(
+    id: 'w4-stars-75',
+    kind: AchievementKind.worldStars,
+    world: 4,
+    target: 75,
+    name: ProgressionText('시계탑 별 75개', 'All 75 Clocktower stars'),
+    rewards: [TitleUnlock('clocktower_bellkeeper')],
   ),
   Achievement(
     id: 'golden-1',

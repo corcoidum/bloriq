@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:bloriq/progression/progression_repository.dart';
 import 'package:bloriq/progression/progression_rules.dart';
+import 'package:bloriq/world/world_catalog.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -804,45 +805,50 @@ void main() {
   });
 
   group('star collection achievements', () {
-    test(
-      'Mirror Lake awards all three milestones and restores the title',
-      () async {
-        final repo = await _load();
-        const milestones = {
-          209: 'w3-stars-25',
-          217: 'w3-stars-50',
-          225: 'w3-stars-75',
-        };
-        for (var id = 201; id <= 225; id++) {
-          final reward = await repo.recordClear(
-            levelKey: '$id:1',
-            stars: 3,
-            previousBestStars: null,
-          );
-          final reached = reward.achievements
-              .where((achievement) => achievement.world == 3)
-              .map((achievement) => achievement.id);
-          expect(reached, [?milestones[id]]);
-          if (id == 209) expect(reward.achievementStardust, 200);
-          if (id == 217) expect(reward.newStarlightCharges, 3);
-          if (id == 225) {
-            expect(reward.newTitles, contains('mirror_lake_keeper'));
+    for (final (world, title) in [
+      (3, 'mirror_lake_keeper'),
+      (4, 'clocktower_bellkeeper'),
+    ]) {
+      test(
+        'world $world awards all milestones and restores its title',
+        () async {
+          final repo = await _load();
+          final first = Worlds.firstLevelId(world);
+          final last = first + 24;
+          final milestones = {
+            first + 8: 'w$world-stars-25',
+            first + 16: 'w$world-stars-50',
+            last: 'w$world-stars-75',
+          };
+          for (var id = first; id <= last; id++) {
+            final reward = await repo.recordClear(
+              levelKey: '$id:1',
+              stars: 3,
+              previousBestStars: null,
+            );
+            final reached = reward.achievements
+                .where((achievement) => achievement.world == world)
+                .map((achievement) => achievement.id);
+            expect(reached, [?milestones[id]]);
+            if (id == first + 8) expect(reward.achievementStardust, 200);
+            if (id == first + 16) expect(reward.newStarlightCharges, 3);
+            if (id == last) expect(reward.newTitles, contains(title));
           }
-        }
-        expect(repo.worldStars(3), 75);
-        expect(repo.worldStars(2), 0);
-        expect(repo.ownedTitles, contains('mirror_lake_keeper'));
-        final restored = await _load();
-        expect(restored.claimedAchievements, containsAll(milestones.values));
-        expect(restored.ownedTitles, contains('mirror_lake_keeper'));
-        final replay = await restored.recordClear(
-          levelKey: '225:1',
-          stars: 3,
-          previousBestStars: 3,
-        );
-        expect(replay.achievements, isEmpty);
-      },
-    );
+          expect(repo.worldStars(world), 75);
+          expect(repo.worldStars(world - 1), 0);
+          expect(repo.ownedTitles, contains(title));
+          final restored = await _load();
+          expect(restored.claimedAchievements, containsAll(milestones.values));
+          expect(restored.ownedTitles, contains(title));
+          final replay = await restored.recordClear(
+            levelKey: '$last:1',
+            stars: 3,
+            previousBestStars: 3,
+          );
+          expect(replay.achievements, isEmpty);
+        },
+      );
+    }
 
     test(
       '25 forest stars pay out once, at the clear that reaches them',

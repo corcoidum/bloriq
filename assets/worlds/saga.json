@@ -67,11 +67,24 @@
     {
       "number": 4,
       "id": "w4",
-      "status": "planned",
+      "status": "playable",
       "lighthouse": 3,
+      "levels": "assets/levels/world4.json",
+      "story": "assets/story/world4.json",
+      "theme": {
+        "palette": {
+          "background": "#221915",
+          "board": "#553727",
+          "border": "#C59551",
+          "accent": "#FFD083"
+        },
+        "woodFloor": true,
+        "rock": null,
+        "bgm": "assets/audio/bgm_w4.wav"
+      },
       "title": { "ko": "시계탑 등대", "en": "Clocktower Lighthouse" },
       "subtitle": { "ko": "셋째 등대 · 멈춘 밤의 시각", "en": "Third lighthouse · The Hour the Night Stopped" },
-      "mechanic": { "ko": "시곗바늘 칸: 한 수마다 물길 화살표가 시계 방향으로 한 칸씩 돌아가요.", "en": "Clock-hand cells: every move turns the current arrows one step clockwise." },
+      "mechanic": { "ko": "시곗바늘 칸: 바늘 쪽으로만 나갈 수 있고, 한 수마다 모든 바늘이 시계 방향으로 돌아요.", "en": "Clock-hand tiles: leave only the way the hand points. Every move turns all hands clockwise." },
       "teaser": { "ko": "모든 시계가 같은 시각에 멈춰 있었어. 등대가 꺼진 바로 그 밤에.", "en": "Every clock had stopped at the same hour — the night the lighthouses went dark." },
       "reveal": { "ko": "아스테르가 등대를 멈춘 밤, 리크는 마지막까지 빛을 지키다 기억을 잃었다.", "en": "On the night Aster stopped the lighthouses, RIQ guarded the light to the end and lost their memories." }
     },

@@ -1,0 +1,1225 @@
+{
+  "version": 1,
+  "worldId": "w4",
+  "title": {
+    "ko": "시계탑 등대",
+    "en": "Clocktower Lighthouse"
+  },
+  "prologue": {
+    "ko": "“등대가 꺼지던 밤, 시계가 울렸어.” 호수에서 되찾은 기억을 따라 리크는 시계탑에 올랐어. 탑의 모든 시계가 같은 시각에 멈춰 있었어.",
+    "en": "“The clock rang the night the lights went out.” RIQ followed the memory from the lake up the tower. Every clock there had stopped at the same hour."
+  },
+  "chapters": [
+    {
+      "number": 1,
+      "globalChapter": 16,
+      "power": null,
+      "family": "winding",
+      "name": {
+        "ko": "태엽 마당",
+        "en": "Winding Yard"
+      },
+      "familyName": {
+        "ko": "태엽 가문",
+        "en": "Winding Family"
+      },
+      "constellation": {
+        "ko": "태엽자리",
+        "en": "The Mainspring"
+      },
+      "stars": {
+        "nodes": [
+          [
+            0.18,
+            0.72
+          ],
+          [
+            0.18,
+            0.29
+          ],
+          [
+            0.73,
+            0.23
+          ],
+          [
+            0.78,
+            0.68
+          ],
+          [
+            0.48,
+            0.54
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            4
+          ]
+        ]
+      },
+      "intro": {
+        "ko": "마당에는 태엽이 잠든 시계가 늘어서 있었어. 리크가 한 칸 밀자 바늘이 깨어났어.",
+        "en": "Clocks with sleeping springs lined the yard. When RIQ pushed once, their hands stirred."
+      },
+      "endingTitle": {
+        "ko": "풀어 둔 태엽",
+        "en": "The Unwound Spring"
+      },
+      "ending": {
+        "ko": "태엽은 끊어지지 않았어. 누군가 시계를 멈춰 두려고 조심스레 풀어 놓았어.",
+        "en": "The spring was still whole. Someone had gently unwound it to stop the clock."
+      }
+    },
+    {
+      "number": 2,
+      "globalChapter": 17,
+      "power": null,
+      "family": "gear",
+      "name": {
+        "ko": "톱니 회랑",
+        "en": "Gear Hall"
+      },
+      "familyName": {
+        "ko": "톱니 가문",
+        "en": "Gear Family"
+      },
+      "constellation": {
+        "ko": "톱니자리",
+        "en": "The Cogwheel"
+      },
+      "stars": {
+        "nodes": [
+          [
+            0.19,
+            0.29
+          ],
+          [
+            0.78,
+            0.27
+          ],
+          [
+            0.82,
+            0.72
+          ],
+          [
+            0.24,
+            0.78
+          ],
+          [
+            0.5,
+            0.51
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            0
+          ],
+          [
+            0,
+            4
+          ],
+          [
+            2,
+            4
+          ]
+        ]
+      },
+      "intro": {
+        "ko": "톱니가 맞물릴 때마다 먼지가 살짝 일었어. 빈 자리엔 어제의 잔상이 남아 있었어.",
+        "en": "Dust lifted as the teeth meshed. In the gaps, echoes of yesterday lingered."
+      },
+      "endingTitle": {
+        "ko": "그날 밤의 시각",
+        "en": "The Hour of That Night"
+      },
+      "ending": {
+        "ko": "커다란 톱니에서 등대가 꺼진 날짜를 찾았어. 모든 시계는 바로 그 밤에 멈춰 있었어.",
+        "en": "The great gear bore the date the lights went out. Every clock had stopped that very night."
+      }
+    },
+    {
+      "number": 3,
+      "globalChapter": 18,
+      "power": null,
+      "family": "bell",
+      "name": {
+        "ko": "종지기의 다락",
+        "en": "Bellkeeper’s Attic"
+      },
+      "familyName": {
+        "ko": "종 가문",
+        "en": "Bell Family"
+      },
+      "constellation": {
+        "ko": "종자리",
+        "en": "The Bell"
+      },
+      "stars": {
+        "nodes": [
+          [
+            0.5,
+            0.17
+          ],
+          [
+            0.29,
+            0.4
+          ],
+          [
+            0.2,
+            0.69
+          ],
+          [
+            0.81,
+            0.69
+          ],
+          [
+            0.5,
+            0.83
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            3
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            2,
+            4
+          ],
+          [
+            3,
+            4
+          ]
+        ]
+      },
+      "intro": {
+        "ko": "다락의 종은 조용했지만 종줄은 따뜻했어. 리크는 그 아래서 가느다란 울림을 들었어.",
+        "en": "The attic bell was quiet, but its rope felt warm. RIQ heard a faint hum beneath it."
+      },
+      "endingTitle": {
+        "ko": "종줄을 잡은 손",
+        "en": "The Hand on the Rope"
+      },
+      "ending": {
+        "ko": "마지막 종을 친 건 아스테르였어. 친구들이 안전한 곳으로 갈 시간을 알리는 종이었어.",
+        "en": "Aster rang the last bell. Its call gave the friends time to reach shelter."
+      }
+    },
+    {
+      "number": 4,
+      "globalChapter": 19,
+      "power": "seal",
+      "family": "pendulum",
+      "name": {
+        "ko": "추의 계단",
+        "en": "Pendulum Stair"
+      },
+      "familyName": {
+        "ko": "추 가문",
+        "en": "Pendulum Family"
+      },
+      "constellation": {
+        "ko": "추자리",
+        "en": "The Pendulum"
+      },
+      "stars": {
+        "nodes": [
+          [
+            0.5,
+            0.16
+          ],
+          [
+            0.51,
+            0.4
+          ],
+          [
+            0.23,
+            0.65
+          ],
+          [
+            0.78,
+            0.64
+          ],
+          [
+            0.5,
+            0.82
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            4
+          ],
+          [
+            2,
+            4
+          ],
+          [
+            4,
+            3
+          ]
+        ]
+      },
+      "intro": {
+        "ko": "계단 위의 추들이 한쪽으로 기울어 있었어. 추 끝에 작은 불빛 하나가 비쳤어.",
+        "en": "The pendulums leaned over the stairs. One small light glinted at their tips."
+      },
+      "endingTitle": {
+        "ko": "끝까지 남은 불빛",
+        "en": "The Light That Stayed"
+      },
+      "ending": {
+        "ko": "그날 밤, 등대 꼭대기에 작은 빛이 남아 있었어. 다른 불이 꺼진 뒤에도 오래 빛났어.",
+        "en": "That night, a little light stayed at the top of the tower. It shone long after the others went out."
+      }
+    },
+    {
+      "number": 5,
+      "globalChapter": 20,
+      "power": null,
+      "family": "midnight",
+      "name": {
+        "ko": "멈춘 자정",
+        "en": "Frozen Midnight"
+      },
+      "familyName": {
+        "ko": "자정 가문",
+        "en": "Midnight Family"
+      },
+      "constellation": {
+        "ko": "자정자리",
+        "en": "Midnight"
+      },
+      "stars": {
+        "nodes": [
+          [
+            0.51,
+            0.14
+          ],
+          [
+            0.84,
+            0.48
+          ],
+          [
+            0.49,
+            0.83
+          ],
+          [
+            0.16,
+            0.49
+          ],
+          [
+            0.5,
+            0.48
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            0
+          ],
+          [
+            0,
+            4
+          ],
+          [
+            2,
+            4
+          ]
+        ]
+      },
+      "intro": {
+        "ko": "자정의 바늘이 한곳을 가리켰어. 리크는 손을 뻗어 익숙한 빛을 감쌌어.",
+        "en": "At midnight the hands pointed together. RIQ reached out and cupped a familiar light."
+      },
+      "endingTitle": {
+        "ko": "시계가 다시 가는 밤",
+        "en": "The Night the Clock Moved Again"
+      },
+      "ending": {
+        "ko": "친구들을 지키려 아스테르는 등대를 멈췄어. 리크는 남은 빛을 끝까지 지키다 기억을 잃었어. 리크가 빛을 돌려놓자 시계가 다시 움직였어. “동굴 깊은 곳, 고장 난 기억 보존 장치가 아직 차갑게 숨 쉬고 있어.”",
+        "en": "Aster stopped the lighthouses to keep the friends safe. RIQ guarded the last light and lost their memories. When RIQ brought the light back, the clock started again. “Deep in the cave, the broken memory keeper is still breathing cold.”"
+      }
+    }
+  ],
+  "spirits": [
+    {
+      "id": "s4-01",
+      "levelId": 301,
+      "chapter": 1,
+      "family": "winding",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "티오",
+        "en": "Tio"
+      },
+      "levelTitle": {
+        "ko": "첫 바늘",
+        "en": "First Hand"
+      },
+      "appearance": {
+        "ko": "가슴에 작은 태엽이 달렸어.",
+        "en": "A tiny spring sits on Tio’s chest."
+      },
+      "personality": {
+        "ko": "새 소리가 나면 가만히 들어.",
+        "en": "Stops to listen to every new sound."
+      },
+      "memory": {
+        "ko": "한 번 밀자 바늘이 한 칸 돌아갔어.",
+        "en": "One push turned the hand a quarter turn."
+      },
+      "quote": {
+        "ko": "바늘이 보는 쪽으로 나가 봐.",
+        "en": "Try leaving the way the hand points."
+      }
+    },
+    {
+      "id": "s4-02",
+      "levelId": 302,
+      "chapter": 1,
+      "family": "winding",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "두리",
+        "en": "Duri"
+      },
+      "levelTitle": {
+        "ko": "두 번 기다리기",
+        "en": "Wait Twice"
+      },
+      "appearance": {
+        "ko": "둥근 안경에 바늘 두 개가 비쳐.",
+        "en": "Two clock hands reflect in round glasses."
+      },
+      "personality": {
+        "ko": "서두르는 친구 옆에서 기다려 줘.",
+        "en": "Waits beside friends who are in a hurry."
+      },
+      "memory": {
+        "ko": "리크가 멈추자 룬석이 먼저 걸었어.",
+        "en": "When RIQ paused, a rune stone moved first."
+      },
+      "quote": {
+        "ko": "기다릴 땐 내가 한 칸 갈게.",
+        "en": "I can take a step while you wait."
+      }
+    },
+    {
+      "id": "s4-03",
+      "levelId": 303,
+      "chapter": 1,
+      "family": "winding",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "노치",
+        "en": "Notch"
+      },
+      "levelTitle": {
+        "ko": "오른쪽으로 도는 길",
+        "en": "The Turning Passage"
+      },
+      "appearance": {
+        "ko": "모자 가장자리가 톱니처럼 생겼어.",
+        "en": "The rim of Notch’s cap is toothed."
+      },
+      "personality": {
+        "ko": "쓰고 난 도구를 제자리에 돌려놔.",
+        "en": "Always puts tools back where they belong."
+      },
+      "memory": {
+        "ko": "다른 룬석을 밀어 위로 갈 시각을 만들었어.",
+        "en": "A second stone made time for the upward path."
+      },
+      "quote": {
+        "ko": "한 수로 길도 바늘도 바뀌네.",
+        "en": "One move changes both the path and the hands."
+      }
+    },
+    {
+      "id": "s4-04",
+      "levelId": 304,
+      "chapter": 1,
+      "family": "winding",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "키키",
+        "en": "Kiki"
+      },
+      "levelTitle": {
+        "ko": "돌아온 자리",
+        "en": "Back to the Same Tile"
+      },
+      "appearance": {
+        "ko": "등에 구리 열쇠 하나를 매고 있어.",
+        "en": "A copper key hangs across Kiki’s back."
+      },
+      "personality": {
+        "ko": "돌아가는 길에도 새것을 찾아.",
+        "en": "Finds something new even on the way back."
+      },
+      "memory": {
+        "ko": "같은 칸으로 돌아오니 바늘이 위를 봤어.",
+        "en": "Back on the same tile, the hand pointed up."
+      },
+      "quote": {
+        "ko": "같은 자리라도 시각은 달라.",
+        "en": "The tile is the same, but the hour has changed."
+      }
+    },
+    {
+      "id": "s4-05",
+      "levelId": 305,
+      "chapter": 1,
+      "family": "winding",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "모루",
+        "en": "Moru"
+      },
+      "levelTitle": {
+        "ko": "풀어 둔 태엽",
+        "en": "The Unwound Spring"
+      },
+      "appearance": {
+        "ko": "등에 큰 나선 태엽을 메고 있어.",
+        "en": "A great coiled spring rests on Moru’s back."
+      },
+      "personality": {
+        "ko": "작은 부품도 두 손으로 조심히 다뤄.",
+        "en": "Handles even the smallest part with both hands."
+      },
+      "memory": {
+        "ko": "누군가 태엽을 조심스레 풀어 놓았어. 시계를 멈추려는 손길이었어.",
+        "en": "Someone carefully unwound the spring. They meant to stop the clocks."
+      },
+      "quote": {
+        "ko": "이 태엽은 아직 다시 감을 수 있어.",
+        "en": "This spring can still be wound again."
+      }
+    },
+    {
+      "id": "s4-06",
+      "levelId": 306,
+      "chapter": 2,
+      "family": "gear",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "코그",
+        "en": "Cog"
+      },
+      "levelTitle": {
+        "ko": "먼지 없는 자리",
+        "en": "A Clear Footprint"
+      },
+      "appearance": {
+        "ko": "볼에 네모난 톱니 자국이 있어.",
+        "en": "A square gear mark sits on Cog’s cheek."
+      },
+      "personality": {
+        "ko": "친구가 지날 자리를 먼저 비워 줘.",
+        "en": "Clears a place for friends to pass."
+      },
+      "memory": {
+        "ko": "민들레에서 떠나니 뒤가 바로 비었어.",
+        "en": "Leaving the dandelion cleared the space behind."
+      },
+      "quote": {
+        "ko": "먼저 가. 자리는 비워 뒀어.",
+        "en": "Go ahead. The space is clear."
+      }
+    },
+    {
+      "id": "s4-07",
+      "levelId": 307,
+      "chapter": 2,
+      "family": "gear",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "앰비",
+        "en": "Ambi"
+      },
+      "levelTitle": {
+        "ko": "남겨 둔 한 칸",
+        "en": "A Space Kept"
+      },
+      "appearance": {
+        "ko": "호박빛 주머니가 배에서 빛나.",
+        "en": "An amber pouch glows at Ambi’s belly."
+      },
+      "personality": {
+        "ko": "맡아 둔 물건을 잘 기억해.",
+        "en": "Remembers everything kept for a friend."
+      },
+      "memory": {
+        "ko": "룬석은 갔지만 이전 잔상은 거기 있었어.",
+        "en": "The stone moved, but the older echo stayed."
+      },
+      "quote": {
+        "ko": "이건 조금 더 여기 둘게.",
+        "en": "I’ll keep this here a little longer."
+      }
+    },
+    {
+      "id": "s4-08",
+      "levelId": 308,
+      "chapter": 2,
+      "family": "gear",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "피니",
+        "en": "Pinny"
+      },
+      "levelTitle": {
+        "ko": "빈자리로 되돌아가기",
+        "en": "Back to the Gap"
+      },
+      "appearance": {
+        "ko": "머리핀 끝이 작은 톱니야.",
+        "en": "Pinny’s hairpin ends in a little cog."
+      },
+      "personality": {
+        "ko": "길이 비면 살짝 돌아와 인사해.",
+        "en": "Slips back to say hello when the path clears."
+      },
+      "memory": {
+        "ko": "민들레 덕분에 다음 수에 되돌아왔어.",
+        "en": "The dandelion let RIQ return on the next move."
+      },
+      "quote": {
+        "ko": "돌아와도 바늘은 한 칸 갔어.",
+        "en": "Even when you turn back, the hand goes on."
+      }
+    },
+    {
+      "id": "s4-09",
+      "levelId": 309,
+      "chapter": 2,
+      "family": "gear",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "위브",
+        "en": "Weave"
+      },
+      "levelTitle": {
+        "ko": "오래 남는 발자국",
+        "en": "The Lingering Step"
+      },
+      "appearance": {
+        "ko": "등에 가는 구리 실이 감겨 있어.",
+        "en": "Fine copper thread is wound around Weave."
+      },
+      "personality": {
+        "ko": "좁은 길에선 양보할 곳을 찾아.",
+        "en": "Looks for a place to make room in narrow paths."
+      },
+      "memory": {
+        "ko": "남은 잔상을 피해 리크가 윗길을 돌았어.",
+        "en": "RIQ took the upper path around a lingering echo."
+      },
+      "quote": {
+        "ko": "위에도 작은 길이 있어.",
+        "en": "There’s a little path up there too."
+      }
+    },
+    {
+      "id": "s4-10",
+      "levelId": 310,
+      "chapter": 2,
+      "family": "gear",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "기어라",
+        "en": "Geara"
+      },
+      "levelTitle": {
+        "ko": "밤을 새긴 톱니",
+        "en": "The Gear That Marked the Night"
+      },
+      "appearance": {
+        "ko": "커다란 톱니에 작은 날짜가 새겨졌어.",
+        "en": "A tiny date is etched into Geara’s great cog."
+      },
+      "personality": {
+        "ko": "잊지 않으려고 중요한 날을 새겨 둬.",
+        "en": "Carves important dates to remember them."
+      },
+      "memory": {
+        "ko": "톱니의 날짜는 등대가 꺼진 밤이었어. 모든 시계가 그 시각을 품고 있었어.",
+        "en": "The date was the night the lights went out. Every clock held that same hour."
+      },
+      "quote": {
+        "ko": "우리가 기억해 둔 밤이야.",
+        "en": "This is the night we kept in memory."
+      }
+    },
+    {
+      "id": "s4-11",
+      "levelId": 311,
+      "chapter": 3,
+      "family": "bell",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "링고",
+        "en": "Ringo"
+      },
+      "levelTitle": {
+        "ko": "종줄과 문",
+        "en": "Rope and Gate"
+      },
+      "appearance": {
+        "ko": "종줄을 닮은 긴 꼬리가 있어.",
+        "en": "A long tail curls like a bell rope."
+      },
+      "personality": {
+        "ko": "한 번 약속하면 그 시각에 꼭 와.",
+        "en": "Keeps every appointment to the minute."
+      },
+      "memory": {
+        "ko": "문이 열린 한 수에 바늘도 아래를 봤어.",
+        "en": "For one move, the gate opened and the hand pointed down."
+      },
+      "quote": {
+        "ko": "문이 열렸어. 지금이야.",
+        "en": "The gate is open. Now’s the moment."
+      }
+    },
+    {
+      "id": "s4-12",
+      "levelId": 312,
+      "chapter": 3,
+      "family": "bell",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "레니",
+        "en": "Leni"
+      },
+      "levelTitle": {
+        "ko": "문 앞의 자리",
+        "en": "Before the Gate"
+      },
+      "appearance": {
+        "ko": "손끝에 은빛 방울이 달렸어.",
+        "en": "A silver bell dangles from one fingertip."
+      },
+      "personality": {
+        "ko": "친구가 준비될 때까지 종을 잡고 있어.",
+        "en": "Holds the bell still until friends are ready."
+      },
+      "memory": {
+        "ko": "리크가 문 앞에 서고 나서 룬석이 수정을 떠났어.",
+        "en": "The stone left the crystal once RIQ reached the gate."
+      },
+      "quote": {
+        "ko": "먼저 갈 자리를 골라 봐.",
+        "en": "Pick where you’ll stand first."
+      }
+    },
+    {
+      "id": "s4-13",
+      "levelId": 313,
+      "chapter": 3,
+      "family": "bell",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "차임",
+        "en": "Chime"
+      },
+      "levelTitle": {
+        "ko": "위쪽의 수정",
+        "en": "Crystal Upstairs"
+      },
+      "appearance": {
+        "ko": "어깨에 작은 종 두 개가 달렸어.",
+        "en": "Two little bells hang from Chime’s shoulders."
+      },
+      "personality": {
+        "ko": "작은 소리로 서로의 위치를 알려.",
+        "en": "Uses quiet sounds to let others know where they are."
+      },
+      "memory": {
+        "ko": "룬석이 두 바늘을 지나 위쪽 수정에 닿았어.",
+        "en": "The stone passed two hands on its way to the upper crystal."
+      },
+      "quote": {
+        "ko": "여기 있어. 한 수 뒤에 만나.",
+        "en": "I’m here. Meet me in one move."
+      }
+    },
+    {
+      "id": "s4-14",
+      "levelId": 314,
+      "chapter": 3,
+      "family": "bell",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "여울",
+        "en": "Yeoul"
+      },
+      "levelTitle": {
+        "ko": "둘이 맞추는 시각",
+        "en": "An Hour for Two"
+      },
+      "appearance": {
+        "ko": "파란 술이 종소리에 살랑거려.",
+        "en": "A blue tassel sways when a bell sounds."
+      },
+      "personality": {
+        "ko": "한 사람이 바쁘면 다른 자리를 맡아.",
+        "en": "Takes the other spot when a friend is busy."
+      },
+      "memory": {
+        "ko": "한 블록이 수정을 맡고 리크가 문을 건넜어.",
+        "en": "One block took the crystal while RIQ crossed the gate."
+      },
+      "quote": {
+        "ko": "네가 지나갈 때 내가 열게.",
+        "en": "I’ll open it as you pass."
+      }
+    },
+    {
+      "id": "s4-15",
+      "levelId": 315,
+      "chapter": 3,
+      "family": "bell",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "루멘",
+        "en": "Lumen"
+      },
+      "levelTitle": {
+        "ko": "마지막 종",
+        "en": "The Last Bell"
+      },
+      "appearance": {
+        "ko": "두 손에 낡은 종줄을 쥐고 있어.",
+        "en": "Lumen holds an old bell rope in both hands."
+      },
+      "personality": {
+        "ko": "큰 소리보다 그 소리를 듣는 이를 살펴.",
+        "en": "Watches who hears a sound more than how loud it is."
+      },
+      "memory": {
+        "ko": "아스테르가 마지막 종을 쳤어. 그 소리에 친구들이 몸을 숨길 곳을 찾았어.",
+        "en": "Aster rang the last bell. Its sound sent the friends looking for shelter."
+      },
+      "quote": {
+        "ko": "친구들이 들을 수 있게 울린 거야.",
+        "en": "The bell rang so the friends would hear."
+      }
+    },
+    {
+      "id": "s4-16",
+      "levelId": 316,
+      "chapter": 4,
+      "family": "pendulum",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "추리",
+        "en": "Churi"
+      },
+      "levelTitle": {
+        "ko": "잔상을 붙드는 추",
+        "en": "The Echo Weight"
+      },
+      "appearance": {
+        "ko": "허리에 작은 놋쇠 추가 매달려 있어.",
+        "en": "A brass weight hangs from Churi’s waist."
+      },
+      "personality": {
+        "ko": "하던 일을 한 박자 더 붙들 줄 알아.",
+        "en": "Knows when to hold on for one more beat."
+      },
+      "memory": {
+        "ko": "봉인 덕분에 리크가 떠난 자리가 비었어.",
+        "en": "Seal kept the spot RIQ left open."
+      },
+      "quote": {
+        "ko": "남길 건 남겨 두고 한 칸 가자.",
+        "en": "Keep what you need and take one step."
+      }
+    },
+    {
+      "id": "s4-17",
+      "levelId": 317,
+      "chapter": 4,
+      "family": "pendulum",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "반디",
+        "en": "Bandi"
+      },
+      "levelTitle": {
+        "ko": "반대편 발걸음",
+        "en": "A Step on the Other Side"
+      },
+      "appearance": {
+        "ko": "추 끝에 작은 반달이 달렸어.",
+        "en": "A crescent hangs from the end of Bandi’s weight."
+      },
+      "personality": {
+        "ko": "짝이 움직이면 반대편을 살펴.",
+        "en": "Watches the other side when a twin moves."
+      },
+      "memory": {
+        "ko": "짝이 함께 갔어도 바늘은 한 칸만 갔어.",
+        "en": "Both twins moved, but the hands turned only once."
+      },
+      "quote": {
+        "ko": "두 발걸음도 한 박자야.",
+        "en": "Two footsteps can share one beat."
+      }
+    },
+    {
+      "id": "s4-18",
+      "levelId": 318,
+      "chapter": 4,
+      "family": "pendulum",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "틸트",
+        "en": "Tilt"
+      },
+      "levelTitle": {
+        "ko": "되돌아올 한 수",
+        "en": "Room to Return"
+      },
+      "appearance": {
+        "ko": "모자가 늘 한쪽으로 기울어 있어.",
+        "en": "Tilt’s hat always leans to one side."
+      },
+      "personality": {
+        "ko": "길을 나서기 전에 돌아올 곳을 살펴.",
+        "en": "Checks the way back before setting out."
+      },
+      "memory": {
+        "ko": "봉인으로 옛 잔상을 붙들고 룬석을 되돌렸어.",
+        "en": "Seal held the old echo so the stone could return."
+      },
+      "quote": {
+        "ko": "돌아올 자리부터 비워 두자.",
+        "en": "Leave a space to come back to."
+      }
+    },
+    {
+      "id": "s4-19",
+      "levelId": 319,
+      "chapter": 4,
+      "family": "pendulum",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "스윙",
+        "en": "Swing"
+      },
+      "levelTitle": {
+        "ko": "두 추의 간격",
+        "en": "Between Two Weights"
+      },
+      "appearance": {
+        "ko": "가슴에 크기가 다른 추 두 개가 있어.",
+        "en": "Two unequal weights hang at Swing’s chest."
+      },
+      "personality": {
+        "ko": "친구와 보폭이 달라도 호흡을 맞춰.",
+        "en": "Keeps time with friends of different strides."
+      },
+      "memory": {
+        "ko": "리크가 오른쪽으로 갈 때 짝은 왼쪽으로 비켰어.",
+        "en": "RIQ moved right while the twin cleared space to the left."
+      },
+      "quote": {
+        "ko": "서로 갈 길을 먼저 보자.",
+        "en": "Let’s look at where we’ll both land."
+      }
+    },
+    {
+      "id": "s4-20",
+      "levelId": 320,
+      "chapter": 4,
+      "family": "pendulum",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "온추",
+        "en": "Onchu"
+      },
+      "levelTitle": {
+        "ko": "끝에 남은 빛",
+        "en": "The Last Light Above"
+      },
+      "appearance": {
+        "ko": "오래 닦은 추에 작은 점 하나가 비쳐.",
+        "en": "One tiny point shines in a well-polished weight."
+      },
+      "personality": {
+        "ko": "어두운 곳에서 작은 불빛을 잘 찾아.",
+        "en": "Finds the smallest lights in dark places."
+      },
+      "memory": {
+        "ko": "그날 밤, 맨 꼭대기에 작은 빛이 남았어. 끝까지 그 자리를 지키는 빛이었어.",
+        "en": "One little light stayed at the very top that night. It held its place to the end."
+      },
+      "quote": {
+        "ko": "꺼지지 않은 빛 하나가 있었어.",
+        "en": "There was one light that stayed."
+      }
+    },
+    {
+      "id": "s4-21",
+      "levelId": 321,
+      "chapter": 5,
+      "family": "midnight",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "미드",
+        "en": "Mid"
+      },
+      "levelTitle": {
+        "ko": "멈춘 물길",
+        "en": "The Still Stream"
+      },
+      "appearance": {
+        "ko": "모자에 멈춘 바늘 하나가 꽂혀 있어.",
+        "en": "A stopped hand is pinned to Mid’s cap."
+      },
+      "personality": {
+        "ko": "바뀌지 않는 것을 기준 삼아 길을 찾아.",
+        "en": "Finds the way by looking for what stays steady."
+      },
+      "memory": {
+        "ko": "회전 바늘이 고정 물길과 같은 쪽을 봤어.",
+        "en": "The turning hands lined up with the fixed stream."
+      },
+      "quote": {
+        "ko": "이 바늘을 보고 나머지를 맞춰 봐.",
+        "en": "Use this hand to line up the others."
+      }
+    },
+    {
+      "id": "s4-22",
+      "levelId": 322,
+      "chapter": 5,
+      "family": "midnight",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "자오",
+        "en": "Jao"
+      },
+      "levelTitle": {
+        "ko": "함께 가리키는 쪽",
+        "en": "Where the Hands Agree"
+      },
+      "appearance": {
+        "ko": "둥근 등에 같은 방향의 바늘이 둘 있어.",
+        "en": "Two matching hands sit on Jao’s round back."
+      },
+      "personality": {
+        "ko": "함께 움직일 때 가장 편안해해.",
+        "en": "Feels most at ease moving together."
+      },
+      "memory": {
+        "ko": "문을 지나니 바늘이 모두 위를 보던 수가 왔어.",
+        "en": "After the gate came a turn when all the hands pointed up."
+      },
+      "quote": {
+        "ko": "같은 쪽을 보는 때가 있어.",
+        "en": "There’s a moment when they all point together."
+      }
+    },
+    {
+      "id": "s4-23",
+      "levelId": 323,
+      "chapter": 5,
+      "family": "midnight",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "고요",
+        "en": "Goyo"
+      },
+      "levelTitle": {
+        "ko": "고정된 아래쪽",
+        "en": "The Fixed Downward Hand"
+      },
+      "appearance": {
+        "ko": "작은 화살표 귀걸이가 아래로 향해.",
+        "en": "A little arrow earring points downward."
+      },
+      "personality": {
+        "ko": "시끌벅적해도 자기 박자를 지켜.",
+        "en": "Keeps a steady beat in a noisy room."
+      },
+      "memory": {
+        "ko": "모든 회전 바늘이 아래를 볼 때 리크가 나갔어.",
+        "en": "RIQ left when all the turning hands pointed down."
+      },
+      "quote": {
+        "ko": "지금은 나와 같은 쪽이야.",
+        "en": "Right now they point the way I do."
+      }
+    },
+    {
+      "id": "s4-24",
+      "levelId": 324,
+      "chapter": 5,
+      "family": "midnight",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "시나",
+        "en": "Sina"
+      },
+      "levelTitle": {
+        "ko": "한 칸의 두 방향",
+        "en": "Two Ways Out"
+      },
+      "appearance": {
+        "ko": "등불 그림자가 시계 둘레를 돌아.",
+        "en": "A lantern shadow circles Sina’s clock face."
+      },
+      "personality": {
+        "ko": "같은 길에서도 다른 때를 기다릴 줄 알아.",
+        "en": "Can wait for a different hour on the same road."
+      },
+      "memory": {
+        "ko": "룬석은 오른쪽으로, 리크는 같은 칸에서 왼쪽으로 나갔어.",
+        "en": "The stone left to the right. RIQ later left the same tile to the left."
+      },
+      "quote": {
+        "ko": "그때와 다른 시각에 다시 와.",
+        "en": "Come back when the hour has changed."
+      }
+    },
+    {
+      "id": "s4-25",
+      "levelId": 325,
+      "chapter": 5,
+      "family": "midnight",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "자정지기 오르",
+        "en": "Orr, Keeper of Midnight"
+      },
+      "levelTitle": {
+        "ko": "돌아온 자정",
+        "en": "Midnight Returns"
+      },
+      "appearance": {
+        "ko": "놋쇠 시계 안에 작은 불씨가 있어.",
+        "en": "A tiny ember glows inside Orr’s brass clock."
+      },
+      "personality": {
+        "ko": "친구들이 돌아올 때까지 불을 살펴.",
+        "en": "Tends the light until all the friends return."
+      },
+      "memory": {
+        "ko": "아스테르는 친구들을 지키려 등대를 멈췄어. 리크는 남은 빛을 지키다 기억을 잃었어.",
+        "en": "Aster stopped the lights to protect the friends. RIQ kept the last light and lost their memories."
+      },
+      "quote": {
+        "ko": "째깍. 이제 다시 시간이 가고 있어.",
+        "en": "Tick. Time is moving again."
+      }
+    }
+  ]
+}
