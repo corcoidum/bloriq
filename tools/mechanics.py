@@ -54,12 +54,13 @@ class BoardMechanic:
     type: ClassVar[str]
     max_instances: ClassVar[int] = 1
     reflection_symmetric: ClassVar[bool] = True
+    has_exclusive_cells: ClassVar[bool] = True
     cells: Positions = ()
 
     def combine(self, other: BoardMechanic) -> BoardMechanic:
         raise AssertionError(f'Duplicate special rule: {self.type}')
 
-    def validate(self, level: dict) -> None:
+    def validate(self, level: dict, mechanics: dict[str, BoardMechanic]) -> None:
         pass
 
     def canEnter(self, state: State, index: int, target: Position) -> bool:
@@ -192,7 +193,7 @@ class EchoGate(BoardMechanic):
     def parse(cls, rule: dict, point: PointParser) -> EchoGate:
         return cls(point(rule.get('switch')), point(rule.get('gate')))
 
-    def validate(self, level):
+    def validate(self, level, mechanics):
         def point(raw):
             return raw['x'], raw['y']
 
@@ -247,6 +248,68 @@ class Ice(_TileMechanic):
 
 
 @dataclass(frozen=True)
+class ShelfDoor(BoardMechanic):
+    type = 'shelfDoor'
+    has_exclusive_cells = False
+    pairs: tuple[tuple[Position, Position], ...]
+
+    @property
+    def cells(self) -> Positions:
+        return tuple(cell for pair in self.pairs for cell in pair)
+
+    @classmethod
+    def parse(cls, rule: dict, point: PointParser) -> ShelfDoor:
+        pairs = rule.get('pairs')
+        assert isinstance(pairs, list) and 1 <= len(pairs) <= 2, 'Shelf doors require one or two pairs'
+        assert all(isinstance(pair, dict) for pair in pairs), 'Invalid shelf door pair'
+        return cls(tuple((point(pair.get('a')), point(pair.get('b'))) for pair in pairs))
+
+    def validate(self, level: dict, mechanics: dict[str, BoardMechanic]) -> None:
+        exit_point = level['exitPosition']
+        forbidden = {(exit_point['x'], exit_point['y'])}
+        for kind in (Ice.type, OneWay.type, ClockArrow.type, EchoGate.type):
+            if kind in mechanics:
+                forbidden.update(mechanics[kind].cells)
+        cells = set(self.cells)
+        assert len(cells) == 2 * len(self.pairs), 'Invalid or repeated shelf door endpoints'
+        assert not cells & forbidden, 'Overlapping shelf door tile'
+
+    def transformMove(self, before: State, move: MechanicMove, blocks: Positions) -> Positions:
+        if move.power == 'light_swap':
+            return blocks
+        index = move.index
+        end = self.finish_teleport(before, blocks, index, before.positions[index])
+        if end == blocks[index]:
+            return blocks
+        return blocks[:index] + (end,) + blocks[index + 1:]
+
+    def finish_teleport(self, before: State, blocks: Positions, index: int, vacated: Position) -> Position:
+        landing = blocks[index]
+        for a, b in self.pairs:
+            if landing == a:
+                target = b
+            elif landing == b:
+                target = a
+            else:
+                continue
+            if target != vacated and before.canOccupy(index, target, positions=blocks):
+                return target
+            break
+        return landing
+
+    @classmethod
+    def randomRule(cls, level: dict, rng: Random, take: Callable[[], dict]) -> dict:
+        return {'type': cls.type, 'pairs': [{'a': take(), 'b': take()} for _ in range(rng.randint(1, 2))]}
+
+    @classmethod
+    def auditTokens(cls, level: dict, rule: dict, token: AuditToken,
+                    direction: AuditDirection) -> Iterable[str]:
+        for pair in rule['pairs']:
+            endpoints = sorted(token('shelf', pair[end]) for end in ('a', 'b'))
+            yield f"{cls.type}:{'/'.join(endpoints)}"
+
+
+@dataclass(frozen=True)
 class MirrorPair(BoardMechanic):
     type = 'mirrorPair'
     max_instances = 2
@@ -263,7 +326,7 @@ class MirrorPair(BoardMechanic):
         assert isinstance(other, MirrorPair)
         return MirrorPair(self.pairs + other.pairs)
 
-    def validate(self, level: dict) -> None:
+    def validate(self, level: dict, mechanics: dict[str, BoardMechanic]) -> None:
         assert len(self.pairs) <= self.max_instances, 'At most two mirror pairs are allowed'
         ids = {'goal', *(block['id'] for block in level['blocks'])}
         for first, second in self.pairs:
@@ -296,7 +359,13 @@ class MirrorPair(BoardMechanic):
         ice = next((rule for rule in before.board.mechanics if isinstance(rule, Ice)), None)
         if ice is not None:
             target = ice.finish_slide(before, blocks, partner, target, direction, source)
-        return blocks[:partner] + (target,) + blocks[partner + 1:]
+        landed = blocks[:partner] + (target,) + blocks[partner + 1:]
+        shelf = next((rule for rule in before.board.mechanics if isinstance(rule, ShelfDoor)), None)
+        if shelf is not None:
+            end = shelf.finish_teleport(before, landed, partner, source)
+            if end != target:
+                return blocks[:partner] + (end,) + blocks[partner + 1:]
+        return landed
 
     @classmethod
     def randomRule(cls, level: dict, rng: Random, take: Callable[[], dict]) -> dict:
@@ -353,7 +422,7 @@ class ClockArrow(OneWay):
 # 순서는 Dart MechanicRegistry와 같아야 한다.
 REGISTRY = {
     mechanic.type: mechanic
-    for mechanic in (EchoEraser, EchoHold, OneWay, GoalOnly, EchoGate, Ice, MirrorPair, ClockArrow)
+    for mechanic in (EchoEraser, EchoHold, OneWay, GoalOnly, EchoGate, Ice, ShelfDoor, MirrorPair, ClockArrow)
 }
 
 
@@ -378,14 +447,15 @@ def parse_mechanics(level: dict, point: PointParser, *, walls: frozenset[Positio
         mechanic = REGISTRY[kind].parse(rule, point)
         if kind in parsed:
             mechanic = parsed[kind].combine(mechanic)
-        for tile in mechanic.cells:
-            assert tile not in occupied, 'Overlapping mechanism tile'
-            occupied.add(tile)
+        if mechanic.has_exclusive_cells:
+            for tile in mechanic.cells:
+                assert tile not in occupied, 'Overlapping mechanism tile'
+                occupied.add(tile)
         if isinstance(mechanic, EchoGate) and gate_locked:
             mechanic = EchoGate(mechanic.switch, mechanic.gate, locked=True)
         parsed[kind] = mechanic
     for mechanic in parsed.values():
-        mechanic.validate(level)
+        mechanic.validate(level, parsed)
     # 문 효과를 비교할 때는 문을 없애지 않고 잠근 채로 둔다.
     return tuple(parsed[kind] for kind in REGISTRY
                  if kind in parsed and (kind != disabled_rule or kind == EchoGate.type))

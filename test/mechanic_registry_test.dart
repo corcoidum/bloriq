@@ -145,8 +145,9 @@ class _LandingProbe extends BoardMechanic {
   List<Block> transformMove(
     PuzzleState before,
     PuzzleMove move,
-    List<Block> blocks,
-  ) => move.target == const Position(2, 0)
+    List<Block> blocks, {
+    List<MoveTeleport>? teleports,
+  }) => move.target == const Position(2, 0)
       ? [blocks.single.at(before.level.exitPosition)]
       : blocks;
 

@@ -7,6 +7,7 @@ import 'mechanics/echo_hold.dart';
 import 'mechanics/goal_only.dart';
 import 'mechanics/mechanic_registry.dart';
 import 'mechanics/one_way.dart';
+import 'mechanics/shelf_door.dart';
 
 /// 격자 좌표. 왼쪽 위가 (0, 0)이다.
 class Position {
@@ -159,11 +160,12 @@ class Level {
         'A switch and gate must be provided together',
       );
     }
-    // 서로 다른 기믹은 서로 겹치지 않게 하여 판정과 표시를 명확히 한다.
+    // 독점 기믹은 서로 겹치지 않게 하여 판정과 표시를 명확히 한다.
     final mechanismPositions = this.obstacles.toSet();
     for (final mechanic in this.mechanics.values) {
       for (final tile in mechanic.cells) {
-        if (!contains(tile) || !mechanismPositions.add(tile)) {
+        if (!contains(tile) ||
+            (mechanic.hasExclusiveCells && !mechanismPositions.add(tile))) {
           throw const FormatException('Invalid or overlapping mechanism tile');
         }
       }
@@ -428,9 +430,14 @@ abstract final class PowerRules {
 }
 
 /// 미리보기와 재생 모두 실제 controller 상태를 변경하지 않는다.
-PuzzleState? previewMove(PuzzleState state, String blockId, Position target) {
+PuzzleState? previewMove(
+  PuzzleState state,
+  String blockId,
+  Position target, {
+  List<MoveTeleport>? teleports,
+}) {
   if (!MoveValidator.canMove(state, blockId, target)) return null;
-  return _move(state, PuzzleMove(blockId, target));
+  return _move(state, PuzzleMove(blockId, target), teleports: teleports);
 }
 
 /// 권능 한 번을 적용한 다음 상태. 쓸 수 없으면 null.
@@ -438,12 +445,19 @@ PuzzleState? previewPower(
   PuzzleState state,
   PuzzlePower power,
   String blockId,
-  Position direction,
-) {
+  Position direction, {
+  List<MoveTeleport>? teleports,
+}) {
   final land = PowerRules.landing(state, power, blockId, direction);
   if (land == null) return null;
-  return _move(state, PuzzleMove(blockId, land, power: power));
+  return _move(
+    state,
+    PuzzleMove(blockId, land, power: power),
+    teleports: teleports,
+  );
 }
+
+typedef MoveTeleport = ({String blockId, Position from, Position to});
 
 /// 유효한 한 이동의 전후 스냅샷. Undo한 이동은 목록에서 제거한다.
 class MoveRecord {
@@ -455,6 +469,7 @@ class MoveRecord {
     required this.after,
     this.power,
     Position? landing,
+    this.teleports = const [],
   }) : landing = landing ?? to;
 
   final String blockId;
@@ -465,6 +480,9 @@ class MoveRecord {
   final Position landing;
   final PuzzleState before;
   final PuzzleState after;
+  final List<MoveTeleport> teleports;
+  MoveTeleport? teleportOf(String blockId) =>
+      teleports.where((hop) => hop.blockId == blockId).firstOrNull;
 
   /// 이 수에 쓴 권능. 일반 이동이면 null.
   final PuzzlePower? power;
@@ -473,7 +491,11 @@ class MoveRecord {
 }
 
 /// Controller와 solver가 같은 상태 전이를 사용한다.
-PuzzleState _move(PuzzleState state, PuzzleMove move) {
+PuzzleState _move(
+  PuzzleState state,
+  PuzzleMove move, {
+  List<MoveTeleport>? teleports,
+}) {
   final PuzzleMove(:blockId, :target, :power) = move;
   final source = state.positionOf(blockId)!;
   final mechanics = state.level.mechanics.values;
@@ -483,7 +505,7 @@ PuzzleState _move(PuzzleState state, PuzzleMove move) {
   ];
   // 일반/권능 착지 → 기믹 배치 변환 → 잔상. 봉인·교대의 잔상 규칙은 마지막에 우선한다.
   for (final mechanic in mechanics) {
-    blocks = mechanic.transformMove(state, move, blocks);
+    blocks = mechanic.transformMove(state, move, blocks, teleports: teleports);
   }
   Position? echo = source;
   for (final mechanic in mechanics) {
@@ -556,8 +578,15 @@ class PuzzleController {
   void _commit(String blockId, Position target, PuzzlePower? power) {
     final before = _state;
     final from = before.positionOf(blockId)!;
+    final teleports = before.level.mechanics.containsKey(ShelfDoor.typeId)
+        ? <MoveTeleport>[]
+        : null;
     _history.add(_state);
-    _state = _move(_state, PuzzleMove(blockId, target, power: power));
+    _state = _move(
+      before,
+      PuzzleMove(blockId, target, power: power),
+      teleports: teleports,
+    );
     _moves.add(
       MoveRecord(
         blockId: blockId,
@@ -567,6 +596,7 @@ class PuzzleController {
         before: before,
         after: _state,
         power: power,
+        teleports: teleports == null ? const [] : List.unmodifiable(teleports),
       ),
     );
   }

@@ -1,6 +1,7 @@
 import '../puzzle.dart';
 import 'board_mechanic.dart';
 import 'ice.dart';
+import 'shelf_door.dart';
 
 typedef MirrorShift = ({String blockId, int pair, Position from, Position to});
 
@@ -51,8 +52,9 @@ class MirrorPair extends BoardMechanic {
   List<Block> transformMove(
     PuzzleState before,
     PuzzleMove move,
-    List<Block> blocks,
-  ) {
+    List<Block> blocks, {
+    List<MoveTeleport>? teleports,
+  }) {
     if (move.power != null) return blocks;
     final partner = partnerOf(move.blockId);
     if (partner == null) return blocks;
@@ -88,10 +90,23 @@ class MirrorPair extends BoardMechanic {
               vacated: source,
             ) ??
         target;
-    return [...blocks]..[index] = twin.at(end);
+    final landed = twin.at(end);
+    final result = [...blocks]..[index] = landed;
+    final shelf = before.level.mechanic<ShelfDoor>(ShelfDoor.typeId);
+    if (shelf != null) {
+      final destination = shelf.finishTeleport(
+        before,
+        result,
+        landed,
+        vacated: source,
+        teleports: teleports,
+      );
+      if (destination != end) result[index] = landed.at(destination);
+    }
+    return result;
   }
 
-  /// 화면은 이미 판정한 두 스냅샷을 읽는다. 제자리면 짝이 막힌 수다.
+  /// 화면은 이미 판정한 두 스냅샷에서 짝의 시작과 최종 위치를 읽는다.
   MirrorShift? shiftBetween(
     PuzzleState before,
     PuzzleState after,
@@ -108,10 +123,19 @@ class MirrorPair extends BoardMechanic {
     );
   }
 
-  static MirrorShift? recordedShift(MoveRecord move) {
+  static MirrorShift? recordedShift(
+    MoveRecord move, {
+    bool includeTeleportReturn = false,
+  }) {
     if (move.power != null) return null;
     final pair = move.before.level.mechanic<MirrorPair>(typeId);
     final shift = pair?.shiftBetween(move.before, move.after, move.blockId);
-    return shift == null || shift.from == shift.to ? null : shift;
+    if (shift == null ||
+        (shift.from == shift.to &&
+            !(includeTeleportReturn &&
+                move.teleportOf(shift.blockId) != null))) {
+      return null;
+    }
+    return shift;
   }
 }

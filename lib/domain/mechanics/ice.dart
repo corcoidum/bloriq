@@ -28,8 +28,9 @@ class Ice extends BoardMechanic {
   List<Block> transformMove(
     PuzzleState before,
     PuzzleMove move,
-    List<Block> blocks,
-  ) {
+    List<Block> blocks, {
+    List<MoveTeleport>? teleports,
+  }) {
     if (move.power == PuzzlePower.wind ||
         move.power == PuzzlePower.lightSwap ||
         !positions.contains(move.target)) {

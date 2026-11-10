@@ -75,7 +75,8 @@ class IceSlide {
       (to.x - from.x).abs() + (to.y - from.y).abs();
 
   static IceSlide? forMove(MoveRecord move) {
-    if (move.to == move.landing ||
+    final end = move.teleportOf(move.blockId)?.from ?? move.to;
+    if (end == move.landing ||
         move.before.level
                 .mechanic<Ice>(Ice.typeId)
                 ?.positions
@@ -84,14 +85,14 @@ class IceSlide {
       return null;
     }
     return IceSlide._(
-      distance(move.from, move.to),
+      distance(move.from, end),
       frostStart: move.power == PuzzlePower.moonflowerLeap ? 2 : 0,
     );
   }
 
-  static IceSlide? forTwin(MirrorShift? shift) {
+  static IceSlide? forTwin(MirrorShift? shift, {Position? landing}) {
     if (shift == null) return null;
-    final cells = distance(shift.from, shift.to);
+    final cells = distance(shift.from, landing ?? shift.to);
     return cells > 1 ? IceSlide._(cells, frostStart: 0) : null;
   }
 

@@ -73,3 +73,43 @@ flutter test -r failures-only test/ice_widget_test.dart --dart-define=CAPTURE_IC
 ```
 
 `test/fixtures/ice_fuzz.json`의 320판에는 거울 짝과 시곗바늘을 둘 다 섞은 판 30개가 있다. 319판에서 두 solver의 최단 수와 수순이 같았고, 1판은 양쪽 모두 해가 없었다. isolate 측정 원본은 `build/design_logs/ice-isolate.json`에 출력한다.
+
+## 세계 6-A 책장 문
+
+생성 시드 `662026`의 첫 200판을 측정했다. 5×5 160판과 6×5 40판에 리크 외 블록 2–3개와 책장 문 1–2쌍을 배치했다. 얼음이 있는 판 100개, 거울 짝이 있는 판 75개, 얼음·거울 짝·시곗바늘을 함께 쓰는 판 25개를 포함한다. 100판은 권능 없이, 100판은 권능 4종을 각각 25판씩 넣었다. 해의 유무와 난이도로 표본을 선별하지 않았다.
+
+### Python BFS
+
+첫 최단 해까지 발견한 고유 상태 수와 전체 호출 시간을 쟀다. 상태 한도는 200만 개다. 비교군은 같은 200판에서 책장 문 변환만 껐다.
+
+| 표본 | 해를 찾은 판 | 평균 상태 수 | 최대 상태 수 | 평균 시간 | 최대 시간 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 책장 문 전체 | 200/200 | 2,052.7 | 119,884 | 39.56 ms | 3,297.50 ms |
+| 책장 문 5×5 | 160/160 | 1,497.8 | 52,655 | 22.98 ms | 882.58 ms |
+| 책장 문 6×5 | 40/40 | 4,272.1 | 119,884 | 105.90 ms | 3,297.50 ms |
+| 같은 200판, 책장 문 비활성화 | 200/200 | 2,306.5 | 106,141 | 45.69 ms | 2,813.70 ms |
+
+이 표본에서는 책장 문을 켰을 때 평균 상태 수가 11.0% 줄었다. 최대 상태와 시간은 6×5 얼음·시곗바늘 혼합판 3197번에서 나왔다. 책장 문은 위치만 바꾸므로 solver 상태 키에는 값을 추가하지 않는다. 6×5 표본도 200만 상태 기준 이내였다.
+
+### 앱 isolate 힌트
+
+같은 200판을 저장된 풀이 없이 `HintSearch.solve`로 순차 호출했다. 호출부터 응답까지 isolate 생성과 결과 전달을 포함한다. 앱의 제한은 1.5초와 20만 상태다.
+
+| 표본 | 해를 찾은 판 | 1.5초 이내 응답 | 제한 종료 | 평균 시간 | 최대 시간 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 책장 문 전체 | 200/200 | 200/200 | 0 | 7.01 ms | 487.32 ms |
+| 책장 문 5×5 | 160/160 | 160/160 | 0 | 4.95 ms | 171.61 ms |
+| 책장 문 6×5 | 40/40 | 40/40 | 0 | 15.27 ms | 487.32 ms |
+
+Windows 11 x64, AMD Ryzen 5 8500G, Python 3.13.7, Flutter 3.47.8, Dart 3.13.7에서 측정했다. 앱 수치는 데스크톱 테스트 러너의 JIT 실측이며 모바일 실기기·웹 측정은 남아 있다.
+
+### 재현
+
+```sh
+python -m tools.shelf_door_fixture --benchmark-output build/design_logs/shelf-door-python.json
+flutter test -r failures-only test/shelf_door_solver_agreement_test.dart
+flutter test -r failures-only test/shelf_door_solver_agreement_test.dart --dart-define=BENCH_SHELF_DOOR=true
+flutter test -r failures-only test/shelf_door_widget_test.dart --dart-define=CAPTURE_SHELF_RULE=true
+```
+
+`test/fixtures/shelf_door_fuzz.json`의 무작위 320판 모두에서 두 solver의 최단 수와 수순이 일치했다. 얼음·거울 짝·시곗바늘을 모두 섞은 판은 40개다. isolate 측정 원본은 `build/design_logs/shelf-door-isolate.json`에 출력한다.

@@ -7,6 +7,7 @@ import 'goal_only.dart';
 import 'ice.dart';
 import 'mirror_pair.dart';
 import 'one_way.dart';
+import 'shelf_door.dart';
 
 typedef MechanicParser = BoardMechanic Function(Map<String, dynamic>);
 
@@ -18,8 +19,9 @@ abstract final class MechanicRegistry {
     OneWay.typeId: OneWay.parse,
     GoalOnly.typeId: GoalOnly.parse,
     EchoGate.typeId: EchoGate.parse,
-    // 먼저 밀린 블록의 미끄러짐을 끝내고 그 배치로 짝 이동을 판정한다.
+    // 먼저 밀린 블록이 얼음과 책장을 지난 뒤의 배치로 짝을 판정한다.
     Ice.typeId: Ice.parse,
+    ShelfDoor.typeId: ShelfDoor.parse,
     MirrorPair.typeId: MirrorPair.parse,
     ClockArrow.typeId: ClockArrow.parse,
   };

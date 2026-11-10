@@ -89,6 +89,7 @@
   "mirrorPairRule": "Mirror twins — push one and its twin moves the opposite way",
   "clockArrowRule": "Clock-hand tile — arrows turn clockwise every move; leave only the way it points",
   "iceRule": "Ice — slide until something stops you",
+  "shelfDoorRule": "Bookshelf door — step in and come out at its twin shelf",
   "iceGuideEnter": "Slide when you enter ice",
   "iceGuideEnterBody": "Push a block onto ice and it keeps going in the same direction.",
   "iceGuideStop": "Stop when something blocks you",

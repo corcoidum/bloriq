@@ -10,9 +10,11 @@ import '../domain/mechanics/goal_only.dart';
 import '../domain/mechanics/ice.dart';
 import '../domain/mechanics/mirror_pair.dart';
 import '../domain/mechanics/one_way.dart';
+import '../domain/mechanics/shelf_door.dart';
 import 'clock_arrow_art.dart';
 import 'ice_art.dart';
 import 'mirror_pair_art.dart';
+import 'shelf_door_art.dart';
 
 enum GateBadge { crystal, open, closed }
 
@@ -89,6 +91,10 @@ class BoardBadge extends CustomPainter {
     }
     if (type == Ice.typeId) {
       IceArt.tile(canvas, center, diameter * .88);
+      return;
+    }
+    if (type == ShelfDoor.typeId) {
+      ShelfDoorArt.tile(canvas, center, diameter * .88, 0);
       return;
     }
     final glyph = _glyphs[type];

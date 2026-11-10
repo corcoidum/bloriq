@@ -1,11 +1,12 @@
 import '../puzzle.dart';
 
-/// 한 레벨에 설정된 기믹. 훅은 이전 상태를 바꾸지 않는 순수 함수다.
+/// 한 레벨에 설정된 기믹. 훅은 이전 상태를 보존하며 다음 배치와 잔상을 계산한다.
 abstract class BoardMechanic {
   const BoardMechanic();
 
   String get type;
   Iterable<Position> get cells => const [];
+  bool get hasExclusiveCells => true;
   bool get reflectionSymmetric => true;
   void validate(Level level) {}
 
@@ -17,12 +18,13 @@ abstract class BoardMechanic {
 
   bool canLeave(PuzzleState state, Position from, Position direction) => true;
 
-  /// 일반 이동 또는 권능 착지 후의 배치를 받는다. 블록 순서와 ID를 보존한다.
+  /// 착지 후의 배치를 받는다. 블록 순서와 ID를 보존하며 화면용 경로는 선택적으로 기록한다.
   List<Block> transformMove(
     PuzzleState before,
     PuzzleMove move,
-    List<Block> blocks,
-  ) => blocks;
+    List<Block> blocks, {
+    List<MoveTeleport>? teleports,
+  }) => blocks;
 
   /// 배치 변환 뒤에 호출된다. 일반 이동의 기본 잔상은 출발 칸이다.
   Position? nextEcho(

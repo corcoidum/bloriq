@@ -47,6 +47,7 @@
   "mirrorPairRule": "거울 짝 — 하나를 밀면 짝은 반대쪽으로 움직여요",
   "clockArrowRule": "시곗바늘 칸 — 한 수마다 화살표가 시계 방향으로 돌아요, 화살표 쪽으로만 나갈 수 있어요",
   "iceRule": "얼음 — 들어가면 막힐 때까지 미끄러져요",
+  "shelfDoorRule": "책장 문 — 들어가면 같은 무늬 책장으로 건너가요",
   "iceGuideEnter": "얼음에 들어가면 미끄러져요",
   "iceGuideEnterBody": "블록을 얼음 칸으로 밀면 같은 방향으로 계속 가요.",
   "iceGuideStop": "막히는 곳에서 멈춰요",

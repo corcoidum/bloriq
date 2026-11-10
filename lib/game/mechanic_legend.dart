@@ -12,6 +12,7 @@ import '../domain/mechanics/goal_only.dart';
 import '../domain/mechanics/ice.dart';
 import '../domain/mechanics/mirror_pair.dart';
 import '../domain/mechanics/one_way.dart';
+import '../domain/mechanics/shelf_door.dart';
 import '../domain/puzzle.dart';
 import '../l10n/app_localizations.dart';
 import 'board_badge.dart';
@@ -92,6 +93,7 @@ class MechanicLegend extends StatelessWidget {
     MirrorPair.typeId: _LegendText((t, _) => [t.mirrorPairRule]),
     ClockArrow.typeId: _LegendText((t, _) => [t.clockArrowRule]),
     Ice.typeId: _LegendText((t, _) => [t.iceRule]),
+    ShelfDoor.typeId: _LegendText((t, _) => [t.shelfDoorRule]),
   };
 
   static List<LegendItem> itemsFor(
