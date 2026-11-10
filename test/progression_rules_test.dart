@@ -211,7 +211,7 @@ void main() {
         'gold_mirror',
       ]);
       expect(defaultTrailId, 'moonlight');
-      expect(titles.length, 18);
+      expect(titles.length, 19);
       for (final text in [
         ...trails.map((t) => t.name),
         ...titles.map((t) => t.name),
@@ -229,6 +229,9 @@ void main() {
       final clocktower = titleById('clocktower_bellkeeper')!.name;
       expect(clocktower.ko, '멈춘 시각의 종지기');
       expect(clocktower.en, 'Bellkeeper of the Still Hour');
+      final iceCave = titleById('frost_memory_keeper')!.name;
+      expect(iceCave.ko, '서리 속 기억 지기');
+      expect(iceCave.en, 'Keeper of Frostbound Memories');
     });
   });
 

@@ -89,6 +89,13 @@
   "mirrorPairRule": "Mirror twins — push one and its twin moves the opposite way",
   "clockArrowRule": "Clock-hand tile — arrows turn clockwise every move; leave only the way it points",
   "iceRule": "Ice — slide until something stops you",
+  "iceGuideEnter": "Slide when you enter ice",
+  "iceGuideEnterBody": "Push a block onto ice and it keeps going in the same direction.",
+  "iceGuideStop": "Stop when something blocks you",
+  "iceGuideStopBody": "If the way is blocked, stop on the ice. If you slide off the ice, stop on the first clear floor tile.",
+  "iceGuideSetStop": "Make a stop with blocks and echoes",
+  "iceGuideSetStopBody": "Put a rune or an echo just ahead of the ice tile where you want to stop.",
+  "iceGuideReplay": "Review sliding on ice",
   "clockPhaseLabel": "Clock phase {phase} of {total}",
   "@clockPhaseLabel": {
     "placeholders": {

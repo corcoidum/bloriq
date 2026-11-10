@@ -1,16 +1,16 @@
 # BLORIQ
 
-현재 버전은 **BLORIQ 0.3.0**입니다. 리크와 룬석을 한 칸씩 밀어 길을 만드는 오프라인 퍼즐입니다. 블록이 떠난 칸에 남는 한 턴의 잔상이 다음 이동의 길을 바꿉니다.
+현재 버전은 **BLORIQ 0.4.0**입니다. 리크와 룬석을 밀어 길을 만드는 오프라인 퍼즐입니다. 블록이 떠난 칸에 남는 한 턴의 잔상이 다음 이동의 길을 바꿉니다.
 
-## 0.3.0에서 달라진 점
+## 0.4.0에서 달라진 점
 
-- **시계탑 등대**. 거울 호수의 별자리 5개를 완성하면 셋째 등대가 열립니다. 301~325번에서 놋쇠와 밤색 나무판, 금빛 테두리, 째깍이는 BGM을 배경으로 정령 25명의 기억을 모읍니다.
-- **시곗바늘 칸**. 바늘이 가리키는 쪽으로만 나갈 수 있고, 한 수를 둘 때마다 모든 바늘이 시계 방향으로 돌아갑니다. 원하는 때를 기다리려면 다른 블록을 움직입니다. 301번의 세 장짜리 안내는 게임 방법에서 다시 볼 수 있습니다.
-- **수호 정령과 별 모으기**. 수호 판을 깨면 세계 지도에서 정령의 기억과 별자리를 다시 볼 수 있습니다. 시계탑에서 별 25·50·75개를 모으면 차례로 별가루 200개, 별빛 길 사용권 3장, ‘멈춘 시각의 종지기’ 칭호를 받습니다.
+- **얼음 동굴 등대**. 시계탑의 별자리 5개를 완성하면 넷째 등대가 열립니다. 401~425번에서 서리 테두리의 청백색 보드와 느린 종소리를 배경으로 정령 25명의 기억을 모읍니다.
+- **미끄럼 얼음**. 얼음에 들어가면 같은 방향으로 미끄러집니다. 룬석과 잔상으로 멈출 자리를 만들고, 드래그 중 점선으로 정지 칸을 확인할 수 있습니다. 401번의 세 장짜리 안내는 게임 방법에서 다시 볼 수 있습니다.
+- **수호 정령과 별 모으기**. 수호 판을 깨면 세계 지도에서 정령의 기억과 별자리를 다시 볼 수 있습니다. 얼음 동굴에서 별 25·50·75개를 모으면 차례로 별가루 200개, 별빛 길 사용권 3장, ‘서리 속 기억 지기’ 칭호를 받습니다.
 
 소스는 [0.1.2 보관 브랜치](https://github.com/corcoidum/bloriq/tree/codex/aurora-board-badges)에서도 확인할 수 있습니다.
 
-현재 캠페인은 **달빛 숲, 구름바다 등대, 거울 호수 등대, 시계탑 등대**의 총 100판입니다. 날짜별 **오늘의 잔상**과 무한 모드 **별바다 항해**도 플레이할 수 있습니다. 시계탑을 마치면 빛길 지도에서 얼음 동굴 등대를 예고합니다. [시계탑 레벨 검토와 보드 캡처](docs/LEVEL_REVIEW_W4.md)
+현재 캠페인은 **달빛 숲, 구름바다 등대, 거울 호수 등대, 시계탑 등대, 얼음 동굴 등대**의 총 125판입니다. 날짜별 **오늘의 잔상**과 무한 모드 **별바다 항해**도 플레이할 수 있습니다. 얼음 동굴을 마치면 빛길 지도에서 꿈의 서고 등대를 예고합니다. [얼음 동굴 레벨 검토와 보드 캡처](docs/LEVEL_REVIEW_W5.md)
 
 현재 규칙을 기준으로 정리한 후속 제작 지시와 완료 기준은 [개발 마스터 프롬프트 v3](docs/ECHO_BLOCK_MASTER_PROMPT_V3.md)를 참고하세요.
 
@@ -20,10 +20,11 @@
 
 처음 실행하면 시네마틱 인트로와 1레벨의 세 단계 튜토리얼을 거칩니다. 둘 다 건너뛸 수 있습니다. 도움말의 다시 연습은 진행 기록과 분리되며, 설정에서 인트로를 다시 볼 수 있습니다. 재방문자는 홈으로 들어가 이어서 플레이하거나 원하는 스테이지를 고릅니다.
 
-- 블록을 상하좌우로 드래그하면 한 번에 한 칸 이동합니다. 민트 표식의 리크를 별문까지 보내면 클리어합니다.
+- 블록을 상하좌우로 드래그하면 보통 한 칸씩 이동합니다. 민트 표식의 리크를 별문까지 보내면 클리어합니다.
 - 일반 칸에서 성공적으로 이동하면 출발 칸에 잔상이 생깁니다. 이전 잔상은 다음 이동을 판정할 때까지 장애물로 남고, 그 이동이 끝나면 새 잔상으로 교체됩니다. 아래의 특수 칸에서는 예외가 적용됩니다.
 - 민들레 칸에서 떠나면 이전 잔상을 지우고 새 잔상을 남기지 않습니다. 오로라 호박석 칸에서 떠나면 이전 잔상이 그대로 유지됩니다.
 - 물길 칸에서는 화살표 방향으로만 나갈 수 있습니다. 세모 잎이 표시된 클로버 칸에는 리크만 들어갈 수 있습니다.
+- 얼음 칸에 들어가면 앞이 막히거나 얼음 밖의 첫 칸에 닿을 때까지 미끄러집니다. 미끄러짐 전체가 한 수입니다.
 - 스위치가 있는 스테이지에서는 스위치 위의 잔상이 문을 엽니다. 잔상이 남아 있는 동안 문으로 들어갈 수 있고, 다음 이동을 마치면 이전 잔상이 사라지며 문이 닫힙니다. 블록이 문 위에 있을 때 문이 닫혀도 블록을 문 밖으로 이동할 수 있습니다.
 - 막힌 칸으로 드래그하거나 가만히 기다리는 것은 턴을 소비하지 않습니다.
 - Undo는 블록 위치와 잔상, 시계탑 판의 시각을 함께 복원합니다. Restart는 현재 스테이지를 처음부터 시작합니다. 이동할 수 있는 수가 없으면 되돌리기 버튼이 안내됩니다.
@@ -64,7 +65,7 @@
 
 ## 실행 방법
 
-Flutter SDK가 필요합니다. 0.3.0의 검증 환경은 Flutter 3.47.8 / Dart 3.13.7입니다. Android SDK 없이 Chrome으로 실행할 수 있습니다. [Flutter 설치 문서](https://docs.flutter.dev/get-started/install)
+Flutter SDK가 필요합니다. 0.4.0의 검증 환경은 Flutter 3.47.8 / Dart 3.13.7입니다. Android SDK 없이 Chrome으로 실행할 수 있습니다. [Flutter 설치 문서](https://docs.flutter.dev/get-started/install)
 
 다른 컴퓨터에서 처음 시작한다면 `git clone https://github.com/corcoidum/bloriq.git`으로 저장소를 내려받고 `cd bloriq`으로 이동합니다. 이미 저장소가 있다면 본인 작업을 확인한 후 `git pull --ff-only`로 최신 변경을 가져옵니다.
 
@@ -83,7 +84,7 @@ Chrome 창이 열리면 마우스로 블록을 드래그해 플레이합니다. 
 
 Android 실행에는 Android SDK, 호환 JDK, USB 디버깅을 켠 기기 또는 에뮬레이터가 필요합니다. [Android 환경 설정](https://docs.flutter.dev/platform-integration/android/setup) 후 `flutter devices`에서 기기 ID를 확인하고 `flutter run -d <기기_ID>`를 실행합니다. `flutter doctor`가 Android 라이선스 동의를 요청하면 `flutter doctor --android-licenses`를 실행합니다.
 
-Android 테스트 APK는 `flutter build apk --release`로 빌드합니다. 결과는 `build/app/outputs/flutter-apk/app-release.apk`에 생성됩니다. 0.3.0의 Android 버전 코드는 5입니다.
+Android 테스트 APK는 `flutter build apk --release`로 빌드합니다. 결과는 `build/app/outputs/flutter-apk/app-release.apk`에 생성됩니다. 0.4.0의 Android 버전 코드는 6입니다.
 
 `android/key.properties`가 없는 환경의 릴리스 빌드는 테스트용 디버그 키로 서명합니다. 진행 기록을 보존하며 앱을 업데이트하려면 기기에 설치된 앱과 APK의 앱 ID 및 서명이 일치해야 합니다. [Android 휴대폰 테스트 안내](docs/ANDROID_PHONE_TEST.md)
 
@@ -94,18 +95,18 @@ flutter gen-l10n
 flutter analyze
 flutter test -r failures-only
 python3 tools/validate_levels.py
-python3 -m tools.level_audit --world 4
+python3 -m tools.level_audit --world 5
 ```
 
-위젯 테스트는 225번을 깨면 시계탑이 열리는 흐름, 시곗바늘 안내와 수호 정령 도감, 320×568에서 200% 글자 크기로 한·영 게임과 결과 화면을 검증합니다. 독립 Python 검증기는 해결 가능성과 최단 수를 확인합니다. [세계 4 화면 캡처](docs/screenshots/world4/)
+위젯 테스트는 325번을 깨면 얼음 동굴이 열리는 흐름, 미끄럼 얼음 안내와 수호 정령 도감, 320×568에서 200% 글자 크기로 한·영 게임과 결과 화면을 검증합니다. 독립 Python 검증기는 해결 가능성과 최단 수를 확인합니다. [세계 5 화면 캡처](docs/screenshots/world5/)
 
 ```bash
-flutter test -r failures-only test/world4_release_test.dart --dart-define=CAPTURE_WORLD4_RELEASE=true
+flutter test -r failures-only test/world5_release_test.dart --dart-define=CAPTURE_WORLD5_RELEASE=true
 ```
 
 ## 데이터와 범위
 
-`assets/levels/levels.json`에서 `startPosition`은 목표 블록 시작 위치, `exitPosition`은 출구, `blocks`는 일반 블록, `obstacles`는 고정 장애물입니다. `specialRules`에는 `echoGate`, `echoEraser`, `echoHold`, `oneWay`, `goalOnly`, `mirrorPair`, `clockArrow`를 조합할 수 있습니다. 좌표 `(0, 0)`은 왼쪽 위입니다. `minimumMoves`는 잔상까지 포함해 검증한 최단 이동 횟수입니다. 새로운 스테이지를 추가하면 위 테스트와 검증기를 다시 실행하세요.
+`assets/levels/levels.json`에서 `startPosition`은 목표 블록 시작 위치, `exitPosition`은 출구, `blocks`는 일반 블록, `obstacles`는 고정 장애물입니다. `specialRules`에는 `echoGate`, `echoEraser`, `echoHold`, `oneWay`, `goalOnly`, `mirrorPair`, `clockArrow`, `ice`를 조합할 수 있습니다. 좌표 `(0, 0)`은 왼쪽 위입니다. `minimumMoves`는 잔상까지 포함해 검증한 최단 이동 횟수입니다. 새로운 스테이지를 추가하면 위 테스트와 검증기를 다시 실행하세요.
 
 계정, 서버, 광고, 결제 기능은 없습니다. 스테이지별 최고 이동 수, 최고 별, 완료 횟수는 기기 내부에 저장되며 스테이지 메뉴에서 최고 별을 볼 수 있습니다. 새 코스의 기록은 이전 코스와 분리되며, 이전 기록은 기기에 보존되지만 새 코스에는 표시되지 않습니다. 이전 스테이지 데이터는 `assets/levels/legacy_levels.json`에 보관합니다. 앱 데이터 삭제나 앱 제거 시 기록이 사라질 수 있습니다. 포스트카드에는 스테이지 번호와 결과가 들어갑니다. 거울 짝이 움직인 판에서는 최근 12번까지의 짝 이동 방향과 앞선 짝 이동 수를 표시합니다. 표식은 방향만 담으며 보드 좌표는 사용하지 않습니다. 공유를 선택하면 기기의 시스템 공유 창이 열립니다. 효과음과 BGM은 앱에 포함된 합성 음원으로 오프라인에서 재생되며 기기의 오디오 설정에 영향을 받습니다. Android 아이콘과 서명은 출시용이 아닙니다. 실기기 사용자 테스트, 접근성 검토 및 정식 출시 준비는 후속 작업입니다.
 

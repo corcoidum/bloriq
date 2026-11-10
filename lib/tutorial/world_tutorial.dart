@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../design/arcade_components.dart' show prefersReducedMotion;
 import '../design/game_theme.dart';
 import '../domain/mechanics/clock_arrow.dart';
+import '../domain/mechanics/ice.dart';
 import '../domain/mechanics/mirror_pair.dart';
 import '../game/board_badge.dart';
 import '../game/mechanic_legend.dart';
@@ -11,7 +12,8 @@ import '../settings/game_settings.dart';
 
 enum WorldTutorial {
   mirror(3, 'mirror-guide', MirrorPair.typeId),
-  clock(4, 'clock-guide', ClockArrow.typeId);
+  clock(4, 'clock-guide', ClockArrow.typeId),
+  ice(5, 'ice-guide', Ice.typeId);
 
   const WorldTutorial(this.world, this.keyPrefix, this.mechanic);
 
@@ -33,6 +35,17 @@ enum WorldTutorial {
       (t.clockGuideTurn, t.clockGuideTurnBody),
       (t.clockGuideWait, t.clockGuideWaitBody),
     ],
+    ice => [
+      (t.iceGuideEnter, t.iceGuideEnterBody),
+      (t.iceGuideStop, t.iceGuideStopBody),
+      (t.iceGuideSetStop, t.iceGuideSetStopBody),
+    ],
+  };
+
+  String replayLabel(AppLocalizations t) => switch (this) {
+    mirror => t.mirrorGuideReplay,
+    clock => t.clockGuideReplay,
+    ice => t.iceGuideReplay,
   };
 }
 

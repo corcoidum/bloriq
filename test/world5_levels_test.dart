@@ -26,6 +26,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/mechanic_solver.dart';
+import 'support/start_game.dart';
 import 'support/story_session.dart';
 import 'support/world_release.dart';
 
@@ -51,36 +52,33 @@ void main() {
   final levels = releaseLevels(_world);
   const solver = PuzzleSolver(maxStates: 200000);
 
-  test(
-    'the five draft chapters follow their slot and publication limits',
-    () async {
-      final saga = Saga.parse(File(Saga.asset).readAsStringSync());
-      expect(saga.world(_world).playable, isFalse);
-      final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
-      expect(manifest.listAssets(), isNot(contains(_levelAsset)));
-      expect(
-        levels.map((level) => level.id),
-        List.generate(25, (index) => 401 + index),
-      );
-      expect(
-        levels.map((level) => level.minimumMoves),
-        _targets.expand((chapter) => chapter),
-      );
-      expect(
-        levels
-            .where((level) => level.availablePowers.isNotEmpty)
-            .map((level) => level.id),
-        [406, 408],
-      );
-      for (final level in levels) {
-        expect((level.boardWidth, level.boardHeight), (5, 5));
-        expect(level.blocks, hasLength(2));
-        final ice = level.mechanic<Ice>(Ice.typeId)!;
-        expect(ice.positions.length, inInclusiveRange(1, 7));
-        expect(level.availablePowers.length, lessThanOrEqualTo(1));
-      }
-    },
-  );
+  test('the five published chapters follow their slot limits', () async {
+    final saga = Saga.parse(File(Saga.asset).readAsStringSync());
+    expect(saga.world(_world).playable, isTrue);
+    final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+    expect(manifest.listAssets(), contains(_levelAsset));
+    expect(
+      levels.map((level) => level.id),
+      List.generate(25, (index) => 401 + index),
+    );
+    expect(
+      levels.map((level) => level.minimumMoves),
+      _targets.expand((chapter) => chapter),
+    );
+    expect(
+      levels
+          .where((level) => level.availablePowers.isNotEmpty)
+          .map((level) => level.id),
+      [406, 408],
+    );
+    for (final level in levels) {
+      expect((level.boardWidth, level.boardHeight), (5, 5));
+      expect(level.blocks, hasLength(2));
+      final ice = level.mechanic<Ice>(Ice.typeId)!;
+      expect(ice.positions.length, inInclusiveRange(1, 7));
+      expect(level.availablePowers.length, lessThanOrEqualTo(1));
+    }
+  });
 
   for (final level in levels) {
     test(
@@ -185,6 +183,9 @@ void main() {
           ),
         );
         await tester.pump(const Duration(milliseconds: 100));
+        if (level.id == Worlds.firstLevelId(_world)) {
+          await tapVisible(tester, releaseKey('ice-guide-skip'));
+        }
         final state = releaseGame(tester).controller.state;
         expect(state.level.id, level.id);
         expect(state.moves, 0);

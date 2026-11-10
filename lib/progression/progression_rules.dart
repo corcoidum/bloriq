@@ -296,6 +296,10 @@ const titles = <TitleDefinition>[
     'clocktower_bellkeeper',
     ProgressionText('멈춘 시각의 종지기', 'Bellkeeper of the Still Hour'),
   ),
+  TitleDefinition(
+    'frost_memory_keeper',
+    ProgressionText('서리 속 기억 지기', 'Keeper of Frostbound Memories'),
+  ),
   TitleDefinition('golden_first', ProgressionText('첫 황금 별자리', 'First Gold')),
   TitleDefinition(
     'golden_collector',
@@ -815,6 +819,30 @@ const achievements = <Achievement>[
     target: 75,
     name: ProgressionText('시계탑 별 75개', 'All 75 Clocktower stars'),
     rewards: [TitleUnlock('clocktower_bellkeeper')],
+  ),
+  Achievement(
+    id: 'w5-stars-25',
+    kind: AchievementKind.worldStars,
+    world: 5,
+    target: 25,
+    name: ProgressionText('얼음 동굴 별 25개', '25 Ice Cave stars'),
+    rewards: [StardustBundle(200)],
+  ),
+  Achievement(
+    id: 'w5-stars-50',
+    kind: AchievementKind.worldStars,
+    world: 5,
+    target: 50,
+    name: ProgressionText('얼음 동굴 별 50개', '50 Ice Cave stars'),
+    rewards: [StarlightCharge(3)],
+  ),
+  Achievement(
+    id: 'w5-stars-75',
+    kind: AchievementKind.worldStars,
+    world: 5,
+    target: 75,
+    name: ProgressionText('얼음 동굴 별 75개', 'All 75 Ice Cave stars'),
+    rewards: [TitleUnlock('frost_memory_keeper')],
   ),
   Achievement(
     id: 'golden-1',

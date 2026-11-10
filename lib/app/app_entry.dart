@@ -344,8 +344,10 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     final replay = await showGameHelp(
       context,
       widget.settings,
-      showMirrorGuide: session?.worldUnlocked(3) ?? false,
-      showClockGuide: session?.worldUnlocked(4) ?? false,
+      worldGuides: [
+        for (final guide in WorldTutorial.values)
+          if (session?.worldUnlocked(guide.world) ?? false) guide,
+      ],
     );
     if (!mounted) return;
     if (replay?.worldGuide case final tutorial?) {

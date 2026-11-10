@@ -808,6 +808,7 @@ void main() {
     for (final (world, title) in [
       (3, 'mirror_lake_keeper'),
       (4, 'clocktower_bellkeeper'),
+      (5, 'frost_memory_keeper'),
     ]) {
       test(
         'world $world awards all milestones and restores its title',

@@ -1203,8 +1203,7 @@ class _GameScreenState extends State<GameScreen>
       final replay = await showGameHelp(
         context,
         widget.settings,
-        showMirrorGuide: widget.play.world == 3,
-        showClockGuide: widget.play.world == 4,
+        worldGuides: [?WorldTutorial.forWorld(widget.play.world)],
       );
       if (!mounted) return;
       if (replay?.worldGuide case final tutorial?) {

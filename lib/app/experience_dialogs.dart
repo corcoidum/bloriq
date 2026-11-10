@@ -50,12 +50,11 @@ Future<void> showExperienceSettings(
   }
 }
 
-enum GameHelpAction {
-  echo,
-  mirror(WorldTutorial.mirror),
-  clock(WorldTutorial.clock);
+class GameHelpAction {
+  const GameHelpAction._(this.worldGuide);
+  const GameHelpAction.world(WorldTutorial guide) : this._(guide);
 
-  const GameHelpAction([this.worldGuide]);
+  static const echo = GameHelpAction._(null);
 
   final WorldTutorial? worldGuide;
 }
@@ -63,8 +62,7 @@ enum GameHelpAction {
 Future<GameHelpAction?> showGameHelp(
   BuildContext context,
   GameSettings settings, {
-  bool showMirrorGuide = false,
-  bool showClockGuide = false,
+  List<WorldTutorial> worldGuides = const [],
 }) {
   final t = AppLocalizations.of(context)!;
   return showDialog<GameHelpAction>(
@@ -81,24 +79,18 @@ Future<GameHelpAction?> showGameHelp(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(t.helpBody),
+          for (final guide in worldGuides)
+            TextButton(
+              key: ValueKey('replay-${guide.keyPrefix}'),
+              onPressed: () =>
+                  Navigator.pop(dialogContext, GameHelpAction.world(guide)),
+              child: Text(guide.replayLabel(t)),
+            ),
           const SizedBox(height: 8),
           MechanicLegend(items: MechanicLegend.instructions(t)),
         ],
       ),
       actions: [
-        if (showMirrorGuide)
-          TextButton(
-            key: const ValueKey('replay-mirror-guide'),
-            onPressed: () =>
-                Navigator.pop(dialogContext, GameHelpAction.mirror),
-            child: Text(t.mirrorGuideReplay),
-          ),
-        if (showClockGuide)
-          TextButton(
-            key: const ValueKey('replay-clock-guide'),
-            onPressed: () => Navigator.pop(dialogContext, GameHelpAction.clock),
-            child: Text(t.clockGuideReplay),
-          ),
         TextButton(
           key: const ValueKey('replay-tutorial'),
           onPressed: () => Navigator.pop(dialogContext, GameHelpAction.echo),

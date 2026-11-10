@@ -120,3 +120,20 @@ for bar, chord in enumerate([
 for i in range(len(clocktower)):
     clocktower[i] *= min(1., (len(clocktower) - i - 1) / (RATE * .05))
 write('bgm_w4.wav', clocktower)
+
+# 얼음 동굴의 16초 루프. 낮은 울림 위로 맑은 종이 드문드문 번진다.
+ice_cave = [0.] * round(length * RATE)
+for bar, (bass, first_bell, answer) in enumerate([
+    (146.83, 587.33, 880.00),
+    (130.81, 523.25, 783.99),
+    (116.54, 698.46, 587.33),
+    (110.00, 440.00, 659.25),
+]):
+    start = bar * 4
+    mix(ice_cave, tone(bass, 3.88, .06, .58, False), start)
+    mix(ice_cave, tone(first_bell, 2.95, .15, 1.45), start)
+    mix(ice_cave, tone(first_bell * 2.76, .69, .032, 5.5, False), start)
+    mix(ice_cave, tone(answer, 2.08, .091, 1.68), start + 1.78)
+for i in range(len(ice_cave)):
+    ice_cave[i] *= min(1., i / (RATE * .045), (len(ice_cave) - i - 1) / (RATE * .10))
+write('bgm_w5.wav', ice_cave)

@@ -3,7 +3,6 @@ import 'package:bloriq/design/star_art.dart';
 import 'package:bloriq/domain/mechanics/clock_arrow.dart';
 import 'package:bloriq/progress/progress_repository.dart';
 import 'package:bloriq/progression/progression_repository.dart';
-import 'package:bloriq/world/saga_map.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -171,50 +170,6 @@ void main() {
       tester,
       find.descendant(of: atlas, matching: find.text('닫기')),
     );
-    await closeReleaseApp(tester);
-  });
-
-  testWidgets('clearing 325 completes Clocktower and previews the Ice Cave', (
-    tester,
-  ) async {
-    seedCampaign({
-      ..._chaptersThroughWorld3,
-      16,
-      17,
-      18,
-      19,
-    }, cleared: releaseLevels(4).take(24));
-    await openReleaseApp(tester);
-    await enterReleaseWorld(tester, 4);
-    await tapVisible(tester, releaseKey('world-continue'));
-    expect(releaseGame(tester).controller.state.level.id, 325);
-    await solveVisibleBoard(tester);
-    final cleared = releaseKey('world-clear');
-    await waitForReleaseWidget(tester, cleared);
-    expect(
-      find.descendant(of: cleared, matching: _storyText('얼음 동굴 등대')),
-      findsOneWidget,
-    );
-    expect(
-      (await ProgressionRepository.load()).completedChapters,
-      contains(20),
-    );
-    await tapVisible(tester, releaseKey('result-next'));
-    final saga = find.byType(SagaMap);
-    await waitForReleaseWidget(tester, saga);
-    final cave = releaseKey('saga-world-5');
-    await tester.scrollUntilVisible(
-      cave,
-      170,
-      scrollable: find
-          .descendant(of: saga, matching: find.byType(Scrollable))
-          .first,
-    );
-    expect(
-      find.descendant(of: cave, matching: _storyText('기억 보존 장치')),
-      findsOneWidget,
-    );
-    expect(releaseKey('saga-enter-5'), findsNothing);
     await closeReleaseApp(tester);
   });
 

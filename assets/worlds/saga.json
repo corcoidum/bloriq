@@ -91,13 +91,26 @@
     {
       "number": 5,
       "id": "w5",
-      "status": "planned",
+      "status": "playable",
       "lighthouse": 4,
+      "levels": "assets/levels/world5.json",
+      "story": "assets/story/world5.json",
+      "theme": {
+        "palette": {
+          "background": "#152840",
+          "board": "#B2DAED",
+          "border": "#E6F8FF",
+          "accent": "#92DEFF"
+        },
+        "floor": null,
+        "rock": null,
+        "bgm": "assets/audio/bgm_w5.wav"
+      },
       "title": { "ko": "얼음 동굴 등대", "en": "Ice Cave Lighthouse" },
       "subtitle": { "ko": "넷째 등대 · 얼어붙은 기억", "en": "Fourth lighthouse · Frozen Memories" },
-      "mechanic": { "ko": "미끄럼 얼음: 얼음 칸에 들어선 블록은 막힐 때까지 미끄러져요.", "en": "Slick ice: a block that enters ice slides until something stops it." },
+      "mechanic": { "ko": "미끄럼 얼음 — 얼음에 들어가면 미끄러져요. 블록과 잔상으로 멈출 자리를 만들어요.", "en": "Slick ice — blocks slide when they enter ice. Use blocks and echoes to make a stopping point." },
       "teaser": { "ko": "고장 난 기억 보존 장치가 동굴 깊은 곳에서 아직도 차갑게 숨 쉬고 있어.", "en": "Deep in the cave, the broken memory keeper is still breathing cold." },
-      "reveal": { "ko": "기억 보존 장치는 고장 난 게 아니라, 누군가의 기억을 너무 많이 얼려 두고 있었다.", "en": "The memory keeper was not broken — it was freezing far too many memories." }
+      "reveal": { "ko": "장치는 기억을 너무 많이 얼려 두고 있었다. 얼음이 녹자 잃어버린 기억이 리크에게 돌아왔다.", "en": "The keeper had frozen too many memories. As the ice thawed, RIQ's lost memories returned." }
     },
     {
       "number": 6,
@@ -107,7 +120,7 @@
       "title": { "ko": "꿈의 서고 등대", "en": "Dream Library Lighthouse" },
       "subtitle": { "ko": "다섯째 등대 · 첫 잔상의 기록", "en": "Fifth lighthouse · The Record of the First Echo" },
       "mechanic": { "ko": "책장 문: 짝지은 두 책장 칸 사이를 블록이 순식간에 건너가요.", "en": "Bookshelf doors: blocks jump instantly between paired shelf cells." },
-      "teaser": { "ko": "서고의 마지막 책장에는 '첫 잔상'이라는 제목의 빈 책 한 권이 꽂혀 있어.", "en": "On the last shelf of the library sits an empty book titled \"The First Echo\"." },
+      "teaser": { "ko": "서고의 마지막 책장에 '첫 잔상'이라는 빈 책 한 권이 꽂혀 있어.", "en": "On the last shelf of the library sits an empty book titled \"The First Echo\"." },
       "reveal": { "ko": "첫 잔상을 만든 건 첫 별 자신이었다.", "en": "The first echo was made by the First Star itself." }
     },
     {

@@ -1,0 +1,1209 @@
+{
+  "version": 1,
+  "worldId": "w5",
+  "title": {
+    "ko": "얼음 동굴 등대",
+    "en": "Ice Cave Lighthouse"
+  },
+  "prologue": {
+    "ko": "시계가 다시 움직이자 동굴에서 찬바람이 불어왔어. 깊은 곳의 기억 보존 장치는 아직 차갑게 숨 쉬고 있었어.",
+    "en": "The clocks began to tick again, and a cold wind stirred from the cave. Deep within, the memory keeper was still breathing cold."
+  },
+  "chapters": [
+    {
+      "number": 1,
+      "globalChapter": 21,
+      "power": null,
+      "family": "frost",
+      "name": {
+        "ko": "서리 입구",
+        "en": "Frost Entrance"
+      },
+      "familyName": {
+        "ko": "서리 가문",
+        "en": "Frost Family"
+      },
+      "constellation": {
+        "ko": "서리자리",
+        "en": "The Frost Branch"
+      },
+      "stars": {
+        "nodes": [
+          [
+            0.17,
+            0.69
+          ],
+          [
+            0.37,
+            0.55
+          ],
+          [
+            0.4,
+            0.22
+          ],
+          [
+            0.74,
+            0.3
+          ],
+          [
+            0.65,
+            0.68
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            4
+          ]
+        ]
+      },
+      "intro": {
+        "ko": "동굴 입구에 하얀 서리가 내려 있었어. 얼음 안에서 작은 빛이 깜박였어.",
+        "en": "White frost dusted the cave entrance. A tiny light flickered inside the ice."
+      },
+      "endingTitle": {
+        "ko": "얼음 속 작은 장면",
+        "en": "Little Scenes in the Ice"
+      },
+      "ending": {
+        "ko": "얼음 속에 작은 장면들이 갇혀 있었어. 리크는 그 안에서 손을 흔드는 친구를 보았어.",
+        "en": "Little scenes were trapped in the ice. In one of them, RIQ saw a friend waving."
+      }
+    },
+    {
+      "number": 2,
+      "globalChapter": 22,
+      "power": "wind",
+      "family": "icicle",
+      "name": {
+        "ko": "고드름 회랑",
+        "en": "Icicle Corridor"
+      },
+      "familyName": {
+        "ko": "고드름 가문",
+        "en": "Icicle Family"
+      },
+      "constellation": {
+        "ko": "고드름자리",
+        "en": "The Icicle"
+      },
+      "stars": {
+        "nodes": [
+          [
+            0.18,
+            0.23
+          ],
+          [
+            0.41,
+            0.3
+          ],
+          [
+            0.7,
+            0.2
+          ],
+          [
+            0.63,
+            0.5
+          ],
+          [
+            0.48,
+            0.79
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            4
+          ],
+          [
+            4,
+            1
+          ]
+        ]
+      },
+      "intro": {
+        "ko": "고드름 사이를 지나자 낮은 종소리가 났어. 그 소리 너머로 익숙한 웃음이 들렸어.",
+        "en": "A low chime rang among the icicles. Beyond it, RIQ heard a familiar laugh."
+      },
+      "endingTitle": {
+        "ko": "우리의 정원",
+        "en": "Our Garden"
+      },
+      "ending": {
+        "ko": "얼음 속 장면은 달빛 숲 친구들의 기억이었어. 리크는 손을 흔들던 포미를 알아보았어.",
+        "en": "The scenes held the Moonlight Forest friends' memories. RIQ recognized Pomi waving."
+      }
+    },
+    {
+      "number": 3,
+      "globalChapter": 23,
+      "power": null,
+      "family": "snowflake",
+      "name": {
+        "ko": "얼음 거울",
+        "en": "Ice Mirrors"
+      },
+      "familyName": {
+        "ko": "눈결정 가문",
+        "en": "Snowflake Family"
+      },
+      "constellation": {
+        "ko": "눈결정자리",
+        "en": "The Snowflake"
+      },
+      "stars": {
+        "nodes": [
+          [
+            0.51,
+            0.14
+          ],
+          [
+            0.84,
+            0.45
+          ],
+          [
+            0.57,
+            0.8
+          ],
+          [
+            0.18,
+            0.59
+          ],
+          [
+            0.5,
+            0.48
+          ]
+        ],
+        "edges": [
+          [
+            4,
+            0
+          ],
+          [
+            4,
+            1
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            4,
+            3
+          ]
+        ]
+      },
+      "intro": {
+        "ko": "얼음 벽에 리크가 두 번 비쳤어. 한 그림자가 호수에서처럼 먼저 움직였어.",
+        "en": "The ice wall reflected RIQ twice. One shadow moved first, just as it had at the lake."
+      },
+      "endingTitle": {
+        "ko": "한 번 더 겹친 잔상",
+        "en": "The Echo Draws Close"
+      },
+      "ending": {
+        "ko": "호수에서 돌아온 잔상이 얼음에 다시 비쳤어. 두 그림자가 리크의 발밑에서 하나로 겹쳤어.",
+        "en": "The echo from the lake appeared in the ice again. The two shadows joined beneath RIQ's feet."
+      }
+    },
+    {
+      "number": 4,
+      "globalChapter": 24,
+      "power": null,
+      "family": "blizzard",
+      "name": {
+        "ko": "눈보라 갈림길",
+        "en": "Blizzard Fork"
+      },
+      "familyName": {
+        "ko": "눈보라 가문",
+        "en": "Blizzard Family"
+      },
+      "constellation": {
+        "ko": "눈보라자리",
+        "en": "The Snow Squall"
+      },
+      "stars": {
+        "nodes": [
+          [
+            0.13,
+            0.36
+          ],
+          [
+            0.42,
+            0.17
+          ],
+          [
+            0.78,
+            0.34
+          ],
+          [
+            0.68,
+            0.73
+          ],
+          [
+            0.38,
+            0.52
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            4
+          ]
+        ]
+      },
+      "intro": {
+        "ko": "눈보라가 지나갈 때마다 다른 길이 보였어. 바람 사이로 장치의 오래된 표식이 드러났어.",
+        "en": "Each passing flurry showed a different path. An old mark on the keeper emerged between gusts."
+      },
+      "endingTitle": {
+        "ko": "지키려던 기억",
+        "en": "Memories Kept Safe"
+      },
+      "ending": {
+        "ko": "장치는 기억이 사라지지 않도록 만들어졌어. 누군가 잊힐까 봐 아끼던 순간들을 맡겨 두었어.",
+        "en": "The keeper was built to keep memories from fading. Someone had entrusted it with moments too dear to lose."
+      }
+    },
+    {
+      "number": 5,
+      "globalChapter": 25,
+      "power": null,
+      "family": "iceheart",
+      "name": {
+        "ko": "기억 보존 장치",
+        "en": "Memory Keeper"
+      },
+      "familyName": {
+        "ko": "얼음심장 가문",
+        "en": "Iceheart Family"
+      },
+      "constellation": {
+        "ko": "얼음심장자리",
+        "en": "The Ice Heart"
+      },
+      "stars": {
+        "nodes": [
+          [
+            0.25,
+            0.28
+          ],
+          [
+            0.5,
+            0.38
+          ],
+          [
+            0.75,
+            0.28
+          ],
+          [
+            0.77,
+            0.53
+          ],
+          [
+            0.5,
+            0.8
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            4
+          ],
+          [
+            4,
+            0
+          ]
+        ]
+      },
+      "intro": {
+        "ko": "가장 깊은 방에서 장치가 천천히 숨을 쉬었어. 리크는 얼음 안쪽에서 자기 발자국을 보았어.",
+        "en": "In the deepest room, the keeper breathed slowly. RIQ saw their own footprints beneath the ice."
+      },
+      "endingTitle": {
+        "ko": "녹아 나온 기억",
+        "en": "Memories Thaw"
+      },
+      "ending": {
+        "ko": "기억 보존 장치는 고장 난 게 아니었어. 지키려던 기억을 너무 많이 얼려 두고 있었어. 얼음이 녹자 잃어버린 기억이 리크에게 돌아왔어. “서고의 마지막 책장에 '첫 잔상'이라는 빈 책 한 권이 꽂혀 있어.”",
+        "en": "The memory keeper wasn't broken. It had frozen too many memories to keep them safe. As the ice melted, RIQ's lost memories returned. “On the last shelf of the library sits an empty book titled 'The First Echo'.”"
+      }
+    }
+  ],
+  "spirits": [
+    {
+      "id": "s5-01",
+      "levelId": 401,
+      "chapter": 1,
+      "family": "frost",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "설콩",
+        "en": "Seolkong"
+      },
+      "levelTitle": {
+        "ko": "첫 서리",
+        "en": "First Frost"
+      },
+      "appearance": {
+        "ko": "등 위에 서리 한 점이 반짝여.",
+        "en": "A single fleck of frost sparkles on Seolkong's back."
+      },
+      "personality": {
+        "ko": "먼저 작은 발자국을 남겨 길을 알려 줘.",
+        "en": "Leaves little footprints to show the way."
+      },
+      "memory": {
+        "ko": "입구의 얼음이 반짝일 때 작은 그림을 봤어.",
+        "en": "I saw a little picture when the ice at the entrance glittered."
+      },
+      "quote": {
+        "ko": "얼음 위에선 한 칸 더 갈 수 있어.",
+        "en": "On the ice, you might travel farther than you think."
+      }
+    },
+    {
+      "id": "s5-02",
+      "levelId": 402,
+      "chapter": 1,
+      "family": "frost",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "보솜",
+        "en": "Bosomi"
+      },
+      "levelTitle": {
+        "ko": "얼음 위 멈춤",
+        "en": "A Place to Stop"
+      },
+      "appearance": {
+        "ko": "눈처럼 폭신한 귀를 달고 있어.",
+        "en": "Snow-soft ears frame Bosomi's face."
+      },
+      "personality": {
+        "ko": "친구가 멈출 곳을 먼저 찾아 둬.",
+        "en": "Always looks for a safe place for friends to stop."
+      },
+      "memory": {
+        "ko": "얼음 속 바닥에 발자국이 줄지어 있었어.",
+        "en": "Footprints lined the ground inside the ice."
+      },
+      "quote": {
+        "ko": "앞에 돌이 있으면 여기서 쉬어 가자.",
+        "en": "There's a stone ahead. Let's rest here."
+      }
+    },
+    {
+      "id": "s5-03",
+      "levelId": 403,
+      "chapter": 1,
+      "family": "frost",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "하얀",
+        "en": "Hayan"
+      },
+      "levelTitle": {
+        "ko": "비워 둔 모퉁이",
+        "en": "A Corner Left Clear"
+      },
+      "appearance": {
+        "ko": "꼬리에 하얀 털실 같은 서리가 피었어.",
+        "en": "A woolly curl of frost blooms on Hayan's tail."
+      },
+      "personality": {
+        "ko": "작은 모퉁이를 늘 깨끗이 비워 둬.",
+        "en": "Likes to leave little corners clear."
+      },
+      "memory": {
+        "ko": "얼음에 비친 누군가가 모퉁이에서 손을 흔들었어.",
+        "en": "Someone reflected in the ice waved from a corner."
+      },
+      "quote": {
+        "ko": "모퉁이를 비우면 길이 하나 더 생겨.",
+        "en": "Leave the corner clear and another path opens."
+      }
+    },
+    {
+      "id": "s5-04",
+      "levelId": 404,
+      "chapter": 1,
+      "family": "frost",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "서이",
+        "en": "Seoi"
+      },
+      "levelTitle": {
+        "ko": "옮겨 둔 벽",
+        "en": "A Wall You Can Move"
+      },
+      "appearance": {
+        "ko": "이마에 서리 맺힌 이슬 한 방울이 있어.",
+        "en": "A frosted dewdrop sits on Seoi's forehead."
+      },
+      "personality": {
+        "ko": "작은 돌을 모아 쉼터를 만들어.",
+        "en": "Gathers small stones to make resting spots."
+      },
+      "memory": {
+        "ko": "룬석 뒤에서 꽃잎이 가만히 빛났어.",
+        "en": "A petal glowed quietly behind a rune."
+      },
+      "quote": {
+        "ko": "이 돌을 옮기면 멈출 자리가 달라져.",
+        "en": "Move this stone and you'll stop somewhere new."
+      }
+    },
+    {
+      "id": "s5-05",
+      "levelId": 405,
+      "chapter": 1,
+      "family": "frost",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "서온",
+        "en": "Seoon"
+      },
+      "levelTitle": {
+        "ko": "얼음 속 작은 장면",
+        "en": "Little Scenes in the Ice"
+      },
+      "appearance": {
+        "ko": "둥근 서리 망토에 작은 빛이 어른거려.",
+        "en": "Tiny lights shimmer in Seoon's round frost cloak."
+      },
+      "personality": {
+        "ko": "얼음 속 풍경이 흐려질 때까지 지켜봐.",
+        "en": "Watches the scenes in the ice until they grow faint."
+      },
+      "memory": {
+        "ko": "얼음 안에 작은 장면들이 갇혀 있었어. 한 장면 속 친구가 손을 흔들었어.",
+        "en": "Little scenes were trapped in the ice. A friend in one of them was waving."
+      },
+      "quote": {
+        "ko": "저 손짓이 어쩐지 낯익어.",
+        "en": "Somehow, that wave feels familiar."
+      }
+    },
+    {
+      "id": "s5-06",
+      "levelId": 406,
+      "chapter": 2,
+      "family": "icicle",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "울린",
+        "en": "Ullin"
+      },
+      "levelTitle": {
+        "ko": "바람이 닿는 곳",
+        "en": "Where the Wind Reaches"
+      },
+      "appearance": {
+        "ko": "목 아래로 맑은 고드름이 두 개 달려 있어.",
+        "en": "Two clear icicles hang from Ullin's neck."
+      },
+      "personality": {
+        "ko": "찬바람이 오면 작은 종을 울려.",
+        "en": "Rings a little bell whenever a cold wind comes."
+      },
+      "memory": {
+        "ko": "바람에 흔들린 고드름 너머로 달꽃을 봤어.",
+        "en": "Beyond an icicle swaying in the wind, I saw a moonflower."
+      },
+      "quote": {
+        "ko": "바람은 바닥 칸도 건너가.",
+        "en": "Wind can carry you across floor tiles too."
+      }
+    },
+    {
+      "id": "s5-07",
+      "levelId": 407,
+      "chapter": 2,
+      "family": "icicle",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "솔비",
+        "en": "Solbi"
+      },
+      "levelTitle": {
+        "ko": "남은 잔상의 벽",
+        "en": "A Wall of Echo"
+      },
+      "appearance": {
+        "ko": "솔잎처럼 가는 얼음 가시가 등에 났어.",
+        "en": "Slender ice spines like pine needles line Solbi's back."
+      },
+      "personality": {
+        "ko": "한 번 들은 소리를 기억해 둬.",
+        "en": "Remembers every sound after hearing it once."
+      },
+      "memory": {
+        "ko": "얼음 안쪽에서 포미의 웃음소리가 났어.",
+        "en": "Pomi's laugh came from inside the ice."
+      },
+      "quote": {
+        "ko": "뒤에 남은 잔상도 앞길을 막을 수 있어.",
+        "en": "A lingering echo can stop you on the path ahead."
+      }
+    },
+    {
+      "id": "s5-08",
+      "levelId": 408,
+      "chapter": 2,
+      "family": "icicle",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "종비",
+        "en": "Jongbi"
+      },
+      "levelTitle": {
+        "ko": "한 줄 바람",
+        "en": "A Line of Wind"
+      },
+      "appearance": {
+        "ko": "고드름 끝에 작은 은빛 종이 매달려 있어.",
+        "en": "A tiny silver bell hangs from Jongbi's icicle."
+      },
+      "personality": {
+        "ko": "길고 느린 음을 울리기를 좋아해.",
+        "en": "Loves to ring long, slow notes."
+      },
+      "memory": {
+        "ko": "종이 울릴 때 숲길의 발소리가 들렸어.",
+        "en": "When the bell rang, I heard footsteps on a forest path."
+      },
+      "quote": {
+        "ko": "한 줄로 길이 비었을 때 바람을 불러 봐.",
+        "en": "Call the wind when the whole lane is clear."
+      }
+    },
+    {
+      "id": "s5-09",
+      "levelId": 409,
+      "chapter": 2,
+      "family": "icicle",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "바온",
+        "en": "Baon"
+      },
+      "levelTitle": {
+        "ko": "호박빛 기억",
+        "en": "An Amber Memory"
+      },
+      "appearance": {
+        "ko": "손안에 따뜻한 호박석 조각을 품고 있어.",
+        "en": "Baon cups a warm piece of amber."
+      },
+      "personality": {
+        "ko": "따뜻한 것을 만나면 친구들과 나눠.",
+        "en": "Shares anything warm with friends."
+      },
+      "memory": {
+        "ko": "루나벨의 달꽃이 손바닥 안에서 피었어.",
+        "en": "Lunabel's moonflower opened in my palm."
+      },
+      "quote": {
+        "ko": "여기서는 전의 잔상을 더 오래 둘 수 있어.",
+        "en": "Here you can keep the old echo a little longer."
+      }
+    },
+    {
+      "id": "s5-10",
+      "levelId": 410,
+      "chapter": 2,
+      "family": "icicle",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "결유",
+        "en": "Gyeoryu"
+      },
+      "levelTitle": {
+        "ko": "우리의 정원",
+        "en": "Our Garden"
+      },
+      "appearance": {
+        "ko": "고드름 관 안에 분홍 꽃잎이 얼어 있어.",
+        "en": "A pink petal is frozen inside Gyeoryu's icicle crown."
+      },
+      "personality": {
+        "ko": "그리운 이름을 하나씩 소리 내 불러.",
+        "en": "Says the names of missed friends aloud, one by one."
+      },
+      "memory": {
+        "ko": "포미의 꽃잎과 루나벨의 달꽃이 보였어. 둘 다 달빛 숲 정원의 기억이었어.",
+        "en": "I saw Pomi's petal and Lunabel's moonflower. Both came from memories of the Moonlight Forest garden."
+      },
+      "quote": {
+        "ko": "친구들의 목소리를 기억해?",
+        "en": "Do you remember your friends' voices?"
+      }
+    },
+    {
+      "id": "s5-11",
+      "levelId": 411,
+      "chapter": 3,
+      "family": "snowflake",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "솔눈",
+        "en": "Solnun"
+      },
+      "levelTitle": {
+        "ko": "마주 가는 두 길",
+        "en": "Two Paths Meeting"
+      },
+      "appearance": {
+        "ko": "이마에 서로 비치는 눈결정 둘이 있어.",
+        "en": "Two mirrored snowflakes shine on Solnun's brow."
+      },
+      "personality": {
+        "ko": "항상 친구와 나란히 걸을 길을 골라.",
+        "en": "Always chooses paths wide enough to walk beside a friend."
+      },
+      "memory": {
+        "ko": "얼음 벽에 리크의 그림자가 둘로 비쳤어.",
+        "en": "The ice wall showed two shadows of RIQ."
+      },
+      "quote": {
+        "ko": "한쪽을 밀면 다른 쪽도 길을 찾아.",
+        "en": "Push one and the other finds a path too."
+      }
+    },
+    {
+      "id": "s5-12",
+      "levelId": 412,
+      "chapter": 3,
+      "family": "snowflake",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "별결",
+        "en": "Byeolgyeol"
+      },
+      "levelTitle": {
+        "ko": "서로의 자리",
+        "en": "Each Other's Place"
+      },
+      "appearance": {
+        "ko": "별처럼 갈라진 얼음 조각을 들고 있어.",
+        "en": "Byeolgyeol carries a star-shaped shard of ice."
+      },
+      "personality": {
+        "ko": "친구의 발이 닿을 자리를 먼저 봐.",
+        "en": "First looks for where a friend's feet will land."
+      },
+      "memory": {
+        "ko": "호수에서 본 그림자가 반대로 미끄러졌어.",
+        "en": "The shadow from the lake slid the other way."
+      },
+      "quote": {
+        "ko": "둘이 어디에 설지 한 번 더 봐 줘.",
+        "en": "Look again at where both will stop."
+      }
+    },
+    {
+      "id": "s5-13",
+      "levelId": 413,
+      "chapter": 3,
+      "family": "snowflake",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "눈담",
+        "en": "Nundam"
+      },
+      "levelTitle": {
+        "ko": "비치는 손",
+        "en": "A Reflected Hand"
+      },
+      "appearance": {
+        "ko": "손끝마다 작은 눈결정이 반짝여.",
+        "en": "A snowflake glitters on each of Nundam's fingertips."
+      },
+      "personality": {
+        "ko": "손을 흔들어 대답할 때가 많아.",
+        "en": "Often answers with a wave."
+      },
+      "memory": {
+        "ko": "리크가 손을 내밀자 얼음 속 손도 다가왔어.",
+        "en": "When RIQ reached out, a hand in the ice drew near."
+      },
+      "quote": {
+        "ko": "닿을 것 같으면 잠깐 멈춰도 좋아.",
+        "en": "If you're about to touch, it's fine to pause."
+      }
+    },
+    {
+      "id": "s5-14",
+      "levelId": 414,
+      "chapter": 3,
+      "family": "snowflake",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "설결",
+        "en": "Seolgyeol"
+      },
+      "levelTitle": {
+        "ko": "따라온 그림자",
+        "en": "The Shadow That Followed"
+      },
+      "appearance": {
+        "ko": "걷고 나면 잎 모양의 눈무늬가 남아.",
+        "en": "Leaf-shaped snowflakes trail behind Seolgyeol."
+      },
+      "personality": {
+        "ko": "뒤처진 친구가 오기까지 기다려.",
+        "en": "Waits for any friend who falls behind."
+      },
+      "memory": {
+        "ko": "얼음 속 그림자에도 호수 물빛이 남아 있었어.",
+        "en": "A trace of lake light still shimmered in the shadow."
+      },
+      "quote": {
+        "ko": "가끔은 기다리면 둘이 만날 수 있어.",
+        "en": "Sometimes a little waiting brings two together."
+      }
+    },
+    {
+      "id": "s5-15",
+      "levelId": 415,
+      "chapter": 3,
+      "family": "snowflake",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "설미",
+        "en": "Seolmi"
+      },
+      "levelTitle": {
+        "ko": "한 번 더 겹친 잔상",
+        "en": "The Echo Draws Close"
+      },
+      "appearance": {
+        "ko": "투명한 눈꽃 관 아래로 두 그림자가 비쳐.",
+        "en": "Two shadows shimmer beneath Seolmi's clear snow crown."
+      },
+      "personality": {
+        "ko": "서로 다른 발걸음도 조용히 들어 줘.",
+        "en": "Listens quietly to footsteps, even when they don't match."
+      },
+      "memory": {
+        "ko": "호수의 잔상이 얼음에 다시 비쳤어. 두 그림자가 리크 발밑에서 겹쳤어.",
+        "en": "The echo from the lake appeared in the ice again. Both shadows overlapped beneath RIQ."
+      },
+      "quote": {
+        "ko": "호수에서 만난 발걸음이었어.",
+        "en": "Those are the footsteps we met at the lake."
+      }
+    },
+    {
+      "id": "s5-16",
+      "levelId": 416,
+      "chapter": 4,
+      "family": "blizzard",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "숨이",
+        "en": "Sumi"
+      },
+      "levelTitle": {
+        "ko": "얼음 끝의 바늘",
+        "en": "A Hand at the End of the Ice"
+      },
+      "appearance": {
+        "ko": "숨을 내쉴 때마다 작은 눈송이가 떠올라.",
+        "en": "Tiny snowflakes rise with every breath Sumi takes."
+      },
+      "personality": {
+        "ko": "바람이 잦아들 때까지 귀를 기울여.",
+        "en": "Listens until the wind goes quiet."
+      },
+      "memory": {
+        "ko": "얼음길 끝에서 다시 시계 소리가 났어.",
+        "en": "I heard a clock again at the end of the icy path."
+      },
+      "quote": {
+        "ko": "바늘이 돌아오면 다음 길이 보여.",
+        "en": "When the hand comes round, you'll see the next path."
+      }
+    },
+    {
+      "id": "s5-17",
+      "levelId": 417,
+      "chapter": 4,
+      "family": "blizzard",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "흰솔",
+        "en": "Huinsol"
+      },
+      "levelTitle": {
+        "ko": "돌아갈 시각",
+        "en": "The Hour to Turn Back"
+      },
+      "appearance": {
+        "ko": "등에 눈보라처럼 흐린 줄무늬가 있어.",
+        "en": "Soft streaks like a snow flurry cover Huinsol's back."
+      },
+      "personality": {
+        "ko": "급한 친구에게 한 박자 쉬자고 말해.",
+        "en": "Asks hurried friends to take a breath."
+      },
+      "memory": {
+        "ko": "바늘의 가장자리에 오래된 글씨가 있었어.",
+        "en": "Old writing lined the edge of a clock hand."
+      },
+      "quote": {
+        "ko": "서두르지 말고 떠날 때의 바늘을 봐.",
+        "en": "Take your time. Look at the hand when you leave."
+      }
+    },
+    {
+      "id": "s5-18",
+      "levelId": 418,
+      "chapter": 4,
+      "family": "blizzard",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "길봄",
+        "en": "Gilbom"
+      },
+      "levelTitle": {
+        "ko": "두 번 읽는 바늘",
+        "en": "Read the Hand Twice"
+      },
+      "appearance": {
+        "ko": "가슴에 얼어붙은 작은 나침반이 있어.",
+        "en": "A little frozen compass rests on Gilbom's chest."
+      },
+      "personality": {
+        "ko": "같은 길을 두 번 지나도 새 표식을 찾아.",
+        "en": "Finds new signs even on a path traveled twice."
+      },
+      "memory": {
+        "ko": "돌아가는 바늘 밑에서 별 표식을 보았어.",
+        "en": "I saw a star mark under a turning hand."
+      },
+      "quote": {
+        "ko": "들어온 시각과 나갈 시각이 달라.",
+        "en": "The hour you arrive can differ from the hour you leave."
+      }
+    },
+    {
+      "id": "s5-19",
+      "levelId": 419,
+      "chapter": 4,
+      "family": "blizzard",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "푸리",
+        "en": "Puri"
+      },
+      "levelTitle": {
+        "ko": "눈보라의 틈",
+        "en": "A Break in the Blizzard"
+      },
+      "appearance": {
+        "ko": "푸른 망토 끝에서 눈가루가 풀려 나와.",
+        "en": "Powdery snow drifts from Puri's blue cloak."
+      },
+      "personality": {
+        "ko": "막힌 길을 만나면 조용히 다른 쪽을 봐.",
+        "en": "Quietly looks for another way when a path is blocked."
+      },
+      "memory": {
+        "ko": "눈이 걷히자 장치에 남은 약속이 보였어.",
+        "en": "When the snow cleared, I saw a promise etched on the keeper."
+      },
+      "quote": {
+        "ko": "바람이 잦아드는 한 수를 찾아 봐.",
+        "en": "Find the turn when the wind lets up."
+      }
+    },
+    {
+      "id": "s5-20",
+      "levelId": 420,
+      "chapter": 4,
+      "family": "blizzard",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "흰결",
+        "en": "Huingyeol"
+      },
+      "levelTitle": {
+        "ko": "지키려던 기억",
+        "en": "Memories Kept Safe"
+      },
+      "appearance": {
+        "ko": "긴 눈망토 속에 희미한 별빛을 감추고 있어.",
+        "en": "Faint starlight hides beneath Huingyeol's long snow cloak."
+      },
+      "personality": {
+        "ko": "친구가 잊고 싶지 않은 일을 천천히 들어 줘.",
+        "en": "Listens patiently to anything a friend wants to remember."
+      },
+      "memory": {
+        "ko": "장치는 기억이 사라지지 않게 만들었대. 잊힐까 두려운 순간들을 맡겨 두었어.",
+        "en": "The keeper was built to preserve memories. It held moments someone was afraid to lose."
+      },
+      "quote": {
+        "ko": "여기에는 잊지 않겠다는 약속이 있어.",
+        "en": "There is a promise here to remember."
+      }
+    },
+    {
+      "id": "s5-21",
+      "levelId": 421,
+      "chapter": 5,
+      "family": "iceheart",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "온숨",
+        "en": "Onsum"
+      },
+      "levelTitle": {
+        "ko": "열리는 한 수",
+        "en": "One Turn to Open"
+      },
+      "appearance": {
+        "ko": "차가운 가슴속에 작은 숨결이 빛나.",
+        "en": "A tiny breath glows inside Onsum's cold chest."
+      },
+      "personality": {
+        "ko": "문이 열리는 순간을 조용히 알려 줘.",
+        "en": "Softly calls out the moment a door opens."
+      },
+      "memory": {
+        "ko": "문 뒤에서 기계가 천천히 숨을 쉬었어.",
+        "en": "The machine breathed slowly behind the gate."
+      },
+      "quote": {
+        "ko": "수정에서 떠난 뒤 한 수를 살펴봐.",
+        "en": "Watch the turn just after leaving the crystal."
+      }
+    },
+    {
+      "id": "s5-22",
+      "levelId": 422,
+      "chapter": 5,
+      "family": "iceheart",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "빛울",
+        "en": "Bitul"
+      },
+      "levelTitle": {
+        "ko": "엇갈린 통로",
+        "en": "Crossing Passages"
+      },
+      "appearance": {
+        "ko": "등에 서로 교차하는 두 빛줄기가 있어.",
+        "en": "Two crossing beams shine on Bitul's back."
+      },
+      "personality": {
+        "ko": "물길 소리를 따라 새 통로를 찾아.",
+        "en": "Follows the sound of currents to find new paths."
+      },
+      "memory": {
+        "ko": "차가운 물길 아래에서 등대 불빛이 비쳤어.",
+        "en": "A lighthouse beam shone beneath the cold current."
+      },
+      "quote": {
+        "ko": "화살표를 보고 돌아갈 길을 골라.",
+        "en": "Read the arrow before you choose your way back."
+      }
+    },
+    {
+      "id": "s5-23",
+      "levelId": 423,
+      "chapter": 5,
+      "family": "iceheart",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "담온",
+        "en": "Damon"
+      },
+      "levelTitle": {
+        "ko": "수정에 남긴 빛",
+        "en": "Light Left on the Crystal"
+      },
+      "appearance": {
+        "ko": "빛을 담은 수정 조각을 두 팔로 안고 있어.",
+        "en": "Damon cradles a shard of light-filled crystal."
+      },
+      "personality": {
+        "ko": "친구를 위해 작은 불씨를 남겨 둬.",
+        "en": "Leaves a little light for any friend coming after."
+      },
+      "memory": {
+        "ko": "얼음 속에서 리크가 품었던 불씨가 빛났어.",
+        "en": "The spark RIQ once held glowed inside the ice."
+      },
+      "quote": {
+        "ko": "작은 잔상 하나로 문을 열 수 있어.",
+        "en": "One small echo can open the gate."
+      }
+    },
+    {
+      "id": "s5-24",
+      "levelId": 424,
+      "chapter": 5,
+      "family": "iceheart",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "해숨",
+        "en": "Haesum"
+      },
+      "levelTitle": {
+        "ko": "문 앞의 한 칸",
+        "en": "One Tile Before the Gate"
+      },
+      "appearance": {
+        "ko": "뺨에 햇살처럼 옅은 금빛이 돌아.",
+        "en": "A pale gold warmth shines on Haesum's cheeks."
+      },
+      "personality": {
+        "ko": "문 앞에 온 친구에게 먼저 자리를 내 줘.",
+        "en": "Makes room for any friend waiting at the door."
+      },
+      "memory": {
+        "ko": "얼음 아래 작은 물소리가 들리기 시작했어.",
+        "en": "A little trickle began to sound beneath the ice."
+      },
+      "quote": {
+        "ko": "앞에서 멈춘 뒤 문이 열릴 때 건너가.",
+        "en": "Stop here, then cross when the gate opens."
+      }
+    },
+    {
+      "id": "s5-25",
+      "levelId": 425,
+      "chapter": 5,
+      "family": "iceheart",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "서람",
+        "en": "Seoram"
+      },
+      "levelTitle": {
+        "ko": "녹아 나온 기억",
+        "en": "Memories Thaw"
+      },
+      "appearance": {
+        "ko": "가슴에 얼음으로 된 작은 심장을 품고 있어.",
+        "en": "Seoram carries a little heart of ice."
+      },
+      "personality": {
+        "ko": "돌아오는 기억을 서두르지 않고 맞이해.",
+        "en": "Welcomes returning memories without rushing them."
+      },
+      "memory": {
+        "ko": "장치는 기억을 너무 많이 얼려 두었어. 얼음이 풀리자 리크가 잃은 기억이 돌아왔어.",
+        "en": "The keeper had frozen too many memories. When the ice loosened, RIQ's lost memories came home."
+      },
+      "quote": {
+        "ko": "기억 하나씩, 천천히 돌아오고 있어.",
+        "en": "They're coming back slowly, one memory at a time."
+      }
+    }
+  ]
+}
