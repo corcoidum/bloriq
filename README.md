@@ -68,7 +68,7 @@
 
 Flutter SDK가 필요합니다. 0.5.0의 검증 환경은 Flutter 3.47.8 / Dart 3.13.7입니다. Android SDK 없이 Chrome으로 실행할 수 있습니다. [Flutter 설치 문서](https://docs.flutter.dev/get-started/install)
 
-다른 컴퓨터에서 처음 시작한다면 `git clone https://github.com/corcoidum/bloriq.git`으로 저장소를 내려받고 `cd bloriq`으로 이동합니다. 이미 저장소가 있다면 본인 작업을 확인한 후 `git pull --ff-only`로 최신 변경을 가져옵니다.
+집이나 다른 컴퓨터에서 작업을 이어갈 때는 새 폴더 복제 또는 기존 복사본의 fast-forward 갱신 절차를 따릅니다. [집에서 BLORIQ 이어서 작업하기](docs/HOME_HANDOFF.md)
 
 프로젝트 폴더에서 PowerShell 또는 터미널을 열고:
 

@@ -1,83 +1,102 @@
-# 맥북에서 최신 BLORIQ 이어서 작업하기
+# 집에서 BLORIQ 이어서 작업하기
 
-2026-10-30. 최신 개발 브랜치는 **`codex/moonstone-season1`**이다. `main`에 병합하지 않고 작업 브랜치로 전달한다. 게임 구현 기준은 `026c70f`이며 그 뒤 이 안내를 갱신했다.
+개발 기준은 GitHub의 [`main`](https://github.com/corcoidum/bloriq/tree/main)이다. BLORIQ `0.5.0+7`에는 세계 6 꿈의 서고까지 150판이 들어 있다. 세계 6 병합과 포스트카드 수정이 들어간 기준 커밋은 [`2ee40c0`](https://github.com/corcoidum/bloriq/commit/2ee40c0c173883b36c70fb9224757d3a5f23e552)이다.
 
-## 완료 상태
+## 저장소 받기
 
-- 달빛 석판 보드: 프레임·타일 홈·룬석·장애물·목표 받침의 깊이와 정렬 통일.
-- 시즌1: 실제25종 친구·기억·5개 챕터 결말·도감·동행·발견/챕터 공유.
-- 기존25개 퍼즐·ID·revision·최단 이동·기믹·별 평가·진행 저장 유지.
-- 신규 사용자는 실제1번 튜토리얼, 재방문자는 홈으로 바로 진입.
-- Daily·7일 기록·로컬 분석 동의·Preview·Replay·Postcard·테마·오디오 유지.
-- 3초 인트로는 콘티 제안만 작성. 설정의 기존4초 다시 보기는 보존.
+### 새 폴더에서 시작
 
-[전체 실제 화면](moonstone-season1-review.html) · [구현/검증](MOONSTONE_SEASON1.md) · [25종 바이블](LAST_ECHO_BIBLE.md) · [인트로 콘티](INTRO_3S_STORYBOARD.md)
-
-## 가장 안전한 방법: 새 폴더로 받기
-
-맥북의 기존 작업을 덮어쓰지 않도록 새 폴더에 받는다. `bloriq-moonstone`이 이미 있으면 다른 새 이름을 사용한다.
+macOS 터미널 또는 Windows PowerShell에서 저장소를 둘 상위 폴더로 이동한다. `bloriq-home`이 이미 있으면 비어 있는 새 이름을 사용한다.
 
 ```bash
-git clone --branch codex/moonstone-season1 --single-branch https://github.com/corcoidum/bloriq.git bloriq-moonstone
-cd bloriq-moonstone
+git clone --branch main https://github.com/corcoidum/bloriq.git bloriq-home
+cd bloriq-home
 git status --short --branch
-flutter --version
-flutter pub get
-flutter gen-l10n
-flutter run -d chrome --web-port 8878
+git rev-list --left-right --count HEAD...origin/main
 ```
 
-개발·검증 기준은 Flutter **3.47.8**, Dart **3.13.7**이다. `pubspec.yaml`은 Dart>=3.13을 요구한다. 다른 컴퓨터의 SDK는 `flutter --version`으로 확인하고, 기존 lockfile을 유지하며 불필요한 `pub upgrade`는 하지 않는다. Chrome이 없으면 `flutter devices`에서 가능한 실행 대상을 확인한다.8878이 사용 중이면 기존 실행을 종료하거나 다른 포트를 쓴다.
+마지막 결과 `0 0`은 로컬과 원격 `main`에 각자만 가진 커밋이 없다는 뜻이다.
 
-## 이미 맥북에 저장소가 있는 경우
+### 기존 복사본 갱신
 
 ```bash
+git remote get-url origin
 git status --short --branch
 git fetch origin --prune
 ```
 
-미커밋 작업이나 별도 커밋이 있으면 그대로 보존하고 위 새 폴더 방식을 사용한다. 자동 reset·stash·강제 push로 맞추지 않는다.
-
-깨끗한 작업 폴더에서 이 브랜치를 처음 받는다면:
+`origin`이 `corcoidum/bloriq`인지 확인한다. 작업 중인 파일이 있으면 기존 폴더를 보존하고 위의 새 폴더 방식을 쓴다. 이전 인수인계대로 `--single-branch`로 받은 경우에는 아래 명령으로 다른 원격 브랜치도 가져올 수 있게 한다.
 
 ```bash
-git switch --track origin/codex/moonstone-season1
+git remote set-branches origin '*'
+git fetch origin --prune
 ```
 
-이미 같은 로컬 브랜치가 있다면:
+작업 폴더가 깨끗하면 `main`을 연다. 로컬 `main`이 처음이라면 첫 줄에 `git switch --track origin/main`을 사용한다.
 
 ```bash
-git switch codex/moonstone-season1
-git pull --ff-only origin codex/moonstone-season1
-git rev-list --left-right --count HEAD...origin/codex/moonstone-season1
+git switch main
+git merge --ff-only origin/main
+git rev-list --left-right --count HEAD...origin/main
 ```
 
-마지막 결과가 `0 0`이면 일치한다. fast-forward가 거부되면 중단하고 새 폴더로 받는다. 앱이 실행 중이었다면 `q`로 종료 후 재실행한다. 새 카탈로그는 세션 시작 시 읽으므로 단순 hot reload만으로 확인하지 않는다.
+fast-forward가 거부되거나 결과가 `0 0`이 아니면 기존 브랜치를 보존하고 새 폴더에서 이어서 작업한다.
 
-## 검증 근거와 남은 작업
+## 실행 환경과 웹 미리보기
 
-구현 기준 `026c70f`에서 정적 분석 정상, **Flutter261개·Python5개·BFS25/25·웹 release 빌드**를 통과했다. 이 인수인계 문서만 수정하는 업로드 단계에서 전체 검사를 다시 수행한 것은 아니다.
+검증에 사용한 버전은 Flutter **3.47.8**, Dart **3.13.7**, Python **3.13.7**이다. Dart는 Flutter SDK에 포함된다. Flutter SDK의 `bin`을 PATH에 추가한 뒤 터미널을 새로 연다. 웹 미리보기는 Chrome으로 실행한다. [Flutter SDK 아카이브](https://docs.flutter.dev/install/archive) · [Flutter 3.47.8 태그](https://github.com/flutter/flutter/tree/3.47.8) · [웹 실행 환경 설정](https://docs.flutter.dev/platform-integration/web/setup)
+
+프로젝트 폴더에서 아래 명령을 실행한다. 저장소의 `pubspec.lock`을 기준으로 의존성을 받는다.
+
+```bash
+flutter --version
+flutter doctor -v
+flutter pub get
+flutter gen-l10n
+flutter devices
+flutter run -d chrome --web-port 8878
+```
+
+`flutter devices`에서 `chrome`을 확인한다. 포트 8878이 사용 중이면 실행 중인 세션을 `q`로 종료하거나 다른 포트를 지정한다. 레벨이나 이야기 데이터를 바꿨을 때는 세션을 재시작해 새 카탈로그를 불러온다.
+
+Android가 필요하면 해당 컴퓨터에 Android SDK와 JDK를 설정한 뒤 프로젝트에서 `flutter build apk --release`를 실행한다. 결과는 `build/app/outputs/flutter-apk/app-release.apk`에 생성된다. 테스트 APK로 기존 앱을 업데이트하려면 앱 ID와 서명을 먼저 확인한다. [Android 환경 설정](https://docs.flutter.dev/platform-integration/android/setup) · [BLORIQ 휴대폰 테스트 안내](ANDROID_PHONE_TEST.md)
+
+## 작업 재개와 검증
+
+1. Codex에서 받은 `bloriq-home` 폴더를 연다. [저장소 작업 규칙](../AGENTS.md)
+2. 새 작업은 최신 `origin/main`에서 `codex/` 브랜치를 만든다. 세계 7을 이어갈 때는 **7-A 혼합 판 생성 준비**부터 진행한다. [세계 7 작업 프롬프트](codex/07_world7_first_star.md#7-a-혼합-판-생성-준비)
+3. 작업 브랜치에서 검증하고 커밋한 뒤 `git push -u origin HEAD`로 올린다. 다른 컴퓨터에서 `git fetch origin` 후 해당 브랜치를 연다. 처음 받을 때는 `git switch --track origin/브랜치명`을 사용하고, 이미 로컬에 있으면 브랜치를 연 뒤 `git merge --ff-only origin/브랜치명`으로 갱신한다.
+
+세계 7-A를 새로 시작할 때 쓰는 명령이다.
+
+```bash
+git fetch origin
+git switch -c codex/w7-mix-prep origin/main
+```
+
+Windows PowerShell에서 Python 실행 파일 이름이 `python`이면 아래 `python3`를 `python`으로 바꾼다.
 
 ```bash
 flutter analyze
-flutter test
+flutter test -r failures-only
+python3 -m unittest discover -s tools
 python3 tools/validate_levels.py
-python3 -m unittest tools.test_hybrid_tools -v
-flutter build web --release
+python3 -m tools.level_audit --world 6
 ```
 
-Android APK는 아직 생성하지 않았다. 회사 PC에서 사용자 동의 후 Java/Android SDK 다운로드 준비를 시작했으나 APK 빌드 완료 상태가 아니다. SDK·JDK·Gradle 캐시·서명 키는 Git에 올리지 않는다. 맥북에서는 자신의 Android 환경을 준비하고 라이선스 동의 후 아래 명령으로 확인한다.
+세계 6 병합 기준으로 Flutter 테스트 2,107개, Python 테스트 37개, 캠페인 150판과 보관 25판 검증, 세계 1~6 감사, Android 테스트 APK 빌드를 통과했다. [꿈의 서고 레벨 검토](LEVEL_REVIEW_W6.md) · [세계 6 화면 캡처](screenshots/world6/)
+
+### 저장 복구 작업 이어받기
+
+저장 오류 복구와 아이템 구매 수정 `9a1c720`은 당시 기준 커밋 `711bb20`에서 시작한 별도 브랜치에 있다. 이 브랜치에서 관련 Flutter 테스트 52개를 통과했다. [저장 복구 브랜치](https://github.com/corcoidum/bloriq/tree/codex/fix-save-recovery)
 
 ```bash
-flutter doctor -v
-flutter devices
-flutter build apk --debug
-# 실제 기기가 준비되면
-flutter run --profile -d YOUR_ANDROID_DEVICE_ID
+git fetch origin
+git switch --track origin/codex/fix-save-recovery
 ```
 
-기존 release 설정은 debug 서명이며 스토어용 서명으로 간주하지 않는다. 실제 Android 터치·오프라인·음향·종료/복귀·프레임·공유 시트와 사람 관찰은 남아 있다. 이번 전달은 원격 브랜치 업로드이며 main 병합·스토어 배포가 아니다.
+같은 로컬 브랜치가 이미 있으면 `git switch codex/fix-save-recovery` 후 `git merge --ff-only origin/codex/fix-save-recovery`를 사용한다.
 
-## PC 사이에 자동으로 옮겨지지 않는 데이터
+## 컴퓨터별로 관리하는 데이터
 
-진행·수집·테마·오디오·Daily·선택한 테스트 로그는 기기/브라우저 로컬 데이터다. Git clone으로 회사 PC의 플레이 기록이 맥북으로 이동하지 않는다. 새 브라우저 origin/포트에서는 신규 사용자로 시작할 수 있다. 코드·25종 아트·폰트·퍼즐·문서는 저장소에 포함돼 있다. APK·로컬 SDK와 빌드 캐시는 제외한다.
+Git에는 소스·레벨·이야기·에셋·문서가 들어 있다. 플레이 기록과 설정은 사용한 기기 또는 브라우저 프로필과 주소에 저장된다. SDK, Gradle 캐시, 빌드 APK, Android 서명 키와 로컬 설정은 각 컴퓨터에서 별도로 관리한다.

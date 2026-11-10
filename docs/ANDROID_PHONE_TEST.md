@@ -1,6 +1,6 @@
 # BLORIQ Android 휴대폰 테스트 안내
 
-이 문서는 BLORIQ 개발용 Android 테스트 절차입니다. **debug APK는 개인 테스트용이며 Google Play 배포용이 아닙니다.** 2026-10-28 작업 당시 Windows PC에서 Android SDK를 찾지 못해 APK 빌드와 Android 실기기 실행을 검증하지 못했습니다. 각 컴퓨터의 현재 상태는 `flutter doctor -v`로 확인하세요.
+BLORIQ 0.5.0+7의 Android 테스트 APK는 Windows에서 `flutter build apk --release`로 빌드하고 테스트용 디버그 서명을 확인했습니다. 실기기 설치와 동작 확인은 기기에서 진행합니다. 개발 환경은 `flutter doctor -v`로 확인합니다.
 
 ## 1. 개발 환경 준비
 
@@ -21,26 +21,15 @@ flutter doctor -v
 
 ## 2. 프로젝트 준비
 
-새 컴퓨터에서 처음 받는다면:
+새 컴퓨터에서 받거나 기존 복사본을 갱신할 때는 `main` 기준 절차를 따릅니다. [집에서 BLORIQ 이어서 작업하기](HOME_HANDOFF.md#저장소-받기)
 
 ```bash
-git clone https://github.com/corcoidum/bloriq.git
-cd bloriq
-git switch codex/echo-experience-retention
+git status --short --branch
 flutter pub get
+flutter gen-l10n
 ```
 
-이미 복제한 경우에는 해당 프로젝트 폴더로 이동해 로컬 변경을 확인한 뒤 업데이트합니다.
-
-```bash
-git status
-git fetch origin
-git switch codex/echo-experience-retention
-git pull --ff-only
-flutter pub get
-```
-
-Windows 작업 폴더는 `E:\openkiki\codex_root\bloriq`입니다. Mac에서는 저장소를 복제한 자신의 폴더로 이동하세요. 첫 빌드에는 Android 빌드 도구와 Gradle 의존성을 받기 위해 인터넷이 필요할 수 있습니다.
+첫 빌드에는 Android 빌드 도구와 Gradle 의존성을 받기 위해 인터넷이 필요할 수 있습니다.
 
 ## 3. 휴대폰 연결 후 바로 실행
 
