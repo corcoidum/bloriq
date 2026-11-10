@@ -230,6 +230,20 @@ class Level {
     if (solution != null && solution is! List) {
       throw const FormatException('Solution must be a list');
     }
+    final rawPowers = json['availablePowers'];
+    Set<PuzzlePower>? availablePowers;
+    if (rawPowers != null) {
+      if (rawPowers is! List) {
+        throw const FormatException('Available powers must be a list');
+      }
+      availablePowers = <PuzzlePower>{};
+      for (final id in rawPowers) {
+        final power = id is String ? PuzzlePower.byId(id) : null;
+        if (power == null || !availablePowers.add(power)) {
+          throw const FormatException('Unknown or repeated available power');
+        }
+      }
+    }
     return Level(
       id: json['id'] as int,
       revision: json['revision'] as int? ?? 1,
@@ -264,13 +278,7 @@ class Level {
           ? null
           : PuzzlePower.byId(json['featuredPower'] as String) ??
                 (throw const FormatException('Unknown power')),
-      availablePowers: json['availablePowers'] == null
-          ? null
-          : {
-              for (final id in json['availablePowers'] as List<dynamic>)
-                PuzzlePower.byId(id as String) ??
-                    (throw const FormatException('Unknown power')),
-            },
+      availablePowers: availablePowers,
     );
   }
 

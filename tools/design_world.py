@@ -10,6 +10,8 @@ import random
 import signal
 from collections import Counter
 from contextlib import contextmanager
+from dataclasses import replace
+from itertools import combinations
 from multiprocessing import TimeoutError as WorkerTimeout
 from multiprocessing import get_context
 from pathlib import Path
@@ -33,6 +35,13 @@ from tools.validate_levels import (
     write_levels,
 )
 from tools.worlds import Slot, load_slots
+from tools.worlds.large_board_limits import (
+    APP_HINT_STATES,
+    SIX_BY_SIX,
+    SIX_BY_SIX_CANDIDATE_SECONDS,
+    SIX_BY_SIX_QUICK_STATES,
+    blocked_mix,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 CHECKPOINT_SECONDS = 30
@@ -67,7 +76,36 @@ def occupied(level: dict) -> set[Position]:
     return {(handle['x'], handle['y']) for handle in _handles(level)}
 
 
+def mechanic_choices(slot: Slot) -> tuple[tuple[str, ...], ...]:
+    for kind, count in Counter((*slot.mechanics, *slot.mechanic_candidates)).items():
+        if kind not in REGISTRY:
+            raise ValueError(f'Unknown mechanic: {kind}')
+        if count > REGISTRY[kind].max_instances:
+            raise ValueError(f'Too many {kind} rules')
+    choices = []
+    for extra in combinations(slot.mechanic_candidates, slot.mechanic_count):
+        kinds = (*slot.mechanics, *extra)
+        if slot.size != SIX_BY_SIX or not blocked_mix(kinds, slot.powers):
+            choices.append(kinds)
+    if not choices:
+        raise ValueError('No supported 6×6 combination for this slot')
+    return tuple(choices)
+
+
+def _rule_signature(rules: list[dict]) -> tuple[str, ...]:
+    return tuple(sorted(rule['type'] for rule in rules))
+
+
+def _bounded_slot(slot: Slot) -> Slot:
+    if slot.size != SIX_BY_SIX:
+        return slot
+    full = min(slot.full_states, APP_HINT_STATES)
+    return replace(slot, quick_states=min(slot.quick_states, SIX_BY_SIX_QUICK_STATES, full),
+                   full_states=full)
+
+
 def random_level(world: int, index: int, slot: Slot, rng: random.Random) -> dict:
+    choices = mechanic_choices(slot)
     width, height = slot.size
     free = cells(width, height)
 
@@ -90,9 +128,12 @@ def random_level(world: int, index: int, slot: Slot, rng: random.Random) -> dict
             blocks=[{'id': f'b{i + 1}', **take()} for i in range(slot.blocks)],
             obstacles=[take() for _ in range(rng.randint(*slot.walls))],
         )
-        populate_random_rules(level, slot.mechanics, rng, take)
+        kinds = choices[0] if len(choices) == 1 else rng.choice(choices)
+        populate_random_rules(level, kinds, rng, take)
     else:
         level.update(slot.layout_factory(rng))
+        if _rule_signature(level['specialRules']) not in {tuple(sorted(kinds)) for kinds in choices}:
+            raise ValueError('Layout mechanics do not match the slot')
     if slot.rule_filter is not None and not slot.rule_filter(level['specialRules']):
         raise ValueError('Generated rules do not match the slot')
     level['availablePowers'] = list(slot.powers)
@@ -169,6 +210,9 @@ class Result(NamedTuple):
 def design(job: Job) -> Result:
     """최단 수를 키우는 언덕 오르기. 슬롯 한도에 가까워지면 목표를 완화한다."""
     world, index, slot, seed, seen, similar_to = job
+    slot = _bounded_slot(slot)
+    choices = mechanic_choices(slot)
+    allowed = {tuple(sorted(kinds)) for kinds in choices}
     rng = random.Random(seed)
     started = monotonic()
     deadline = started + slot.max_seconds
@@ -178,7 +222,6 @@ def design(job: Job) -> Result:
     # 같은 장의 통과판도 출발점으로 쓸 수 있다. 중복·유사 판은 저장 직전에 다시 거른다.
     siblings = []
     if slot.mutate_layout:
-        kinds = Counter(slot.mechanics)
         siblings = [
             level for level in similar_to
             if level.get('world') == world
@@ -186,7 +229,7 @@ def design(job: Job) -> Result:
             and len(level['blocks']) == slot.blocks
             and slot.walls[0] <= len(level['obstacles']) <= slot.walls[1]
             and available_powers(level) == slot.powers
-            and Counter(rule['type'] for rule in level['specialRules']) == kinds
+            and _rule_signature(level['specialRules']) in allowed
         ]
     try:
         while monotonic() < deadline:
@@ -201,8 +244,9 @@ def design(job: Job) -> Result:
             stale = 0
             while stale < stale_limit and monotonic() < deadline:
                 candidate = current if direct_sample else mutate(current, slot, rng)
-                if (slot.rule_filter is not None
-                        and not slot.rule_filter(candidate['specialRules'])):
+                rules = candidate['specialRules']
+                if (_rule_signature(rules) not in allowed
+                        or (slot.rule_filter is not None and not slot.rule_filter(rules))):
                     stale += 1
                     continue
                 elapsed = monotonic() - started
@@ -213,10 +257,13 @@ def design(job: Job) -> Result:
                 else:
                     low = max(1, slot.target_moves - tolerance)
                     high = slot.target_moves + tolerance
+                # 큰 판 하나가 슬롯의 남은 시간을 모두 쓰지 않도록 빠른 풀이와 재검증을 묶어 제한한다.
+                candidate_deadline = (min(deadline, monotonic() + SIX_BY_SIX_CANDIDATE_SECONDS)
+                                      if slot.size == SIX_BY_SIX else deadline)
                 try:
                     quick = solve_or_none(
                         candidate, powers=slot.powers, max_states=slot.quick_states,
-                        deadline=deadline, max_moves=high if tolerance is not None else None,
+                        deadline=candidate_deadline, max_moves=high if tolerance is not None else None,
                     )
                     if quick is None:
                         stale += 1
@@ -240,8 +287,11 @@ def design(job: Job) -> Result:
                         if matches is None:
                             matches = slot.solution_filter is None or slot.solution_filter(candidate, quick)
                         if matches:
-                            profile = full_check(candidate, slot, quick, elapsed > slot.max_seconds * .6, deadline)
-                except SearchBudgetExceeded:
+                            profile = full_check(candidate, slot, quick, elapsed > slot.max_seconds * .6,
+                                                 candidate_deadline)
+                except (SearchBudgetExceeded, TimeoutError) as error:
+                    if isinstance(error, TimeoutError) and monotonic() >= deadline:
+                        raise
                     # 예산 초과는 해가 없다는 증거가 아니다. 후보만 버린다.
                     over_budget += 1
                     stale += 1
@@ -300,21 +350,27 @@ def check_existing(existing: dict[int, dict], world: int, slots: tuple[Slot, ...
                    previous: list[dict]) -> None:
     if len(existing) != len(slots):
         raise ValueError(f'World {world}: {len(existing)}/{len(slots)} stages present')
+    slots = tuple(map(_bounded_slot, slots))
     for index, slot in enumerate(slots):
         level = existing[index]
+        allowed = {tuple(sorted(kinds)) for kinds in mechanic_choices(slot)}
         if ((level['boardWidth'], level['boardHeight']) != slot.size
                 or len(level['blocks']) != slot.blocks
                 or not slot.walls[0] <= len(level['obstacles']) <= slot.walls[1]
                 or set(available_powers(level)) != set(slot.powers)
-                or Counter(rule['type'] for rule in level['specialRules']) != Counter(slot.mechanics)
+                or _rule_signature(level['specialRules']) not in allowed
                 or level.get('featuredPower') != slot.featured
                 or 'solution' not in level):
             raise ValueError(f"Level {level['id']}: slot metadata or solution mismatch")
         if slot.rule_filter is not None and not slot.rule_filter(level['specialRules']):
             raise ValueError(f"Level {level['id']}: rules do not match the slot")
-        if slot.solution_filter is not None:
-            solution = solve_or_none(level, powers=slot.powers, max_states=slot.full_states)
-            if solution is None or not slot.solution_filter(level, solution):
+        large = slot.size == SIX_BY_SIX
+        if large or slot.solution_filter is not None:
+            solution = solve_or_none(
+                level, powers=slot.powers, max_states=slot.quick_states if large else slot.full_states,
+                deadline=monotonic() + SIX_BY_SIX_CANDIDATE_SECONDS if large else None,
+            )
+            if solution is None or (slot.solution_filter is not None and not slot.solution_filter(level, solution)):
                 raise ValueError(f"Level {level['id']}: solution does not match the slot")
         if (slot.move_tolerance is not None
                 and abs(level['minimumMoves'] - slot.target_moves) > slot.move_tolerance):
@@ -435,12 +491,12 @@ def main(argv: list[str] | None = None) -> None:
         parser.error('공개된 세계의 판은 교체할 수 없습니다.')
     try:
         slots = load_slots(args.world)
+        allowed = []
         for index, slot in enumerate(slots, 1):
-            for kind, count in Counter(slot.mechanics).items():
-                if kind not in REGISTRY:
-                    raise ValueError(f'Slot {index}: unknown mechanic {kind}')
-                if count > REGISTRY[kind].max_instances:
-                    raise ValueError(f'Slot {index}: too many {kind} rules')
+            try:
+                allowed.append({tuple(sorted(kinds)) for kinds in mechanic_choices(slot)})
+            except ValueError as error:
+                raise ValueError(f'Slot {index}: {error}') from error
         selected = sorted(set(args.only or range(1, len(slots) + 1)))
         if any(not 1 <= number <= len(slots) for number in selected):
             parser.error(f'슬롯 번호는 1..{len(slots)}입니다.')
@@ -462,6 +518,11 @@ def main(argv: list[str] | None = None) -> None:
             )
             logger = logging.getLogger(__name__)
             levels = load_existing(output, args.world, len(slots))
+            for index, level in levels.items():
+                if args.replace and index + 1 in selected:
+                    continue
+                if _rule_signature(level['specialRules']) not in allowed[index]:
+                    raise ValueError(f"Level {level['id']}: rules do not match the current slot")
             seen = signatures(levels, previous)
             jobs = [
                 Job(

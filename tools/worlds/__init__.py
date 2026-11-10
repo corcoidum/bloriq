@@ -30,6 +30,9 @@ class Slot:
     solution_filter: Callable[[dict, list['Move']], bool] | None = None
     layout_factory: Callable[[Random], dict] | None = None
     mutate_layout: bool = False
+    # 고정 기믹에 후보 목록에서 고른 서로 다른 기믹을 정확히 이 수만큼 더한다.
+    mechanic_candidates: tuple[str, ...] = ()
+    mechanic_count: int = 0
 
     def __post_init__(self) -> None:
         width, height = self.size
@@ -44,6 +47,12 @@ class Slot:
             raise ValueError('A required or featured power must be available in the slot')
         if self.move_tolerance is not None and self.move_tolerance < 0:
             raise ValueError('Move tolerance must be nonnegative')
+        candidates = set(self.mechanic_candidates)
+        if (type(self.mechanic_count) is not int
+                or not 0 <= self.mechanic_count <= len(candidates)
+                or len(candidates) != len(self.mechanic_candidates)
+                or not candidates.isdisjoint(self.mechanics)):
+            raise ValueError('Choose a valid number of distinct mechanics outside the fixed rules')
 
 
 def load_slots(world: int) -> tuple[Slot, ...]:

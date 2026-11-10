@@ -1,6 +1,8 @@
 import 'package:bloriq/domain/mechanics/board_mechanic.dart';
 import 'package:bloriq/domain/mechanics/clock_arrow.dart';
+import 'package:bloriq/domain/mechanics/echo_eraser.dart';
 import 'package:bloriq/domain/mechanics/echo_gate.dart';
+import 'package:bloriq/domain/mechanics/echo_hold.dart';
 import 'package:bloriq/domain/mechanics/goal_only.dart';
 import 'package:bloriq/domain/mechanics/ice.dart';
 import 'package:bloriq/domain/mechanics/mirror_pair.dart';
@@ -89,6 +91,20 @@ void main() {
       expect(controller.state.echo, floor);
     },
   );
+
+  test('a shelf endpoint changes the echo only when the main block leaves', () {
+    for (final (mechanic, echo) in [
+      (EchoHold({_b}), _start),
+      (EchoEraser({_b}), null),
+    ]) {
+      final controller = PuzzleController(_level(extras: [mechanic]));
+      expect(controller.move(_goal, _a), isTrue);
+      expect(controller.state.goal.position, _b);
+      expect(controller.state.echo, _start);
+      expect(controller.move(_goal, const Position(5, 3)), isTrue);
+      expect(controller.state.echo, echo);
+    }
+  });
 
   test(
     'a rock, occupied block, or previous echo at B leaves the move at A',
@@ -301,6 +317,36 @@ void main() {
       expect(swapped.goal.position, _b);
       expect(swapped.echo, _start);
       expect(hops, isEmpty);
+    },
+  );
+
+  test(
+    'wind passes a clock arrow, teleports once and leaves its twin still',
+    () {
+      const twin = Position(4, 2);
+      const windStop = Position(3, 1);
+      final controller = PuzzleController(
+        _level(
+          blocks: [const Block(id: 'rune', position: twin)],
+          walls: [const Position(4, 1)],
+          pairs: [(windStop, _b)],
+          extras: [
+            _mirror(),
+            ClockArrow({_a: _east}),
+          ],
+        ),
+        powers: {PuzzlePower.wind},
+      );
+      expect(controller.usePower(PuzzlePower.wind, _goal, _east), isTrue);
+      expect(controller.lastMove!.landing, windStop);
+      expect(controller.lastMove!.teleports, [
+        (blockId: _goal, from: windStop, to: _b),
+      ]);
+      expect(controller.state.goal.position, _b);
+      expect(controller.state.positionOf('rune'), twin);
+      expect(controller.state.echo, _start);
+      expect(controller.state.moves, 1);
+      expect(controller.state.canLeave(_a, const Position(0, 1)), isTrue);
     },
   );
 

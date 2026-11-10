@@ -32,6 +32,7 @@ def _read_board(level: dict[str, Any], *, disabled_rule: str | None = None,
                 gate_locked: bool = False) -> tuple[Board, Positions]:
     width, height = level['boardWidth'], level['boardHeight']
     assert type(width) is int and type(height) is int and width > 0 and height > 0
+    available_powers(level)
 
     def point(value: dict[str, int]) -> Position:
         assert isinstance(value, dict), 'Invalid position'
@@ -224,7 +225,9 @@ def available_powers(level: dict) -> tuple[str, ...]:
     allowed = level.get('availablePowers')
     if allowed is None:
         return POWERS
-    assert len(set(allowed)) == len(allowed) and all(p in POWERS for p in allowed)
+    assert isinstance(allowed, list), 'Available powers must be a list'
+    assert all(p in POWERS for p in allowed) and len(set(allowed)) == len(allowed), (
+        'Unknown or repeated available power')
     return tuple(p for p in POWERS if p in allowed)
 
 

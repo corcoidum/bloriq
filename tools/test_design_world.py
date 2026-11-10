@@ -1,13 +1,26 @@
 """공통 생성기의 예산·재개 검증."""
 import json
+import random
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 from time import monotonic
 from unittest.mock import patch
 
-from tools.design_world import Job, checkpoint, design, load_existing, pt
+from tools.design_world import (
+    Job,
+    check_existing,
+    checkpoint,
+    design,
+    full_check,
+    load_existing,
+    mechanic_choices,
+    pt,
+    random_level,
+)
 from tools.validate_levels import (
+    SEAL,
     SearchBudgetExceeded,
     decorative_mechanic,
     expansion_worlds,
@@ -29,6 +42,17 @@ def board(level_id: int) -> dict:
         'blocks': [],
         'obstacles': [],
         'specialRules': [],
+    }
+
+
+def mixed_corridor(height: int = 2) -> dict:
+    return {
+        **board(601), 'world': 7, 'boardWidth': 6, 'boardHeight': height,
+        'exitPosition': pt((5, 0)),
+        'specialRules': [
+            {'type': 'shelfDoor', 'pairs': [{'a': pt((2, 0)), 'b': pt((4, 0))}]},
+            {'type': 'ice', 'positions': [pt((1, 0))]},
+        ],
     }
 
 
@@ -66,6 +90,69 @@ class WorldGeneratorTest(unittest.TestCase):
         level = board(201)
         level['specialRules'] = [{'type': 'goalOnly', 'positions': [pt((1, 1))]}]
         self.assertEqual(decorative_mechanic(level, 2), 'goalOnly')
+
+    def test_mixed_slot_samples_exactly_k_distinct_additional_rules(self):
+        slot = Slot(5, (5, 5), 2, (2, 3), ('echoEraser',), None, False, 'mix', (), 'test',
+                    mechanic_candidates=('echoGate', 'ice', 'shelfDoor'), mechanic_count=2)
+        seen = set()
+        for seed in range(20):
+            level = random_level(7, 0, slot, random.Random(seed))
+            kinds = tuple(rule['type'] for rule in level['specialRules'])
+            self.assertIn(kinds, mechanic_choices(slot))
+            self.assertEqual(len(set(kinds)), 3)
+            seen.add(kinds)
+        self.assertEqual(seen, set(mechanic_choices(slot)))
+        with self.assertRaises(ValueError):
+            replace(slot, mechanic_count=4)
+        with self.assertRaises(ValueError):
+            replace(slot, mechanic_candidates=('ice', 'echoEraser'))
+
+    def test_every_selected_rule_must_change_the_shortest_solution(self):
+        slot = Slot(2, (6, 6), 0, (0, 0), ('shelfDoor',), None, False, 'mix', (), 'test',
+                    mechanic_candidates=('ice', 'goalOnly'), mechanic_count=1,
+                    layout_factory=lambda _: mixed_corridor(6), max_seconds=5)
+        result = design(Job(7, 0, slot, 17, frozenset()))
+        self.assertEqual(len(result.level['solution']), 2)
+        self.assertIsNone(decorative_mechanic(result.level, 2))
+
+        decorative = mixed_corridor(6)
+        decorative['specialRules'][1] = {'type': 'goalOnly', 'positions': [pt((1, 1))]}
+        solution = validate_level(decorative)
+        self.assertIsNone(full_check(decorative, slot, solution, False, monotonic() + 5))
+
+    def test_6x6_excludes_measured_failures_even_inside_a_triple(self):
+        slot = Slot(10, (6, 6), 3, (2, 4), ('clockArrow',), None, False, 'mix', (SEAL,), 'test',
+                    mechanic_candidates=('shelfDoor', 'echoHold'), mechanic_count=1)
+        self.assertEqual(mechanic_choices(slot), (('clockArrow', 'echoHold'),))
+        with self.assertRaisesRegex(ValueError, 'No supported 6×6 combination'):
+            mechanic_choices(replace(slot, mechanic_count=2))
+        self.assertIn(('clockArrow', 'shelfDoor'), mechanic_choices(replace(slot, size=(6, 5))))
+        self.assertIn(('clockArrow', 'shelfDoor'), mechanic_choices(replace(slot, powers=())))
+
+        forbidden = random_level(
+            7, 0, replace(slot, powers=(), mechanic_candidates=('shelfDoor',)), random.Random(17),
+        )
+        forbidden.update(availablePowers=[SEAL], solution=[])
+        with self.assertRaisesRegex(ValueError, 'slot metadata'):
+            check_existing({0: forbidden}, 7, (slot,), [])
+
+    def test_6x6_caps_candidate_searches_and_retries_a_timed_out_candidate(self):
+        slot = Slot(2, (6, 6), 0, (0, 0), ('ice', 'shelfDoor'), None, False, 'mix', (), 'test',
+                    layout_factory=lambda _: mixed_corridor(6), max_seconds=30)
+        path = validate_level(mixed_corridor(6))
+        profile = {'minimumMoves': 2, 'bareHandedMoves': 2, 'requiredPowers': [], 'solution': path}
+        with (
+            patch('tools.design_world.monotonic', return_value=1000),
+            patch('tools.design_world.solve_or_none', side_effect=[TimeoutError(), path]) as quick,
+            patch('tools.design_world.full_check', return_value=profile) as full,
+        ):
+            result = design(Job(7, 0, slot, 17, frozenset()))
+        self.assertEqual(result.over_budget, 1)
+        self.assertEqual(len(result.level['solution']), 2)
+        self.assertEqual([call.kwargs['max_states'] for call in quick.call_args_list], [120_000] * 2)
+        self.assertEqual([call.kwargs['deadline'] for call in quick.call_args_list], [1008.0] * 2)
+        self.assertEqual(full.call_args.args[1].full_states, 200_000)
+        self.assertEqual(full.call_args.args[4], 1008.0)
 
     def test_unpowered_slot_records_a_shortest_solution(self):
         slot = Slot(2, (3, 2), 0, (0, 0), (), None, False, 'fixture', (), 'test',

@@ -113,3 +113,48 @@ flutter test -r failures-only test/shelf_door_widget_test.dart --dart-define=CAP
 ```
 
 `test/fixtures/shelf_door_fuzz.json`의 무작위 320판 모두에서 두 solver의 최단 수와 수순이 일치했다. 얼음·거울 짝·시곗바늘을 모두 섞은 판은 40개다. isolate 측정 원본은 `build/design_logs/shelf-door-isolate.json`에 출력한다.
+
+## 세계 7-A 혼합 판
+
+### 표본과 측정 방법
+
+- 시드 `772027`로 서로 다른 기믹 36쌍에 권능 4종을 하나씩 조합했다. 5×5와 6×5에서는 조합당 무작위 판을 하나씩 뽑았다. 6×6에서는 같은 무작위 표본에 리크와 별문을 대각선 맞은편에 두고 룬석 3개와 바위 3~5개를 놓은 표본을 조합당 하나씩 더했다. 총 576판을 해의 유무와 관계없이 측정했다.
+- Python은 20만 상태 한도로 처음부터 독립 BFS를 실행했다. 표의 시간은 4개 워커로 생성할 때 각 호출의 벽시계 시간이다. 한도를 넘긴 후보를 포함한 상태 수의 최대는 200,001개다.
+- Flutter는 저장 풀이 없이 앱의 기본 `HintSearch.solve`를 순차 호출했다. 첫 호출로 준비한 뒤 isolate 시작·결과 전달을 포함해 576개 초기 상태를 측정했다. 6×6 대각선 표본 144개는 클리어하지 않는 첫 일반 수를 적용하고 권능을 들고 있는 상태도 측정했다.
+- 실측 환경은 macOS 26.5.2 arm64, Apple M4, Python 3.14.3, Flutter 3.47.8 및 Dart 3.13.7이다. Flutter는 데스크톱 테스트 러너의 JIT 실측이다.
+
+### Python BFS
+
+| 크기 | 해를 찾은 판 | 상태 제한 | 평균 상태 수 | 최대 상태 수 | 평균 시간 | 최대 시간 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 5×5 | 144/144 | 0 | 2,211.8 | 66,181 | 15.40 ms | 506.24 ms |
+| 6×5 | 144/144 | 0 | 3,986.6 | 117,031 | 24.12 ms | 868.73 ms |
+| 6×6 | 238/288 | 50 | 60,010.6 | 200,001 | 609.02 ms | 3,179.53 ms |
+
+### 앱 isolate 힌트
+
+| 표본 | 해를 찾은 상태 | 상태 제한 | 1.5초 이내 응답 | 평균 시간 | 최대 시간 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 5×5 초기 | 144/144 | 0 | 144/144 | 4.70 ms | 148.72 ms |
+| 6×5 초기 | 144/144 | 0 | 144/144 | 6.54 ms | 233.23 ms |
+| 6×6 초기 | 238/288 | 50 | 288/288 | 153.11 ms | 825.06 ms |
+| 6×6 일반 수 이후 | 100/144 | 44 | 144/144 | 256.19 ms | 853.00 ms |
+
+1.5초를 넘겨 응답한 표본은 0개였다. 6×6에서는 상태 한도로 풀이를 돌려주지 못한 **53개 조합**을 [생성기 금지 목록](../tools/worlds/large_board_limits.py)에 기록했다. 초기 상태에서 50개, 한 수 진행 상태에서만 추가로 3개가 나왔다. 예를 들어 `clockArrow + shelfDoor + seal`은 8564번의 초기 상태와 8565번의 일반 수 이후 상태에서 한도에 걸렸다. 6×6에서 세 번째 기믹을 넣어도 금지된 기믹 쌍과 권능을 함께 쓰지 않는다.
+
+6×6 생성은 빠른 풀이를 **12만 상태**, 효과 제거·권능 재검증을 **20만 상태**로 제한한다. 한 후보의 풀이와 재검증에 슬롯 남은 시간 중 최대 **8초**를 쓴다. `Slot`에 더 작은 상태 한도나 전체 슬롯 시간을 줄 수 있다. 측정한 조합은 시작 상태와 일반 수 한 번을 적용한 상태의 표본이다. 모바일 실기기·웹과 임의의 후속 수순은 추가 검증 대상이다.
+
+`Slot.mechanics`는 고정 기믹이다. `mechanic_candidates`에서 서로 다른 `mechanic_count`개를 골라 더한다. 예를 들어 고정 기믹 없이 등대 기믹 넷 중 셋을 쓰려면 `mechanics=()`, `mechanic_candidates=('mirrorPair', 'clockArrow', 'ice', 'shelfDoor')`, `mechanic_count=3`을 준다. 생성과 `--check` 모두 각 기믹을 하나씩 비활성화해 최단 수가 달라지는지 다시 푼다. 효과가 없는 기믹이 하나라도 있으면 통과하지 않는다.
+
+캠페인 초기 상태에서는 `HintSearch.storedSolution`이 현재 권능과 시작 상태를 확인하고 저장된 풀이를 반환한다. 세계 6 공개판 25개와 권능이 있는 혼합 표본에서 시간 0, 상태 1을 설정해도 저장 풀이를 얻는 것을 테스트했다.
+
+### 재현
+
+```sh
+python3 -m tools.mixed_fixture --workers 4
+flutter test -r failures-only test/mixed_solver_agreement_test.dart
+python3 -m tools.mixed_fixture --benchmark --workers 4
+flutter test -r failures-only test/mixed_solver_agreement_test.dart --dart-define=BENCH_MIXED=true
+```
+
+`test/fixtures/mixed_fuzz.json`에는 시드 `772026`의 500판을 담았다. 2기믹 360판에서 모든 기믹 쌍과 권능 선택(0개 또는 4종 중 1개)을 각각 두 번 다루고, 3기믹 140판에는 가능한 84개 삼중 조합을 모두 넣었다. 두 solver는 497판의 최단 수와 수순, 3판의 해 없음 판정에서 일치했다. 비용 원본은 `build/design_logs/w7-mixed-python.json`과 `build/design_logs/w7-mixed-isolate.json`에 생성된다.

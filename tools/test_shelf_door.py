@@ -46,6 +46,14 @@ class ShelfDoorTest(unittest.TestCase):
         after = step(step(after, (1, 4), index=1), B)
         self.assertEqual((after.positions[0], after.moves, after.echo), (A, 4, floor))
 
+    def test_shelf_endpoint_changes_echo_on_departure_only(self):
+        for kind, echo in (('echoHold', START), ('echoEraser', None)):
+            with self.subTest(kind=kind):
+                rule = {'type': kind, 'positions': [point(B)]}
+                after = step(initial(level(extras=(rule,))), A)
+                self.assertEqual((after.positions[0], after.echo), (B, START))
+                self.assertEqual(step(after, (5, 3)).echo, echo)
+
     def test_rock_block_old_echo_and_vacated_origin(self):
         for before in (
             initial(level(walls=(B,))), initial(level(blocks=(B,))),
@@ -101,6 +109,22 @@ class ShelfDoorTest(unittest.TestCase):
                 after = step(initial(data, power=power, echo=echo), target, power=power)
                 self.assertEqual((after.positions[0], after.moves, after.echo), (B, 1, START))
                 self.assertFalse(after.powers)
+
+    def test_wind_passes_clock_and_teleports_without_moving_the_twin(self):
+        twin, stop = (4, 2), (3, 1)
+        mirror = {'type': 'mirrorPair', 'blocks': ['goal', 'b1']}
+        clock = {'type': 'clockArrow', 'tiles': [{**point(A), 'dx': 1, 'dy': 0}]}
+        before = initial(level(blocks=(twin,), walls=((4, 1),), pairs=((stop, B),),
+                               extras=(mirror, clock)), power=WIND)
+        self.assertTrue(before.canLeave(A, (1, 0)))
+        after = step(before, stop, power=WIND)
+        self.assertEqual((after.positions, after.echo, after.moves), ((B, twin), START, 1))
+        self.assertTrue(after.canLeave(A, (0, 1)))
+
+    def test_repeated_power_declaration_is_rejected(self):
+        data = {**level(), 'availablePowers': [WIND, WIND]}
+        with self.assertRaisesRegex(AssertionError, 'repeated available power'):
+            validate_level(data)
 
     def test_invalid_endpoints_and_overlaps(self):
         for pairs in ((), ((A, A),), ((A, EXIT),), ((A, (6, 4)),),
