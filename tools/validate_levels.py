@@ -9,9 +9,9 @@ from time import monotonic
 from typing import Any, Callable, Iterator
 
 if __package__:
-    from .mechanics import Board, BoardMechanic, DIRECTIONS, MechanicMove, Position, Positions, State, parse_mechanics
+    from .mechanics import Board, BoardMechanic, DIRECTIONS, MechanicMove, Position, Positions, ShelfDoor, State, parse_mechanics
 else:
-    from mechanics import Board, BoardMechanic, DIRECTIONS, MechanicMove, Position, Positions, State, parse_mechanics
+    from mechanics import Board, BoardMechanic, DIRECTIONS, MechanicMove, Position, Positions, ShelfDoor, State, parse_mechanics
 
 ROOT = Path(__file__).resolve().parents[1]
 LEVELS_FILE = ROOT / 'assets/levels/levels.json'
@@ -268,6 +268,15 @@ def decorative_mechanic(
                 alternative = solve_or_none(reduced, **limits)
                 if alternative is not None and len(alternative) == minimum:
                     return f'{kind} #{pair}'
+    for index, rule in enumerate(rules):
+        if rule['type'] != ShelfDoor.type or len(rule['pairs']) == 1:
+            continue
+        for pair in range(len(rule['pairs'])):
+            remaining = rule['pairs'][:pair] + rule['pairs'][pair + 1:]
+            reduced = {**level, 'specialRules': [*rules[:index], {**rule, 'pairs': remaining}, *rules[index + 1:]]}
+            alternative = solve_or_none(reduced, **limits)
+            if alternative is not None and len(alternative) == minimum:
+                return f'{ShelfDoor.type} #{pair + 1}'
     return None
 
 

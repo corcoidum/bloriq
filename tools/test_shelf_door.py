@@ -4,7 +4,7 @@ import unittest
 
 from tools.level_audit import canonical
 from tools.mechanics import EchoGate, MechanicMove, ShelfDoor, State
-from tools.validate_levels import LEAP, SWAP, WIND, _read_board, _transition
+from tools.validate_levels import LEAP, SWAP, WIND, _read_board, _transition, decorative_mechanic, validate_level
 
 
 START, A, B, EXIT = (0, 1), (1, 1), (4, 3), (5, 0)
@@ -122,3 +122,9 @@ class ShelfDoorTest(unittest.TestCase):
         original = canonical(level(pairs=((A, B), (c, d))))
         self.assertEqual(original, canonical(level(pairs=((d, c), (B, A)))))
         self.assertNotEqual(original, canonical(level(pairs=((A, c), (B, d)))))
+
+    def test_audit_rejects_an_unused_pair_even_when_the_other_shortens_the_path(self):
+        draft = level(pairs=((A, B), ((0, 4), (1, 4))))
+        minimum = len(validate_level(draft))
+        self.assertLess(minimum, len(validate_level(draft, disabled_rule=ShelfDoor.type)))
+        self.assertEqual(decorative_mechanic(draft, minimum), 'shelfDoor #2')
