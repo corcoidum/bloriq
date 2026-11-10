@@ -987,6 +987,17 @@ class _GameScreenState extends State<GameScreen>
     widget.session.analytics.record('postcard_open', _eventContext);
     final state = controller.state;
     final best = _bestMoves ?? state.moves;
+    final mirrorSteps = <MirrorPostcardStep>[];
+    for (final move in controller.moveHistory) {
+      final shift = MirrorPair.recordedShift(move, includeTeleportReturn: true);
+      if (shift == null) continue;
+      final landing = move.teleportOf(shift.blockId)?.from ?? shift.to;
+      mirrorSteps.add((
+        pair: shift.pair,
+        dx: landing.x - shift.from.x,
+        dy: landing.y - shift.from.y,
+      ));
+    }
     showDialog<void>(
       context: context,
       animationStyle: _reduceMotion ? AnimationStyle.noAnimation : null,
@@ -1004,15 +1015,7 @@ class _GameScreenState extends State<GameScreen>
               : t.level(_displayNumber(state.level)),
           movesText: t.moves(state.moves),
           bestText: t.bestMoves(best),
-          mirrorSteps: [
-            for (final move in controller.moveHistory)
-              if (MirrorPair.recordedShift(move) case final shift?)
-                (
-                  pair: shift.pair,
-                  dx: shift.to.x - shift.from.x,
-                  dy: shift.to.y - shift.from.y,
-                ),
-          ],
+          mirrorSteps: mirrorSteps,
         ),
         onShareTap: () => widget.session.analytics.record(
           'postcard_share_tap',

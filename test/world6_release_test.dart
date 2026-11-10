@@ -2,6 +2,7 @@ import 'package:bloriq/design/keep_all_text.dart';
 import 'package:bloriq/design/star_art.dart';
 import 'package:bloriq/domain/mechanics/shelf_door.dart';
 import 'package:bloriq/domain/puzzle.dart';
+import 'package:bloriq/postcard/echo_postcard.dart';
 import 'package:bloriq/progress/progress_repository.dart';
 import 'package:bloriq/progression/progression_repository.dart';
 import 'package:bloriq/world/saga.dart';
@@ -14,6 +15,7 @@ import 'support/start_game.dart';
 import 'support/world_release.dart';
 
 const _capture = bool.fromEnvironment('CAPTURE_WORLD6_RELEASE');
+const _capturePostcard = bool.fromEnvironment('CAPTURE_WORLD6_POSTCARD');
 const _teaser = '다섯 등대가 모두 켜지면, 빛길 끝에서 첫 별이 눈을 떠.';
 final _chaptersThroughWorld5 = {
   for (var chapter = 1; chapter <= 25; chapter++) chapter,
@@ -232,6 +234,39 @@ void main() {
       await closeReleaseApp(tester);
     },
   );
+
+  testWidgets('511 postcard shows the twin direction before the shelf hop', (
+    tester,
+  ) async {
+    seedCampaign({
+      ..._chaptersThroughWorld5,
+      26,
+      27,
+    }, cleared: releaseLevels(6).take(10));
+    final boundary = await openReleaseApp(tester, captureArt: _capturePostcard);
+    await enterReleaseWorld(tester, 6);
+    await tapVisible(tester, releaseKey('world-continue'));
+    expect(releaseGame(tester).controller.state.level.id, 511);
+    await solveVisibleBoard(tester);
+    await waitForReleaseWidget(tester, releaseKey('result-more'));
+    await tapVisible(tester, releaseKey('result-more'));
+    await tapVisible(tester, releaseKey('result-postcard'));
+    final dialog = find.byType(EchoPostcardDialog);
+    await waitForReleaseWidget(tester, dialog);
+    expect(tester.widget<EchoPostcardDialog>(dialog).data.mirrorSteps, [
+      (pair: 0, dx: 0, dy: 1),
+      (pair: 0, dx: 1, dy: 0),
+      (pair: 0, dx: -1, dy: 0),
+    ]);
+    if (_capturePostcard) {
+      await captureReleaseScreen(
+        tester,
+        boundary,
+        'docs/screenshots/world6/mirror-postcard.png',
+      );
+    }
+    await closeReleaseApp(tester);
+  });
 
   testWidgets('all four unlocked guides fit home help at 200% text', (
     tester,
