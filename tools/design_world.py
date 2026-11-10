@@ -173,12 +173,28 @@ def design(job: Job) -> Result:
     started = monotonic()
     deadline = started + slot.max_seconds
     over_budget = 0
-    direct_sample = slot.layout_factory is not None
-    stale_limit = 1 if direct_sample else 400
+    direct_sample = slot.layout_factory is not None and not slot.mutate_layout
+    stale_limit = 1 if direct_sample else 200 if slot.mutate_layout else 400
+    # 같은 장의 통과판도 출발점으로 쓸 수 있다. 중복·유사 판은 저장 직전에 다시 거른다.
+    siblings = []
+    if slot.mutate_layout:
+        kinds = Counter(slot.mechanics)
+        siblings = [
+            level for level in similar_to
+            if level.get('world') == world
+            and (level['boardWidth'], level['boardHeight']) == slot.size
+            and len(level['blocks']) == slot.blocks
+            and slot.walls[0] <= len(level['obstacles']) <= slot.walls[1]
+            and available_powers(level) == slot.powers
+            and Counter(rule['type'] for rule in level['specialRules']) == kinds
+        ]
     try:
         while monotonic() < deadline:
             try:
-                current = random_level(world, index, slot, rng)
+                if siblings and rng.random() < .6:
+                    current = {**rng.choice(siblings), 'id': first_level_id(world) + index}
+                else:
+                    current = random_level(world, index, slot, rng)
             except ValueError:
                 continue
             score = None
@@ -211,12 +227,20 @@ def design(job: Job) -> Result:
                     if score is not None and candidate_score > score:
                         stale += 1
                         continue
-                    profile = (
-                        full_check(candidate, slot, quick, elapsed > slot.max_seconds * .6, deadline)
-                        if (low <= minimum <= high
-                            and (slot.solution_filter is None
-                                 or slot.solution_filter(candidate, quick))) else None
-                    )
+                    matches = None
+                    if slot.mutate_layout and slot.solution_filter is not None:
+                        matches = slot.solution_filter(candidate, quick)
+                        if not matches:
+                            candidate_score += .5
+                    if score is not None and candidate_score > score:
+                        stale += 1
+                        continue
+                    profile = None
+                    if low <= minimum <= high:
+                        if matches is None:
+                            matches = slot.solution_filter is None or slot.solution_filter(candidate, quick)
+                        if matches:
+                            profile = full_check(candidate, slot, quick, elapsed > slot.max_seconds * .6, deadline)
                 except SearchBudgetExceeded:
                     # 예산 초과는 해가 없다는 증거가 아니다. 후보만 버린다.
                     over_budget += 1

@@ -29,6 +29,7 @@ class Slot:
     reject_similar: bool = False
     solution_filter: Callable[[dict, list['Move']], bool] | None = None
     layout_factory: Callable[[Random], dict] | None = None
+    mutate_layout: bool = False
 
     def __post_init__(self) -> None:
         width, height = self.size

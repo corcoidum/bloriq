@@ -70,12 +70,7 @@ Future<GlobalKey> openReleaseApp(
   addTearDown(tester.view.reset);
   tester.platformDispatcher.localesTestValue = [locale];
   addTearDown(tester.platformDispatcher.clearLocalesTestValue);
-  if (captureArt) {
-    final preload = GlobalKey();
-    await tester.pumpWidget(MaterialApp(home: SizedBox(key: preload)));
-    await tester.runAsync(() => _loadArt(preload.currentContext!));
-    await tester.pump();
-  }
+  if (captureArt) await preloadReleaseArt(tester);
   final settings = GameSettings(reduceMotion: true);
   addTearDown(settings.dispose);
   final boundary = GlobalKey();
@@ -167,6 +162,13 @@ Future<void> solveVisibleBoard(WidgetTester tester) async {
   }
   expect(controller.state.isComplete, isTrue);
   await tester.pump(const Duration(milliseconds: 350));
+}
+
+Future<void> preloadReleaseArt(WidgetTester tester) async {
+  final preload = GlobalKey();
+  await tester.pumpWidget(MaterialApp(home: SizedBox(key: preload)));
+  await tester.runAsync(() => _loadArt(preload.currentContext!));
+  await tester.pump();
 }
 
 Future<void> _loadArt(BuildContext context) async {

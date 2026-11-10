@@ -102,6 +102,17 @@ class WorldGeneratorTest(unittest.TestCase):
         self.assertEqual(result.level['minimumMoves'], 2)
         mutate.assert_not_called()
 
+    def test_slot_can_mutate_a_seeded_layout(self):
+        fixture = {**board(201), 'availablePowers': []}
+        keys = ('startPosition', 'exitPosition', 'blocks', 'obstacles', 'specialRules')
+        slot = Slot(2, (3, 2), 0, (0, 0), (), None, False, 'fixture', (), 'test',
+                    layout_factory=lambda rng: {key: fixture[key] for key in keys},
+                    mutate_layout=True)
+        with patch('tools.design_world.mutate', return_value=fixture) as mutate:
+            result = design(Job(3, 0, slot, 30, frozenset()))
+        self.assertEqual(result.level['minimumMoves'], 2)
+        mutate.assert_called_once()
+
     def test_checkpoint_keeps_previous_slots_if_a_write_fails(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'world3.json'

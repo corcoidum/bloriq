@@ -6,12 +6,12 @@ import json
 from pathlib import Path
 from textwrap import indent
 from time import monotonic
-from typing import Any
+from typing import Any, Callable, Iterator
 
 if __package__:
-    from .mechanics import Board, BoardMechanic, DIRECTIONS, MechanicMove, Position, State, parse_mechanics
+    from .mechanics import Board, BoardMechanic, DIRECTIONS, MechanicMove, Position, Positions, State, parse_mechanics
 else:
-    from mechanics import Board, BoardMechanic, DIRECTIONS, MechanicMove, Position, State, parse_mechanics
+    from mechanics import Board, BoardMechanic, DIRECTIONS, MechanicMove, Position, Positions, State, parse_mechanics
 
 ROOT = Path(__file__).resolve().parents[1]
 LEVELS_FILE = ROOT / 'assets/levels/levels.json'
@@ -28,22 +28,8 @@ class SearchBudgetExceeded(RuntimeError):
     """상태 예산으로 탐색을 중단했다. 해가 없다는 뜻과 구분한다."""
 
 
-def validate_level(
-    level: dict[str, Any], *, use_echo: bool = True, gate_locked: bool = False,
-    disabled_rule: str | None = None,
-    stats: dict[str, int] | None = None, max_states: int = 200000,
-    powers: tuple[str, ...] | frozenset[str] = (),
-    must_use: str | None = None,
-    deadline: float | None = None,
-    max_moves: int | None = None,
-) -> list[Move]:
-    """powers 는 아직 쓰지 않은 권능이다. 각 권능은 한 번, 한 수로 센다.
-    must_use 가 있으면 그 권능을 쓴 해만 정답으로 본다(강조 권능 확인용)."""
-    def check_deadline() -> None:
-        if deadline is not None and monotonic() >= deadline:
-            raise TimeoutError(f"Level {level['id']} search deadline exceeded")
-
-    check_deadline()
+def _read_board(level: dict[str, Any], *, disabled_rule: str | None = None,
+                gate_locked: bool = False) -> tuple[Board, Positions]:
     width, height = level['boardWidth'], level['boardHeight']
     assert type(width) is int and type(height) is int and width > 0 and height > 0
 
@@ -66,13 +52,72 @@ def validate_level(
     assert not ({start, exit_point} & (set(blocks) | walls))
     mechanics = parse_mechanics(level, point, walls=walls, disabled_rule=disabled_rule,
                                 gate_locked=gate_locked)
-    transforms = [rule.transformMove for rule in mechanics
+    return Board(width, height, exit_point, walls, ('goal', *ids), mechanics), (start, *blocks)
+
+
+def _transition(board: Board, use_echo: bool = True) -> Callable[[State, MechanicMove], State]:
+    transforms = [rule.transformMove for rule in board.mechanics
                   if type(rule).transformMove is not BoardMechanic.transformMove]
-    echo_rules = [rule.nextEcho for rule in mechanics
+    echo_rules = [rule.nextEcho for rule in board.mechanics
                   if type(rule).nextEcho is not BoardMechanic.nextEcho]
-    keyed_rules = [rule for rule in mechanics
+
+    def apply(state: State, move: MechanicMove) -> State:
+        index, dest, power = move
+        source = state.positions[index]
+        positions = state.positions[:index] + (dest,) + state.positions[index + 1:]
+        # 일반/권능 착지 → 기믹 배치 변환 → 잔상. 봉인·교대의 잔상 규칙이 우선한다.
+        for transform in transforms:
+            positions = transform(state, move, positions)
+        echo = source
+        for next_echo in echo_rules:
+            echo = next_echo(state, move, positions, echo)
+        if power == SEAL:
+            echo = state.echo
+        elif power == SWAP:
+            echo = source
+        return State(positions, echo if use_echo else None,
+                     state.powers - {power} if power else state.powers, state.moves + 1, board)
+
+    return apply
+
+
+def trace_solution(level: dict[str, Any], solution: list[Move],
+                   ) -> Iterator[tuple[State, MechanicMove, State]]:
+    """BFS가 낸 입력을 같은 상태 전이로 적용해 실제 이동 전후를 읽는다."""
+    board, positions = _read_board(level)
+    apply = _transition(board)
+    state = State(positions, None, frozenset(available_powers(level)), 0, board)
+    for block_id, source, target, *power in solution:
+        index = board.block_ids.index(block_id)
+        assert source == state.positions[index], 'Solution source does not match the board'
+        move = MechanicMove(index, target, power[0] if power else None)
+        after = apply(state, move)
+        yield state, move, after
+        state = after
+    assert state.positions[0] == board.exit_point, 'Solution does not reach the exit'
+
+
+def validate_level(
+    level: dict[str, Any], *, use_echo: bool = True, gate_locked: bool = False,
+    disabled_rule: str | None = None,
+    stats: dict[str, int] | None = None, max_states: int = 200000,
+    powers: tuple[str, ...] | frozenset[str] = (),
+    must_use: str | None = None,
+    deadline: float | None = None,
+    max_moves: int | None = None,
+) -> list[Move]:
+    """powers 는 아직 쓰지 않은 권능이다. 각 권능은 한 번, 한 수로 센다.
+    must_use 가 있으면 그 권능을 쓴 해만 정답으로 본다(강조 권능 확인용)."""
+    def check_deadline() -> None:
+        if deadline is not None and monotonic() >= deadline:
+            raise TimeoutError(f"Level {level['id']} search deadline exceeded")
+
+    check_deadline()
+    board, positions = _read_board(level, disabled_rule=disabled_rule, gate_locked=gate_locked)
+    walls, exit_point = board.walls, board.exit_point
+    apply = _transition(board, use_echo)
+    keyed_rules = [rule for rule in board.mechanics
                    if type(rule).stateKey is not BoardMechanic.stateKey]
-    board = Board(width, height, exit_point, walls, ('goal', *ids), mechanics)
     assert all(power in POWERS for power in powers)
 
     def successors(state: State):
@@ -112,23 +157,6 @@ def validate_level(
                         if current != source:
                             yield MechanicMove(index, current, power)
 
-    def apply(state: State, move: MechanicMove) -> State:
-        index, dest, power = move
-        source = state.positions[index]
-        positions = state.positions[:index] + (dest,) + state.positions[index + 1:]
-        # 일반/권능 착지 → 기믹 배치 변환 → 잔상. 봉인·교대의 잔상 규칙이 우선한다.
-        for transform in transforms:
-            positions = transform(state, move, positions)
-        echo = source
-        for next_echo in echo_rules:
-            echo = next_echo(state, move, positions, echo)
-        if power == SEAL:
-            echo = state.echo
-        elif power == SWAP:
-            echo = source
-        return State(positions, echo if use_echo else None,
-                     state.powers - {power} if power else state.powers, state.moves + 1, board)
-
     def state_key(state: State) -> tuple:
         key = (state.positions, state.echo, state.powers)
         if not keyed_rules:
@@ -137,7 +165,7 @@ def validate_level(
                       if (value := mechanic.stateKey(state)) is not None)
         return (*key, extra) if extra else key
 
-    initial = State((start, *blocks), None, frozenset(powers), 0, board)
+    initial = State(positions, None, frozenset(powers), 0, board)
     initial_key = state_key(initial)
     parents: dict[tuple, tuple[tuple, Move] | None] = {initial_key: None}
     pending = deque([(initial, initial_key)])
