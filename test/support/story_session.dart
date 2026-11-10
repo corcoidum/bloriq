@@ -3,11 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// 위젯 테스트의 fake async 안에서 저장 큐를 생성하고 끝낸다.
-Future<GameSession> loadStorySession(WidgetTester tester) async {
+Future<GameSession> loadStorySession(
+  WidgetTester tester, {
+  Future<GameSession> Function()? load,
+}) async {
   rootBundle.clear();
   GameSession? result;
   Object? error;
-  GameSession.load().then(
+  (load ?? GameSession.load)().then(
     (value) => result = value,
     onError: (Object e) {
       error = e;

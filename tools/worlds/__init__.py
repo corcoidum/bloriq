@@ -2,7 +2,11 @@
 from dataclasses import dataclass
 from importlib import import_module
 from math import isfinite
-from typing import Callable
+from random import Random
+from typing import TYPE_CHECKING, Callable
+
+if TYPE_CHECKING:
+    from tools.validate_levels import Move
 
 
 @dataclass(frozen=True)
@@ -23,6 +27,8 @@ class Slot:
     move_tolerance: int | None = None
     rule_filter: Callable[[list[dict]], bool] | None = None
     reject_similar: bool = False
+    solution_filter: Callable[[dict, list['Move']], bool] | None = None
+    layout_factory: Callable[[Random], dict] | None = None
 
     def __post_init__(self) -> None:
         width, height = self.size

@@ -70,7 +70,6 @@ def occupied(level: dict) -> set[Position]:
 def random_level(world: int, index: int, slot: Slot, rng: random.Random) -> dict:
     width, height = slot.size
     free = cells(width, height)
-    rng.shuffle(free)
 
     def take() -> dict:
         if not free:
@@ -82,12 +81,18 @@ def random_level(world: int, index: int, slot: Slot, rng: random.Random) -> dict
         'world': world,
         'boardWidth': width,
         'boardHeight': height,
-        'startPosition': take(),
-        'exitPosition': take(),
-        'blocks': [{'id': f'b{i + 1}', **take()} for i in range(slot.blocks)],
-        'obstacles': [take() for _ in range(rng.randint(*slot.walls))],
     }
-    populate_random_rules(level, slot.mechanics, rng, take)
+    if slot.layout_factory is None:
+        rng.shuffle(free)
+        level.update(
+            startPosition=take(),
+            exitPosition=take(),
+            blocks=[{'id': f'b{i + 1}', **take()} for i in range(slot.blocks)],
+            obstacles=[take() for _ in range(rng.randint(*slot.walls))],
+        )
+        populate_random_rules(level, slot.mechanics, rng, take)
+    else:
+        level.update(slot.layout_factory(rng))
     if slot.rule_filter is not None and not slot.rule_filter(level['specialRules']):
         raise ValueError('Generated rules do not match the slot')
     level['availablePowers'] = list(slot.powers)
@@ -168,6 +173,8 @@ def design(job: Job) -> Result:
     started = monotonic()
     deadline = started + slot.max_seconds
     over_budget = 0
+    direct_sample = slot.layout_factory is not None
+    stale_limit = 1 if direct_sample else 400
     try:
         while monotonic() < deadline:
             try:
@@ -176,8 +183,12 @@ def design(job: Job) -> Result:
                 continue
             score = None
             stale = 0
-            while stale < 400 and monotonic() < deadline:
-                candidate = mutate(current, slot, rng)
+            while stale < stale_limit and monotonic() < deadline:
+                candidate = current if direct_sample else mutate(current, slot, rng)
+                if (slot.rule_filter is not None
+                        and not slot.rule_filter(candidate['specialRules'])):
+                    stale += 1
+                    continue
                 elapsed = monotonic() - started
                 tolerance = slot.move_tolerance
                 if tolerance is None:
@@ -202,7 +213,9 @@ def design(job: Job) -> Result:
                         continue
                     profile = (
                         full_check(candidate, slot, quick, elapsed > slot.max_seconds * .6, deadline)
-                        if low <= minimum <= high else None
+                        if (low <= minimum <= high
+                            and (slot.solution_filter is None
+                                 or slot.solution_filter(candidate, quick))) else None
                     )
                 except SearchBudgetExceeded:
                     # 예산 초과는 해가 없다는 증거가 아니다. 후보만 버린다.
@@ -212,7 +225,7 @@ def design(job: Job) -> Result:
                 except AssertionError:
                     stale += 1
                     continue
-                stale = 0 if score is None or candidate_score < score else stale + 1
+                stale = 0 if not direct_sample and (score is None or candidate_score < score) else stale + 1
                 current, score = candidate, candidate_score
                 if (profile is not None and canonical(candidate) not in seen
                         and not any(similarity(candidate, other) >= SIMILARITY_THRESHOLD
@@ -275,6 +288,10 @@ def check_existing(existing: dict[int, dict], world: int, slots: tuple[Slot, ...
             raise ValueError(f"Level {level['id']}: slot metadata or solution mismatch")
         if slot.rule_filter is not None and not slot.rule_filter(level['specialRules']):
             raise ValueError(f"Level {level['id']}: rules do not match the slot")
+        if slot.solution_filter is not None:
+            solution = solve_or_none(level, powers=slot.powers, max_states=slot.full_states)
+            if solution is None or not slot.solution_filter(level, solution):
+                raise ValueError(f"Level {level['id']}: solution does not match the slot")
         if (slot.move_tolerance is not None
                 and abs(level['minimumMoves'] - slot.target_moves) > slot.move_tolerance):
             raise ValueError(f"Level {level['id']}: outside the target move range")

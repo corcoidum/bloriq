@@ -78,6 +78,30 @@ class WorldGeneratorTest(unittest.TestCase):
         self.assertEqual(level['minimumMoves'], level['bareHandedMoves'])
         self.assertEqual(len(level['solution']), level['minimumMoves'])
 
+    def test_mutation_rechecks_the_slot_rule_filter_before_solving(self):
+        slot = Slot(2, (3, 2), 0, (0, 0), (), None, False, 'fixture', (), 'test',
+                    max_seconds=5, rule_filter=lambda rules: not rules)
+        level = {**board(201), 'availablePowers': []}
+        invalid = {**level, 'specialRules': [{'type': 'goalOnly', 'positions': [pt((1, 1))]}]}
+        with (
+            patch('tools.design_world.random_level', return_value=level),
+            patch('tools.design_world.mutate', side_effect=[invalid, level]),
+            patch('tools.design_world.solve_or_none', wraps=solve_or_none) as solve,
+        ):
+            result = design(Job(3, 0, slot, 30, frozenset()))
+        self.assertEqual(result.level['specialRules'], [])
+        self.assertEqual(solve.call_count, 1)
+
+    def test_slot_layout_factory_produces_a_candidate_without_mutating_it(self):
+        fixture = board(201)
+        keys = ('startPosition', 'exitPosition', 'blocks', 'obstacles', 'specialRules')
+        slot = Slot(2, (3, 2), 0, (0, 0), (), None, False, 'fixture', (), 'test',
+                    layout_factory=lambda rng: {key: fixture[key] for key in keys})
+        with patch('tools.design_world.mutate') as mutate:
+            result = design(Job(3, 0, slot, 30, frozenset()))
+        self.assertEqual(result.level['minimumMoves'], 2)
+        mutate.assert_not_called()
+
     def test_checkpoint_keeps_previous_slots_if_a_write_fails(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'world3.json'
