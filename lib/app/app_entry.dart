@@ -207,9 +207,9 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     if (session == null || _opening || _choosing) return;
     final lang = AppLocalizations.of(context)!.localeName;
     if (!session.endlessUnlocked) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(EndlessText.locked.resolve(lang))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(EndlessText.locked.resolve(lang))));
       return;
     }
     setState(() => _opening = true);
@@ -421,6 +421,8 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                     // 보통 휴대폰에서는 한 화면에 고정하고, 아주 작은 화면이나 큰 글자에서만 스크롤한다.
                     final scroll =
                         area.maxHeight < 600 ||
+                        area.maxHeight <
+                            530 * MediaQuery.textScalerOf(context).scale(1) ||
                         MediaQuery.textScalerOf(context).scale(10) > 13;
                     final children = <Widget>[
                       _homeHeader(t, session),

@@ -10,7 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   for (final colors in [GameColors.light, GameColors.dark]) {
-    for (final shape in [(3, 3), (4, 4), (3, 4)]) {
+    for (final shape in [(3, 3), (4, 4), (5, 5), (3, 4)]) {
       test(
         'moonstone ${colors == GameColors.dark ? 'dark' : 'light'} $shape: transparent corners and recessed board inside frame',
         () async {
@@ -42,6 +42,15 @@ void main() {
           expect(alpha(image.width - 1, 0), 0);
           expect(alpha(0, image.height - 1), 0);
           expect(alpha(image.width - 1, image.height - 1), 0);
+          final edgeX = g.framedBoardRect.center.dx.floor();
+          final boardTop = g.framedBoardRect.top.floor();
+          final slatePixel = (image.width * (boardTop - 4) + edgeX) * 4;
+          expect(alpha(edgeX, boardTop - 4), 255);
+          expect(alpha(edgeX, boardTop - 16), 0);
+          expect(
+            data.getUint8(slatePixel + 2),
+            greaterThan(data.getUint8(slatePixel)),
+          );
           final center =
               g.center(const Position(0, 0)) +
               Offset(g.frameInset, g.frameInset);

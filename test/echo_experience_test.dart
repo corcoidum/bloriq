@@ -56,8 +56,8 @@ void main() {
     expect(game.controller.state.moves, 0);
     expect(game.controller.canUndo, isFalse);
 
-    await tester.ensureVisible(find.text('Levels'));
-    await tester.tap(find.text('Levels'));
+    await tester.ensureVisible(find.byTooltip('Levels'));
+    await tester.tap(find.byTooltip('Levels'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     await tester.ensureVisible(find.text('Level 2').last);

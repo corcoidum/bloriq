@@ -31,7 +31,6 @@ abstract final class StarArt {
     'floor_2',
     'floor_3',
     'floor_4',
-    'plank',
     'rock',
     'stump',
     'riq_cushion',

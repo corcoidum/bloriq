@@ -9,6 +9,7 @@ import '../design/board_material.dart';
 import '../design/star_art.dart';
 import 'block_art.dart';
 import 'board_geometry.dart';
+import 'board_badge.dart';
 import '../domain/puzzle.dart';
 
 /// 드래그 중 표시할 가상 이동. 실제 게임 상태에는 적용하지 않는다.
@@ -301,33 +302,26 @@ class BloriqGame extends FlameGame {
     material.floor(canvas, layout);
 
     // 기믹은 색과 모양을 함께 사용하고, 블록이 덮어도 아래 모서리 표시를 남긴다.
-    String directionSymbol(Position direction) {
-      if (direction.x == 1) return '→';
-      if (direction.x == -1) return '←';
-      if (direction.y == 1) return '↓';
-      return '↑';
-    }
-
-    final mechanicTiles = <(Position, String, Color)>[
-      for (final p in state.level.echoErasers) (p, '×', _colors.echo),
-      for (final p in state.level.echoHolds) (p, 'Ⅱ', _colors.echo),
+    final mechanicTiles = <(Position, BoardMark, Offset)>[
+      for (final p in state.level.echoErasers)
+        (p, BoardMark.eraser, Offset.zero),
+      for (final p in state.level.echoHolds) (p, BoardMark.hold, Offset.zero),
       for (final entry in state.level.oneWays.entries)
-        (entry.key, directionSymbol(entry.value), _colors.primary),
-      for (final p in state.level.goalOnlyTiles) (p, '▶', _colors.goal),
+        (
+          entry.key,
+          BoardMark.oneWay,
+          Offset(entry.value.x.toDouble(), entry.value.y.toDouble()),
+        ),
+      for (final p in state.level.goalOnlyTiles)
+        (p, BoardMark.goalOnly, Offset.zero),
     ];
     final breathe = _reduceMotion ? 0.0 : .5 + .5 * math.sin(_hintTime * 2.2);
-    for (final (position, symbol, color) in mechanicTiles) {
-      final kind = switch (symbol) {
-        '×' => 'tile_dandelion',
-        'Ⅱ' => 'tile_amber',
-        '▶' => 'tile_clover',
+    for (final (position, mark, direction) in mechanicTiles) {
+      final kind = switch (mark) {
+        BoardMark.eraser => 'tile_dandelion',
+        BoardMark.hold => 'tile_amber',
+        BoardMark.goalOnly => 'tile_clover',
         _ => 'tile_stream',
-      };
-      final direction = switch (symbol) {
-        '←' => const Offset(-1, 0),
-        '↑' => const Offset(0, -1),
-        '↓' => const Offset(0, 1),
-        _ => const Offset(1, 0),
       };
       if (BlockArt.mechanic(
         canvas,
@@ -342,23 +336,12 @@ class BloriqGame extends FlameGame {
         }
         continue;
       }
-      final rect = Rect.fromCenter(
-        center: center(position),
-        width: cell * .88,
-        height: cell * .88,
-      );
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(rect, Radius.circular(cell * .15)),
-        paint..color = color.withValues(alpha: .15),
-      );
-      _label(
+      BoardBadge.draw(
         canvas,
-        symbol,
         center(position),
-        cell * .28,
-        color == _colors.echo
-            ? _colors.echoInk
-            : Color.lerp(color, _colors.text, .26)!,
+        cell * .38,
+        mark,
+        direction: direction,
       );
     }
 
@@ -404,14 +387,7 @@ class BloriqGame extends FlameGame {
           ..strokeWidth = math.max(2.0, cell * .025),
       );
       paint.style = PaintingStyle.fill;
-      // A diamond marks the plate even in grayscale.
-      final diamond = Path()
-        ..moveTo(switchCenter.dx, switchCenter.dy - cell * .14)
-        ..lineTo(switchCenter.dx + cell * .14, switchCenter.dy)
-        ..lineTo(switchCenter.dx, switchCenter.dy + cell * .14)
-        ..lineTo(switchCenter.dx - cell * .14, switchCenter.dy)
-        ..close();
-      canvas.drawPath(diamond, paint..color = _colors.cyan);
+      BoardBadge.draw(canvas, switchCenter, cell * .38, BoardMark.crystal);
     }
 
     if (gatePosition != null &&
@@ -464,9 +440,12 @@ class BloriqGame extends FlameGame {
       paint.style = PaintingStyle.fill;
     }
     // 실제 문의 상태는 유지하고, 이동 후 바뀔 상태만 바깥 테두리에 표시한다.
-    if (gatePosition != null &&
-        previewState != null &&
-        previewState.isGateOpen != state.isGateOpen) {
+    final previewGateOpen = previewState?.isGateOpen;
+    final showGatePreview =
+        gatePosition != null &&
+        previewGateOpen != null &&
+        previewGateOpen != state.isGateOpen;
+    if (showGatePreview) {
       final rect = Rect.fromCenter(
         center: center(gatePosition),
         width: cell * .98,
@@ -475,18 +454,11 @@ class BloriqGame extends FlameGame {
       canvas.drawRRect(
         RRect.fromRectAndRadius(rect, Radius.circular(cell * .18)),
         paint
-          ..color = previewState.isGateOpen ? _colors.cyan : _colors.error
+          ..color = previewGateOpen ? _colors.cyan : _colors.error
           ..style = PaintingStyle.stroke
           ..strokeWidth = math.max(3.0, cell * .045),
       );
       paint.style = PaintingStyle.fill;
-      _label(
-        canvas,
-        previewState.isGateOpen ? '↗' : '×',
-        center(gatePosition) + Offset(cell * .34, -cell * .34),
-        cell * .25,
-        previewState.isGateOpen ? _colors.cyan : _colors.error,
-      );
     }
     for (final p in state.level.obstacles) {
       if (BlockArt.obstacle(canvas, center(p), cell, p.x * 7 + p.y * 3)) {
@@ -636,22 +608,30 @@ class BloriqGame extends FlameGame {
       canvas.restore();
     }
     if (!_reduceMotion) _drawImpact(canvas, layout);
-    for (final (position, symbol, color) in mechanicTiles) {
-      final marker = center(position) + Offset(cell * .34, -cell * .34);
-      canvas.drawCircle(marker, cell * .12, paint..color = color);
-      _label(canvas, symbol, marker, cell * .17, _colors.blockSymbol);
+    for (final (position, mark, direction) in mechanicTiles) {
+      BoardBadge.draw(
+        canvas,
+        center(position) + Offset(cell * .34, -cell * .34),
+        cell * .27,
+        mark,
+        direction: direction,
+      );
     }
     if (switchPosition != null) {
-      // The corner marker remains visible when a block covers the plate.
-      final marker = center(switchPosition) + Offset(-cell * .34, -cell * .34);
-      canvas.drawCircle(marker, cell * .095, paint..color = _colors.cyan);
-      final mark = Path()
-        ..moveTo(marker.dx, marker.dy - cell * .05)
-        ..lineTo(marker.dx + cell * .05, marker.dy)
-        ..lineTo(marker.dx, marker.dy + cell * .05)
-        ..lineTo(marker.dx - cell * .05, marker.dy)
-        ..close();
-      canvas.drawPath(mark, paint..color = _colors.surface);
+      BoardBadge.draw(
+        canvas,
+        center(switchPosition) + Offset(-cell * .34, -cell * .34),
+        cell * .27,
+        BoardMark.crystal,
+      );
+    }
+    if (showGatePreview) {
+      BoardBadge.draw(
+        canvas,
+        center(gatePosition) + Offset(cell * .34, -cell * .34),
+        cell * .27,
+        previewGateOpen ? BoardMark.gateOpen : BoardMark.gateClosed,
+      );
     }
     if (state.isComplete && !isReplaying && !_reduceMotion) {
       _drawCelebration(canvas, exit, cell);
@@ -1017,72 +997,6 @@ class BloriqGame extends FlameGame {
         canvas.drawLine(at - Offset(radius, 0), at + Offset(radius, 0), paint);
         canvas.drawLine(at - Offset(0, radius), at + Offset(0, radius), paint);
       }
-    }
-  }
-
-  void _label(
-    Canvas canvas,
-    String value,
-    Offset center,
-    double fontSize,
-    Color color,
-  ) {
-    final radius = fontSize * .36;
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = math.max(1.3, fontSize * .12)
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round
-      ..style = PaintingStyle.stroke;
-    if (value == '×') {
-      canvas.drawLine(
-        center + Offset(-radius, -radius),
-        center + Offset(radius, radius),
-        paint,
-      );
-      canvas.drawLine(
-        center + Offset(radius, -radius),
-        center + Offset(-radius, radius),
-        paint,
-      );
-    } else if (value == 'Ⅱ') {
-      for (final x in [-radius * .55, radius * .55]) {
-        canvas.drawLine(
-          center + Offset(x, -radius),
-          center + Offset(x, radius),
-          paint,
-        );
-      }
-    } else if (value == '▶') {
-      canvas.drawPath(
-        Path()
-          ..moveTo(center.dx - radius * .65, center.dy - radius)
-          ..lineTo(center.dx + radius, center.dy)
-          ..lineTo(center.dx - radius * .65, center.dy + radius)
-          ..close(),
-        paint..style = PaintingStyle.fill,
-      );
-    } else {
-      final direction = switch (value) {
-        '←' => const Offset(-1, 0),
-        '↑' => const Offset(0, -1),
-        '↓' => const Offset(0, 1),
-        '↗' => const Offset(.707, -.707),
-        _ => const Offset(1, 0),
-      };
-      final normal = Offset(-direction.dy, direction.dx);
-      final tip = center + direction * radius;
-      canvas.drawLine(center - direction * radius, tip, paint);
-      canvas.drawLine(
-        tip,
-        tip - direction * radius * .65 + normal * radius * .6,
-        paint,
-      );
-      canvas.drawLine(
-        tip,
-        tip - direction * radius * .65 - normal * radius * .6,
-        paint,
-      );
     }
   }
 }

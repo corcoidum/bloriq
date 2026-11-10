@@ -39,7 +39,7 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.textContaining('an echo on the diamond opens the gate'),
+      find.textContaining('an echo on the moon crystal opens the gate'),
       findsOneWidget,
     );
     await tester.tap(find.text('Close'));
@@ -175,7 +175,7 @@ void main() {
     final level = Level.fromJson(json.last as Map<String, dynamic>);
     final solution = const PuzzleSolver().solve(level)!;
     final controller = PuzzleController(level);
-    await tapVisible(tester, find.text('Levels'));
+    await tapVisible(tester, find.byTooltip('Levels'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     await selectOpenLevel(tester, level.id);
@@ -240,7 +240,7 @@ void main() {
     final block = controller.state.blocks.firstWhere(
       (item) => item.id == firstMove.blockId,
     );
-    await tapVisible(tester, find.text('Levels'));
+    await tapVisible(tester, find.byTooltip('Levels'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     await selectOpenLevel(tester, level.id);
@@ -291,14 +291,14 @@ void main() {
     final controller = PuzzleController(level);
     final solution = const PuzzleSolver().solve(level)!;
 
-    await tapVisible(tester, find.text('Levels'));
+    await tapVisible(tester, find.byTooltip('Levels'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     await selectOpenLevel(tester, level.id);
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump(const Duration(milliseconds: 300));
     expect(
-      find.text('Leave an echo on the diamond to open the gate.'),
+      find.text('Leave an echo on the moon crystal to open the gate.'),
       findsOneWidget,
     );
 
@@ -324,7 +324,7 @@ void main() {
     await move(level.startPosition, level.echoGate!);
     expect(find.text('Moves: 0'), findsOneWidget);
     expect(
-      find.text('The gate is closed. Leave an echo on the diamond.'),
+      find.text('The gate is closed. Leave an echo on the moon crystal.'),
       findsOneWidget,
     );
 
@@ -378,6 +378,10 @@ void main() {
   });
 
   testWidgets('a position with no legal move suggests undo', (tester) async {
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     await pumpGame(tester, BloriqApp(loadLevels: loadLegacyLevels));
     for (
       var i = 0;
@@ -386,7 +390,7 @@ void main() {
     ) {
       await tester.pump(const Duration(milliseconds: 20));
     }
-    await tapVisible(tester, find.text('Levels'));
+    await tapVisible(tester, find.byKey(const ValueKey('game-levels')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     await selectOpenLevel(tester, 11);

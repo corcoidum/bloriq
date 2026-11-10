@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../audio/game_audio.dart';
 import '../design/arcade_components.dart';
 import '../design/star_art.dart';
+import '../game/mechanic_legend.dart';
 import '../l10n/app_localizations.dart';
 import '../settings/game_settings.dart';
 import '../settings/settings_dialog.dart';
@@ -58,7 +59,25 @@ Future<bool?> showGameHelp(BuildContext context, GameSettings settings) {
     builder: (_) => AlertDialog(
       icon: const Center(child: CourierPortrait(height: 70)),
       title: Text(t.help),
-      content: SingleChildScrollView(child: Text(t.helpBody)),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(t.helpBody),
+            const SizedBox(height: 8),
+            MechanicLegend(
+              items: [
+                LegendItem(LegendKind.eraser, t.eraserRule),
+                LegendItem(LegendKind.hold, t.holdRule),
+                LegendItem(LegendKind.oneWay, t.oneWayRule),
+                LegendItem(LegendKind.goalOnly, t.goalOnlyRule),
+                LegendItem(LegendKind.gate, t.gateInstruction),
+              ],
+            ),
+          ],
+        ),
+      ),
       actions: [
         TextButton(
           key: const ValueKey('replay-tutorial'),

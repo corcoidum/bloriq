@@ -102,6 +102,34 @@ abstract final class EndlessText {
   static const start = ProgressionText('출항하기', 'Set sail');
   static const resume = ProgressionText('이어서 항해', 'Continue voyage');
   static const newVoyage = ProgressionText('새로 출항', 'New voyage');
+  static const endVoyageTitle = ProgressionText(
+    '진행 중인 항해를 끝낼까요?',
+    'End your current voyage?',
+  );
+  static const keepVoyage = ProgressionText('계속 항해', 'Keep voyage');
+  static const endAndSail = ProgressionText(
+    '항해 종료 후 새로 출항',
+    'End voyage and sail again',
+  );
+  static const startSaveFailed = ProgressionText(
+    '새 항해를 저장하지 못했어요. 다시 시도해 주세요.',
+    'Could not save the new voyage. Please try again.',
+  );
+
+  static ProgressionText endVoyageBody(int depth, int cleared, int score) =>
+      ProgressionText(
+        '$depth번째 바다에서 진행 중이에요. $cleared판 클리어와 ${score}점은 '
+            '최고 기록에 반영돼요. 새 항해는 1번째 바다에서 시작해요.',
+        'You are on Sea $depth. Your $cleared clears and $score points count '
+            'toward your records. A new voyage starts at Sea 1.',
+      );
+
+  static ProgressionText voyageProgress(int cleared, int score) =>
+      ProgressionText(
+        '$cleared판 클리어 · ${score}점',
+        '$cleared cleared · $score pts',
+      );
+
   static const again = ProgressionText('다시 출항', 'Sail again');
   static const home = ProgressionText('홈으로', 'Home');
   static const lantern = ProgressionText('등불', 'Lantern');
