@@ -115,7 +115,7 @@ void main() {
           RepaintBoundary(
             key: boundaryKey,
             child: MaterialApp(
-              debugShowCheckedModeBanner: false,
+            debugShowCheckedModeBanner: false,
               theme: GameTheme.dark,
               locale: Locale(language),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -155,7 +155,7 @@ void main() {
           findsOneWidget,
         );
         if (capture && language == 'ko') {
-          await tester.pump(const Duration(milliseconds: 250));
+        await tester.pump(const Duration(milliseconds: 250));
           await tester.runAsync(() => _capture(boundaryKey));
         }
 
