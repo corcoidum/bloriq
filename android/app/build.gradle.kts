@@ -40,6 +40,11 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // 테스터 빌드는 정식 앱과 나란히 설치되도록 앱 ID에 접미사를 붙인다.
+        // 예: BLORIQ_APP_ID_SUFFIX=.tester flutter build apk ...
+        System.getenv("BLORIQ_APP_ID_SUFFIX")?.takeIf { it.isNotBlank() }?.let {
+            applicationIdSuffix = it
+        }
     }
 
     val releaseSigning = keyProperties?.let { properties ->

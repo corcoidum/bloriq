@@ -15,6 +15,7 @@ import '../story/collection_repository.dart';
 import '../constellation/constellation_state.dart';
 import '../progression/progression_repository.dart';
 import '../game/assist.dart';
+import 'tester_seed.dart';
 import '../world/saga.dart';
 import '../world/world_catalog.dart';
 import '../world/world_progress.dart';
@@ -199,6 +200,10 @@ class GameSession {
     void Function(Onboarding)? onOnboardingReady,
     DateTime Function()? clock,
   }) async {
+    // 테스터 빌드는 첫 실행에서 모든 판을 깬 기록으로 시작한다.
+    final tester = testerAllCleared && loadLevels == null
+        ? await seedTesterProgress()
+        : null;
     final progress = await ProgressRepository.load();
     final onboarding = await Onboarding.load(
       returningPlayer: progress.hasAnyProgress || progress.hasHistoricalStorage,
@@ -223,6 +228,14 @@ class GameSession {
       );
     }
     final progression = await ProgressionRepository.load();
+    if (tester != null && !progress.saveFailed && !progression.backfilled) {
+      // 레벨·별가루·권능이 기록과 맞도록 일반 환산과 같은 길로 지급한다.
+      await progression.backfill(
+        records: tester.records,
+        completedChapters: tester.completedChapters,
+        goldenChapters: tester.goldenChapters,
+      );
+    }
     if (!progress.saveFailed && !progression.backfilled) {
       final atlas = ConstellationAtlas.derive(levels, progress);
       await progression.backfill(
