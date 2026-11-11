@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 
 import '../audio/game_audio.dart';
 import '../domain/puzzle.dart';
+import '../progress/last_played.dart';
 import '../progress/progress_repository.dart';
 import '../tutorial/echo_tutorial.dart';
 import '../daily/daily_repository.dart';
@@ -75,9 +76,11 @@ class GameSession {
     required this.progression,
     required this.endless,
     this.saga,
+    LastPlayedRepository? lastPlayed,
     Iterable<LoadedWorld> worlds = const [],
     Map<int, WorldBoardSkin> boardSkins = const {},
   }) : levels = List.unmodifiable(levels),
+       lastPlayed = lastPlayed ?? LastPlayedRepository.memory(),
        worlds = Map.unmodifiable({
          for (final world in worlds) world.number: world,
        }),
@@ -89,6 +92,9 @@ class GameSession {
 
   final List<Level> levels;
   final ProgressRepository progress;
+
+  /// 마지막으로 연 캠페인 판. 홈 "이어가기"가 막힌 판으로 돌아가는 데 쓴다.
+  final LastPlayedRepository lastPlayed;
   final GameAudio audio;
   final Onboarding onboarding;
   final DailyRepository daily;
@@ -247,6 +253,7 @@ class GameSession {
     return GameSession(
       levels: levels,
       progress: progress,
+      lastPlayed: await LastPlayedRepository.load(),
       audio: audio,
       onboarding: onboarding,
       daily: daily,
@@ -276,8 +283,9 @@ class GameSession {
       if (worldUnlocked(number)) number,
   ];
 
-  /// 홈 "이어가기"가 갈 곳. 가장 멀리 온 세계의 열린 판을 먼저 고르고,
-  /// 없으면 앞 세계에 남은 판, 그다음 별 3개가 안 된 판 순서로 찾는다.
+  /// 홈 "이어가기"가 갈 곳. 마지막으로 열었다가 못 깬 판이 있으면 그 판,
+  /// 없으면 가장 멀리 온 세계의 열린 판, 앞 세계에 남은 판,
+  /// 별 3개가 안 된 판 순서로 찾는다.
   ContinueTarget get continueTarget {
     final open = openWorlds;
     final atlases = <int, WorldAtlas>{
@@ -286,6 +294,23 @@ class GameSession {
     WorldStageView? openStage(int number) => atlases[number]?.stages
         .where((stage) => stage.unlocked && !stage.cleared)
         .firstOrNull;
+
+    // 마지막으로 연 판을 아직 못 깼으면 그 판으로 돌아간다.
+    final last = lastPlayed.levelId;
+    if (last != null) {
+      final first = levels.where((level) => level.id == last).firstOrNull;
+      final world = first != null ? 1 : Worlds.worldOf(last);
+      final stuck = first != null
+          ? progress.forLevel(last, revision: first.revision) == null
+          : atlases[world]?.stages.any(
+                  (stage) =>
+                      stage.level.id == last &&
+                      stage.unlocked &&
+                      !stage.cleared,
+                ) ??
+                false;
+      if (stuck) return ContinueTarget(ContinueKind.next, world, last);
+    }
 
     final current = currentExpansionWorld;
     if (current != null) {

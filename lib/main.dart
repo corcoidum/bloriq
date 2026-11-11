@@ -336,6 +336,7 @@ class _GameScreenState extends State<GameScreen>
     if (widget.play.mode != PlayMode.campaign || _tutorial != null) return;
     final struggle = widget.session.struggle;
     final id = _controller!.state.level.id;
+    unawaited(widget.session.lastPlayed.record(id));
     struggle.opened(id);
     final left = struggle.untilStuck(id);
     if (left != null && left > Duration.zero) {

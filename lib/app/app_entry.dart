@@ -309,8 +309,9 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
         context,
         session,
         widget.settings,
+        allWorlds: true,
       );
-      if (id != null && mounted) await _open(id);
+      if (id != null && mounted) await _openLevel(id);
     } finally {
       _choosing = false;
     }
@@ -321,9 +322,14 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     if (session == null || _opening || _choosing) return;
     _choosing = true;
     try {
-      final id = await showJourneyPanel(context, session, widget.settings);
+      final id = await showJourneyPanel(
+        context,
+        session,
+        widget.settings,
+        allWorlds: true,
+      );
       if (mounted) setState(() {});
-      if (id != null && mounted) await _open(id);
+      if (id != null && mounted) await _openLevel(id);
     } finally {
       _choosing = false;
     }
@@ -579,12 +585,23 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   /// "이어가기"를 눌렀을 때: 고른 판을 지도 없이 바로 연다.
   Future<void> _continue(ContinueTarget target) {
     final id = target.levelId;
-    if (id == null) return _openEndless();
-    return _open(
+    return id == null ? _openEndless() : _openLevel(id);
+  }
+
+  /// 판 id로 그 세계의 캠페인 판을 연다(세계 2부터는 101, 201 …).
+  /// 세계 1 목록에 있는 판은 id와 상관없이 세계 1 판이다.
+  Future<void> _openLevel(int id) async {
+    final session = _session;
+    if (session == null) return;
+    final world = session.levels.any((level) => level.id == id)
+        ? 1
+        : Worlds.worldOf(id);
+    if (world > 1 && !session.worldUnlocked(world)) return;
+    await _open(
       id,
-      play: target.world == 1
+      play: world == 1
           ? const PlayContext.campaign()
-          : PlayContext.world(target.world),
+          : PlayContext.world(world),
     );
   }
 

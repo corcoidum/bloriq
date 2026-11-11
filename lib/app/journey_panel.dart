@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../constellation/constellation_atlas.dart';
+import '../constellation/constellation_painter.dart';
 import '../constellation/constellation_state.dart';
 import '../design/arcade_components.dart';
 import '../design/game_theme.dart';
@@ -13,6 +14,9 @@ import '../progression/progression_rules.dart';
 import '../settings/game_settings.dart';
 import '../story/companion_view.dart';
 import '../story/story_catalog.dart';
+import '../world/world_catalog.dart';
+import '../world/world_progress.dart';
+import '../world/world_shelf.dart';
 import '../world/world_text.dart';
 import 'game_session.dart';
 
@@ -26,13 +30,18 @@ Future<int?> showJourneyPanel(
   GameSettings settings, {
   JourneyTab initial = JourneyTab.status,
   WidgetBuilder? rewards,
+  bool allWorlds = false,
 }) => showDialog<int>(
   context: context,
   animationStyle: prefersReducedMotion(context, settings)
       ? AnimationStyle.noAnimation
       : null,
-  builder: (_) =>
-      JourneyPanel(session: session, initial: initial, rewards: rewards),
+  builder: (_) => JourneyPanel(
+    session: session,
+    initial: initial,
+    rewards: rewards,
+    allWorlds: allWorlds,
+  ),
 );
 
 class JourneyPanel extends StatefulWidget {
@@ -41,9 +50,14 @@ class JourneyPanel extends StatefulWidget {
     required this.session,
     this.initial = JourneyTab.status,
     this.rewards,
+    this.allWorlds = false,
   });
   final GameSession session;
   final JourneyTab initial;
+
+  /// 별자리 탭이 열린 세계를 모두 넘겨 보게 할지. 홈에서만 켠다:
+  /// 게임 화면에서는 다른 세계의 판으로 건너갈 수 없다.
+  final bool allWorlds;
 
   /// 보상 탭 내용. 성장 정보가 없으면 별자리 권능 대신 안내만 보여 준다.
   final WidgetBuilder? rewards;
@@ -135,7 +149,10 @@ class _JourneyPanelState extends State<JourneyPanel>
                   controller: _tabs,
                   children: [
                     _StatusTab(session: widget.session),
-                    _ConstellationTab(session: widget.session),
+                    _ConstellationTab(
+                      session: widget.session,
+                      allWorlds: widget.allWorlds,
+                    ),
                     _CompanionTab(session: widget.session, onChanged: _refresh),
                     widget.rewards?.call(context) ??
                         _RewardsTab(
@@ -352,9 +369,23 @@ class _WorldProgressCard extends StatelessWidget {
   }
 }
 
+/// 별자리 탭의 한 쪽. 세계 1 장과 확장 세계 장을 같은 모양으로 넘겨 본다.
+class _SkyPage {
+  const _SkyPage({
+    required this.name,
+    required this.status,
+    required this.art,
+    required this.chips,
+  });
+  final String name, status;
+  final Widget art;
+  final List<_LevelChip> chips;
+}
+
 class _ConstellationTab extends StatefulWidget {
-  const _ConstellationTab({required this.session});
+  const _ConstellationTab({required this.session, this.allWorlds = false});
   final GameSession session;
+  final bool allWorlds;
 
   @override
   State<_ConstellationTab> createState() => _ConstellationTabState();
@@ -363,6 +394,7 @@ class _ConstellationTab extends StatefulWidget {
 class _ConstellationTabState extends State<_ConstellationTab>
     with AutomaticKeepAliveClientMixin<_ConstellationTab> {
   late final List<ChapterConstellation> _chapters;
+  late final List<WorldChapterView> _worldChapters;
   late final PageController _pages;
   late int _page;
 
@@ -374,7 +406,23 @@ class _ConstellationTabState extends State<_ConstellationTab>
       session.levels,
       session.progress,
     ).chapters;
+    _worldChapters = [
+      if (widget.allWorlds)
+        for (final world in session.openWorlds)
+          ...?session.worldAtlas(world)?.chapters,
+    ];
     _page = math.max(0, _chapters.indexWhere((chapter) => !chapter.complete));
+    // 홈에서 열면 지금 진행 중인 세계의 장부터 보여 준다.
+    final target = widget.allWorlds ? session.continueTarget : null;
+    if (target != null && target.world > 1) {
+      final id = target.levelId;
+      final index = _worldChapters.indexWhere(
+        (chapter) => id == null
+            ? Worlds.worldOf(chapter.stages.first.level.id) == target.world
+            : chapter.stages.any((stage) => stage.level.id == id),
+      );
+      if (index >= 0) _page = _chapters.length + index;
+    }
     _pages = PageController(initialPage: _page);
   }
 
@@ -387,10 +435,66 @@ class _ConstellationTabState extends State<_ConstellationTab>
     super.dispose();
   }
 
+  _SkyPage _pageAt(BuildContext context, int index) {
+    final t = AppLocalizations.of(context)!;
+    if (index < _chapters.length) {
+      final chapter = _chapters[index];
+      return _SkyPage(
+        name: chapter.definition.name(t),
+        status: constellationStatus(t, chapter),
+        art: ConstellationArt(
+          chapter: chapter,
+          guardianAsset: guardianAssetFor(widget.session, chapter),
+        ),
+        chips: [
+          for (final level in chapter.levels)
+            _LevelChip(
+              id: level.id,
+              stars: chapter.bestStars[level.id] ?? 0,
+              lit: chapter.isLit(level.id),
+            ),
+        ],
+      );
+    }
+    final chapter = _worldChapters[index - _chapters.length];
+    final lang = t.localeName;
+    final world = Worlds.worldOf(chapter.stages.first.level.id);
+    final title = widget.session.saga?.world(world).title.inLocale(lang);
+    final status = worldChapterStatus(t, chapter);
+    return _SkyPage(
+      name: chapter.chapter.constellation.inLocale(lang),
+      status: title == null ? status : '$title · $status',
+      art: Semantics(
+        label: chapter.chapter.constellation.inLocale(lang),
+        value: '${chapter.cleared} / ${chapter.stages.length}',
+        child: CustomPaint(
+          size: Size.infinite,
+          painter: ConstellationPainter(
+            definition: chapter.definition,
+            lit: chapter.lit,
+            colors: GameTheme.colorsOf(context),
+            golden: chapter.golden ? 1 : 0,
+          ),
+        ),
+      ),
+      chips: [
+        for (final stage in chapter.stages)
+          _LevelChip(
+            id: stage.level.id,
+            number: Worlds.stageNumber(stage.level.id),
+            stars: stage.stars,
+            lit: stage.cleared,
+            enabled: stage.unlocked,
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    if (_chapters.isEmpty) return const SizedBox.shrink();
+    final count = _chapters.length + _worldChapters.length;
+    if (count == 0) return const SizedBox.shrink();
     final t = AppLocalizations.of(context)!;
     final colors = GameTheme.colorsOf(context);
     Widget label(String text, TextStyle style) => FittedBox(
@@ -405,23 +509,23 @@ class _ConstellationTabState extends State<_ConstellationTab>
             controller: _pages,
             scrollDirection: Axis.vertical,
             allowImplicitScrolling: true,
-            itemCount: _chapters.length,
+            itemCount: count,
             onPageChanged: (page) => setState(() => _page = page),
             itemBuilder: (context, index) {
-              final chapter = _chapters[index];
+              final page = _pageAt(context, index);
               return Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 child: Column(
                   children: [
                     label(
-                      chapter.definition.name(t),
+                      page.name,
                       GameTypography.reward.copyWith(
                         color: colors.rewardInk,
                         fontSize: 22,
                       ),
                     ),
                     label(
-                      constellationStatus(t, chapter),
+                      page.status,
                       GameTypography.body.copyWith(
                         color: colors.secondaryText,
                         fontSize: 14,
@@ -430,26 +534,14 @@ class _ConstellationTabState extends State<_ConstellationTab>
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: ConstellationArt(
-                          chapter: chapter,
-                          guardianAsset: guardianAssetFor(
-                            widget.session,
-                            chapter,
-                          ),
-                        ),
+                        child: page.art,
                       ),
                     ),
                     Row(
                       children: [
-                        for (final (slot, level) in chapter.levels.indexed) ...[
+                        for (final (slot, chip) in page.chips.indexed) ...[
                           if (slot > 0) const SizedBox(width: 6),
-                          Expanded(
-                            child: _LevelChip(
-                              id: level.id,
-                              stars: chapter.bestStars[level.id] ?? 0,
-                              lit: chapter.isLit(level.id),
-                            ),
-                          ),
+                          Expanded(child: chip),
                         ],
                       ],
                     ),
@@ -459,13 +551,13 @@ class _ConstellationTabState extends State<_ConstellationTab>
             },
           ),
         ),
-        if (_chapters.length > 1)
+        if (count > 1)
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             child: FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
-                '${_page + 1} / ${_chapters.length} · ${t.journeyPageHint}',
+                '${_page + 1} / $count · ${t.journeyPageHint}',
                 key: const ValueKey('journey-constellation-page-count'),
                 maxLines: 1,
                 style: GameTypography.label.copyWith(
@@ -481,9 +573,21 @@ class _ConstellationTabState extends State<_ConstellationTab>
 }
 
 class _LevelChip extends StatelessWidget {
-  const _LevelChip({required this.id, required this.stars, required this.lit});
+  const _LevelChip({
+    required this.id,
+    required this.stars,
+    required this.lit,
+    this.number,
+    this.enabled = true,
+  });
   final int id, stars;
   final bool lit;
+
+  /// 칩에 적을 번호. 확장 세계는 세계 안에서 센 번호(1..25)를 쓴다.
+  final int? number;
+
+  /// 아직 잠긴 판은 누를 수 없다.
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -502,7 +606,7 @@ class _LevelChip extends StatelessWidget {
       child: InkWell(
         key: ValueKey('journey-play-$id'),
         borderRadius: BorderRadius.circular(14),
-        onTap: () => Navigator.pop(context, id),
+        onTap: enabled ? () => Navigator.pop(context, id) : null,
         child: SizedBox(
           height: math.max(54.0, textScaler.scale(36) + 12),
           child: Padding(
@@ -514,7 +618,7 @@ class _LevelChip extends StatelessWidget {
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text(
-                      '$id',
+                      '${number ?? id}',
                       style: GameTypography.reward.copyWith(
                         fontSize: 18,
                         color: colors.text,

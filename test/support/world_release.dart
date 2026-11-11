@@ -112,6 +112,17 @@ Future<Finder> openLightroad(WidgetTester tester, int world) async {
   return node;
 }
 
+/// 확장 세계 판의 정령 id(assets/story/worldN.json).
+String releaseSpiritId(int world, int levelId) {
+  final story = jsonDecode(
+    File('assets/story/world$world.json').readAsStringSync(),
+  ) as Map<String, dynamic>;
+  return (story['spirits'] as List).cast<Map<String, dynamic>>().firstWhere(
+        (spirit) => spirit['levelId'] == levelId,
+      )['id']
+      as String;
+}
+
 Finder releaseWorldMap(int world) => find.byWidgetPredicate(
   (widget) => widget is WorldMap && widget.world == world,
 );

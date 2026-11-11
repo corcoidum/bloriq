@@ -1,67 +1,13 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:bloriq/audio/game_audio.dart';
-import 'package:bloriq/domain/puzzle.dart';
-import 'package:bloriq/progress/progress_repository.dart';
-import 'package:bloriq/progression/progression_repository.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'support/saga_seed.dart';
 import 'support/start_game.dart';
 import 'support/world_release.dart';
 
 const _capture = bool.fromEnvironment('CAPTURE_HOME');
-
-List<Level> _worldOne() =>
-    (jsonDecode(File('assets/levels/levels.json').readAsStringSync()) as List)
-        .map((item) => Level.fromJson(item as Map<String, dynamic>))
-        .toList();
-
-/// 세계 1부터 [throughWorld]까지 모두 깨고, 다음 세계에서 [extra]판을 더 깬 기록.
-/// [stars]에 적은 판만 별 수를 낮춘다.
-void _seed({
-  required int throughWorld,
-  int extra = 0,
-  Map<int, int> stars = const {},
-}) {
-  final cleared = [
-    ..._worldOne(),
-    for (var world = 2; world <= throughWorld; world++) ...releaseLevels(world),
-    if (extra > 0) ...releaseLevels(throughWorld + 1).take(extra),
-  ];
-  SharedPreferences.setMockInitialValues({
-    'bloriq.onboarding.v1': 'skipped',
-    GameAudio.musicKey: false,
-    GameAudio.effectsKey: false,
-    ProgressionRepository.storageKey: jsonEncode({
-      'version': 1,
-      'backfilled': true,
-      'completedChapters': [
-        for (
-          var chapter = 1;
-          chapter <= throughWorld * 5 + extra ~/ 5;
-          chapter++
-        )
-          chapter,
-      ],
-    }),
-    ProgressRepository.storageKey: jsonEncode({
-      'version': ProgressRepository.schemaVersion,
-      'levels': [
-        for (final level in cleared)
-          {
-            'levelId': level.id,
-            'revision': level.revision,
-            'bestMoves': level.minimumMoves,
-            'bestStars': stars[level.id] ?? 3,
-            'completionCount': 1,
-          },
-      ],
-    }),
-  });
-}
 
 Finder _inPlay(String text) =>
     find.descendant(of: releaseKey('home-play'), matching: find.text(text));
@@ -73,7 +19,7 @@ void main() {
   testWidgets('mid world 6: home shows that world and continues its stage', (
     tester,
   ) async {
-    _seed(throughWorld: 5, extra: 12);
+    seedSaga(throughWorld: 5, extra: 12);
     final boundary = await openReleaseApp(tester, captureArt: _capture);
     expect(_inPlay('이어가기 · 꿈의 서고 등대 13'), findsOneWidget);
     expect(find.text('137 / 175 완료'), findsOneWidget);
@@ -110,7 +56,7 @@ void main() {
   testWidgets('world 1 finished: continue opens the new world, not gate 1', (
     tester,
   ) async {
-    _seed(throughWorld: 1);
+    seedSaga(throughWorld: 1);
     await openReleaseApp(tester);
     expect(_inPlay('새 세계 · 구름바다 등대 1'), findsOneWidget);
     expect(find.text('25 / 175 완료'), findsOneWidget);
@@ -124,7 +70,7 @@ void main() {
   testWidgets('everything cleared: continue polishes the first weak stage', (
     tester,
   ) async {
-    _seed(throughWorld: 7, stars: {204: 2});
+    seedSaga(throughWorld: 7, stars: {204: 2});
     await openReleaseApp(tester);
     expect(_inPlay('별 더 모으기 · 거울 호수 등대 4'), findsOneWidget);
     expect(find.text('175 / 175 완료'), findsOneWidget);
@@ -135,7 +81,7 @@ void main() {
   });
 
   testWidgets('everything perfect: continue sails the starsea', (tester) async {
-    _seed(throughWorld: 7);
+    seedSaga(throughWorld: 7);
     await openReleaseApp(tester);
     expect(_inPlay('별바다 항해'), findsOneWidget);
     expect(

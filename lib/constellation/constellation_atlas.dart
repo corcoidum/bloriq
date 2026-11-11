@@ -8,6 +8,10 @@ import '../design/star_art.dart';
 import '../l10n/app_localizations.dart';
 import '../progression/progression_rules.dart';
 import '../settings/game_settings.dart';
+import '../world/world_catalog.dart';
+import '../world/world_progress.dart';
+import '../world/world_shelf.dart';
+import '../world/world_text.dart';
 import 'constellation_painter.dart';
 import 'constellation_state.dart';
 
@@ -160,11 +164,14 @@ String constellationSummary(AppLocalizations t, ChapterConstellation chapter) =>
     );
 
 /// 고른 별문의 id를 돌려준다. 닫으면 null.
+/// [allWorlds]이면 열린 세계를 모두 다루고, 지금 진행 중인 세계부터 보여 준다.
+/// 게임 화면처럼 한 세계 안에서 여는 곳은 세계 1 도감만 쓴다.
 Future<int?> showConstellationAtlas(
   BuildContext context,
   GameSession session,
   GameSettings settings, {
   int? initialChapter,
+  bool allWorlds = false,
 }) => showDialog<int>(
   context: context,
   animationStyle: prefersReducedMotion(context, settings)
@@ -173,6 +180,7 @@ Future<int?> showConstellationAtlas(
   builder: (_) => ConstellationAtlasDialog(
     session: session,
     initialChapter: initialChapter,
+    allWorlds: allWorlds,
   ),
 );
 
@@ -181,9 +189,11 @@ class ConstellationAtlasDialog extends StatefulWidget {
     super.key,
     required this.session,
     this.initialChapter,
+    this.allWorlds = false,
   });
   final GameSession session;
   final int? initialChapter;
+  final bool allWorlds;
 
   @override
   State<ConstellationAtlasDialog> createState() =>
@@ -191,30 +201,57 @@ class ConstellationAtlasDialog extends StatefulWidget {
 }
 
 class _ConstellationAtlasDialogState extends State<ConstellationAtlasDialog> {
+  /// 고른 장. 세계 1은 장 번호(1..5), 확장 세계는 세계 안의 장 번호(1..5).
   late int? _selected = widget.initialChapter;
+  late int _world = widget.allWorlds && widget.initialChapter == null
+      ? widget.session.continueTarget.world
+      : 1;
 
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
     final colors = GameTheme.colorsOf(context);
     final session = widget.session;
-    final atlas = ConstellationAtlas.derive(session.levels, session.progress);
-    final selected = _selected == null ? null : atlas.forChapter(_selected!);
+    final worldAtlas = _world == 1 ? null : session.worldAtlas(_world);
+    final String? title;
+    final Widget body;
+    if (worldAtlas == null) {
+      final atlas = ConstellationAtlas.derive(session.levels, session.progress);
+      final selected = _selected == null ? null : atlas.forChapter(_selected!);
+      title = selected?.definition.name(t);
+      body = selected == null
+          ? _overview(context, atlas)
+          : _detail(context, selected);
+    } else {
+      final selected = _selected == null
+          ? null
+          : worldAtlas.chapters[_selected! - 1];
+      title = selected?.chapter.constellation.inLocale(t.localeName);
+      body = selected == null
+          ? _worldOverview(context, worldAtlas)
+          : _worldDetail(context, selected);
+    }
     return AlertDialog(
       key: const ValueKey('constellation-atlas'),
       icon: Icon(Icons.auto_awesome, color: colors.rewardInk),
-      title: Text(
-        selected == null ? t.constellationAtlas : selected.definition.name(t),
-      ),
+      title: Text(title ?? t.constellationAtlas),
       content: SizedBox(
         width: 460,
         height: MediaQuery.sizeOf(context).height * .6,
-        child: selected == null
-            ? _overview(context, atlas)
-            : _detail(context, selected),
+        child: Column(
+          children: [
+            if (widget.allWorlds && _selected == null)
+              WorldChips(
+                session: session,
+                selected: _world,
+                onSelected: (world) => setState(() => _world = world),
+              ),
+            Expanded(child: body),
+          ],
+        ),
       ),
       actions: [
-        if (selected != null)
+        if (_selected != null)
           TextButton.icon(
             key: const ValueKey('atlas-back'),
             onPressed: () => setState(() => _selected = null),
@@ -225,6 +262,196 @@ class _ConstellationAtlasDialogState extends State<ConstellationAtlasDialog> {
           onPressed: () => Navigator.pop(context),
           child: Text(t.close),
         ),
+      ],
+    );
+  }
+
+  Widget _worldArt(BuildContext context, WorldChapterView chapter) =>
+      CustomPaint(
+        size: Size.infinite,
+        painter: ConstellationPainter(
+          definition: chapter.definition,
+          lit: chapter.lit,
+          colors: GameTheme.colorsOf(context),
+          golden: chapter.golden ? 1 : 0,
+        ),
+      );
+
+  Widget _worldStatus(BuildContext context, WorldChapterView chapter) {
+    final t = AppLocalizations.of(context)!;
+    final colors = GameTheme.colorsOf(context);
+    final (icon, color) = chapter.golden
+        ? (Icons.workspace_premium_rounded, colors.rewardInk)
+        : chapter.complete
+        ? (Icons.auto_awesome, colors.goalInk)
+        : (Icons.bedtime_outlined, colors.secondaryText);
+    return StatPill(
+      icon: icon,
+      label: worldChapterStatus(t, chapter),
+      color: color,
+    );
+  }
+
+  /// 확장 세계의 다섯 별자리. 잠긴 장은 여는 조건만 보여 준다.
+  Widget _worldOverview(BuildContext context, WorldAtlas atlas) {
+    final t = AppLocalizations.of(context)!;
+    final colors = GameTheme.colorsOf(context);
+    final lang = t.localeName;
+    return ListView.separated(
+      key: ValueKey('atlas-list-world-${atlas.world}'),
+      itemCount: atlas.chapters.length + 1,
+      separatorBuilder: (_, _) => const SizedBox(height: GameSpacing.medium),
+      itemBuilder: (context, index) {
+        if (index == 0) return _goldenBenefit(context);
+        final chapter = atlas.chapters[index - 1];
+        final info = chapter.chapter;
+        final text = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              info.constellation.inLocale(lang),
+              style: TextStyle(
+                fontFamily: GameTypography.canvasFontFamily,
+                fontSize: 20,
+                color: colors.rewardInk,
+              ),
+            ),
+            Text(
+              info.name.inLocale(lang),
+              style: TextStyle(color: colors.secondaryText),
+            ),
+            const SizedBox(height: GameSpacing.tiny),
+            if (!chapter.unlocked)
+              Text(WorldText.lockedStage.resolve(lang))
+            else ...[
+              Text(t.constellationLit(chapter.cleared, chapter.stages.length)),
+              Text(
+                t.constellationBestStars(
+                  worldChapterStars(chapter),
+                  chapter.stages.length * 3,
+                ),
+              ),
+              const SizedBox(height: GameSpacing.tiny),
+              _worldStatus(context, chapter),
+            ],
+          ],
+        );
+        final art = SizedBox(
+          width: 104,
+          height: 80,
+          child: _worldArt(context, chapter),
+        );
+        return InkWell(
+          key: ValueKey('atlas-chapter-${info.globalChapter}'),
+          borderRadius: BorderRadius.circular(GameSpacing.radius),
+          onTap: chapter.unlocked
+              ? () => setState(() => _selected = info.number)
+              : null,
+          child: ArcadeSurface(
+            padding: const EdgeInsets.all(GameSpacing.medium),
+            accent: chapter.golden
+                ? colors.reward
+                : chapter.complete
+                ? colors.goal
+                : null,
+            child: LayoutBuilder(
+              builder: (context, constraints) => constraints.maxWidth < 300
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [art, text],
+                    )
+                  : Row(
+                      children: [
+                        art,
+                        const SizedBox(width: GameSpacing.medium),
+                        Expanded(child: text),
+                      ],
+                    ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _worldDetail(BuildContext context, WorldChapterView chapter) {
+    final t = AppLocalizations.of(context)!;
+    final colors = GameTheme.colorsOf(context);
+    final lang = t.localeName;
+    return ListView(
+      key: ValueKey('atlas-detail-${chapter.chapter.globalChapter}'),
+      children: [
+        AspectRatio(
+          aspectRatio: 1.35,
+          child: Semantics(
+            image: true,
+            label: chapter.chapter.constellation.inLocale(lang),
+            value: '${chapter.cleared} / ${chapter.stages.length}',
+            child: _worldArt(context, chapter),
+          ),
+        ),
+        Center(child: _worldStatus(context, chapter)),
+        const SizedBox(height: GameSpacing.small),
+        Text(
+          '${t.constellationLit(chapter.cleared, chapter.stages.length)} · '
+          '${t.constellationBestStars(worldChapterStars(chapter), chapter.stages.length * 3)}',
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: GameSpacing.medium),
+        _goldenBenefit(context),
+        const SizedBox(height: GameSpacing.medium),
+        for (final stage in chapter.stages)
+          Padding(
+            padding: const EdgeInsets.only(bottom: GameSpacing.small),
+            child: Row(
+              children: [
+                Icon(
+                  stage.cleared
+                      ? Icons.star_rounded
+                      : stage.unlocked
+                      ? Icons.star_outline_rounded
+                      : Icons.lock_rounded,
+                  color: stage.cleared ? colors.rewardInk : colors.outline,
+                ),
+                const SizedBox(width: GameSpacing.small),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        stage.cleared
+                            ? t.constellationLevelStars(
+                                Worlds.stageNumber(stage.level.id),
+                                stage.stars,
+                              )
+                            : t.constellationLevelDark(
+                                Worlds.stageNumber(stage.level.id),
+                              ),
+                      ),
+                      if (stage.unlocked)
+                        Text(
+                          stage.cleared
+                              ? '${stage.spirit.levelTitle.inLocale(lang)} · '
+                                    '${stage.spirit.name.inLocale(lang)}'
+                              : stage.spirit.levelTitle.inLocale(lang),
+                          style: TextStyle(
+                            color: colors.secondaryText,
+                            fontSize: 13,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  key: ValueKey('atlas-play-${stage.level.id}'),
+                  onPressed: stage.unlocked
+                      ? () => Navigator.pop(context, stage.level.id)
+                      : null,
+                  child: Text(t.constellationPlay),
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }
