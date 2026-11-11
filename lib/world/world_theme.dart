@@ -40,17 +40,25 @@ class WorldTheme {
         _ => throw const FormatException('Invalid world palette'),
       },
       floor = _asset(data['floor'], 'floor'),
+      floorVariants = _assetList(data['floorVariants'], 'floorVariants'),
       woodFloor = switch (data['woodFloor']) {
         null => false,
         final bool value => value,
         _ => throw const FormatException('Invalid wood floor option'),
       },
       rock = _asset(data['rock'], 'rock'),
+      rockVariants = _assetList(data['rockVariants'], 'rockVariants'),
+      mechanicArt = _assetMap(data['mechanicArt']),
       bgm = _asset(data['bgm'], 'bgm');
 
   final WorldPalette? palette;
   final String? floor, rock, bgm;
+  final List<String> floorVariants, rockVariants;
+  final Map<String, String> mechanicArt;
   final bool woodFloor;
+
+  List<String> get floorAssets => [?floor, ...floorVariants];
+  List<String> get rockAssets => [?rock, ...rockVariants];
 
   static WorldTheme? parse(Object? data) => switch (data) {
     null => null,
@@ -69,18 +77,46 @@ class WorldTheme {
     return value;
   }
 
-  Future<WorldBoardSkin> loadBoardSkin() async {
-    final images = await Future.wait([_loadImage(floor), _loadImage(rock)]);
-    return WorldBoardSkin(
-      palette: palette,
-      floor: images[0],
-      woodFloor: woodFloor,
-      rock: images[1],
+  static List<String> _assetList(Object? value, String name) {
+    if (value == null) return const [];
+    if (value is! List || value.any((path) => path is! String)) {
+      throw FormatException('Invalid world theme asset list: $name');
+    }
+    return List.unmodifiable(value.map((path) => _asset(path, name)!));
+  }
+
+  static Map<String, String> _assetMap(Object? value) {
+    if (value == null) return const {};
+    if (value is! Map<String, dynamic> ||
+        value.values.any((path) => path is! String)) {
+      throw const FormatException('Invalid world theme mechanic art');
+    }
+    return Map.unmodifiable(
+      value.map((type, path) => MapEntry(type, _asset(path, type)!)),
     );
   }
 
-  static Future<ui.Image?> _loadImage(String? path) async {
-    if (path == null) return null;
+  Future<WorldBoardSkin> loadBoardSkin() async {
+    final floors = floorAssets, rocks = rockAssets;
+    final paths = {...floors, ...rocks, ...mechanicArt.values};
+    final images = Map.fromEntries(
+      await Future.wait(
+        paths.map((path) async => MapEntry(path, await _loadImage(path))),
+      ),
+    );
+    return WorldBoardSkin(
+      palette: palette,
+      floors: [for (final path in floors) ?images[path]],
+      woodFloor: woodFloor,
+      rocks: [for (final path in rocks) ?images[path]],
+      mechanicArt: {
+        for (final entry in mechanicArt.entries)
+          entry.key: ?images[entry.value],
+      },
+    );
+  }
+
+  static Future<ui.Image?> _loadImage(String path) async {
     try {
       final bytes = await rootBundle.load(path);
       final codec = await ui.instantiateImageCodec(
@@ -102,17 +138,26 @@ class WorldTheme {
 class WorldBoardSkin {
   const WorldBoardSkin({
     this.palette,
-    this.floor,
-    this.rock,
+    this.floors = const [],
+    this.rocks = const [],
+    this.mechanicArt = const {},
     this.woodFloor = false,
   });
 
   final WorldPalette? palette;
-  final ui.Image? floor, rock;
+  final List<ui.Image> floors, rocks;
+  final Map<String, ui.Image> mechanicArt;
   final bool woodFloor;
 
+  ui.Image? get floor => floors.firstOrNull;
+  ui.Image? get rock => rocks.firstOrNull;
+
+  ui.Image? rockAt(int variant) =>
+      rocks.isEmpty ? null : rocks[variant % rocks.length];
+
   void dispose() {
-    floor?.dispose();
-    rock?.dispose();
+    for (final image in {...floors, ...rocks, ...mechanicArt.values}) {
+      image.dispose();
+    }
   }
 }

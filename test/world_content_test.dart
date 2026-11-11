@@ -37,11 +37,49 @@ void main() {
       levelsAsset,
       storyAsset,
       ...spirits.map((spirit) => spirit['asset']).whereType<String>(),
-      if (world.theme case final theme?)
-        ...[theme.floor, theme.rock, theme.bgm].whereType<String>(),
+      if (world.theme case final theme?) ...[
+        ...theme.floorAssets,
+        ...theme.rockAssets,
+        ...theme.mechanicArt.values,
+        ?theme.bgm,
+      ],
     ]);
 
     group('world $n', () {
+      if (expansion != null) {
+        test('five guardian portraits and complete 256px board art', () async {
+          final theme = world.theme!;
+          final portraits = expansion.spirits.where(
+            (spirit) => spirit.guardian,
+          );
+          final tilePaths = [
+            ...theme.floorAssets,
+            ...theme.rockAssets,
+            ...theme.mechanicArt.values,
+          ];
+          expect(theme.floorAssets.toSet(), hasLength(4));
+          expect(theme.rockAssets.toSet(), hasLength(2));
+          expect(theme.mechanicArt.keys.toSet(), switch (n) {
+            3 => {'mirrorPair'},
+            4 => {'clockArrow'},
+            5 => {'ice'},
+            6 => {'shelfDoor'},
+            _ => <String>{},
+          });
+          var bytes = 0;
+          for (final spirit in portraits) {
+            final path = 'assets/art/world$n/spirits/${spirit.id}.png';
+            expect(spirit.asset, path);
+            bytes += await _checkPng(path, 512, transparent: true);
+          }
+          for (final path in tilePaths) {
+            expect(path, startsWith('assets/art/world$n/board/'));
+            bytes += await _checkPng(path, 256);
+          }
+          expect(bytes, lessThan(15 * 1000 * 1000));
+        });
+      }
+
       test('25 stages and spirits with one guardian at each chapter end', () {
         expect(levels, hasLength(25));
         expect(spirits, hasLength(25));
@@ -162,6 +200,15 @@ void main() {
     final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
     expect(manifest.listAssets(), containsAll(bundled));
   });
+}
+
+Future<int> _checkPng(String path, int size, {bool transparent = false}) async {
+  final bytes = await rootBundle.load(path);
+  expect(bytes.getUint32(0), 0x89504e47, reason: path);
+  expect(bytes.getUint32(16), size, reason: path);
+  expect(bytes.getUint32(20), size, reason: path);
+  if (transparent) expect(bytes.getUint8(25), 6, reason: path);
+  return bytes.lengthInBytes;
 }
 
 Map<String, dynamic> _readJson(String asset) =>

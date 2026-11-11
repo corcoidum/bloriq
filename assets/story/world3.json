@@ -380,7 +380,7 @@
       "chapter": 1,
       "family": "water_shadow",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world3/spirits/s3-05.png",
       "motionKind": "bow",
       "name": {
         "ko": "고요",
@@ -545,7 +545,7 @@
       "chapter": 2,
       "family": "lotus",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world3/spirits/s3-10.png",
       "motionKind": "bow",
       "name": {
         "ko": "연화",
@@ -710,7 +710,7 @@
       "chapter": 3,
       "family": "waterbird",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world3/spirits/s3-15.png",
       "motionKind": "bow",
       "name": {
         "ko": "물결새",
@@ -875,7 +875,7 @@
       "chapter": 4,
       "family": "moon_halo",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world3/spirits/s3-20.png",
       "motionKind": "bow",
       "name": {
         "ko": "달무리",
@@ -1040,7 +1040,7 @@
       "chapter": 5,
       "family": "mirror_keeper",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world3/spirits/s3-25.png",
       "motionKind": "bow",
       "name": {
         "ko": "온빛",

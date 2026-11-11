@@ -30,8 +30,10 @@
           "border": "#E8F5FF",
           "accent": "#B7F2FA"
         },
-        "floor": null,
-        "rock": null,
+        "floor": "assets/art/world2/board/floor_1.png",
+        "floorVariants": ["assets/art/world2/board/floor_2.png", "assets/art/world2/board/floor_3.png", "assets/art/world2/board/floor_4.png"],
+        "rock": "assets/art/world2/board/rock_1.png",
+        "rockVariants": ["assets/art/world2/board/rock_2.png"],
         "bgm": "assets/audio/bgm_w2.wav"
       },
       "title": { "ko": "구름바다 등대", "en": "Cloud-Sea Lighthouse" },
@@ -54,8 +56,11 @@
           "border": "#BFD3DF",
           "accent": "#71E6D6"
         },
-        "floor": null,
-        "rock": null,
+        "floor": "assets/art/world3/board/floor_1.png",
+        "floorVariants": ["assets/art/world3/board/floor_2.png", "assets/art/world3/board/floor_3.png", "assets/art/world3/board/floor_4.png"],
+        "rock": "assets/art/world3/board/rock_1.png",
+        "rockVariants": ["assets/art/world3/board/rock_2.png"],
+        "mechanicArt": {"mirrorPair": "assets/art/world3/board/mirror_pair.png"},
         "bgm": "assets/audio/bgm_w3.wav"
       },
       "title": { "ko": "거울 호수 등대", "en": "Mirror Lake Lighthouse" },
@@ -79,7 +84,11 @@
           "accent": "#FFD083"
         },
         "woodFloor": true,
-        "rock": null,
+        "floor": "assets/art/world4/board/floor_1.png",
+        "floorVariants": ["assets/art/world4/board/floor_2.png", "assets/art/world4/board/floor_3.png", "assets/art/world4/board/floor_4.png"],
+        "rock": "assets/art/world4/board/rock_1.png",
+        "rockVariants": ["assets/art/world4/board/rock_2.png"],
+        "mechanicArt": {"clockArrow": "assets/art/world4/board/clock_arrow.png"},
         "bgm": "assets/audio/bgm_w4.wav"
       },
       "title": { "ko": "시계탑 등대", "en": "Clocktower Lighthouse" },
@@ -102,8 +111,11 @@
           "border": "#E6F8FF",
           "accent": "#92DEFF"
         },
-        "floor": null,
-        "rock": null,
+        "floor": "assets/art/world5/board/floor_1.png",
+        "floorVariants": ["assets/art/world5/board/floor_2.png", "assets/art/world5/board/floor_3.png", "assets/art/world5/board/floor_4.png"],
+        "rock": "assets/art/world5/board/rock_1.png",
+        "rockVariants": ["assets/art/world5/board/rock_2.png"],
+        "mechanicArt": {"ice": "assets/art/world5/board/ice.png"},
         "bgm": "assets/audio/bgm_w5.wav"
       },
       "title": { "ko": "얼음 동굴 등대", "en": "Ice Cave Lighthouse" },
@@ -126,8 +138,11 @@
           "border": "#C7A568",
           "accent": "#F4A9CB"
         },
-        "floor": null,
-        "rock": null,
+        "floor": "assets/art/world6/board/floor_1.png",
+        "floorVariants": ["assets/art/world6/board/floor_2.png", "assets/art/world6/board/floor_3.png", "assets/art/world6/board/floor_4.png"],
+        "rock": "assets/art/world6/board/rock_1.png",
+        "rockVariants": ["assets/art/world6/board/rock_2.png"],
+        "mechanicArt": {"shelfDoor": "assets/art/world6/board/shelf_door.png"},
         "bgm": "assets/audio/bgm_w6.wav"
       },
       "title": { "ko": "꿈의 서고 등대", "en": "Dream Library Lighthouse" },
@@ -150,8 +165,10 @@
           "accent": "#FFF2C2",
           "accents": ["#B7F2FA", "#71E6D6", "#FFD083", "#92DEFF", "#F4A9CB"]
         },
-        "floor": null,
-        "rock": null,
+        "floor": "assets/art/world7/board/floor_1.png",
+        "floorVariants": ["assets/art/world7/board/floor_2.png", "assets/art/world7/board/floor_3.png", "assets/art/world7/board/floor_4.png"],
+        "rock": "assets/art/world7/board/rock_1.png",
+        "rockVariants": ["assets/art/world7/board/rock_2.png"],
         "bgm": "assets/audio/bgm_w7.wav"
       },
       "title": { "ko": "첫 별", "en": "The First Star" },

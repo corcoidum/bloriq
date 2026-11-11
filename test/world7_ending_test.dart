@@ -256,11 +256,19 @@ void main() {
         reduceMotion: false,
       );
       if (_capture) {
+        final context = tester.element(find.byType(Scaffold).first);
         await tester.runAsync(
-          () => precacheImage(
-            const AssetImage('assets/art/season1/aster.png'),
-            tester.element(find.byType(Scaffold).first),
-          ),
+          () => Future.wait([
+            precacheImage(
+              const AssetImage('assets/art/season1/aster.png'),
+              context,
+            ),
+            for (var world = 2; world < Worlds.finalWorld; world++)
+              precacheImage(
+                AssetImage('assets/art/world$world/spirits/s$world-25.png'),
+                context,
+              ),
+          ]),
         );
       }
       await _settingsAction(tester, 'replay-ending');

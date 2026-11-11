@@ -1,7 +1,9 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../design/star_art.dart';
 import '../domain/mechanics/ice.dart';
 import '../domain/mechanics/mirror_pair.dart';
 import '../domain/puzzle.dart';
@@ -28,11 +30,19 @@ abstract final class IceArt {
     ..lineTo(.07, -.12)
     ..lineTo(.31, -.25);
 
-  static void tile(Canvas canvas, Offset center, double extent) {
+  static void tile(
+    Canvas canvas,
+    Offset center,
+    double extent, {
+    ui.Image? texture,
+  }) {
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.scale(extent);
     canvas.drawRRect(_tile, Paint()..shader = _glass);
+    if (texture != null) {
+      StarArt.drawTile(canvas, texture, _tile, opacity: .76);
+    }
     final edge = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = .025

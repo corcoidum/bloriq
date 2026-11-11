@@ -530,7 +530,7 @@
       "chapter": 1,
       "family": "lightroad_kin",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-05.png",
       "motionKind": "sway",
       "name": {
         "ko": "등아",
@@ -695,7 +695,7 @@
       "chapter": 2,
       "family": "mirror_clock_kin",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-10.png",
       "motionKind": "sway",
       "name": {
         "ko": "기온",
@@ -860,7 +860,7 @@
       "chapter": 3,
       "family": "thawed_pages_kin",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-15.png",
       "motionKind": "sway",
       "name": {
         "ko": "종이별",
@@ -1025,7 +1025,7 @@
       "chapter": 4,
       "family": "lighthouse_kin",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-20.png",
       "motionKind": "sway",
       "name": {
         "ko": "글별",
@@ -1190,7 +1190,7 @@
       "chapter": 5,
       "family": "first_star_wardens",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-25.png",
       "motionKind": "sway",
       "name": {
         "ko": "아스테르와 다섯 지기",

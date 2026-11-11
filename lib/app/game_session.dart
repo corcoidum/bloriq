@@ -84,7 +84,7 @@ class GameSession {
        worlds = Map.unmodifiable({
          for (final world in worlds) world.number: world,
        }),
-       _boardSkins = Map.unmodifiable(boardSkins) {
+       _boardSkins = Map.of(boardSkins) {
     if (levels.isEmpty) throw const FormatException('No levels');
     WidgetsBinding.instance.addObserver(audio);
     audio.setGameVisible(false);
@@ -126,10 +126,29 @@ class GameSession {
   /// 불러온 확장 세계(세계 2부터). 에셋이 깨진 세계는 빠지고 입구도 숨긴다.
   final Map<int, LoadedWorld> worlds;
   final Map<int, WorldBoardSkin> _boardSkins;
+  final _boardSkinLoads = <int, Future<WorldBoardSkin?>>{};
   final _shownWorldGuides = <int>{};
+  bool _disposed = false;
 
   LoadedWorld? world(int number) => worlds[number];
   WorldBoardSkin? boardSkin(int number) => _boardSkins[number];
+
+  /// 현재 플레이할 세계의 텍스처만 디코딩해 홈이 모든 그림을 기다리지 않게 한다.
+  Future<WorldBoardSkin?> prepareBoardSkin(int number) async {
+    if (_disposed) return null;
+    final loaded = _boardSkins[number];
+    if (loaded != null) return loaded;
+    final theme = saga?.world(number).theme;
+    if (theme == null) return null;
+    return _boardSkinLoads.putIfAbsent(number, () async {
+      final skin = await theme.loadBoardSkin();
+      if (_disposed) {
+        skin.dispose();
+        return null;
+      }
+      return _boardSkins[number] = skin;
+    });
+  }
 
   /// 첫 판 기록과 세션 상태로 안내를 관리한다.
   bool takeWorldGuide(Level level) {
@@ -232,7 +251,6 @@ class GameSession {
     final endless = await EndlessRepository.load(clock: clock);
     Saga? saga;
     final worlds = <LoadedWorld>[];
-    final boardSkins = <int, WorldBoardSkin>{};
     try {
       saga = await Saga.load();
     } on Object catch (error) {
@@ -242,9 +260,6 @@ class GameSession {
       if (!info.playable) continue;
       try {
         if (info.expansion) worlds.add(await LoadedWorld.load(info));
-        if (info.theme case final theme?) {
-          boardSkins[info.number] = await theme.loadBoardSkin();
-        }
       } on Object catch (error) {
         // 한 세계가 깨져도 나머지 세계는 그대로 플레이할 수 있어야 한다.
         debugPrint('World ${info.number} unavailable: $error');
@@ -264,7 +279,6 @@ class GameSession {
       endless: endless,
       saga: saga,
       worlds: worlds,
-      boardSkins: boardSkins,
     );
   }
 
@@ -398,6 +412,8 @@ class GameSession {
   );
 
   Future<void> dispose() async {
+    if (_disposed) return;
+    _disposed = true;
     await progress.flush();
     await collection.flush();
     await progression.flush();
@@ -408,5 +424,7 @@ class GameSession {
     for (final skin in _boardSkins.values) {
       skin.dispose();
     }
+    _boardSkins.clear();
+    _boardSkinLoads.clear();
   }
 }

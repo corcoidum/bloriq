@@ -27,8 +27,8 @@ void main() {
     final theme = saga.world(2).theme!;
     expect(theme.palette!.board, const Color(0xff95c5e5));
     expect(theme.palette!.border, const Color(0xffe8f5ff));
-    expect(theme.floor, isNull);
-    expect(theme.rock, isNull);
+    expect(theme.floor, 'assets/art/world2/board/floor_1.png');
+    expect(theme.rock, 'assets/art/world2/board/rock_1.png');
     expect(theme.bgm, 'assets/audio/bgm_w2.wav');
     expect(
       () => WorldTheme.parse({

@@ -538,7 +538,7 @@
       "chapter": 1,
       "family": "bookworm",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world6/spirits/s6-05.png",
       "motionKind": "sway",
       "name": {
         "ko": "문온",
@@ -703,7 +703,7 @@
       "chapter": 2,
       "family": "paper_bird",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world6/spirits/s6-10.png",
       "motionKind": "sway",
       "name": {
         "ko": "비람",
@@ -868,7 +868,7 @@
       "chapter": 3,
       "family": "ink",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world6/spirits/s6-15.png",
       "motionKind": "sway",
       "name": {
         "ko": "묵선",
@@ -1033,7 +1033,7 @@
       "chapter": 4,
       "family": "hourglass",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world6/spirits/s6-20.png",
       "motionKind": "sway",
       "name": {
         "ko": "사온",
@@ -1198,7 +1198,7 @@
       "chapter": 5,
       "family": "star_librarian",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world6/spirits/s6-25.png",
       "motionKind": "sway",
       "name": {
         "ko": "책별",

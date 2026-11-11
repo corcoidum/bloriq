@@ -1,6 +1,9 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+
+import '../design/star_art.dart';
 
 abstract final class ShelfDoorArt {
   static const transitSeconds = .25;
@@ -56,6 +59,7 @@ abstract final class ShelfDoorArt {
     double extent,
     int pair, {
     double openness = 0,
+    ui.Image? texture,
   }) {
     final accent = pairColor(pair);
     final outer = RRect.fromRectAndRadius(
@@ -73,12 +77,16 @@ abstract final class ShelfDoorArt {
     canvas.clipRRect(inner);
     for (final side in [-1, 1]) {
       final left = side < 0 ? -.44 : .01;
+      final panel = Rect.fromLTWH(left, -.44, .43, .88);
       canvas.save();
       canvas.translate(side * openness * .37, 0);
-      canvas.drawRect(
-        Rect.fromLTWH(left, -.44, .43, .88),
-        paint..color = Color.lerp(_inside, accent, .18)!,
-      );
+      canvas.drawRect(panel, paint..color = Color.lerp(_inside, accent, .18)!);
+      if (texture != null) {
+        canvas.save();
+        canvas.clipRect(panel);
+        StarArt.draw(canvas, texture, inner.outerRect, opacity: .65);
+        canvas.restore();
+      }
       for (var spine = 0; spine < 3; spine++) {
         final x = left + .035 + spine * .127;
         final height = .31 + ((spine + (side < 0 ? 0 : 1)) % 3) * .045;

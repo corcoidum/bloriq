@@ -170,6 +170,18 @@ abstract final class StarArt {
             : ColorFilter.mode(tint, BlendMode.srcATop),
     );
   }
+
+  static void drawTile(
+    Canvas canvas,
+    ui.Image image,
+    RRect shape, {
+    double opacity = 1,
+  }) {
+    canvas.save();
+    canvas.clipRRect(shape);
+    draw(canvas, image, shape.outerRect, opacity: opacity);
+    canvas.restore();
+  }
 }
 
 class CourierPortrait extends StatelessWidget {

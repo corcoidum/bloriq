@@ -51,6 +51,7 @@ import 'world/saga_map.dart';
 import 'world/world_catalog.dart';
 import 'world/world_map.dart';
 import 'world/world_progress.dart';
+import 'world/world_spirit_album.dart';
 import 'world/world_text.dart';
 import 'world/world_theme.dart';
 
@@ -246,11 +247,12 @@ class _GameScreenState extends State<GameScreen>
 
   /// 확장 세계 별자리를 저장 전에 떠 둔다.
   WorldAtlas? _worldBefore;
+  WorldChapterView? _guardianReveal;
 
   /// 세계 2부터는 [LoadedWorld] 데이터와 권능 막대를 쓴다.
   bool get _expansion => widget.play.world >= 2;
   LoadedWorld? get _world => widget.session.world(widget.play.world);
-  WorldBoardSkin? get _boardSkin => widget.session.boardSkin(widget.play.world);
+  WorldBoardSkin? _boardSkin;
 
   /// 확장 세계에서 쓸 수 있는 권능(성장 기록 기준). 세계 1은 늘 비어 있다.
   Set<PuzzlePower> get _ownedPowers => _expansion
@@ -298,6 +300,15 @@ class _GameScreenState extends State<GameScreen>
     if (_index < 0) _index = 0;
     _audio = widget.session.audio;
     _progress = widget.session.progress;
+    final theme = widget.session.saga?.world(widget.play.world).theme;
+    _boardSkin = widget.session.boardSkin(widget.play.world);
+    if (_boardSkin == null && theme != null) {
+      _boardSkin = WorldBoardSkin(
+        palette: theme.palette,
+        woodFloor: theme.woodFloor,
+      );
+      unawaited(_loadBoardSkin());
+    }
     _controller = _newController(_loaded[_index]);
     _game = BloriqGame(_controller!)
       ..trailStyle = widget.session.progression.equippedTrail;
@@ -305,6 +316,11 @@ class _GameScreenState extends State<GameScreen>
     _startAttempt();
     _trackOpened();
     _maybeShowWorldGuide();
+  }
+
+  Future<void> _loadBoardSkin() async {
+    final skin = await widget.session.prepareBoardSkin(widget.play.world);
+    if (mounted && skin != null) setState(() => _boardSkin = skin);
   }
 
   void _maybeShowWorldGuide() {
@@ -723,6 +739,9 @@ class _GameScreenState extends State<GameScreen>
     _game?.trailStyle = widget.session.progression.equippedTrail;
     setState(() {
       _reward = reward;
+      if (worldEvent?.completed != null) {
+        _guardianReveal = worldAfter?.forLevel(state.level.id);
+      }
       _worldCleared =
           !worldWasComplete &&
           Worlds.isComplete(
@@ -734,6 +753,7 @@ class _GameScreenState extends State<GameScreen>
 
   void _resetAssist() {
     _reward = null;
+    _guardianReveal = null;
     _pendingCampaignReward = null;
     _armedPower = null;
     _starlightUsed = false;
@@ -993,6 +1013,33 @@ class _GameScreenState extends State<GameScreen>
   }
 
   Widget? _constellationView(PuzzleController controller) {
+    if (_guardianReveal case final chapter?) {
+      final guardian = chapter.stages.last;
+      final t = AppLocalizations.of(context)!;
+      return OutlinedButton(
+        key: const ValueKey('world-guardian-reveal'),
+        onPressed: () =>
+            _withModal<void>(() => showWorldGuardian(context, chapter)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              WorldSpiritPortrait(
+                asset: chapter.portraitFor(guardian),
+                size: 68,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '${guardian.spirit.name.inLocale(t.localeName)}\n${t.constellationAtlas}',
+                  textAlign: TextAlign.start,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     final levelId = controller.state.level.id;
     final event = _constellation;
     final atlas = _constellationPending ? _atlasBefore : _atlasAfter;

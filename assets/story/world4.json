@@ -534,7 +534,7 @@
       "chapter": 1,
       "family": "winding",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world4/spirits/s4-05.png",
       "motionKind": "sway",
       "name": {
         "ko": "모루",
@@ -699,7 +699,7 @@
       "chapter": 2,
       "family": "gear",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world4/spirits/s4-10.png",
       "motionKind": "sway",
       "name": {
         "ko": "기어라",
@@ -864,7 +864,7 @@
       "chapter": 3,
       "family": "bell",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world4/spirits/s4-15.png",
       "motionKind": "sway",
       "name": {
         "ko": "루멘",
@@ -1029,7 +1029,7 @@
       "chapter": 4,
       "family": "pendulum",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world4/spirits/s4-20.png",
       "motionKind": "sway",
       "name": {
         "ko": "온추",
@@ -1194,7 +1194,7 @@
       "chapter": 5,
       "family": "midnight",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world4/spirits/s4-25.png",
       "motionKind": "sway",
       "name": {
         "ko": "자정지기 오르",

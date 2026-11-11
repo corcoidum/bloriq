@@ -154,7 +154,7 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.descendant(of: atlas, matching: find.byIcon(Icons.star_rounded)),
+        find.descendant(of: atlas, matching: find.byType(Image)),
         findsOneWidget,
       );
       await _shot(tester, boundary, 'guardian-atlas');
