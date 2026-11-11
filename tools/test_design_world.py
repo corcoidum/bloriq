@@ -16,6 +16,7 @@ from tools.design_world import (
     full_check,
     load_existing,
     mechanic_choices,
+    mutate,
     pt,
     random_level,
 )
@@ -57,6 +58,27 @@ def mixed_corridor(height: int = 2) -> dict:
 
 
 class WorldGeneratorTest(unittest.TestCase):
+    def test_fixed_positions_survive_generation_mutation_and_slot_validation(self):
+        slot = Slot(2, (6, 6), 2, (5, 9), ('ice', 'shelfDoor'), None, False,
+                    'first-board echo', (), 'test', fixed_start=(0, 2), fixed_exit=(5, 2))
+        rng = random.Random(625)
+        level = random_level(7, 24, slot, rng)
+        for _ in range(100):
+            self.assertEqual(level['startPosition'], pt((0, 2)))
+            self.assertEqual(level['exitPosition'], pt((5, 2)))
+            level = mutate(level, slot, rng)
+        self.assertFalse(any(wall in (pt((0, 2)), pt((5, 2))) for wall in level['obstacles']))
+
+        for changes in ({'fixed_start': (-1, 2)}, {'fixed_exit': (6, 2)},
+                        {'fixed_start': (True, 2)}, {'fixed_exit': (0, 2)}):
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                replace(slot, **changes)
+        wrong = {**level, 'startPosition': pt((1, 0)), 'solution': []}
+        with self.assertRaisesRegex(ValueError, 'fixed positions'):
+            random_level(7, 24, replace(slot, layout_factory=lambda _: wrong), rng)
+        with self.assertRaisesRegex(ValueError, 'slot metadata'):
+            check_existing({0: wrong}, 7, (slot,), [])
+
     def test_budget_and_deadline_do_not_mean_unsolvable(self):
         level = board(201)
         self.assertEqual(len(validate_level(level)), 2)

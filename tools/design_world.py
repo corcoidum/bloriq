@@ -104,10 +104,17 @@ def _bounded_slot(slot: Slot) -> Slot:
                    full_states=full)
 
 
+def _fixed_positions(slot: Slot) -> dict[str, dict[str, int]]:
+    return {field: pt(point) for field, point in (
+        ('startPosition', slot.fixed_start), ('exitPosition', slot.fixed_exit),
+    ) if point is not None}
+
+
 def random_level(world: int, index: int, slot: Slot, rng: random.Random) -> dict:
     choices = mechanic_choices(slot)
     width, height = slot.size
-    free = cells(width, height)
+    fixed = _fixed_positions(slot)
+    free = [cell for cell in cells(width, height) if pt(cell) not in fixed.values()]
 
     def take() -> dict:
         if not free:
@@ -123,8 +130,8 @@ def random_level(world: int, index: int, slot: Slot, rng: random.Random) -> dict
     if slot.layout_factory is None:
         rng.shuffle(free)
         level.update(
-            startPosition=take(),
-            exitPosition=take(),
+            startPosition=fixed['startPosition'] if 'startPosition' in fixed else take(),
+            exitPosition=fixed['exitPosition'] if 'exitPosition' in fixed else take(),
             blocks=[{'id': f'b{i + 1}', **take()} for i in range(slot.blocks)],
             obstacles=[take() for _ in range(rng.randint(*slot.walls))],
         )
@@ -134,6 +141,8 @@ def random_level(world: int, index: int, slot: Slot, rng: random.Random) -> dict
         level.update(slot.layout_factory(rng))
         if _rule_signature(level['specialRules']) not in {tuple(sorted(kinds)) for kinds in choices}:
             raise ValueError('Layout mechanics do not match the slot')
+    if any(level[field] != point for field, point in fixed.items()):
+        raise ValueError('Layout does not preserve fixed positions')
     if slot.rule_filter is not None and not slot.rule_filter(level['specialRules']):
         raise ValueError('Generated rules do not match the slot')
     level['availablePowers'] = list(slot.powers)
@@ -144,6 +153,9 @@ def mutate(level: dict, slot: Slot, rng: random.Random) -> dict:
     level = copy.deepcopy(level)
     handles = _handles(level)
     used = {(handle['x'], handle['y']) for handle in handles}
+    fixed = _fixed_positions(slot)
+    handles = [handle for handle in handles
+               if not any(handle is level[field] for field in fixed)]
     empty = [cell for cell in cells(*slot.size) if cell not in used]
     if not empty:
         return level
@@ -155,6 +167,8 @@ def mutate(level: dict, slot: Slot, rng: random.Random) -> dict:
     elif choice < .22 and len(walls) > slot.walls[0]:
         walls.pop(rng.randrange(len(walls)))
     else:
+        if not handles:
+            return level
         handle = rng.choice(handles)
         if rng.random() < .15 and 'dx' in handle:
             handle['dx'], handle['dy'] = rng.choice(DIRECTIONS)
@@ -230,6 +244,7 @@ def design(job: Job) -> Result:
             and slot.walls[0] <= len(level['obstacles']) <= slot.walls[1]
             and available_powers(level) == slot.powers
             and _rule_signature(level['specialRules']) in allowed
+            and all(level[field] == point for field, point in _fixed_positions(slot).items())
         ]
     try:
         while monotonic() < deadline:
@@ -359,6 +374,7 @@ def check_existing(existing: dict[int, dict], world: int, slots: tuple[Slot, ...
                 or not slot.walls[0] <= len(level['obstacles']) <= slot.walls[1]
                 or set(available_powers(level)) != set(slot.powers)
                 or _rule_signature(level['specialRules']) not in allowed
+                or any(level[field] != point for field, point in _fixed_positions(slot).items())
                 or level.get('featuredPower') != slot.featured
                 or 'solution' not in level):
             raise ValueError(f"Level {level['id']}: slot metadata or solution mismatch")
@@ -521,8 +537,10 @@ def main(argv: list[str] | None = None) -> None:
             for index, level in levels.items():
                 if args.replace and index + 1 in selected:
                     continue
-                if _rule_signature(level['specialRules']) not in allowed[index]:
-                    raise ValueError(f"Level {level['id']}: rules do not match the current slot")
+                if (_rule_signature(level['specialRules']) not in allowed[index]
+                        or any(level[field] != point
+                               for field, point in _fixed_positions(slots[index]).items())):
+                    raise ValueError(f"Level {level['id']}: rules or fixed positions do not match the current slot")
             seen = signatures(levels, previous)
             jobs = [
                 Job(

@@ -2728,13 +2728,18 @@ class _GameScreenState extends State<GameScreen>
           fit == _GameFit.scroll || room >= _chromeHeight(t, constraints, fit),
     );
     if (fit.index < _fitFloor.index) fit = _fitFloor;
-    // 너비 때문에 칸이 작은 화면은 스크롤해도 칸이 커지지 않는다.
+    final level = _controller!.state.level;
+    // 6×6은 320px 화면에서도 너비로 확보한 40px 칸을 세로 스크롤로 유지한다.
+    final widthMinimum = level.boardWidth == 6 && level.boardHeight == 6
+        ? 40.0
+        : _minCell;
+    // 너비가 이보다 좁으면 스크롤해도 칸을 키울 수 없다.
     if (fit == _GameFit.scroll &&
         _widthCell(
               constraints.maxWidth - GameSpacing.page * 2,
               _controller!.state.level.boardWidth,
             ) <
-            _minCell) {
+            widthMinimum) {
       fit = _GameFit.minimal;
     }
     return fit;

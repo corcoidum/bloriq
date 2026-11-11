@@ -33,6 +33,8 @@ class Slot:
     # 고정 기믹에 후보 목록에서 고른 서로 다른 기믹을 정확히 이 수만큼 더한다.
     mechanic_candidates: tuple[str, ...] = ()
     mechanic_count: int = 0
+    fixed_start: tuple[int, int] | None = None
+    fixed_exit: tuple[int, int] | None = None
 
     def __post_init__(self) -> None:
         width, height = self.size
@@ -53,6 +55,13 @@ class Slot:
                 or len(candidates) != len(self.mechanic_candidates)
                 or not candidates.isdisjoint(self.mechanics)):
             raise ValueError('Choose a valid number of distinct mechanics outside the fixed rules')
+        for point in (self.fixed_start, self.fixed_exit):
+            if point is not None and (len(point) != 2
+                                      or any(type(value) is not int for value in point)
+                                      or not (0 <= point[0] < width and 0 <= point[1] < height)):
+                raise ValueError('Fixed positions must be cells inside the board')
+        if self.fixed_start is not None and self.fixed_start == self.fixed_exit:
+            raise ValueError('Fixed start and exit must differ')
 
 
 def load_slots(world: int) -> tuple[Slot, ...]:

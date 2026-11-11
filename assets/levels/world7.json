@@ -1,0 +1,3498 @@
+[
+  {
+    "id": 601,
+    "world": 7,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 0,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 2,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 3,
+        "y": 4
+      },
+      {
+        "id": "b2",
+        "x": 4,
+        "y": 4
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 4
+      },
+      {
+        "x": 1,
+        "y": 4
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 4
+      },
+      {
+        "x": 4,
+        "y": 0
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "oneWay",
+        "tiles": [
+          {
+            "x": 0,
+            "y": 3,
+            "dx": 0,
+            "dy": -1
+          }
+        ]
+      },
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 3,
+          "y": 0
+        },
+        "gate": {
+          "x": 2,
+          "y": 0
+        }
+      }
+    ],
+    "availablePowers": [
+      "wind"
+    ],
+    "minimumMoves": 11,
+    "bareHandedMoves": 14,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": "wind",
+    "difficulty": "world7-chapter1",
+    "learningIntent": "두 잔상 칸을 구분하고 바람으로 열린 길을 잇는다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 1, "y": 0}},
+      {"blockId": "b1", "target": {"x": 3, "y": 0}, "power": "wind"},
+      {"blockId": "b1", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 0}},
+      {"blockId": "b1", "target": {"x": 3, "y": 2}},
+      {"blockId": "b1", "target": {"x": 4, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}}
+    ]
+  },
+  {
+    "id": 602,
+    "world": 7,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 0,
+      "y": 4
+    },
+    "exitPosition": {
+      "x": 4,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 1,
+        "y": 1
+      },
+      {
+        "id": "b2",
+        "x": 0,
+        "y": 3
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 4
+      },
+      {
+        "x": 2,
+        "y": 4
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 4
+      },
+      {
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 2,
+            "y": 1
+          }
+        ]
+      },
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 2,
+          "y": 2
+        },
+        "gate": {
+          "x": 4,
+          "y": 3
+        }
+      }
+    ],
+    "availablePowers": [
+      "moonflower_leap"
+    ],
+    "minimumMoves": 13,
+    "bareHandedMoves": null,
+    "requiredPowers": [
+      "moonflower_leap"
+    ],
+    "revision": 1,
+    "featuredPower": "moonflower_leap",
+    "difficulty": "world7-chapter1",
+    "learningIntent": "잔상 칸의 순서를 맞춘 뒤 달꽃으로 바위를 넘는다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b2", "target": {"x": 1, "y": 3}},
+      {"blockId": "b2", "target": {"x": 2, "y": 3}},
+      {"blockId": "b2", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}},
+      {"blockId": "b2", "target": {"x": 2, "y": 3}},
+      {"blockId": "b2", "target": {"x": 4, "y": 3}, "power": "moonflower_leap"},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 4, "y": 1}},
+      {"blockId": "goal", "target": {"x": 4, "y": 0}}
+    ]
+  },
+  {
+    "id": 603,
+    "world": 7,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 0,
+      "y": 4
+    },
+    "exitPosition": {
+      "x": 3,
+      "y": 4
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 4,
+        "y": 1
+      },
+      {
+        "id": "b2",
+        "x": 2,
+        "y": 0
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 4
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 4
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 3
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 4,
+            "y": 2
+          }
+        ]
+      },
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 1,
+          "y": 2
+        },
+        "gate": {
+          "x": 3,
+          "y": 1
+        }
+      }
+    ],
+    "availablePowers": [
+      "light_swap"
+    ],
+    "minimumMoves": 14,
+    "bareHandedMoves": null,
+    "requiredPowers": [
+      "light_swap"
+    ],
+    "revision": 1,
+    "featuredPower": "light_swap",
+    "difficulty": "world7-chapter1",
+    "learningIntent": "두 잔상 규칙 사이에 빛 교대의 도착 자리를 만든다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b2", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}, "power": "light_swap"},
+      {"blockId": "b2", "target": {"x": 0, "y": 0}},
+      {"blockId": "b2", "target": {"x": 0, "y": 1}},
+      {"blockId": "b2", "target": {"x": 0, "y": 2}},
+      {"blockId": "b2", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "b2", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 4, "y": 2}},
+      {"blockId": "goal", "target": {"x": 4, "y": 3}},
+      {"blockId": "goal", "target": {"x": 4, "y": 4}},
+      {"blockId": "goal", "target": {"x": 3, "y": 4}}
+    ]
+  },
+  {
+    "id": 604,
+    "world": 7,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 0,
+      "y": 4
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 2,
+        "y": 4
+      },
+      {
+        "id": "b2",
+        "x": 2,
+        "y": 3
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 4
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 4
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "oneWay",
+        "tiles": [
+          {
+            "x": 1,
+            "y": 1,
+            "dx": 0,
+            "dy": -1
+          },
+          {
+            "x": 2,
+            "y": 1,
+            "dx": 0,
+            "dy": -1
+          }
+        ]
+      },
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 2,
+          "y": 2
+        },
+        "gate": {
+          "x": 1,
+          "y": 0
+        }
+      }
+    ],
+    "availablePowers": [
+      "seal"
+    ],
+    "minimumMoves": 15,
+    "bareHandedMoves": 17,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": "seal",
+    "difficulty": "world7-chapter1",
+    "learningIntent": "봉인으로 이전 잔상을 유지하며 두 칸 규칙을 연결한다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 1, "y": 4}},
+      {"blockId": "b2", "target": {"x": 2, "y": 2}},
+      {"blockId": "b2", "target": {"x": 3, "y": 2}},
+      {"blockId": "b1", "target": {"x": 2, "y": 3}},
+      {"blockId": "b1", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 4}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "b1", "target": {"x": 2, "y": 1}},
+      {"blockId": "b1", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "b1", "target": {"x": 3, "y": 0}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}, "power": "seal"},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 0, "y": 0}}
+    ]
+  },
+  {
+    "id": 605,
+    "world": 7,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 4,
+      "y": 2
+    },
+    "exitPosition": {
+      "x": 2,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 1,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 1,
+        "y": 1
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 0,
+        "y": 4
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 4
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 4
+      },
+      {
+        "x": 1,
+        "y": 4
+      },
+      {
+        "x": 0,
+        "y": 2
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "goalOnly",
+        "positions": [
+          {
+            "x": 4,
+            "y": 0
+          },
+          {
+            "x": 3,
+            "y": 2
+          }
+        ]
+      },
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 2,
+          "y": 4
+        },
+        "gate": {
+          "x": 1,
+          "y": 2
+        }
+      }
+    ],
+    "availablePowers": [
+      "wind"
+    ],
+    "minimumMoves": 17,
+    "bareHandedMoves": 18,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": "wind",
+    "difficulty": "world7-chapter1",
+    "learningIntent": "수호판은 잔상 칸 두 종류와 바람의 정지 위치를 함께 읽는다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 4}},
+      {"blockId": "b1", "target": {"x": 0, "y": 0}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "b2", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "b2", "target": {"x": 2, "y": 2}},
+      {"blockId": "b2", "target": {"x": 2, "y": 3}},
+      {"blockId": "b2", "target": {"x": 2, "y": 4}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "b2", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}, "power": "wind"},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}}
+    ]
+  },
+  {
+    "id": 606,
+    "world": 7,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 1,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 1,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 3,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 1,
+        "y": 4
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 4
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 4
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 1
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "mirrorPair",
+        "blocks": [
+          "goal",
+          "b2"
+        ]
+      },
+      {
+        "type": "clockArrow",
+        "tiles": [
+          {
+            "x": 3,
+            "y": 1,
+            "dx": 0,
+            "dy": 1
+          },
+          {
+            "x": 4,
+            "y": 1,
+            "dx": 0,
+            "dy": 1
+          },
+          {
+            "x": 0,
+            "y": 1,
+            "dx": 1,
+            "dy": 0
+          }
+        ]
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 12,
+    "bareHandedMoves": 12,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "world7-chapter2",
+    "learningIntent": "거울 짝을 한 수로 옮겨 바늘을 돌린다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 2, "y": 0}},
+      {"blockId": "b1", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}},
+      {"blockId": "b1", "target": {"x": 4, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "b2", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}}
+    ]
+  },
+  {
+    "id": 607,
+    "world": 7,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 3,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 2,
+      "y": 4
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 4,
+        "y": 1
+      },
+      {
+        "id": "b2",
+        "x": 1,
+        "y": 2
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 4
+      },
+      {
+        "x": 4,
+        "y": 4
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 4
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 3
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "mirrorPair",
+        "blocks": [
+          "b2",
+          "b1"
+        ]
+      },
+      {
+        "type": "clockArrow",
+        "tiles": [
+          {
+            "x": 2,
+            "y": 3,
+            "dx": 1,
+            "dy": 0
+          },
+          {
+            "x": 4,
+            "y": 0,
+            "dx": 0,
+            "dy": 1
+          }
+        ]
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 14,
+    "bareHandedMoves": 14,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "world7-chapter2",
+    "learningIntent": "짝이 비워 주는 칸으로 돌아간 바늘을 지난다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 4, "y": 0}},
+      {"blockId": "b1", "target": {"x": 4, "y": 2}},
+      {"blockId": "b1", "target": {"x": 3, "y": 2}},
+      {"blockId": "b1", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 4, "y": 1}},
+      {"blockId": "goal", "target": {"x": 4, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "b1", "target": {"x": 2, "y": 3}},
+      {"blockId": "b2", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}},
+      {"blockId": "b2", "target": {"x": 0, "y": 2}},
+      {"blockId": "b2", "target": {"x": 0, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 4}}
+    ]
+  },
+  {
+    "id": 608,
+    "world": 7,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 2,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 4,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 4,
+        "y": 4
+      },
+      {
+        "id": "b2",
+        "x": 2,
+        "y": 4
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 4
+      },
+      {
+        "x": 0,
+        "y": 4
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 1
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "mirrorPair",
+        "blocks": [
+          "b1",
+          "goal"
+        ]
+      },
+      {
+        "type": "clockArrow",
+        "tiles": [
+          {
+            "x": 1,
+            "y": 3,
+            "dx": 0,
+            "dy": 1
+          },
+          {
+            "x": 3,
+            "y": 4,
+            "dx": 0,
+            "dy": -1
+          },
+          {
+            "x": 1,
+            "y": 0,
+            "dx": 0,
+            "dy": -1
+          },
+          {
+            "x": 3,
+            "y": 0,
+            "dx": 0,
+            "dy": 1
+          }
+        ]
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 15,
+    "bareHandedMoves": 15,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "world7-chapter2",
+    "learningIntent": "두 블록의 출발 방향을 같은 시각에서 읽는다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 1, "y": 3}},
+      {"blockId": "b1", "target": {"x": 3, "y": 4}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "b2", "target": {"x": 2, "y": 3}},
+      {"blockId": "b2", "target": {"x": 2, "y": 2}},
+      {"blockId": "b2", "target": {"x": 3, "y": 2}},
+      {"blockId": "b1", "target": {"x": 2, "y": 4}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 4}},
+      {"blockId": "goal", "target": {"x": 3, "y": 4}},
+      {"blockId": "goal", "target": {"x": 4, "y": 4}},
+      {"blockId": "goal", "target": {"x": 4, "y": 3}}
+    ]
+  },
+  {
+    "id": 609,
+    "world": 7,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 1,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 3,
+      "y": 1
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 3,
+        "y": 3
+      },
+      {
+        "id": "b2",
+        "x": 1,
+        "y": 2
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 4
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 4
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 0
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "mirrorPair",
+        "blocks": [
+          "b2",
+          "b1"
+        ]
+      },
+      {
+        "type": "clockArrow",
+        "tiles": [
+          {
+            "x": 0,
+            "y": 2,
+            "dx": 0,
+            "dy": -1
+          },
+          {
+            "x": 3,
+            "y": 2,
+            "dx": 0,
+            "dy": -1
+          },
+          {
+            "x": 1,
+            "y": 3,
+            "dx": 1,
+            "dy": 0
+          },
+          {
+            "x": 2,
+            "y": 1,
+            "dx": -1,
+            "dy": 0
+          }
+        ]
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 17,
+    "bareHandedMoves": 17,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "world7-chapter2",
+    "learningIntent": "짝의 착지와 다음 수의 시각을 함께 맞춘다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 0, "y": 0}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "b1", "target": {"x": 3, "y": 2}},
+      {"blockId": "b2", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "b2", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "b2", "target": {"x": 3, "y": 4}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}},
+      {"blockId": "b1", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "b2", "target": {"x": 3, "y": 4}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}}
+    ]
+  },
+  {
+    "id": 610,
+    "world": 7,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 4,
+      "y": 2
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 1
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 3,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 2,
+        "y": 4
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 4
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 4
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 4
+      },
+      {
+        "x": 1,
+        "y": 3
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "mirrorPair",
+        "blocks": [
+          "b2",
+          "b1"
+        ]
+      },
+      {
+        "type": "clockArrow",
+        "tiles": [
+          {
+            "x": 4,
+            "y": 3,
+            "dx": 1,
+            "dy": 0
+          },
+          {
+            "x": 4,
+            "y": 1,
+            "dx": 0,
+            "dy": -1
+          },
+          {
+            "x": 2,
+            "y": 0,
+            "dx": -1,
+            "dy": 0
+          },
+          {
+            "x": 2,
+            "y": 3,
+            "dx": 1,
+            "dy": 0
+          }
+        ]
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 19,
+    "bareHandedMoves": 19,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "world7-chapter2",
+    "learningIntent": "수호판은 짝의 막힘과 바늘을 기다리는 수를 엮는다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "b1", "target": {"x": 4, "y": 0}},
+      {"blockId": "goal", "target": {"x": 4, "y": 2}},
+      {"blockId": "b1", "target": {"x": 4, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "b2", "target": {"x": 2, "y": 4}},
+      {"blockId": "b1", "target": {"x": 4, "y": 2}},
+      {"blockId": "b2", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 4, "y": 2}},
+      {"blockId": "b2", "target": {"x": 2, "y": 4}},
+      {"blockId": "goal", "target": {"x": 4, "y": 1}},
+      {"blockId": "b2", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 4, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 0}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}},
+      {"blockId": "b1", "target": {"x": 4, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 0, "y": 0}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}}
+    ]
+  },
+  {
+    "id": 611,
+    "world": 7,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 0,
+      "y": 2
+    },
+    "exitPosition": {
+      "x": 3,
+      "y": 4
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 2,
+        "y": 4
+      },
+      {
+        "id": "b2",
+        "x": 1,
+        "y": 4
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 3
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "shelfDoor",
+        "pairs": [
+          {
+            "a": {
+              "x": 3,
+              "y": 2
+            },
+            "b": {
+              "x": 4,
+              "y": 1
+            }
+          }
+        ]
+      },
+      {
+        "type": "ice",
+        "positions": [
+          {
+            "x": 0,
+            "y": 4
+          },
+          {
+            "x": 2,
+            "y": 2
+          },
+          {
+            "x": 4,
+            "y": 3
+          }
+        ]
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 12,
+    "bareHandedMoves": 12,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "world7-chapter3",
+    "learningIntent": "얼음의 끝에 놓인 책장으로 들어간다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "b2", "target": {"x": 0, "y": 4}},
+      {"blockId": "b2", "target": {"x": 0, "y": 3}},
+      {"blockId": "b2", "target": {"x": 0, "y": 2}},
+      {"blockId": "b2", "target": {"x": 1, "y": 2}},
+      {"blockId": "b2", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 4}}
+    ]
+  },
+  {
+    "id": 612,
+    "world": 7,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 0,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 3,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 2,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 4,
+        "y": 4
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 4
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 4
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 0
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "shelfDoor",
+        "pairs": [
+          {
+            "a": {
+              "x": 0,
+              "y": 4
+            },
+            "b": {
+              "x": 2,
+              "y": 4
+            }
+          }
+        ]
+      },
+      {
+        "type": "ice",
+        "positions": [
+          {
+            "x": 0,
+            "y": 2
+          },
+          {
+            "x": 0,
+            "y": 3
+          },
+          {
+            "x": 0,
+            "y": 1
+          }
+        ]
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 14,
+    "bareHandedMoves": 14,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "world7-chapter3",
+    "learningIntent": "책장 출구를 비우고 같은 얼음길을 다시 쓴다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b2", "target": {"x": 4, "y": 3}},
+      {"blockId": "b2", "target": {"x": 4, "y": 2}},
+      {"blockId": "b2", "target": {"x": 3, "y": 2}},
+      {"blockId": "b2", "target": {"x": 2, "y": 2}},
+      {"blockId": "b2", "target": {"x": 1, "y": 2}},
+      {"blockId": "b2", "target": {"x": 0, "y": 2}},
+      {"blockId": "b2", "target": {"x": 0, "y": 3}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}}
+    ]
+  },
+  {
+    "id": 613,
+    "world": 7,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 4,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 4
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 2,
+        "y": 2
+      },
+      {
+        "id": "b2",
+        "x": 1,
+        "y": 4
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 4
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 2
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "shelfDoor",
+        "pairs": [
+          {
+            "a": {
+              "x": 3,
+              "y": 1
+            },
+            "b": {
+              "x": 2,
+              "y": 0
+            }
+          }
+        ]
+      },
+      {
+        "type": "ice",
+        "positions": [
+          {
+            "x": 4,
+            "y": 1
+          },
+          {
+            "x": 2,
+            "y": 1
+          }
+        ]
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 16,
+    "bareHandedMoves": 16,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "world7-chapter3",
+    "learningIntent": "미끄러지는 입구와 걸어서 들어갈 입구를 구분한다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b1", "target": {"x": 2, "y": 1}},
+      {"blockId": "b2", "target": {"x": 2, "y": 4}},
+      {"blockId": "b2", "target": {"x": 2, "y": 3}},
+      {"blockId": "b2", "target": {"x": 2, "y": 2}},
+      {"blockId": "b1", "target": {"x": 4, "y": 1}},
+      {"blockId": "b2", "target": {"x": 2, "y": 1}},
+      {"blockId": "b1", "target": {"x": 4, "y": 0}},
+      {"blockId": "goal", "target": {"x": 4, "y": 2}},
+      {"blockId": "goal", "target": {"x": 4, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 4}},
+      {"blockId": "goal", "target": {"x": 1, "y": 4}},
+      {"blockId": "goal", "target": {"x": 0, "y": 4}}
+    ]
+  },
+  {
+    "id": 614,
+    "world": 7,
+    "boardWidth": 6,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 4,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 1,
+      "y": 2
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 1,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 4,
+        "y": 1
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 5,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 4
+      },
+      {
+        "x": 1,
+        "y": 3
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "shelfDoor",
+        "pairs": [
+          {
+            "a": {
+              "x": 2,
+              "y": 2
+            },
+            "b": {
+              "x": 0,
+              "y": 3
+            }
+          }
+        ]
+      },
+      {
+        "type": "ice",
+        "positions": [
+          {
+            "x": 5,
+            "y": 1
+          },
+          {
+            "x": 2,
+            "y": 3
+          }
+        ]
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 18,
+    "bareHandedMoves": 18,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "world7-chapter3",
+    "learningIntent": "넓은 판에서 얼음과 책장으로 두 통로를 연결한다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b2", "target": {"x": 5, "y": 1}},
+      {"blockId": "b2", "target": {"x": 5, "y": 2}},
+      {"blockId": "goal", "target": {"x": 4, "y": 1}},
+      {"blockId": "goal", "target": {"x": 5, "y": 1}},
+      {"blockId": "b2", "target": {"x": 5, "y": 3}},
+      {"blockId": "b2", "target": {"x": 5, "y": 4}},
+      {"blockId": "goal", "target": {"x": 5, "y": 2}},
+      {"blockId": "goal", "target": {"x": 5, "y": 3}},
+      {"blockId": "b2", "target": {"x": 4, "y": 4}},
+      {"blockId": "b2", "target": {"x": 3, "y": 4}},
+      {"blockId": "goal", "target": {"x": 5, "y": 4}},
+      {"blockId": "goal", "target": {"x": 4, "y": 4}},
+      {"blockId": "b2", "target": {"x": 2, "y": 4}},
+      {"blockId": "b2", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 4}},
+      {"blockId": "goal", "target": {"x": 2, "y": 4}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}}
+    ]
+  },
+  {
+    "id": 615,
+    "world": 7,
+    "boardWidth": 6,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 2,
+      "y": 4
+    },
+    "exitPosition": {
+      "x": 4,
+      "y": 4
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 5,
+        "y": 3
+      },
+      {
+        "id": "b2",
+        "x": 5,
+        "y": 2
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 4
+      },
+      {
+        "x": 3,
+        "y": 4
+      },
+      {
+        "x": 5,
+        "y": 0
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "shelfDoor",
+        "pairs": [
+          {
+            "a": {
+              "x": 0,
+              "y": 2
+            },
+            "b": {
+              "x": 1,
+              "y": 1
+            }
+          }
+        ]
+      },
+      {
+        "type": "ice",
+        "positions": [
+          {
+            "x": 4,
+            "y": 0
+          },
+          {
+            "x": 1,
+            "y": 2
+          },
+          {
+            "x": 4,
+            "y": 2
+          }
+        ]
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 20,
+    "bareHandedMoves": 20,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "world7-chapter3",
+    "learningIntent": "수호판은 얼음의 정지 칸과 건너편 책장을 함께 준비한다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 0}},
+      {"blockId": "goal", "target": {"x": 4, "y": 0}},
+      {"blockId": "goal", "target": {"x": 4, "y": 1}},
+      {"blockId": "goal", "target": {"x": 5, "y": 1}},
+      {"blockId": "b2", "target": {"x": 4, "y": 2}},
+      {"blockId": "b2", "target": {"x": 4, "y": 1}},
+      {"blockId": "b1", "target": {"x": 5, "y": 2}},
+      {"blockId": "b1", "target": {"x": 4, "y": 2}},
+      {"blockId": "b2", "target": {"x": 4, "y": 0}},
+      {"blockId": "goal", "target": {"x": 5, "y": 2}},
+      {"blockId": "goal", "target": {"x": 5, "y": 3}},
+      {"blockId": "goal", "target": {"x": 5, "y": 4}},
+      {"blockId": "goal", "target": {"x": 4, "y": 4}}
+    ]
+  },
+  {
+    "id": 616,
+    "world": 7,
+    "boardWidth": 6,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 4,
+      "y": 1
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 4
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 5,
+        "y": 2
+      },
+      {
+        "id": "b2",
+        "x": 5,
+        "y": 3
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 0
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "shelfDoor",
+        "pairs": [
+          {
+            "a": {
+              "x": 1,
+              "y": 4
+            },
+            "b": {
+              "x": 1,
+              "y": 2
+            }
+          }
+        ]
+      },
+      {
+        "type": "ice",
+        "positions": [
+          {
+            "x": 3,
+            "y": 4
+          },
+          {
+            "x": 4,
+            "y": 3
+          },
+          {
+            "x": 5,
+            "y": 0
+          }
+        ]
+      },
+      {
+        "type": "mirrorPair",
+        "blocks": [
+          "b2",
+          "b1"
+        ]
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 13,
+    "bareHandedMoves": 13,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "world7-chapter4",
+    "learningIntent": "서로 다른 등대 기믹 셋을 한 경로로 잇는다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b1", "target": {"x": 5, "y": 1}},
+      {"blockId": "b1", "target": {"x": 5, "y": 0}},
+      {"blockId": "b2", "target": {"x": 4, "y": 4}},
+      {"blockId": "goal", "target": {"x": 5, "y": 1}},
+      {"blockId": "goal", "target": {"x": 5, "y": 2}},
+      {"blockId": "goal", "target": {"x": 5, "y": 3}},
+      {"blockId": "goal", "target": {"x": 4, "y": 3}},
+      {"blockId": "b2", "target": {"x": 3, "y": 4}},
+      {"blockId": "b2", "target": {"x": 1, "y": 4}},
+      {"blockId": "goal", "target": {"x": 4, "y": 4}},
+      {"blockId": "goal", "target": {"x": 3, "y": 4}},
+      {"blockId": "goal", "target": {"x": 1, "y": 4}},
+      {"blockId": "goal", "target": {"x": 0, "y": 4}}
+    ]
+  },
+  {
+    "id": 617,
+    "world": 7,
+    "boardWidth": 6,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 5,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 2
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 4,
+        "y": 2
+      },
+      {
+        "id": "b2",
+        "x": 4,
+        "y": 4
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 5,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 4
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 5,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 4
+      },
+      {
+        "x": 1,
+        "y": 4
+      },
+      {
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "shelfDoor",
+        "pairs": [
+          {
+            "a": {
+              "x": 0,
+              "y": 3
+            },
+            "b": {
+              "x": 5,
+              "y": 3
+            }
+          }
+        ]
+      },
+      {
+        "type": "ice",
+        "positions": [
+          {
+            "x": 3,
+            "y": 2
+          },
+          {
+            "x": 4,
+            "y": 0
+          },
+          {
+            "x": 1,
+            "y": 1
+          }
+        ]
+      },
+      {
+        "type": "mirrorPair",
+        "blocks": [
+          "goal",
+          "b1"
+        ]
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 15,
+    "bareHandedMoves": 15,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "world7-chapter4",
+    "learningIntent": "첫 기믹의 도착 위치를 다음 두 기믹의 발판으로 쓴다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 4, "y": 0}},
+      {"blockId": "b1", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 4, "y": 1}},
+      {"blockId": "b2", "target": {"x": 3, "y": 4}},
+      {"blockId": "b2", "target": {"x": 3, "y": 3}},
+      {"blockId": "b2", "target": {"x": 3, "y": 2}},
+      {"blockId": "b2", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 4, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 4}},
+      {"blockId": "goal", "target": {"x": 4, "y": 4}},
+      {"blockId": "goal", "target": {"x": 5, "y": 4}},
+      {"blockId": "goal", "target": {"x": 5, "y": 3}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}}
+    ]
+  },
+  {
+    "id": 618,
+    "world": 7,
+    "boardWidth": 6,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 0,
+      "y": 4
+    },
+    "exitPosition": {
+      "x": 2,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 3,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 1,
+        "y": 2
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 2
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "shelfDoor",
+        "pairs": [
+          {
+            "a": {
+              "x": 4,
+              "y": 3
+            },
+            "b": {
+              "x": 5,
+              "y": 2
+            }
+          }
+        ]
+      },
+      {
+        "type": "ice",
+        "positions": [
+          {
+            "x": 3,
+            "y": 4
+          },
+          {
+            "x": 0,
+            "y": 0
+          }
+        ]
+      },
+      {
+        "type": "clockArrow",
+        "tiles": [
+          {
+            "x": 5,
+            "y": 1,
+            "dx": 0,
+            "dy": 1
+          },
+          {
+            "x": 4,
+            "y": 0,
+            "dx": 0,
+            "dy": -1
+          }
+        ]
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 17,
+    "bareHandedMoves": 17,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "world7-chapter4",
+    "learningIntent": "블록을 옮기는 수와 리크가 지나가는 수를 나눈다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b1", "target": {"x": 4, "y": 0}},
+      {"blockId": "b1", "target": {"x": 5, "y": 0}},
+      {"blockId": "goal", "target": {"x": 1, "y": 4}},
+      {"blockId": "b1", "target": {"x": 5, "y": 1}},
+      {"blockId": "b1", "target": {"x": 5, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 4}},
+      {"blockId": "b1", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 4}},
+      {"blockId": "goal", "target": {"x": 4, "y": 3}},
+      {"blockId": "goal", "target": {"x": 5, "y": 1}},
+      {"blockId": "goal", "target": {"x": 5, "y": 0}},
+      {"blockId": "goal", "target": {"x": 4, "y": 0}},
+      {"blockId": "b1", "target": {"x": 4, "y": 3}},
+      {"blockId": "b1", "target": {"x": 5, "y": 1}},
+      {"blockId": "b1", "target": {"x": 5, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 0}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}}
+    ]
+  },
+  {
+    "id": 619,
+    "world": 7,
+    "boardWidth": 6,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 5,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 3,
+      "y": 2
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 0,
+        "y": 1
+      },
+      {
+        "id": "b2",
+        "x": 0,
+        "y": 3
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 5,
+        "y": 2
+      },
+      {
+        "x": 5,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 0
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "shelfDoor",
+        "pairs": [
+          {
+            "a": {
+              "x": 1,
+              "y": 4
+            },
+            "b": {
+              "x": 2,
+              "y": 4
+            }
+          }
+        ]
+      },
+      {
+        "type": "ice",
+        "positions": [
+          {
+            "x": 4,
+            "y": 1
+          },
+          {
+            "x": 3,
+            "y": 1
+          },
+          {
+            "x": 0,
+            "y": 2
+          }
+        ]
+      },
+      {
+        "type": "mirrorPair",
+        "blocks": [
+          "b2",
+          "b1"
+        ]
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 19,
+    "bareHandedMoves": 19,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "world7-chapter4",
+    "learningIntent": "세 기믹의 순서를 바꾸어 막힌 경로를 연다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 5, "y": 4}},
+      {"blockId": "goal", "target": {"x": 4, "y": 4}},
+      {"blockId": "goal", "target": {"x": 3, "y": 4}},
+      {"blockId": "goal", "target": {"x": 2, "y": 4}},
+      {"blockId": "goal", "target": {"x": 0, "y": 4}},
+      {"blockId": "b1", "target": {"x": 0, "y": 2}},
+      {"blockId": "b1", "target": {"x": 1, "y": 2}},
+      {"blockId": "b1", "target": {"x": 2, "y": 2}},
+      {"blockId": "b2", "target": {"x": 0, "y": 2}},
+      {"blockId": "b2", "target": {"x": 0, "y": 2}},
+      {"blockId": "b2", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "b2", "target": {"x": 0, "y": 2}},
+      {"blockId": "b1", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}}
+    ]
+  },
+  {
+    "id": 620,
+    "world": 7,
+    "boardWidth": 6,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 1,
+      "y": 4
+    },
+    "exitPosition": {
+      "x": 3,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 3,
+        "y": 1
+      },
+      {
+        "id": "b2",
+        "x": 3,
+        "y": 3
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 4
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 4
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 5,
+        "y": 1
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "shelfDoor",
+        "pairs": [
+          {
+            "a": {
+              "x": 1,
+              "y": 2
+            },
+            "b": {
+              "x": 0,
+              "y": 2
+            }
+          },
+          {
+            "a": {
+              "x": 5,
+              "y": 4
+            },
+            "b": {
+              "x": 0,
+              "y": 1
+            }
+          }
+        ]
+      },
+      {
+        "type": "mirrorPair",
+        "blocks": [
+          "goal",
+          "b1"
+        ]
+      },
+      {
+        "type": "clockArrow",
+        "tiles": [
+          {
+            "x": 4,
+            "y": 3,
+            "dx": 0,
+            "dy": 1
+          },
+          {
+            "x": 2,
+            "y": 4,
+            "dx": 1,
+            "dy": 0
+          },
+          {
+            "x": 4,
+            "y": 4,
+            "dx": 1,
+            "dy": 0
+          }
+        ]
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 22,
+    "bareHandedMoves": 22,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "world7-chapter4",
+    "learningIntent": "수호판은 세 등대의 이동 결과를 다음 수까지 읽는다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 1, "y": 3}},
+      {"blockId": "b1", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "b2", "target": {"x": 4, "y": 3}},
+      {"blockId": "b2", "target": {"x": 4, "y": 4}},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}},
+      {"blockId": "b1", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}},
+      {"blockId": "b2", "target": {"x": 5, "y": 4}},
+      {"blockId": "b2", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 4, "y": 4}},
+      {"blockId": "b1", "target": {"x": 2, "y": 0}},
+      {"blockId": "b2", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 4, "y": 3}},
+      {"blockId": "b2", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}},
+      {"blockId": "b1", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 0}}
+    ]
+  },
+  {
+    "id": 621,
+    "world": 7,
+    "boardWidth": 6,
+    "boardHeight": 6,
+    "startPosition": {
+      "x": 2,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 2
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 1,
+        "y": 2
+      },
+      {
+        "id": "b2",
+        "x": 3,
+        "y": 0
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 5
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 1
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 5,
+        "y": 5
+      },
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 5
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 5
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "mirrorPair",
+        "blocks": [
+          "goal",
+          "b1"
+        ]
+      },
+      {
+        "type": "clockArrow",
+        "tiles": [
+          {
+            "x": 3,
+            "y": 4,
+            "dx": -1,
+            "dy": 0
+          },
+          {
+            "x": 4,
+            "y": 3,
+            "dx": 1,
+            "dy": 0
+          },
+          {
+            "x": 3,
+            "y": 1,
+            "dx": 1,
+            "dy": 0
+          },
+          {
+            "x": 0,
+            "y": 5,
+            "dx": 0,
+            "dy": 1
+          }
+        ]
+      },
+      {
+        "type": "ice",
+        "positions": [
+          {
+            "x": 3,
+            "y": 2
+          },
+          {
+            "x": 5,
+            "y": 4
+          },
+          {
+            "x": 5,
+            "y": 0
+          }
+        ]
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 14,
+    "bareHandedMoves": 14,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "world7-chapter5",
+    "learningIntent": "넓은 하늘에서 서로 다른 이동 결과를 차례로 준비한다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b2", "target": {"x": 3, "y": 1}},
+      {"blockId": "b2", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "b2", "target": {"x": 4, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 4}},
+      {"blockId": "goal", "target": {"x": 2, "y": 4}},
+      {"blockId": "goal", "target": {"x": 1, "y": 4}},
+      {"blockId": "b1", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}}
+    ]
+  },
+  {
+    "id": 622,
+    "world": 7,
+    "boardWidth": 6,
+    "boardHeight": 6,
+    "startPosition": {
+      "x": 5,
+      "y": 1
+    },
+    "exitPosition": {
+      "x": 1,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 0,
+        "y": 2
+      },
+      {
+        "id": "b2",
+        "x": 3,
+        "y": 4
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 4
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 5
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 5
+      },
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 4
+      },
+      {
+        "x": 2,
+        "y": 5
+      },
+      {
+        "x": 5,
+        "y": 5
+      },
+      {
+        "x": 5,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 5
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "mirrorPair",
+        "blocks": [
+          "goal",
+          "b1"
+        ]
+      },
+      {
+        "type": "clockArrow",
+        "tiles": [
+          {
+            "x": 0,
+            "y": 0,
+            "dx": 0,
+            "dy": 1
+          },
+          {
+            "x": 4,
+            "y": 2,
+            "dx": 0,
+            "dy": -1
+          },
+          {
+            "x": 5,
+            "y": 0,
+            "dx": -1,
+            "dy": 0
+          },
+          {
+            "x": 1,
+            "y": 1,
+            "dx": 0,
+            "dy": -1
+          }
+        ]
+      },
+      {
+        "type": "ice",
+        "positions": [
+          {
+            "x": 1,
+            "y": 0
+          },
+          {
+            "x": 4,
+            "y": 5
+          },
+          {
+            "x": 0,
+            "y": 3
+          }
+        ]
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 16,
+    "bareHandedMoves": 16,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "world7-chapter5",
+    "learningIntent": "돌아올 길을 남기고 세 기믹의 순서를 정한다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 5, "y": 0}},
+      {"blockId": "b1", "target": {"x": 1, "y": 4}},
+      {"blockId": "b2", "target": {"x": 3, "y": 3}},
+      {"blockId": "b1", "target": {"x": 0, "y": 4}},
+      {"blockId": "goal", "target": {"x": 4, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "b1", "target": {"x": 0, "y": 3}},
+      {"blockId": "b1", "target": {"x": 0, "y": 4}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 4}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}}
+    ]
+  },
+  {
+    "id": 623,
+    "world": 7,
+    "boardWidth": 6,
+    "boardHeight": 6,
+    "startPosition": {
+      "x": 0,
+      "y": 2
+    },
+    "exitPosition": {
+      "x": 5,
+      "y": 2
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 3,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 5,
+        "y": 4
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 4
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 5
+      },
+      {
+        "x": 0,
+        "y": 4
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 0
+      },
+      {
+        "x": 5,
+        "y": 5
+      },
+      {
+        "x": 5,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 3
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "mirrorPair",
+        "blocks": [
+          "goal",
+          "b1"
+        ]
+      },
+      {
+        "type": "clockArrow",
+        "tiles": [
+          {
+            "x": 3,
+            "y": 4,
+            "dx": 0,
+            "dy": 1
+          },
+          {
+            "x": 5,
+            "y": 3,
+            "dx": -1,
+            "dy": 0
+          }
+        ]
+      },
+      {
+        "type": "shelfDoor",
+        "pairs": [
+          {
+            "a": {
+              "x": 4,
+              "y": 0
+            },
+            "b": {
+              "x": 2,
+              "y": 5
+            }
+          },
+          {
+            "a": {
+              "x": 0,
+              "y": 5
+            },
+            "b": {
+              "x": 3,
+              "y": 1
+            }
+          }
+        ]
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 18,
+    "bareHandedMoves": 18,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "world7-chapter5",
+    "learningIntent": "룬석의 위치로 지름길과 정지 칸을 바꾼다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "b2", "target": {"x": 4, "y": 4}},
+      {"blockId": "b2", "target": {"x": 3, "y": 4}},
+      {"blockId": "b2", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 0}},
+      {"blockId": "goal", "target": {"x": 4, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 5}},
+      {"blockId": "goal", "target": {"x": 3, "y": 4}},
+      {"blockId": "goal", "target": {"x": 4, "y": 4}},
+      {"blockId": "goal", "target": {"x": 5, "y": 4}},
+      {"blockId": "goal", "target": {"x": 5, "y": 3}},
+      {"blockId": "b1", "target": {"x": 1, "y": 5}},
+      {"blockId": "b1", "target": {"x": 2, "y": 5}},
+      {"blockId": "b1", "target": {"x": 3, "y": 0}},
+      {"blockId": "goal", "target": {"x": 5, "y": 2}}
+    ]
+  },
+  {
+    "id": 624,
+    "world": 7,
+    "boardWidth": 6,
+    "boardHeight": 6,
+    "startPosition": {
+      "x": 5,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 3,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 5,
+        "y": 4
+      },
+      {
+        "id": "b2",
+        "x": 5,
+        "y": 0
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 3,
+        "y": 4
+      },
+      {
+        "x": 5,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 5
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 4
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 5
+      },
+      {
+        "x": 1,
+        "y": 3
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "mirrorPair",
+        "blocks": [
+          "goal",
+          "b1"
+        ]
+      },
+      {
+        "type": "clockArrow",
+        "tiles": [
+          {
+            "x": 2,
+            "y": 4,
+            "dx": 0,
+            "dy": 1
+          },
+          {
+            "x": 0,
+            "y": 5,
+            "dx": 0,
+            "dy": -1
+          },
+          {
+            "x": 2,
+            "y": 5,
+            "dx": 0,
+            "dy": -1
+          }
+        ]
+      },
+      {
+        "type": "shelfDoor",
+        "pairs": [
+          {
+            "a": {
+              "x": 1,
+              "y": 4
+            },
+            "b": {
+              "x": 1,
+              "y": 1
+            }
+          },
+          {
+            "a": {
+              "x": 4,
+              "y": 1
+            },
+            "b": {
+              "x": 3,
+              "y": 2
+            }
+          }
+        ]
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 20,
+    "bareHandedMoves": 20,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "world7-chapter5",
+    "learningIntent": "출구를 향하기 전에 세 기믹이 잇는 길을 만든다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b1", "target": {"x": 4, "y": 4}},
+      {"blockId": "b1", "target": {"x": 4, "y": 5}},
+      {"blockId": "b1", "target": {"x": 3, "y": 5}},
+      {"blockId": "b1", "target": {"x": 2, "y": 5}},
+      {"blockId": "goal", "target": {"x": 5, "y": 4}},
+      {"blockId": "b1", "target": {"x": 1, "y": 4}},
+      {"blockId": "goal", "target": {"x": 4, "y": 4}},
+      {"blockId": "goal", "target": {"x": 4, "y": 5}},
+      {"blockId": "goal", "target": {"x": 3, "y": 5}},
+      {"blockId": "goal", "target": {"x": 2, "y": 5}},
+      {"blockId": "b1", "target": {"x": 3, "y": 1}},
+      {"blockId": "b1", "target": {"x": 4, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 4}},
+      {"blockId": "goal", "target": {"x": 1, "y": 4}},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}}
+    ]
+  },
+  {
+    "id": 625,
+    "world": 7,
+    "boardWidth": 6,
+    "boardHeight": 6,
+    "startPosition": {
+      "x": 0,
+      "y": 2
+    },
+    "exitPosition": {
+      "x": 5,
+      "y": 2
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 5,
+        "y": 4
+      },
+      {
+        "id": "b2",
+        "x": 3,
+        "y": 3
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 4
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 5
+      },
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 5,
+        "y": 5
+      },
+      {
+        "x": 3,
+        "y": 5
+      },
+      {
+        "x": 5,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 1
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "mirrorPair",
+        "blocks": [
+          "goal",
+          "b1"
+        ]
+      },
+      {
+        "type": "clockArrow",
+        "tiles": [
+          {
+            "x": 3,
+            "y": 4,
+            "dx": 0,
+            "dy": 1
+          },
+          {
+            "x": 5,
+            "y": 3,
+            "dx": 1,
+            "dy": 0
+          }
+        ]
+      },
+      {
+        "type": "shelfDoor",
+        "pairs": [
+          {
+            "a": {
+              "x": 4,
+              "y": 0
+            },
+            "b": {
+              "x": 2,
+              "y": 5
+            }
+          },
+          {
+            "a": {
+              "x": 0,
+              "y": 4
+            },
+            "b": {
+              "x": 1,
+              "y": 5
+            }
+          }
+        ]
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 24,
+    "bareHandedMoves": 24,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "world7-chapter5",
+    "learningIntent": "처음처럼 왼쪽에서 오른쪽 별문을 향해 마지막 잔상을 잇는다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 4}},
+      {"blockId": "goal", "target": {"x": 0, "y": 4}},
+      {"blockId": "goal", "target": {"x": 2, "y": 5}},
+      {"blockId": "b1", "target": {"x": 3, "y": 4}},
+      {"blockId": "b2", "target": {"x": 3, "y": 2}},
+      {"blockId": "b2", "target": {"x": 3, "y": 1}},
+      {"blockId": "b2", "target": {"x": 3, "y": 0}},
+      {"blockId": "b2", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 4, "y": 1}},
+      {"blockId": "b1", "target": {"x": 3, "y": 2}},
+      {"blockId": "b1", "target": {"x": 3, "y": 1}},
+      {"blockId": "b1", "target": {"x": 3, "y": 0}},
+      {"blockId": "b1", "target": {"x": 4, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 4}},
+      {"blockId": "goal", "target": {"x": 4, "y": 4}},
+      {"blockId": "goal", "target": {"x": 5, "y": 4}},
+      {"blockId": "goal", "target": {"x": 5, "y": 3}},
+      {"blockId": "b1", "target": {"x": 1, "y": 5}},
+      {"blockId": "goal", "target": {"x": 5, "y": 2}}
+    ]
+  }
+]
