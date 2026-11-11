@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../audio/game_audio.dart';
 import '../design/arcade_components.dart';
 import '../design/star_art.dart';
 import '../game/mechanic_legend.dart';
@@ -8,29 +7,52 @@ import '../l10n/app_localizations.dart';
 import '../settings/game_settings.dart';
 import '../settings/settings_dialog.dart';
 import '../tutorial/world_tutorial.dart';
+import '../world/credits_screen.dart';
+import '../world/ending_screen.dart';
+import 'game_session.dart';
 import 'intro_screen.dart';
-import '../analytics/local_analytics.dart';
+
+enum _SettingsAction { intro, ending, credits }
 
 Future<void> showExperienceSettings(
   BuildContext context,
   GameSettings settings,
-  GameAudio audio, {
+  GameSession session, {
   required bool resumeGame,
-  LocalAnalytics? analytics,
+  String? resumeMusicTrack,
 }) async {
-  final replay = await showDialog<bool>(
+  final action = await showDialog<_SettingsAction>(
     context: context,
     animationStyle: prefersReducedMotion(context, settings)
         ? AnimationStyle.noAnimation
         : null,
     builder: (dialogContext) => SettingsDialog(
       settings: settings,
-      audio: audio,
-      analytics: analytics,
-      onReplayIntro: () => Navigator.pop(dialogContext, true),
+      audio: session.audio,
+      analytics: session.analytics,
+      onReplayIntro: () => Navigator.pop(dialogContext, _SettingsAction.intro),
+      onReplayEnding: session.sagaComplete
+          ? () => Navigator.pop(dialogContext, _SettingsAction.ending)
+          : null,
+      onCredits: () => Navigator.pop(dialogContext, _SettingsAction.credits),
     ),
   );
-  if (replay != true || !context.mounted) return;
+  if (action == null || !context.mounted) return;
+  if (action == _SettingsAction.credits) {
+    await showCredits(context, session.saga);
+    return;
+  }
+  if (action == _SettingsAction.ending) {
+    await showEnding(
+      context,
+      session,
+      settings,
+      resumeGame: resumeGame,
+      resumeMusicTrack: resumeMusicTrack,
+    );
+    return;
+  }
+  final audio = session.audio;
   audio.setGameVisible(false);
   try {
     await showDialog<void>(

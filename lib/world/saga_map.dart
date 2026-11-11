@@ -162,7 +162,10 @@ class _WorldNode extends StatelessWidget {
         ? Icons.light_rounded
         : Icons.auto_awesome_rounded;
     final accent = switch (state) {
-      _WorldState.restored => colors.reward,
+      _WorldState.restored =>
+        world.lighthouse != null
+            ? world.theme?.palette?.accent ?? colors.reward
+            : colors.reward,
       _WorldState.open => colors.goal,
       _ => colors.outline,
     };
@@ -217,10 +220,15 @@ class _WorldNode extends StatelessWidget {
                     height: 40,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: restored
-                          ? colors.reward
-                          : accent.withValues(alpha: .14),
+                      color: restored ? accent : accent.withValues(alpha: .14),
                       border: Border.all(color: accent, width: 2),
+                      boxShadow: [
+                        if (restored && world.lighthouse != null)
+                          BoxShadow(
+                            color: accent.withValues(alpha: .35),
+                            blurRadius: 12,
+                          ),
+                      ],
                     ),
                     child: Icon(
                       icon,

@@ -310,7 +310,7 @@ const titles = <TitleDefinition>[
     ProgressionText('첫 잔상의 사서', 'Librarian of the First Echo'),
   ),
   TitleDefinition(
-    'first_star_echo',
+    sagaCompletionTitleId,
     ProgressionText('첫 별의 잔상', 'Echo of the First Star'),
   ),
   TitleDefinition('golden_first', ProgressionText('첫 황금 별자리', 'First Gold')),
@@ -732,6 +732,12 @@ class Achievement {
   final List<TrackReward> rewards;
 }
 
+const sagaCompletionTitleId = 'first_star_echo';
+const sagaCompletionRewards = [
+  TitleUnlock(sagaCompletionTitleId),
+  TrailUnlock(TrailIds.firstStarlight),
+];
+
 /// 목표에 닿으면 다음 클리어 때 자동으로 받는다(한 번만).
 const achievements = <Achievement>[
   Achievement(
@@ -903,10 +909,7 @@ const achievements = <Achievement>[
     world: 7,
     target: 75,
     name: ProgressionText('첫 별의 별 75개', 'All 75 First Star stars'),
-    rewards: [
-      TitleUnlock('first_star_echo'),
-      TrailUnlock(TrailIds.firstStarlight),
-    ],
+    rewards: sagaCompletionRewards,
   ),
   Achievement(
     id: 'golden-1',

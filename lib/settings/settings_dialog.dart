@@ -14,6 +14,8 @@ class SettingsDialog extends StatefulWidget {
     required this.settings,
     required this.audio,
     this.onReplayIntro,
+    this.onReplayEnding,
+    required this.onCredits,
     this.analytics,
   });
 
@@ -21,6 +23,8 @@ class SettingsDialog extends StatefulWidget {
   final GameAudio audio;
   final LocalAnalytics? analytics;
   final VoidCallback? onReplayIntro;
+  final VoidCallback? onReplayEnding;
+  final VoidCallback onCredits;
 
   @override
   State<SettingsDialog> createState() => _SettingsDialogState();
@@ -80,17 +84,26 @@ class _SettingsDialogState extends State<SettingsDialog> {
                   onTap: widget.onReplayIntro,
                 ),
               ],
+              if (widget.onReplayEnding != null)
+                ListTile(
+                  key: const ValueKey('replay-ending'),
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    Icons.auto_awesome_rounded,
+                    color: colors.reward,
+                  ),
+                  title: Text(t.endingReplay),
+                  onTap: widget.onReplayEnding,
+                ),
               if (widget.analytics case final analytics?)
                 PlaytestControls(analytics: analytics),
               const Divider(),
               ListTile(
+                key: const ValueKey('settings-credits'),
                 leading: const Icon(Icons.info_outline_rounded),
                 contentPadding: EdgeInsets.zero,
-                title: Text(t.credits),
-                onTap: () => showLicensePage(
-                  context: context,
-                  applicationName: 'BLORIQ',
-                ),
+                title: Text(t.endingCredits),
+                onTap: widget.onCredits,
               ),
               if (widget.settings.saveFailed)
                 Text(

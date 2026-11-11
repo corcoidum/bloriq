@@ -36,9 +36,43 @@ void main() {
     expect(repo.bonds, isEmpty);
     expect(repo.bareHanded, isEmpty);
     expect(repo.backfilled, false);
+    expect(repo.endingSeen, false);
     expect(repo.corrupt, false);
     expect(repo.saveFailed, false);
   });
+
+  test(
+    'endingSeen extends a 7-C save and grants missing saga cosmetics once',
+    () async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        ProgressionRepository.storageKey,
+        jsonEncode({
+          'version': ProgressionRepository.schemaVersion,
+          'xp': 312,
+          'stardust': 23,
+          'completedChapters': List.generate(35, (i) => i + 1),
+          'unknownField': {'keep': true},
+        }),
+      );
+      final repo = await _load();
+      expect(repo.endingSeen, isFalse);
+      expect(repo.ownedTitles, isNot(contains(sagaCompletionTitleId)));
+      expect(await repo.markEndingSeen(), isTrue);
+      expect(await repo.markEndingSeen(), isTrue);
+      final restored = await _load();
+      expect(restored.endingSeen, isTrue);
+      expect(restored.xp, 312);
+      expect(restored.stardust, 23);
+      expect(restored.completedChapters, hasLength(35));
+      expect(restored.ownedTitles, {sagaCompletionTitleId});
+      expect(restored.ownedTrails, {defaultTrailId, TrailIds.firstStarlight});
+      final data = await _stored();
+      expect(data['version'], 1);
+      expect(data['endingSeen'], isTrue);
+      expect(data['unknownField'], {'keep': true});
+    },
+  );
 
   test('first clear, replay and star upgrade grant xp and stardust', () async {
     final repo = await _load();

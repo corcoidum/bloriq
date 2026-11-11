@@ -11,6 +11,7 @@ import 'saga.dart';
 /// 스테이지 id는 `(n-1)*100 + 1` 부터, 전역 장 번호는 `(n-1)*5 + 1` 부터다.
 /// (세계 1: 1..25 / 장 1..5, 세계 2: 101..125 / 장 6..10, 세계 3: 201..225 / 장 11..15)
 abstract final class Worlds {
+  static const finalWorld = 7;
   static const chapterCount = 5;
   static const stagesPerChapter = 5;
   static const stageCount = chapterCount * stagesPerChapter;

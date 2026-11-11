@@ -25,6 +25,12 @@ abstract final class StarArt {
   static const riqSleep = 'assets/art/last_echo/riq_sleep.png';
   static const runeStone = 'assets/art/last_echo/rune_stone.png';
   static const lunabel = 'assets/art/last_echo/lunabel.png';
+  static const fontLicenses = {
+    'Jua': 'Jua-OFL.txt',
+    'Gamja Flower': 'GamjaFlower-OFL.txt',
+    'Gowun Dodum': 'GowunDodum-OFL.txt',
+    'Nanum Gothic': 'NanumGothic-OFL.txt',
+  };
 
   /// 달빛 숲 정원 보드 그림. 하나가 없으면 그 요소만 기존 코드 그림으로 그린다.
   static const gardenSprites = [
@@ -78,10 +84,10 @@ abstract final class StarArt {
     if (!_licensesRegistered) {
       _licensesRegistered = true;
       LicenseRegistry.addLicense(() async* {
-        for (final name in ['Jua', 'NanumGothic', 'GowunDodum']) {
+        for (final entry in fontLicenses.entries) {
           yield LicenseEntryWithLineBreaks([
-            name,
-          ], await rootBundle.loadString('assets/fonts/$name-OFL.txt'));
+            entry.key,
+          ], await rootBundle.loadString('assets/fonts/${entry.value}'));
         }
       });
     }

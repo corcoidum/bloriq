@@ -168,3 +168,29 @@ for bar, chord in enumerate(chords):
 for i in range(len(first_star)):
     first_star[i] *= min(1., i / (RATE * .05), (len(first_star) - i - 1) / (RATE * .12))
 write('bgm_w7.wav', first_star)
+
+# 엔딩 40초. 다섯 등대가 켜질 때 한 음씩 더하고, 첫 별이 켜질 때
+# 세계 1의 세 음이 높은 옥타브에서 만난다. 끝 문장 동안 잔향만 남긴다.
+ending = [0.] * (40 * RATE)
+for at, note in zip((.7, 2.2, 3.7, 5.2, 6.7), (261.63, 329.63, 392., 440., 523.25)):
+    mix(ending, tone(note, 2.2, .14, 1.8), at)
+    mix(ending, tone(note * 2, 1.1, .045, 3.2), at + .2)
+
+for bar, chord in enumerate(chords):
+    start = 9 + bar * 2.5
+    mix(ending, tone(chord[0] / 2, 2.4, .08, .9, False), start)
+    for step, note in enumerate((0, 1, 2, 3, 2)):
+        mix(ending, tone(chord[note], .7, .095, 2.8), start + step * .5)
+
+for at, note in zip((19.9, 20.25, 20.6), (523.25, 659.25, 783.99)):
+    mix(ending, tone(note, 3.3, .13, 1.2), at)
+    mix(ending, tone(note / 2, 3.6, .06, .65, False), at)
+
+for bar, chord in enumerate(chords):
+    start = 24 + bar * 2.25
+    for step, note in enumerate((3, 2, 1)):
+        mix(ending, tone(chord[note], 1.4, .083, 1.9), start + step * .55)
+
+for step, note in enumerate((130.81, 261.63, 329.63, 392., 523.25)):
+    mix(ending, tone(note, 6 - step * .35, .065, .65, step > 0), 33 + step * .35)
+write('ending.wav', ending)
