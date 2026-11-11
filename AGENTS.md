@@ -1,9 +1,10 @@
 # BLORIQ 작업 규칙 (Codex·Claude 공통)
 
-BLORIQ는 Flutter + Flame으로 만든 오프라인 잔상 퍼즐이다. 큰 줄거리와 세계 틀은 `docs/SAGA.md`, 앞으로의 제작 순서는 `docs/ROADMAP_LIGHTROAD.md`, 단계별 작업 지시는 `docs/codex/`에 있다.
+BLORIQ는 Flutter + Flame으로 만든 오프라인 echo 퍼즐이다. 큰 줄거리와 세계 틀은 `docs/SAGA.md`, 앞으로의 제작 순서는 `docs/ROADMAP_LIGHTROAD.md`, 단계별 작업 지시는 `docs/codex/`에 있다.
 
 ## 언어
 - 보고, 문서, 커밋 설명은 한국어로 쓴다. 코드 식별자와 커밋 제목은 영어로 쓴다.
+- 퍼즐 용어는 앞으로 작성하는 한국어 답변, 문서, 게임 문구에서 `echo`로 표기한다.
 - 게임 문구는 ko/en을 함께 넣는다(`lib/l10n/*.arb`, 이야기 JSON의 `{"ko","en"}`).
 
 ## 브랜치와 커밋
