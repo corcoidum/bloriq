@@ -196,6 +196,7 @@ class BloriqGame extends FlameGame {
     'firefly': Color(0xffffd86b),
     'aurora': Color(0xff7ef0d0),
     'starfall': Color(0xfffff0b3),
+    'first_starlight': Color(0xffe8eeff),
     'tide': Color(0xff6fd3ff),
     'rose': Color(0xffff8fa3),
     'ember': Color(0xffff9a5c),
@@ -206,6 +207,14 @@ class BloriqGame extends FlameGame {
     'gold_cloud': Color(0xffffe08a),
     'gold_mirror': Color(0xfff0b84a),
   };
+
+  static const firstStarlightColors = [
+    Color(0xffb7f2fa),
+    Color(0xff71e6d6),
+    Color(0xffffd083),
+    Color(0xff92deff),
+    Color(0xfff4a9cb),
+  ];
 
   Color _trailColor(bool isGoal) => switch (trailStyle) {
     'meteor' => _colors.reward,
@@ -1391,10 +1400,19 @@ class BloriqGame extends FlameGame {
         start,
         at,
         Paint()
-          ..shader = ui.Gradient.linear(start, at, [
-            color.withValues(alpha: 0),
-            color.withValues(alpha: .38 * fade),
-          ])
+          ..shader = ui.Gradient.linear(
+            start,
+            at,
+            trailStyle == 'first_starlight'
+                ? [
+                    for (final light in firstStarlightColors)
+                      light.withValues(alpha: .38 * fade),
+                  ]
+                : [
+                    color.withValues(alpha: 0),
+                    color.withValues(alpha: .38 * fade),
+                  ],
+          )
           ..strokeWidth = cell * .46
           ..strokeCap = StrokeCap.round,
       );

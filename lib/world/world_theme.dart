@@ -8,9 +8,21 @@ class WorldPalette {
     : background = _color(data['background'], 'background'),
       board = _color(data['board'], 'board'),
       border = _color(data['border'], 'border'),
-      accent = _color(data['accent'], 'accent');
+      accent = _color(data['accent'], 'accent'),
+      accents = _accents(data['accents']);
 
   final ui.Color background, board, border, accent;
+  final List<ui.Color> accents;
+
+  static List<ui.Color> _accents(Object? value) {
+    if (value == null) return const [];
+    if (value is! List || value.length < 2) {
+      throw const FormatException(
+        'World accent colors need at least two colors',
+      );
+    }
+    return List.unmodifiable(value.map((color) => _color(color, 'accents')));
+  }
 
   static ui.Color _color(Object? value, String name) {
     if (value is! String || !RegExp(r'^#[0-9a-fA-F]{6}$').hasMatch(value)) {

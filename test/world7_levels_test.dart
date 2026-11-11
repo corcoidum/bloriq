@@ -23,6 +23,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/mechanic_solver.dart';
+import 'support/start_game.dart';
 import 'support/story_session.dart';
 import 'support/world_release.dart';
 
@@ -57,27 +58,20 @@ const _targets = [
 ];
 const _forest = {'echoEraser', 'echoHold', 'oneWay', 'goalOnly', 'echoGate'};
 const _lighthouses = {'mirrorPair', 'clockArrow', 'ice', 'shelfDoor'};
-const _chapters = [
-  {'ko': '빛길의 시작', 'en': 'The Lightroad Begins'},
-  {'ko': '거울과 시계', 'en': 'Mirrors and Clocks'},
-  {'ko': '얼음과 책장', 'en': 'Ice and Bookshelves'},
-  {'ko': '다섯 등대의 합창', 'en': 'Chorus of Five Lighthouses'},
-  {'ko': '마지막 잔상', 'en': 'The Last Echo'},
-];
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final levels = solverFixtureRows(_asset).map(Level.fromJson).toList();
   const solver = PuzzleSolver(maxStates: 200000);
 
-  test('25 draft stages match their slots and keep the saga planned', () {
+  test('25 published stages match their slots and the saga entry', () {
     expect(
       Worlds.parseLevels(File(_asset).readAsStringSync(), _world),
       hasLength(25),
     );
     expect(
       Saga.parse(File(Saga.asset).readAsStringSync()).world(7).playable,
-      isFalse,
+      isTrue,
     );
     expect(
       levels.map((level) => level.id),
@@ -232,6 +226,9 @@ void main() {
         (level) => level.id % 5 == 1 || level.id % 5 == 0,
       )) {
         final boundary = await _pumpStage(tester, session, settings, level);
+        if (releaseKey('mix-guide-1').evaluate().isNotEmpty) {
+          await tapVisible(tester, releaseKey('mix-guide-next'));
+        }
         expect(releaseGame(tester).controller.state.moves, 0);
         expect(
           tester.getRect(releaseKey('game-home')).top,
@@ -299,21 +296,9 @@ Future<void> _closeStage(WidgetTester tester) async {
 Future<GameSession> _draftSession(List<Level> levels) async {
   final saga = Saga.parse(File(Saga.asset).readAsStringSync());
   final catalog = await StoryCatalog.load();
-  // 캡처에 쓸 장 제목과 ID만 테스트 안에서 바꾼다.
   final data = jsonDecode(
-    File('assets/story/world6.json').readAsStringSync(),
+    File('assets/story/world7.json').readAsStringSync(),
   ) as Map<String, dynamic>;
-  data['worldId'] = 'w7';
-  for (final (index, chapter) in (data['chapters'] as List).indexed) {
-    chapter['globalChapter'] = Worlds.globalChapter(_world, index + 1);
-    chapter['name'] = _chapters[index];
-    chapter['power'] = null;
-  }
-  for (final (index, spirit) in (data['spirits'] as List).indexed) {
-    spirit['id'] = 's7-${(index + 1).toString().padLeft(2, '0')}';
-    spirit['levelId'] = Worlds.firstLevelId(_world) + index;
-    spirit['levelTitle'] = _chapters[index ~/ 5];
-  }
   return GameSession(
     levels: [
       Level.fromJson(solverFixtureRows('assets/levels/levels.json').first),

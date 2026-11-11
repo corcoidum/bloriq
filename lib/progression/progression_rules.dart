@@ -174,6 +174,7 @@ abstract final class TrailIds {
   static const mist = 'mist';
   static const aurora = 'aurora';
   static const starfall = 'starfall';
+  static const firstStarlight = 'first_starlight';
 
   /// 별바다 항해 25판 이정표.
   static const tide = 'tide';
@@ -203,6 +204,10 @@ const trails = <TrailDefinition>[
   TrailDefinition(TrailIds.mist, ProgressionText('안개', 'Mist')),
   TrailDefinition(TrailIds.aurora, ProgressionText('오로라', 'Aurora')),
   TrailDefinition(TrailIds.starfall, ProgressionText('별비', 'Starfall')),
+  TrailDefinition(
+    TrailIds.firstStarlight,
+    ProgressionText('첫 별빛', 'First Starlight'),
+  ),
   TrailDefinition(TrailIds.tide, ProgressionText('물결', 'Tide')),
   TrailDefinition(TrailIds.rose, ProgressionText('장밋빛', 'Rose')),
   TrailDefinition(TrailIds.ember, ProgressionText('불씨', 'Ember')),
@@ -303,6 +308,10 @@ const titles = <TitleDefinition>[
   TitleDefinition(
     'first_echo_librarian',
     ProgressionText('첫 잔상의 사서', 'Librarian of the First Echo'),
+  ),
+  TitleDefinition(
+    'first_star_echo',
+    ProgressionText('첫 별의 잔상', 'Echo of the First Star'),
   ),
   TitleDefinition('golden_first', ProgressionText('첫 황금 별자리', 'First Gold')),
   TitleDefinition(
@@ -871,6 +880,33 @@ const achievements = <Achievement>[
     target: 75,
     name: ProgressionText('꿈의 서고 별 75개', 'All 75 Dream Library stars'),
     rewards: [TitleUnlock('first_echo_librarian')],
+  ),
+  Achievement(
+    id: 'w7-stars-25',
+    kind: AchievementKind.worldStars,
+    world: 7,
+    target: 25,
+    name: ProgressionText('첫 별의 별 25개', '25 First Star stars'),
+    rewards: [StardustBundle(200)],
+  ),
+  Achievement(
+    id: 'w7-stars-50',
+    kind: AchievementKind.worldStars,
+    world: 7,
+    target: 50,
+    name: ProgressionText('첫 별의 별 50개', '50 First Star stars'),
+    rewards: [StarlightCharge(3)],
+  ),
+  Achievement(
+    id: 'w7-stars-75',
+    kind: AchievementKind.worldStars,
+    world: 7,
+    target: 75,
+    name: ProgressionText('첫 별의 별 75개', 'All 75 First Star stars'),
+    rewards: [
+      TitleUnlock('first_star_echo'),
+      TrailUnlock(TrailIds.firstStarlight),
+    ],
   ),
   Achievement(
     id: 'golden-1',

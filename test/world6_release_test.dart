@@ -184,7 +184,7 @@ void main() {
   });
 
   testWidgets(
-    'clearing 525 lights the fifth lighthouse and previews the finale',
+    'clearing 525 lights the fifth lighthouse and opens the First Star map',
     (tester) async {
       seedCampaign(_chaptersBeforeFinal, cleared: releaseLevels(6).take(24));
       await openReleaseApp(tester);
@@ -203,8 +203,18 @@ void main() {
         contains(30),
       );
       await tapVisible(tester, releaseKey('result-next'));
+      await waitForReleaseWidget(tester, releaseWorldMap(7));
+      expect(find.text('첫 별'), findsOneWidget);
+      await tapVisible(tester, releaseKey('world-close'));
+      await waitForHome(tester);
+      await openLightroad(tester, 6);
       final saga = find.byType(SagaMap);
       await waitForReleaseWidget(tester, saga);
+      final scrollable = find
+          .descendant(of: saga, matching: find.byType(Scrollable))
+          .first;
+      tester.state<ScrollableState>(scrollable).position.jumpTo(0);
+      await tester.pump();
       expect(
         find.descendant(
           of: releaseKey('saga-lit'),
@@ -213,9 +223,6 @@ void main() {
         findsOneWidget,
       );
 
-      final scrollable = find
-          .descendant(of: saga, matching: find.byType(Scrollable))
-          .first;
       final library = releaseKey('saga-world-6');
       await tester.scrollUntilVisible(library, 170, scrollable: scrollable);
       expect(
@@ -230,7 +237,7 @@ void main() {
       );
       final sagaData = Saga.parse(await rootBundle.loadString(Saga.asset));
       expect(_storyText(sagaData.world(7).reveal.ko), findsNothing);
-      expect(releaseKey('saga-enter-7'), findsNothing);
+      expect(releaseKey('saga-enter-7'), findsOneWidget);
       await closeReleaseApp(tester);
     },
   );

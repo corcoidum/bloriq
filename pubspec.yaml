@@ -33,6 +33,7 @@ flutter:
     - assets/levels/world4.json
     - assets/levels/world5.json
     - assets/levels/world6.json
+    - assets/levels/world7.json
     - assets/levels/endless_pool_v1.json
     - assets/audio/
     - assets/art/star_courier/
@@ -45,6 +46,7 @@ flutter:
     - assets/story/world4.json
     - assets/story/world5.json
     - assets/story/world6.json
+    - assets/story/world7.json
     - assets/worlds/saga.json
     - assets/fonts/Jua-OFL.txt
     - assets/fonts/NanumGothic-OFL.txt

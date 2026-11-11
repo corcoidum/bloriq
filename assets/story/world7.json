@@ -1,0 +1,1221 @@
+{
+  "version": 1,
+  "worldId": "w7",
+  "title": {
+    "ko": "첫 별",
+    "en": "The First Star"
+  },
+  "prologue": {
+    "ko": "다섯 등대가 모두 켜졌어. 빛길이 하나로 이어지자 그 끝에서 첫 별이 눈을 뜨려 했어.",
+    "en": "All five lighthouses were lit. The lightroad became one path, and the First Star began to wake at its end."
+  },
+  "chapters": [
+    {
+      "number": 1,
+      "globalChapter": 31,
+      "power": null,
+      "family": "lightroad_kin",
+      "name": {
+        "ko": "빛길의 시작",
+        "en": "The Lightroad Begins"
+      },
+      "familyName": {
+        "ko": "빛길의 사촌들",
+        "en": "Lightroad Cousins"
+      },
+      "constellation": {
+        "ko": "배웅자리",
+        "en": "The Farewell"
+      },
+      "stars": {
+        "nodes": [
+          [
+            0.13,
+            0.7
+          ],
+          [
+            0.32,
+            0.53
+          ],
+          [
+            0.52,
+            0.59
+          ],
+          [
+            0.69,
+            0.31
+          ],
+          [
+            0.87,
+            0.19
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            4
+          ]
+        ]
+      },
+      "intro": {
+        "ko": "숲 친구들이 빛길 입구에 모였어. 다섯 등대에서 온 어린 사촌들도 함께였어.",
+        "en": "Forest friends gathered at the lightroad. Young cousins from the five lighthouses joined them."
+      },
+      "endingTitle": {
+        "ko": "처음 건넨 사과",
+        "en": "An Apology at Last"
+      },
+      "ending": {
+        "ko": "아스테르가 고개를 숙였어. '친구들을 지키려다 네 길까지 멈췄어. 미안해, 리크.' 숲 친구들이 조용히 손을 흔들었어.",
+        "en": "Aster bowed their head. \"I wanted to protect our friends, and I stopped your path too. I am sorry, RIQ.\" The forest friends waved quietly."
+      }
+    },
+    {
+      "number": 2,
+      "globalChapter": 32,
+      "power": null,
+      "family": "mirror_clock_kin",
+      "name": {
+        "ko": "거울과 시계",
+        "en": "Mirrors and Clocks"
+      },
+      "familyName": {
+        "ko": "물결과 태엽 가문",
+        "en": "Ripple and Spring Kin"
+      },
+      "constellation": {
+        "ko": "맞물림자리",
+        "en": "The Interlock"
+      },
+      "stars": {
+        "nodes": [
+          [
+            0.17,
+            0.31
+          ],
+          [
+            0.36,
+            0.62
+          ],
+          [
+            0.55,
+            0.26
+          ],
+          [
+            0.75,
+            0.61
+          ],
+          [
+            0.55,
+            0.82
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            4
+          ],
+          [
+            4,
+            1
+          ]
+        ]
+      },
+      "intro": {
+        "ko": "호수의 그림자가 시계탑 바늘에 닿았어. 두 기억이 같은 밤을 천천히 맞추기 시작했어.",
+        "en": "The lake shadow touched a clocktower hand. Two memories slowly began to find the same night."
+      },
+      "endingTitle": {
+        "ko": "같은 밤의 두 조각",
+        "en": "Two Pieces of One Night"
+      },
+      "ending": {
+        "ko": "그림자와 바늘이 같은 밤을 가리켰어. 리크의 기억에 작은 등불을 든 손이 돌아왔어.",
+        "en": "The shadow and the hands pointed to the same night. RIQ remembered a hand holding a small lantern."
+      }
+    },
+    {
+      "number": 3,
+      "globalChapter": 33,
+      "power": null,
+      "family": "thawed_pages_kin",
+      "name": {
+        "ko": "얼음과 책장",
+        "en": "Ice and Bookshelves"
+      },
+      "familyName": {
+        "ko": "서리와 책갈피 가문",
+        "en": "Frost and Bookmark Kin"
+      },
+      "constellation": {
+        "ko": "펼친기억자리",
+        "en": "The Open Memory"
+      },
+      "stars": {
+        "nodes": [
+          [
+            0.18,
+            0.67
+          ],
+          [
+            0.27,
+            0.25
+          ],
+          [
+            0.52,
+            0.49
+          ],
+          [
+            0.75,
+            0.25
+          ],
+          [
+            0.84,
+            0.67
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            4
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ]
+      },
+      "intro": {
+        "ko": "녹은 기억이 '첫 잔상' 책으로 흘러들었어. 얼음과 책장 사이로 오래된 장면이 이어졌어.",
+        "en": "Thawed memories flowed into The First Echo. An old scene unfolded between ice and bookshelves."
+      },
+      "endingTitle": {
+        "ko": "남겨 둔 작은 빛",
+        "en": "A Little Light Left Behind"
+      },
+      "ending": {
+        "ko": "첫 별이 사라지기 전의 장면이었어. 첫 별은 마지막 빛을 작은 잔상 하나로 남겼어. 책장 위로 그 빛이 조용히 번졌어.",
+        "en": "It was a scene from before the First Star vanished. The star left its last light as a little echo. That light spread quietly across the pages."
+      }
+    },
+    {
+      "number": 4,
+      "globalChapter": 34,
+      "power": null,
+      "family": "lighthouse_kin",
+      "name": {
+        "ko": "다섯 등대의 합창",
+        "en": "Chorus of Five Lighthouses"
+      },
+      "familyName": {
+        "ko": "다섯 등대 가문",
+        "en": "Five Lighthouse Kin"
+      },
+      "constellation": {
+        "ko": "모인빛자리",
+        "en": "The Gathered Lights"
+      },
+      "stars": {
+        "nodes": [
+          [
+            0.5,
+            0.12
+          ],
+          [
+            0.85,
+            0.4
+          ],
+          [
+            0.73,
+            0.82
+          ],
+          [
+            0.27,
+            0.82
+          ],
+          [
+            0.15,
+            0.4
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            4
+          ],
+          [
+            4,
+            0
+          ]
+        ]
+      },
+      "intro": {
+        "ko": "다섯 가문의 어린 지기들이 길을 이었어. 저마다 가져온 빛이 서로 다른 색으로 반짝였어.",
+        "en": "Young keepers of five families joined the path. Each light they carried shone in a different color."
+      },
+      "endingTitle": {
+        "ko": "한 줄로 모인 빛",
+        "en": "Lights Along One Path"
+      },
+      "ending": {
+        "ko": "등대 수호자들이 각자의 빛을 모았어. 다섯 색이 한 길을 이루자 첫 별 앞에 마지막 칸이 보였어.",
+        "en": "The lighthouse guardians gathered their lights. Five colors became one path, revealing the last tile before the First Star."
+      }
+    },
+    {
+      "number": 5,
+      "globalChapter": 35,
+      "power": null,
+      "family": "first_star_wardens",
+      "name": {
+        "ko": "마지막 잔상",
+        "en": "The Last Echo"
+      },
+      "familyName": {
+        "ko": "별길지기 가문",
+        "en": "Starpath Wardens"
+      },
+      "constellation": {
+        "ko": "첫별자리",
+        "en": "The First Star"
+      },
+      "stars": {
+        "nodes": [
+          [
+            0.5,
+            0.12
+          ],
+          [
+            0.87,
+            0.43
+          ],
+          [
+            0.71,
+            0.86
+          ],
+          [
+            0.29,
+            0.86
+          ],
+          [
+            0.13,
+            0.43
+          ]
+        ],
+        "edges": [
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            4
+          ],
+          [
+            4,
+            1
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            3,
+            0
+          ]
+        ]
+      },
+      "intro": {
+        "ko": "아스테르와 등대지기들이 마지막 길을 지켰어. 리크가 다가가자 첫 별이 조용히 밝아졌어.",
+        "en": "Aster and the lighthouse keepers guarded the last path. The First Star glimmered as RIQ came near."
+      },
+      "endingTitle": {
+        "ko": "다시 켜진 첫 별",
+        "en": "The First Star Shines Again"
+      },
+      "ending": {
+        "ko": "리크는 첫 별이 남긴 마지막 잔상이었어. 리크가 돌아오자 첫 별이 다시 켜졌어. 친구들의 빛이 그 곁에 오래 머물렀어.",
+        "en": "RIQ was the First Star's last echo. With RIQ's return, the First Star shone again. The friends' lights stayed close for a long time."
+      }
+    }
+  ],
+  "spirits": [
+    {
+      "id": "s7-01",
+      "levelId": 601,
+      "chapter": 1,
+      "family": "lightroad_kin",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "포아",
+        "en": "Poa"
+      },
+      "levelTitle": {
+        "ko": "빛길의 시작 · 포아",
+        "en": "The Lightroad Begins · Poa"
+      },
+      "appearance": {
+        "ko": "포미의 사촌이야. 숲 가문의 작은 잎 망토를 둘렀어.",
+        "en": "Pomi’s cousin wears a little leaf cloak from the Forest family."
+      },
+      "personality": {
+        "ko": "먼저 손을 내미는 다정한 아이야.",
+        "en": "A kind child who reaches out first."
+      },
+      "memory": {
+        "ko": "포미가 네 첫 발걸음을 들려줬어. 오늘은 내가 입구에서 배웅할게.",
+        "en": "Pomi told me about your first steps. Today I will see you off at the entrance."
+      },
+      "quote": {
+        "ko": "첫 칸을 기억하며 걸어 봐.",
+        "en": "Walk with your first tile in mind."
+      }
+    },
+    {
+      "id": "s7-02",
+      "levelId": 602,
+      "chapter": 1,
+      "family": "lightroad_kin",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "누비",
+        "en": "Nubi"
+      },
+      "levelTitle": {
+        "ko": "빛길의 시작 · 누비",
+        "en": "The Lightroad Begins · Nubi"
+      },
+      "appearance": {
+        "ko": "안개 가문의 막내야. 하늘결과 닮은 옅은 구름 귀가 있어.",
+        "en": "The youngest of the Mist family has pale cloud ears like Skyveil’s."
+      },
+      "personality": {
+        "ko": "급한 친구 곁에서 천천히 기다려 줘.",
+        "en": "Waits patiently beside friends in a hurry."
+      },
+      "memory": {
+        "ko": "구름 계단에서 기다리는 법을 배웠어. 네가 멈추면 나도 잠깐 쉴게.",
+        "en": "I learned to wait on the cloud stairs. When you pause, I will rest too."
+      },
+      "quote": {
+        "ko": "천천히 빛을 따라와도 돼.",
+        "en": "You can take time to see the light."
+      }
+    },
+    {
+      "id": "s7-03",
+      "levelId": 603,
+      "chapter": 1,
+      "family": "lightroad_kin",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "물솔",
+        "en": "Mulsol"
+      },
+      "levelTitle": {
+        "ko": "빛길의 시작 · 물솔",
+        "en": "The Lightroad Begins · Mulsol"
+      },
+      "appearance": {
+        "ko": "해미의 사촌이야. 물결 가문의 푸른 매듭을 달았어.",
+        "en": "Haemi’s cousin wears the blue knot of the Tide family."
+      },
+      "personality": {
+        "ko": "길이 갈라지면 먼저 소리를 들어.",
+        "en": "Listens first when a path divides."
+      },
+      "memory": {
+        "ko": "안개 항구에서 네가 남긴 잔상을 봤어. 빈 칸에도 다음 길이 숨어 있었지.",
+        "en": "I saw your echo in Mist Harbor. Even an empty tile held another path."
+      },
+      "quote": {
+        "ko": "돌아갈 자리도 길의 일부야.",
+        "en": "A place to return is part of the path."
+      }
+    },
+    {
+      "id": "s7-04",
+      "levelId": 604,
+      "chapter": 1,
+      "family": "lightroad_kin",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "키온",
+        "en": "Kion"
+      },
+      "levelTitle": {
+        "ko": "빛길의 시작 · 키온",
+        "en": "The Lightroad Begins · Kion"
+      },
+      "appearance": {
+        "ko": "열쇠 가문의 어린 견습이야. 노을지기에게 받은 작은 고리가 있어.",
+        "en": "A young Key-family apprentice carries a ring from Duskwarden."
+      },
+      "personality": {
+        "ko": "작은 약속을 오래 기억해.",
+        "en": "Remembers small promises for a long time."
+      },
+      "memory": {
+        "ko": "문을 여는 손은 하나여도 길을 준비한 친구는 많았어.",
+        "en": "One hand opened the door, but many friends prepared the path."
+      },
+      "quote": {
+        "ko": "열릴 때를 함께 맞춰 보자.",
+        "en": "Let us find the opening together."
+      }
+    },
+    {
+      "id": "s7-05",
+      "levelId": 605,
+      "chapter": 1,
+      "family": "lightroad_kin",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "등아",
+        "en": "Deunga"
+      },
+      "levelTitle": {
+        "ko": "빛길의 시작 · 등아",
+        "en": "The Lightroad Begins · Deunga"
+      },
+      "appearance": {
+        "ko": "노아의 어린 사촌이야. 등불 가문의 노란 불씨를 안고 있어.",
+        "en": "Noa’s young cousin holds a yellow ember from the Beacon family."
+      },
+      "personality": {
+        "ko": "친구가 말할 때 끝까지 들어 줘.",
+        "en": "Listens until a friend has finished speaking."
+      },
+      "memory": {
+        "ko": "아스테르가 오래 입구에 서 있었어. 오늘은 함께 끝까지 걸어가고 싶대.",
+        "en": "Aster waited at the entrance for a long time. Today they want to walk with us to the end."
+      },
+      "quote": {
+        "ko": "이번 길은 함께 걸을 수 있어.",
+        "en": "We can walk this path together."
+      }
+    },
+    {
+      "id": "s7-06",
+      "levelId": 606,
+      "chapter": 2,
+      "family": "mirror_clock_kin",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "연루",
+        "en": "Yeonru"
+      },
+      "levelTitle": {
+        "ko": "거울과 시계 · 연루",
+        "en": "Mirrors and Clocks · Yeonru"
+      },
+      "appearance": {
+        "ko": "연화의 사촌이야. 수련 가문의 둥근 잎 모자를 썼어.",
+        "en": "Lotus’s cousin wears a round leaf hat from the Lotus family."
+      },
+      "personality": {
+        "ko": "물 위에 비친 작은 표정도 알아봐.",
+        "en": "Notices even a small expression in water."
+      },
+      "memory": {
+        "ko": "호수에 네 발자국이 다시 비쳤어. 그때보다 그림자가 조금 따뜻했어.",
+        "en": "Your footsteps appeared in the lake again. Their shadows felt warmer this time."
+      },
+      "quote": {
+        "ko": "같이 움직이는 물결을 봐.",
+        "en": "Watch the ripples move together."
+      }
+    },
+    {
+      "id": "s7-07",
+      "levelId": 607,
+      "chapter": 2,
+      "family": "mirror_clock_kin",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "물린",
+        "en": "Mullin"
+      },
+      "levelTitle": {
+        "ko": "거울과 시계 · 물린",
+        "en": "Mirrors and Clocks · Mullin"
+      },
+      "appearance": {
+        "ko": "물그림자 가문의 막내야. 고요를 닮은 은빛 발끝이 있어.",
+        "en": "The youngest Water Shadow has silver toes like Stillwater’s."
+      },
+      "personality": {
+        "ko": "말 대신 조용히 옆에 서 줘.",
+        "en": "Offers quiet company instead of many words."
+      },
+      "memory": {
+        "ko": "호수의 그림자가 멈춘 시계를 만났어. 둘은 같은 밤을 기억하고 있었어.",
+        "en": "The lake shadow met a stopped clock. Both remembered the same night."
+      },
+      "quote": {
+        "ko": "그림자도 다음 수를 기다려.",
+        "en": "Even a shadow waits for the next move."
+      }
+    },
+    {
+      "id": "s7-08",
+      "levelId": 608,
+      "chapter": 2,
+      "family": "mirror_clock_kin",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "태루",
+        "en": "Taeru"
+      },
+      "levelTitle": {
+        "ko": "거울과 시계 · 태루",
+        "en": "Mirrors and Clocks · Taeru"
+      },
+      "appearance": {
+        "ko": "모루의 어린 사촌이야. 태엽 가문의 작은 열쇠를 달았어.",
+        "en": "Moru’s young cousin wears a small Winding-family key."
+      },
+      "personality": {
+        "ko": "천천히 맞물리는 소리를 좋아해.",
+        "en": "Loves the sound of gears finding their pace."
+      },
+      "memory": {
+        "ko": "다시 움직인 시계는 잊은 밤을 세었어. 바늘 하나가 네 발자국을 따라갔지.",
+        "en": "The waking clock counted a forgotten night. One hand followed your footsteps."
+      },
+      "quote": {
+        "ko": "같은 시각에 길이 만날 거야.",
+        "en": "The paths will meet at the same hour."
+      }
+    },
+    {
+      "id": "s7-09",
+      "levelId": 609,
+      "chapter": 2,
+      "family": "mirror_clock_kin",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "종아",
+        "en": "Jonga"
+      },
+      "levelTitle": {
+        "ko": "거울과 시계 · 종아",
+        "en": "Mirrors and Clocks · Jonga"
+      },
+      "appearance": {
+        "ko": "종 가문 루멘의 사촌이야. 맑은 작은 종을 품었어.",
+        "en": "A cousin of Lumen of the Bell family carries a clear little bell."
+      },
+      "personality": {
+        "ko": "친구의 대답을 재촉하지 않아.",
+        "en": "Never hurries a friend’s answer."
+      },
+      "memory": {
+        "ko": "마지막 종이 울리던 밤에도 작은 등불이 남아 있었어.",
+        "en": "A small lantern remained on the night the last bell rang."
+      },
+      "quote": {
+        "ko": "울림이 돌아올 때까지 기다려.",
+        "en": "Wait for the note to return."
+      }
+    },
+    {
+      "id": "s7-10",
+      "levelId": 610,
+      "chapter": 2,
+      "family": "mirror_clock_kin",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "기온",
+        "en": "Gion"
+      },
+      "levelTitle": {
+        "ko": "거울과 시계 · 기온",
+        "en": "Mirrors and Clocks · Gion"
+      },
+      "appearance": {
+        "ko": "기어라의 어린 친척이야. 톱니 가문의 금빛 어깨가 있어.",
+        "en": "Geara’s young relative has golden shoulders from the Gear family."
+      },
+      "personality": {
+        "ko": "흩어진 조각을 차분히 맞춰.",
+        "en": "Fits scattered pieces together calmly."
+      },
+      "memory": {
+        "ko": "그림자와 바늘 사이에 빈칸이 있었어. 네가 오자 그 칸에 온기가 돌았어.",
+        "en": "There was a gap between shadow and hand. When you came, warmth filled it."
+      },
+      "quote": {
+        "ko": "두 기억을 같은 칸에 놓아 봐.",
+        "en": "Let the two memories meet on one tile."
+      }
+    },
+    {
+      "id": "s7-11",
+      "levelId": 611,
+      "chapter": 3,
+      "family": "thawed_pages_kin",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "서리나",
+        "en": "Seorina"
+      },
+      "levelTitle": {
+        "ko": "얼음과 책장 · 서리나",
+        "en": "Ice and Bookshelves · Seorina"
+      },
+      "appearance": {
+        "ko": "서온의 사촌이야. 서리 가문의 하얀 볼이 반짝여.",
+        "en": "Seoon’s cousin has sparkling white cheeks from the Frost family."
+      },
+      "personality": {
+        "ko": "차가운 손을 두 손으로 감싸 줘.",
+        "en": "Warms cold hands between both of theirs."
+      },
+      "memory": {
+        "ko": "동굴에서 녹은 기억을 한 조각 가져왔어. 책에 닿으니 그림이 되었어.",
+        "en": "I brought a thawed memory from the cave. It became a picture on the page."
+      },
+      "quote": {
+        "ko": "미끄러진 끝에 책장이 있어.",
+        "en": "A bookshelf waits at the end of the slide."
+      }
+    },
+    {
+      "id": "s7-12",
+      "levelId": 612,
+      "chapter": 3,
+      "family": "thawed_pages_kin",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "눈소",
+        "en": "Nunso"
+      },
+      "levelTitle": {
+        "ko": "얼음과 책장 · 눈소",
+        "en": "Ice and Bookshelves · Nunso"
+      },
+      "appearance": {
+        "ko": "눈결정 가문의 막내야. 설미에게 받은 여섯 갈래 리본을 달았어.",
+        "en": "The youngest Snowflake wears a six-point ribbon from Seolmi."
+      },
+      "personality": {
+        "ko": "낯익은 모습을 만나면 반갑게 웃어.",
+        "en": "Smiles warmly at a familiar shape."
+      },
+      "memory": {
+        "ko": "얼음에 비친 네 그림자가 책 속 그림과 잠깐 겹쳤어.",
+        "en": "Your reflection in the ice briefly met a picture in the book."
+      },
+      "quote": {
+        "ko": "닮은 조각을 서둘러 넘기지 마.",
+        "en": "Take time with the pieces that look alike."
+      }
+    },
+    {
+      "id": "s7-13",
+      "levelId": 613,
+      "chapter": 3,
+      "family": "thawed_pages_kin",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "갈피",
+        "en": "Galpi"
+      },
+      "levelTitle": {
+        "ko": "얼음과 책장 · 갈피",
+        "en": "Ice and Bookshelves · Galpi"
+      },
+      "appearance": {
+        "ko": "문온의 어린 사촌이야. 책벌레 가문의 작은 갈피를 들었어.",
+        "en": "Munon’s young cousin carries a little Bookworm-family bookmark."
+      },
+      "personality": {
+        "ko": "기다리는 동안에도 자리를 지켜.",
+        "en": "Keeps a place safe while waiting."
+      },
+      "memory": {
+        "ko": "빈 책에 처음으로 그림자가 생겼어. 아주 작은 빛이 페이지 끝에 있었어.",
+        "en": "A shadow appeared in the empty book. A little light rested at the edge of a page."
+      },
+      "quote": {
+        "ko": "지나온 쪽에도 길을 남겨 둬.",
+        "en": "Leave a path on the side you came from."
+      }
+    },
+    {
+      "id": "s7-14",
+      "levelId": 614,
+      "chapter": 3,
+      "family": "thawed_pages_kin",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "잉온",
+        "en": "Ingon"
+      },
+      "levelTitle": {
+        "ko": "얼음과 책장 · 잉온",
+        "en": "Ice and Bookshelves · Ingon"
+      },
+      "appearance": {
+        "ko": "묵선의 사촌이야. 잉크 가문의 별무늬 손끝을 가졌어.",
+        "en": "Mukseon’s cousin has star-marked fingertips from the Ink family."
+      },
+      "personality": {
+        "ko": "지워진 글자를 끝까지 살펴봐.",
+        "en": "Looks carefully at words that have faded."
+      },
+      "memory": {
+        "ko": "녹은 기억을 따라 잉크가 이어졌어. 이름보다 먼저 작은 빛이 그려졌어.",
+        "en": "Ink followed the thawed memories. A little light appeared before any name."
+      },
+      "quote": {
+        "ko": "아직 빈 줄은 함께 채워 가자.",
+        "en": "Let us fill the empty lines together."
+      }
+    },
+    {
+      "id": "s7-15",
+      "levelId": 615,
+      "chapter": 3,
+      "family": "thawed_pages_kin",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "종이별",
+        "en": "Paperstar"
+      },
+      "levelTitle": {
+        "ko": "얼음과 책장 · 종이별",
+        "en": "Ice and Bookshelves · Paperstar"
+      },
+      "appearance": {
+        "ko": "비람의 어린 사촌이야. 종이새 가문의 별 모양 날개가 있어.",
+        "en": "Biram’s young cousin has star-shaped wings from the Paper Bird family."
+      },
+      "personality": {
+        "ko": "끝까지 읽은 이야기를 소중히 품어.",
+        "en": "Holds a story dear after reading to the end."
+      },
+      "memory": {
+        "ko": "얼음 속 장면과 책의 빈 줄이 이어졌어. 오래 접혀 있던 페이지가 펼쳐졌지.",
+        "en": "The scene in the ice joined the blank line. A page folded long ago opened at last."
+      },
+      "quote": {
+        "ko": "마지막 빛이 머문 곳을 봐.",
+        "en": "See where the last light stayed."
+      }
+    },
+    {
+      "id": "s7-16",
+      "levelId": 616,
+      "chapter": 4,
+      "family": "lighthouse_kin",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "등솔",
+        "en": "Deungsol"
+      },
+      "levelTitle": {
+        "ko": "다섯 등대의 합창 · 등솔",
+        "en": "Chorus of Five Lighthouses · Deungsol"
+      },
+      "appearance": {
+        "ko": "등불 가문 노아의 사촌이야. 첫째 등대의 푸른 불씨를 가져왔어.",
+        "en": "Noa’s Beacon-family cousin brings a blue ember from the first lighthouse."
+      },
+      "personality": {
+        "ko": "친구가 보낸 빛에 꼭 답해 줘.",
+        "en": "Always answers a light sent by a friend."
+      },
+      "memory": {
+        "ko": "구름바다의 불씨가 길 끝에 닿았어. 노아가 뒤에서 같은 빛을 보내 줬어.",
+        "en": "The Cloud Sea ember reached the path’s end. Noa sent the same light from behind."
+      },
+      "quote": {
+        "ko": "첫째 빛은 여기에 둘게.",
+        "en": "I will place the first light here."
+      }
+    },
+    {
+      "id": "s7-17",
+      "levelId": 617,
+      "chapter": 4,
+      "family": "lighthouse_kin",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "온솔",
+        "en": "Onsol"
+      },
+      "levelTitle": {
+        "ko": "다섯 등대의 합창 · 온솔",
+        "en": "Chorus of Five Lighthouses · Onsol"
+      },
+      "appearance": {
+        "ko": "거울지기 가문 온빛의 사촌이야. 물빛 고리를 달았어.",
+        "en": "Wholelight’s Mirror Keeper cousin wears a ring of waterlight."
+      },
+      "personality": {
+        "ko": "멀리 있는 친구와도 보폭을 맞춰.",
+        "en": "Matches steps with friends far away."
+      },
+      "memory": {
+        "ko": "둘째 등대의 물빛이 건너왔어. 호수 저편에서도 손을 흔들고 있었어.",
+        "en": "Waterlight crossed from the second lighthouse. Friends waved from the far shore."
+      },
+      "quote": {
+        "ko": "서로 다른 자리에서 이어 보자.",
+        "en": "Let us join the path from different places."
+      }
+    },
+    {
+      "id": "s7-18",
+      "levelId": 618,
+      "chapter": 4,
+      "family": "lighthouse_kin",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "자루",
+        "en": "Jaru"
+      },
+      "levelTitle": {
+        "ko": "다섯 등대의 합창 · 자루",
+        "en": "Chorus of Five Lighthouses · Jaru"
+      },
+      "appearance": {
+        "ko": "자정 가문 오르의 어린 사촌이야. 호박색 바늘핀을 달았어.",
+        "en": "Orr’s young Midnight-family cousin wears an amber hand-shaped pin."
+      },
+      "personality": {
+        "ko": "모두의 차례를 잊지 않고 세어.",
+        "en": "Keeps track of everyone’s turn."
+      },
+      "memory": {
+        "ko": "셋째 등대의 바늘이 같은 때를 가리켰어. 오르가 그 순간의 빛을 맡겼어.",
+        "en": "The third lighthouse’s hands found one hour. Orr entrusted me with its light."
+      },
+      "quote": {
+        "ko": "세 번째 빛도 맞춰졌어.",
+        "en": "The third light has found its place."
+      }
+    },
+    {
+      "id": "s7-19",
+      "levelId": 619,
+      "chapter": 4,
+      "family": "lighthouse_kin",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "서린",
+        "en": "Seorin"
+      },
+      "levelTitle": {
+        "ko": "다섯 등대의 합창 · 서린",
+        "en": "Chorus of Five Lighthouses · Seorin"
+      },
+      "appearance": {
+        "ko": "얼음심장 가문 서람의 사촌이야. 손 안에 하늘빛 결정을 품었어.",
+        "en": "Seoram’s Iceheart-family cousin holds a sky-blue crystal."
+      },
+      "personality": {
+        "ko": "차가운 기억도 다정하게 기다려.",
+        "en": "Waits kindly with even a cold memory."
+      },
+      "memory": {
+        "ko": "넷째 등대에서 마지막 서리가 녹았어. 서람이 따뜻한 결정을 보내 줬어.",
+        "en": "The last frost melted at the fourth lighthouse. Seoram sent a warm crystal."
+      },
+      "quote": {
+        "ko": "네 번째 빛도 이제 따뜻해.",
+        "en": "The fourth light is warm now too."
+      }
+    },
+    {
+      "id": "s7-20",
+      "levelId": 620,
+      "chapter": 4,
+      "family": "lighthouse_kin",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "글별",
+        "en": "Geulbyeol"
+      },
+      "levelTitle": {
+        "ko": "다섯 등대의 합창 · 글별",
+        "en": "Chorus of Five Lighthouses · Geulbyeol"
+      },
+      "appearance": {
+        "ko": "별지기 사서 가문 책별의 어린 사촌이야. 분홍빛 책을 들었어.",
+        "en": "Chaekbyeol’s young Star Librarian cousin holds a pink-lit book."
+      },
+      "personality": {
+        "ko": "흩어진 목소리를 한 이야기에 모아.",
+        "en": "Gathers scattered voices into one story."
+      },
+      "memory": {
+        "ko": "다섯 등대의 빛이 한 줄로 만났어. 리크의 작은 별 표식에 온기가 돌았어.",
+        "en": "Five lighthouse lights met in one line. RIQ’s little star mark grew warm."
+      },
+      "quote": {
+        "ko": "마지막 칸까지 함께 가자.",
+        "en": "Let us reach the last tile together."
+      }
+    },
+    {
+      "id": "s7-21",
+      "levelId": 621,
+      "chapter": 5,
+      "family": "first_star_wardens",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "노아와 온빛",
+        "en": "Noa and Wholelight"
+      },
+      "levelTitle": {
+        "ko": "마지막 잔상 · 노아와 온빛",
+        "en": "The Last Echo · Noa and Wholelight"
+      },
+      "appearance": {
+        "ko": "등불과 물결 고리를 나란히 든 두 수호자야.",
+        "en": "Two guardians stand together with a lantern and a ripple ring."
+      },
+      "personality": {
+        "ko": "돌아오는 친구의 보폭을 먼저 살펴.",
+        "en": "Look first to the pace of a returning friend."
+      },
+      "memory": {
+        "ko": "구름바다의 불씨와 호수의 그림자를 가져왔어. 네가 걸을 자리에서 함께 기다릴게.",
+        "en": "We brought the Cloud Sea ember and the lake shadow. We will wait where you can walk."
+      },
+      "quote": {
+        "ko": "네 걸음에 우리 빛을 맞출게.",
+        "en": "We will match our lights to your steps."
+      }
+    },
+    {
+      "id": "s7-22",
+      "levelId": 622,
+      "chapter": 5,
+      "family": "first_star_wardens",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "자정지기 오르",
+        "en": "Orr, Keeper of Midnight"
+      },
+      "levelTitle": {
+        "ko": "마지막 잔상 · 자정지기 오르",
+        "en": "The Last Echo · Orr, Keeper of Midnight"
+      },
+      "appearance": {
+        "ko": "태엽 망토에 다시 움직이는 시곗바늘을 달았어.",
+        "en": "A moving clock hand rests on a winding cloak."
+      },
+      "personality": {
+        "ko": "멈췄던 때도 지나온 시간으로 품어.",
+        "en": "Holds even a stopped hour as part of the journey."
+      },
+      "memory": {
+        "ko": "멈춘 밤의 시각을 마지막 칸에 놓았어. 이제 다음 수를 셀 수 있어.",
+        "en": "I placed the stopped night’s hour on the last path. We can count the next move now."
+      },
+      "quote": {
+        "ko": "이번 종은 돌아오는 길에 울릴게.",
+        "en": "This bell will ring for the way home."
+      }
+    },
+    {
+      "id": "s7-23",
+      "levelId": 623,
+      "chapter": 5,
+      "family": "first_star_wardens",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "서람",
+        "en": "Seoram"
+      },
+      "levelTitle": {
+        "ko": "마지막 잔상 · 서람",
+        "en": "The Last Echo · Seoram"
+      },
+      "appearance": {
+        "ko": "얼음심장 가문의 수호자야. 맑은 결정 안에 온기가 있어.",
+        "en": "The Iceheart guardian holds warmth inside a clear crystal."
+      },
+      "personality": {
+        "ko": "기억이 돌아올 때까지 곁을 지켜.",
+        "en": "Stays close until a memory returns."
+      },
+      "memory": {
+        "ko": "너무 오래 얼려 둔 장면을 모두 놓아줬어. 오늘은 빈손으로 네 곁에 설게.",
+        "en": "I released the scenes frozen for too long. Today I can stand beside you with open hands."
+      },
+      "quote": {
+        "ko": "돌아온 기억을 함께 안아 주자.",
+        "en": "Let us welcome the memories home."
+      }
+    },
+    {
+      "id": "s7-24",
+      "levelId": 624,
+      "chapter": 5,
+      "family": "first_star_wardens",
+      "guardian": false,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "책별",
+        "en": "Chaekbyeol"
+      },
+      "levelTitle": {
+        "ko": "마지막 잔상 · 책별",
+        "en": "The Last Echo · Chaekbyeol"
+      },
+      "appearance": {
+        "ko": "별지기 사서의 망토에 다섯 갈피가 빛나고 있어.",
+        "en": "Five bookmarks shine on the Star Librarian’s cloak."
+      },
+      "personality": {
+        "ko": "이야기의 마지막 줄도 조용히 기다려.",
+        "en": "Waits quietly for the last line of a story."
+      },
+      "memory": {
+        "ko": "'첫 잔상' 책을 마지막 칸에 펼쳤어. 남은 한 줄은 네 발자국을 기다려.",
+        "en": "I opened The First Echo at the last tile. Its remaining line waits for your footsteps."
+      },
+      "quote": {
+        "ko": "한 걸음이면 다음 줄이 열려.",
+        "en": "One step can open the next line."
+      }
+    },
+    {
+      "id": "s7-25",
+      "levelId": 625,
+      "chapter": 5,
+      "family": "first_star_wardens",
+      "guardian": true,
+      "asset": null,
+      "motionKind": "sway",
+      "name": {
+        "ko": "아스테르와 다섯 지기",
+        "en": "Aster and the Five Keepers"
+      },
+      "levelTitle": {
+        "ko": "마지막 잔상 · 아스테르와 다섯 지기",
+        "en": "The Last Echo · Aster and the Five Keepers"
+      },
+      "appearance": {
+        "ko": "아스테르 곁에 노아, 온빛, 오르, 서람, 책별이 섰어. 여섯 빛이 같은 칸을 감싸.",
+        "en": "Noa, Wholelight, Orr, Seoram and Chaekbyeol stand beside Aster. Six lights surround one tile."
+      },
+      "personality": {
+        "ko": "함께 지킨 약속을 마지막까지 놓지 않아.",
+        "en": "Hold their shared promise to the end."
+      },
+      "memory": {
+        "ko": "여섯 지기의 빛이 마지막 칸에 모였어. 리크가 한 걸음 내딛자 친구들의 발자국도 반짝였어.",
+        "en": "Six keepers gathered their lights on the last tile. As RIQ stepped forward, the friends’ footsteps shone too."
+      },
+      "quote": {
+        "ko": "여기까지 와 줘서 고마워, 리크.",
+        "en": "Thank you for coming this far, RIQ."
+      }
+    }
+  ]
+}

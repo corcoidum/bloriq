@@ -810,6 +810,7 @@ void main() {
       (4, 'clocktower_bellkeeper'),
       (5, 'frost_memory_keeper'),
       (6, 'first_echo_librarian'),
+      (7, 'first_star_echo'),
     ]) {
       test(
         'world $world awards all milestones and restores its title',
@@ -835,6 +836,9 @@ void main() {
             if (id == first + 8) expect(reward.achievementStardust, 200);
             if (id == first + 16) expect(reward.newStarlightCharges, 3);
             if (id == last) expect(reward.newTitles, contains(title));
+            if (world == 7 && id == last) {
+              expect(reward.newTrails, contains(TrailIds.firstStarlight));
+            }
           }
           expect(repo.worldStars(world), 75);
           expect(repo.worldStars(world - 1), 0);
@@ -842,6 +846,9 @@ void main() {
           final restored = await _load();
           expect(restored.claimedAchievements, containsAll(milestones.values));
           expect(restored.ownedTitles, contains(title));
+          if (world == 7) {
+            expect(restored.ownedTrails, contains(TrailIds.firstStarlight));
+          }
           final replay = await restored.recordClear(
             levelKey: '$last:1',
             stars: 3,

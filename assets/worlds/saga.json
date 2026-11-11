@@ -139,7 +139,21 @@
     {
       "number": 7,
       "id": "w7",
-      "status": "planned",
+      "status": "playable",
+      "levels": "assets/levels/world7.json",
+      "story": "assets/story/world7.json",
+      "theme": {
+        "palette": {
+          "background": "#0D142C",
+          "board": "#202C51",
+          "border": "#DFE7FF",
+          "accent": "#FFF2C2",
+          "accents": ["#B7F2FA", "#71E6D6", "#FFD083", "#92DEFF", "#F4A9CB"]
+        },
+        "floor": null,
+        "rock": null,
+        "bgm": "assets/audio/bgm_w7.wav"
+      },
       "title": { "ko": "첫 별", "en": "The First Star" },
       "subtitle": { "ko": "종장 · 마지막 잔상", "en": "Finale · The Last Echo" },
       "mechanic": { "ko": "모든 규칙과 권능이 한 하늘에서 만나요.", "en": "Every rule and power meets in one sky." },

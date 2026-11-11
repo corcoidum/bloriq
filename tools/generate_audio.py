@@ -155,3 +155,16 @@ for bar, (bass, notes) in enumerate([
 for i in range(len(dream_library)):
     dream_library[i] *= min(1., i / (RATE * .035), (len(dream_library) - i - 1) / (RATE * .11))
 write('bgm_w6.wav', dream_library)
+
+# 첫 별은 세계 1의 아르페지오 선율을 느리게 따라가는 24초 루프다.
+first_star = [0.] * (24 * RATE)
+for bar, chord in enumerate(chords):
+    start = bar * 6
+    mix(first_star, tone(chord[0] / 2, 5.85, .055, .46, False), start)
+    for step, note in enumerate((0, 1, 2, 3, 2, 1, 2, 1)):
+        at = start + step * .75
+        mix(first_star, tone(chord[note], .73, .105, 2.4), at)
+        mix(first_star, tone(chord[note] * 2, .64, .035, 3.6), at + .1)
+for i in range(len(first_star)):
+    first_star[i] *= min(1., i / (RATE * .05), (len(first_star) - i - 1) / (RATE * .12))
+write('bgm_w7.wav', first_star)

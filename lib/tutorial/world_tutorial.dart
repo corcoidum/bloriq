@@ -15,7 +15,8 @@ enum WorldTutorial {
   mirror(3, 'mirror-guide', MirrorPair.typeId),
   clock(4, 'clock-guide', ClockArrow.typeId),
   ice(5, 'ice-guide', Ice.typeId),
-  shelf(6, 'shelf-guide', ShelfDoor.typeId);
+  shelf(6, 'shelf-guide', ShelfDoor.typeId),
+  mix(7, 'mix-guide', 'mix');
 
   const WorldTutorial(this.world, this.keyPrefix, this.mechanic);
 
@@ -47,6 +48,7 @@ enum WorldTutorial {
       (t.shelfGuideBlocked, t.shelfGuideBlockedBody),
       (t.shelfGuideLeave, t.shelfGuideLeaveBody),
     ],
+    mix => [(t.mixGuideTitle, t.mixGuideBody)],
   };
 
   String replayLabel(AppLocalizations t) => switch (this) {
@@ -54,6 +56,7 @@ enum WorldTutorial {
     clock => t.clockGuideReplay,
     ice => t.iceGuideReplay,
     shelf => t.shelfGuideReplay,
+    mix => t.mixGuideReplay,
   };
 }
 
@@ -98,7 +101,13 @@ class _WorldTutorialCardState extends State<_WorldTutorialCard> {
       icon: Center(
         child: SizedBox.square(
           dimension: 52,
-          child: CustomPaint(painter: BoardBadge(tutorial.mechanic)),
+          child: tutorial == WorldTutorial.mix
+              ? Icon(
+                  Icons.auto_awesome_rounded,
+                  size: 48,
+                  color: GameTheme.colorsOf(context).goal,
+                )
+              : CustomPaint(painter: BoardBadge(tutorial.mechanic)),
         ),
       ),
       title: Text(title, textAlign: TextAlign.center),

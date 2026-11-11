@@ -200,6 +200,7 @@ void main() {
         'mist',
         'aurora',
         'starfall',
+        'first_starlight',
         'tide',
         'rose',
         'ember',
@@ -211,7 +212,7 @@ void main() {
         'gold_mirror',
       ]);
       expect(defaultTrailId, 'moonlight');
-      expect(titles.length, 20);
+      expect(titles.length, 21);
       for (final text in [
         ...trails.map((t) => t.name),
         ...titles.map((t) => t.name),
@@ -235,6 +236,8 @@ void main() {
       final librarian = titleById('first_echo_librarian')!.name;
       expect(librarian.ko, '첫 잔상의 사서');
       expect(librarian.en, 'Librarian of the First Echo');
+      expect(titleById('first_star_echo')!.name.ko, '첫 별의 잔상');
+      expect(trailById(TrailIds.firstStarlight)!.name.ko, '첫 별빛');
     });
   });
 

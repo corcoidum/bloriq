@@ -74,6 +74,20 @@ class BoardMaterial {
             palette?.background ??
             (dark ? const Color(0xff101d2a) : const Color(0xff52677a)),
     );
+    if (palette != null && palette.accents.isNotEmpty) {
+      for (final (index, accent) in palette.accents.indexed) {
+        final at = Offset(
+          rim.left + rim.width * (index + 1) / (palette.accents.length + 1),
+          rim.top + 2,
+        );
+        final star = Paint()
+          ..color = accent
+          ..strokeWidth = 1.5
+          ..strokeCap = StrokeCap.round;
+        canvas.drawLine(at - const Offset(3, 0), at + const Offset(3, 0), star);
+        canvas.drawLine(at - const Offset(0, 3), at + const Offset(0, 3), star);
+      }
+    }
   }
 
   void floor(Canvas canvas, BoardGeometry geometry) {
