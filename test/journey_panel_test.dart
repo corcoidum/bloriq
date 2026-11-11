@@ -149,10 +149,18 @@ void main() {
 
       await tester.fling(_status, const Offset(-250, 0), 800);
       await tester.pumpAndSettle();
+      // 홈에서 열면 진행 중인 세계 2의 첫 장(6번째 쪽)에서 시작한다.
+      // 세계 1의 5장 뒤에 세계 2의 5장이 이어진다.
+      expect(tester.widget<Text>(_pageCount).data, startsWith('6 / 10'));
+      for (var back = 0; back < 5; back++) {
+        final swipe = tester.getSize(_pages).height * .6;
+        await tester.fling(_pages, Offset(0, swipe), 800);
+        await tester.pumpAndSettle();
+      }
       for (var chapter = 1; chapter <= 5; chapter++) {
         expect(
           tester.widget<Text>(_pageCount).data,
-          startsWith('$chapter / 5'),
+          startsWith('$chapter / 10'),
         );
         _expectStageRow(tester, 1 + (chapter - 1) * 5);
         if (chapter == 1) {

@@ -18,8 +18,9 @@ import 'story_share.dart';
 Future<void> showSpiritAlbum(
   BuildContext context,
   GameSession session,
-  GameSettings settings,
-) => showDialog<void>(
+  GameSettings settings, {
+  int? initialWorld,
+}) => showDialog<void>(
   context: context,
   animationStyle: prefersReducedMotion(context, settings)
       ? AnimationStyle.noAnimation
@@ -27,6 +28,7 @@ Future<void> showSpiritAlbum(
   builder: (_) => SpiritAlbum(
     session: session,
     reduceMotion: prefersReducedMotion(context, settings),
+    initialWorld: initialWorld,
   ),
 );
 
@@ -35,9 +37,14 @@ class SpiritAlbum extends StatefulWidget {
     super.key,
     required this.session,
     this.reduceMotion = false,
+    this.initialWorld,
   });
   final GameSession session;
   final bool reduceMotion;
+
+  /// 처음 보여 줄 세계. 게임 화면에서는 지금 플레이 중인 세계를 넘긴다.
+  /// 비우면 홈 "이어가기"가 가리키는 세계부터 연다.
+  final int? initialWorld;
   @override
   State<SpiritAlbum> createState() => _SpiritAlbumState();
 }
@@ -45,8 +52,8 @@ class SpiritAlbum extends StatefulWidget {
 class _SpiritAlbumState extends State<SpiritAlbum> {
   bool _busy = false;
 
-  /// 보고 있는 세계. 지금 진행 중인 세계부터 연다.
-  late int _world = widget.session.continueTarget.world;
+  /// 보고 있는 세계.
+  late int _world = widget.initialWorld ?? widget.session.continueTarget.world;
   Future<void> _detail(SpiritDefinition friend) async {
     final session = widget.session;
     if (_busy || !session.collection.owns(friend.id)) return;

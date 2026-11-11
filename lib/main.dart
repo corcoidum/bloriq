@@ -498,7 +498,12 @@ class _GameScreenState extends State<GameScreen>
 
   Future<void> _openAlbum() async {
     await _withModal<void>(
-      () => showSpiritAlbum(context, widget.session, widget.settings),
+      () => showSpiritAlbum(
+        context,
+        widget.session,
+        widget.settings,
+        initialWorld: widget.play.world,
+      ),
     );
     if (mounted) setState(() {});
   }
