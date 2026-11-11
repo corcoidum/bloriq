@@ -31,6 +31,12 @@ class WorldChapterView {
   bool get golden => complete && stages.every((stage) => stage.stars == 3);
   bool get unlocked => stages.any((stage) => stage.unlocked);
   List<bool> get lit => [for (final stage in stages) stage.cleared];
+
+  /// 수호 정령 원화는 별자리의 다섯 별을 모두 켠 뒤 공개한다.
+  String? portraitFor(WorldStageView stage) =>
+      stage.cleared && (!stage.spirit.guardian || complete)
+      ? stage.spirit.asset
+      : null;
 }
 
 /// 기록에서 매번 다시 계산하는 확장 세계 진행 상황. 따로 저장하지 않는다.

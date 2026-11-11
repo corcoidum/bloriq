@@ -1,11 +1,11 @@
 # 08 그림 — 수호 정령 원화와 세계 보드 스킨
 
-Codex는 이미지를 만들지 못하므로, 이미지 생성 도구가 있는 곳(Claude 세션의 이미지 도구 등)에서 따로 만든다. 그림이 없어도 게임은 별 모양 자리표시로 돌아간다. 다만 별자리를 완성할 때 수호 정령 원화가 열리는 순간이 핵심 보상이라 **세계마다 수호 정령 5장은 먼저** 만드는 것을 권한다.
+별자리의 다섯 별을 모두 켜면 수호 정령 원화가 열린다. 세계 2~7의 수호 정령 30장과 보드 스킨 40장은 내장 ImageGen으로 만들었다. 그림이 비어 있는 정령은 별 모양으로 표시한다. [에셋별 프롬프트](../art/world2-7-imagegen-prompts.md)
 
 ## 분량
 | 세계 | 수호 정령 원화 | 일반 정령 | 보드 스킨 |
 |---|---|---|---|
-| 2 구름바다 | 5 (비어 있음) | 20 | 바닥 4, 바위 2 |
+| 2 구름바다 | 5 | 20 | 바닥 4, 바위 2 |
 | 3~6 각 세계 | 5 | 20 | 바닥 4, 바위 2, 새 기믹 칸 1~2 |
 | 7 첫 별 | 5 | 20 | 바닥 4, 바위 2 |
 | 합계(우선) | **30** | 120 (나중) | 세계당 6~8 |
@@ -38,8 +38,14 @@ Top-down seamless game floor tile, {세계 모티프} theme, soft storybook wate
 ```text
 BLORIQ 저장소에서 세계 {N} 그림을 연결해 줘. AGENTS.md를 따르고, origin/main에서 codex/w{N}-art를 만든다.
 - assets/art/world{N}/spirits/s{N}-NN.png(정령), assets/art/world{N}/board/{floor_1..4,rock_1..2}.png(타일)를 받았다.
-- assets/story/world{N}.json의 각 정령 asset에 경로를 넣고, saga.json 세계 {N}의 theme.floor/rock에 타일 경로를 넣는다. pubspec assets에 폴더 추가.
+- assets/story/world{N}.json의 각 정령 asset에 경로를 넣고, saga.json 세계 {N}의 theme.floor/rock에 기본 타일을 넣는다. floorVariants/rockVariants에는 추가 변형을 넣고, mechanicArt는 기믹 ID를 타일과 연결한다. pubspec assets에 폴더 추가.
 - 그림은 1024px 정령은 512px webp 또는 png로 줄여 앱 용량을 아낀다(세계당 15MB 이하). 원본은 저장소에 넣지 않는다.
 - 별자리 도감 수호 정령 공개, 정령 도감, 보드 화면 캡처를 docs/screenshots/world{N}/art/에 남긴다.
 검증 명령 통과 후 커밋·푸시·보고.
+```
+
+세계 지도 상단의 정령 도감에서 수집 현황을 볼 수 있다. 아래 명령으로 세계별 보드, 수호 정령 공개, 정령 도감 캡처를 다시 만든다.
+
+```bash
+flutter test -r failures-only test/world_art_test.dart --dart-define=CAPTURE_WORLD_ART=true
 ```

@@ -40,6 +40,18 @@ flutter:
     - assets/art/last_echo/
     - assets/art/season1/
     - assets/art/moon_garden/
+    - assets/art/world2/spirits/
+    - assets/art/world2/board/
+    - assets/art/world3/spirits/
+    - assets/art/world3/board/
+    - assets/art/world4/spirits/
+    - assets/art/world4/board/
+    - assets/art/world5/spirits/
+    - assets/art/world5/board/
+    - assets/art/world6/spirits/
+    - assets/art/world6/board/
+    - assets/art/world7/spirits/
+    - assets/art/world7/board/
     - assets/story/season1.json
     - assets/story/world2.json
     - assets/story/world3.json

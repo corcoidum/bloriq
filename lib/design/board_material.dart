@@ -96,14 +96,15 @@ class BoardMaterial {
         ? well
         : Color.lerp(palette.board, palette.background, .38)!;
     canvas.drawRRect(geometry.boardShape, Paint()..color = wellColor);
-    final wood = skin?.woodFloor == true && skin?.floor == null
+    final customFloors = skin?.floors ?? const [];
+    final wood = skin?.woodFloor == true && customFloors.isEmpty
         ? StarArt.plankImage
         : null;
-    final customFloor = skin?.floor ?? wood;
+    final useGarden = customFloors.isEmpty && wood == null && palette == null;
     final stones = [
-      if (customFloor != null)
-        customFloor
-      else if (palette == null)
+      ...customFloors,
+      ?wood,
+      if (useGarden)
         for (final name in ['floor_1', 'floor_2', 'floor_3', 'floor_4'])
           ?StarArt.garden[name],
     ];
@@ -111,7 +112,7 @@ class BoardMaterial {
       // 판석은 위치마다 고정된 변주를 쓰고, 밤에는 달빛 남색을 입힌다.
       final paint = Paint()..filterQuality = FilterQuality.medium;
       final useWood = wood != null;
-      if (customFloor == null) {
+      if (useGarden) {
         paint.colorFilter = ColorFilter.mode(
           dark ? const Color(0xffa9b8d6) : const Color(0xfff4f1ea),
           BlendMode.modulate,
@@ -131,6 +132,17 @@ class BoardMaterial {
         for (var x = 0; x < geometry.columns; x++) {
           final image = stones[(x * 7 + y * 13 + x * y) % stones.length];
           final position = Position(x, y);
+          if (customFloors.isNotEmpty) {
+            StarArt.drawTile(
+              canvas,
+              image,
+              RRect.fromRectAndRadius(
+                geometry.tileRect(position),
+                Radius.circular(geometry.cellSize * .14),
+              ),
+            );
+            continue;
+          }
           canvas.drawImageRect(
             image,
             Rect.fromLTWH(

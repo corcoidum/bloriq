@@ -10,6 +10,7 @@ import '../progression/progression_rules.dart';
 import '../world/saga.dart';
 import 'world_catalog.dart';
 import 'world_progress.dart';
+import 'world_spirit_album.dart';
 import 'world_text.dart';
 
 /// 확장 세계 지도. 고른 스테이지 id를 돌려준다(닫으면 null).
@@ -21,6 +22,17 @@ Future<int?> showWorldMap(
   MaterialPageRoute(
     fullscreenDialog: true,
     builder: (_) => WorldMap(session: session, world: world),
+  ),
+);
+
+Future<void> showWorldGuardian(
+  BuildContext context,
+  WorldChapterView chapter,
+) => showDialog<void>(
+  context: context,
+  builder: (context) => _GuardianAtlasCard(
+    chapter: chapter,
+    lang: Localizations.localeOf(context).languageCode,
   ),
 );
 
@@ -48,6 +60,7 @@ class _WorldMapState extends State<WorldMap> {
   @override
   Widget build(BuildContext context) {
     final colors = GameTheme.colorsOf(context);
+    final t = AppLocalizations.of(context)!;
     final lang = Localizations.localeOf(context).languageCode;
     final story = widget.session.world(widget.world)!.story;
     final next = widget.session.saga?.next(widget.world);
@@ -65,6 +78,18 @@ class _WorldMapState extends State<WorldMap> {
           icon: const Icon(Icons.close_rounded),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        actions: [
+          IconButton(
+            key: const ValueKey('world-album'),
+            tooltip: t.album,
+            icon: const Icon(Icons.auto_stories_outlined),
+            onPressed: () => Navigator.of(context).push<void>(
+              MaterialPageRoute(
+                builder: (_) => WorldSpiritAlbum(atlas: _atlas, story: story),
+              ),
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Column(
@@ -125,13 +150,6 @@ class _ChapterPage extends StatelessWidget {
 
   static const _minSkyHeight = 48.0;
 
-  Future<void> _openGuardian(BuildContext context) {
-    return showDialog<void>(
-      context: context,
-      builder: (_) => _GuardianAtlasCard(chapter: chapter, lang: lang),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = GameTheme.colorsOf(context);
@@ -159,7 +177,7 @@ class _ChapterPage extends StatelessWidget {
                     message: AppLocalizations.of(context)!.constellationAtlas,
                     child: TextButton.icon(
                       key: ValueKey('world-guardian-${guardian.level.id}'),
-                      onPressed: () => _openGuardian(context),
+                      onPressed: () => showWorldGuardian(context, chapter),
                       icon: Icon(
                         chapter.golden
                             ? Icons.workspace_premium_rounded
@@ -249,11 +267,7 @@ class _GuardianAtlasCard extends StatelessWidget {
     final colors = GameTheme.colorsOf(context);
     final spirit = chapter.stages.last.spirit;
     final info = chapter.chapter;
-    final placeholder = Icon(
-      Icons.star_rounded,
-      size: 46,
-      color: colors.reward,
-    );
+    final asset = chapter.portraitFor(chapter.stages.last);
     return AlertDialog(
       key: ValueKey('guardian-atlas-${spirit.levelId}'),
       scrollable: true,
@@ -298,15 +312,7 @@ class _GuardianAtlasCard extends StatelessWidget {
                 : const BoxDecoration(),
             child: Padding(
               padding: EdgeInsets.all(chapter.golden ? 6 : 0),
-              child: spirit.asset != null
-                  ? Image.asset(
-                      spirit.asset!,
-                      width: 72,
-                      height: 72,
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, _, _) => placeholder,
-                    )
-                  : placeholder,
+              child: WorldSpiritPortrait(asset: asset, size: 120),
             ),
           ),
           if (chapter.golden)

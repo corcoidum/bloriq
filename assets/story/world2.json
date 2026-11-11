@@ -382,7 +382,7 @@
       "chapter": 1,
       "family": "mist",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-05.png",
       "motionKind": "bow",
       "name": {
         "ko": "하늘결",
@@ -547,7 +547,7 @@
       "chapter": 2,
       "family": "tide",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-10.png",
       "motionKind": "bow",
       "name": {
         "ko": "해미",
@@ -712,7 +712,7 @@
       "chapter": 3,
       "family": "key",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-15.png",
       "motionKind": "bow",
       "name": {
         "ko": "노을지기",
@@ -877,7 +877,7 @@
       "chapter": 4,
       "family": "gale",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-20.png",
       "motionKind": "bow",
       "name": {
         "ko": "마루바람",
@@ -1042,7 +1042,7 @@
       "chapter": 5,
       "family": "beacon",
       "guardian": true,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-25.png",
       "motionKind": "bow",
       "name": {
         "ko": "등대지기 노아",

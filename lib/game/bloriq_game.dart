@@ -577,6 +577,7 @@ class BloriqGame extends FlameGame {
         : twinTravel.shelfFrame(twinMotion);
     final shelf = state.level.mechanic<ShelfDoor>(ShelfDoor.typeId);
     final mirror = state.level.mechanic<MirrorPair>(MirrorPair.typeId);
+    final mirrorTexture = _skin?.mechanicArt[MirrorPair.typeId];
 
     // 착지 순간 보드 전체가 이동 방향으로 살짝 밀렸다가 돌아온다.
     canvas.save();
@@ -609,12 +610,13 @@ class BloriqGame extends FlameGame {
     _gateTarget = state.isGateOpen;
     _drawMechanics(mechanicCanvas, badges: false);
     for (final p in state.level.obstacles) {
+      final variant = p.x * 7 + p.y * 3;
       if (BlockArt.obstacle(
         canvas,
         center(p),
         cell,
-        p.x * 7 + p.y * 3,
-        customRock: _skin?.rock,
+        variant,
+        customRock: _skin?.rockAt(variant),
         useGarden: palette == null,
       )) {
         continue;
@@ -807,7 +809,8 @@ class BloriqGame extends FlameGame {
               _motion < 1
           ? (block.position.x - _from!.x) * .07 * math.sin(_motion * math.pi)
           : 0.0;
-      if (mirror?.partnerOf(block.id) case final link?) {
+      final link = mirror?.partnerOf(block.id);
+      if (link != null) {
         MirrorPairArt.marker(
           canvas,
           at,
@@ -833,6 +836,19 @@ class BloriqGame extends FlameGame {
         opacity: opacity,
       );
       canvas.restore();
+      if (link != null && mirrorTexture != null) {
+        final extent = cell * shelfScale * .36;
+        StarArt.draw(
+          canvas,
+          mirrorTexture,
+          Rect.fromCenter(
+            center: at + Offset(cell * .22, -cell * .22) * shelfScale,
+            width: extent,
+            height: extent,
+          ),
+          opacity: opacity,
+        );
+      }
     }
     if (preview?.twin case final shift?) {
       final hop = preview!.twinTeleport;
@@ -939,10 +955,10 @@ class BloriqGame extends FlameGame {
         game._drawTileMechanic(board, mechanic, badges, 'tile_clover'),
     EchoGate.typeId: (game, board, mechanic, badges) =>
         game._drawGateMechanic(board, mechanic as EchoGate, badges),
-    Ice.typeId: (_, board, mechanic, badges) =>
-        _drawIceMechanic(board, mechanic as Ice, badges),
-    ShelfDoor.typeId: (_, board, mechanic, badges) =>
-        _drawShelfMechanic(board, mechanic as ShelfDoor, badges),
+    Ice.typeId: (game, board, mechanic, badges) =>
+        game._drawIceMechanic(board, mechanic as Ice, badges),
+    ShelfDoor.typeId: (game, board, mechanic, badges) =>
+        game._drawShelfMechanic(board, mechanic as ShelfDoor, badges),
     ClockArrow.typeId: (game, board, mechanic, badges) =>
         game._drawClockMechanic(board, mechanic as ClockArrow, badges),
   };
@@ -954,11 +970,12 @@ class BloriqGame extends FlameGame {
     }
   }
 
-  static void _drawIceMechanic(_MechanicCanvas board, Ice ice, bool badges) {
+  void _drawIceMechanic(_MechanicCanvas board, Ice ice, bool badges) {
+    final texture = _skin?.mechanicArt[Ice.typeId];
     for (final position in ice.positions) {
       final center = board.center(position);
       if (!badges) {
-        IceArt.tile(board.canvas, center, board.cell * .94);
+        IceArt.tile(board.canvas, center, board.cell * .94, texture: texture);
       } else if (board.state.blocks.any(
         (block) => block.position == position,
       )) {
@@ -968,11 +985,8 @@ class BloriqGame extends FlameGame {
     }
   }
 
-  static void _drawShelfMechanic(
-    _MechanicCanvas board,
-    ShelfDoor shelf,
-    bool badges,
-  ) {
+  void _drawShelfMechanic(_MechanicCanvas board, ShelfDoor shelf, bool badges) {
+    final texture = _skin?.mechanicArt[ShelfDoor.typeId];
     double openness(Position at) {
       for (final frame in [board.shelfFrame, board.twinShelfFrame]) {
         if (frame case (:final hop, :final arriving, :final half)
@@ -1002,6 +1016,7 @@ class BloriqGame extends FlameGame {
             board.cell * .94,
             pair,
             openness: openness(at),
+            texture: texture,
           );
         } else if (board.state.level.obstacles.contains(at) ||
             board.state.echo == at ||
@@ -1025,13 +1040,28 @@ class BloriqGame extends FlameGame {
     final nextTurn = board.preview == null
         ? null
         : ClockArrow.phaseAt(board.preview!.moves) * quarter;
+    final texture = _skin?.mechanicArt[ClockArrow.typeId];
     for (final MapEntry(key: position, value: arrow)
         in mechanic.arrows.entries) {
       final occupied = board.state.blocks.any(
         (block) => block.position == position,
       );
-      if (badges != occupied) continue;
       final center = board.center(position);
+      if (!badges && texture != null) {
+        StarArt.drawTile(
+          board.canvas,
+          texture,
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(
+              center: center,
+              width: board.cell * .94,
+              height: board.cell * .94,
+            ),
+            Radius.circular(board.cell * .14),
+          ),
+        );
+      }
+      if (badges != occupied) continue;
       final base = math.atan2(arrow.y, arrow.x);
       ClockArrowArt.draw(
         board.canvas,
