@@ -13,14 +13,17 @@ import 'intro_screen.dart';
 import 'game_session.dart';
 import '../story/companion_view.dart';
 import '../story/spirit_album.dart';
+import '../story/story_catalog.dart';
 import '../constellation/constellation_atlas.dart';
 import 'journey_panel.dart';
 import 'level_picker.dart';
+import '../constellation/constellation_painter.dart';
 import '../constellation/constellation_state.dart';
 import 'play_context.dart';
 import '../endless/endless_rules.dart';
 import '../endless/endless_screen.dart';
 import '../world/saga_map.dart';
+import '../world/world_catalog.dart';
 import '../world/world_map.dart';
 import '../world/world_text.dart';
 import '../tutorial/world_tutorial.dart';
@@ -441,14 +444,14 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                         area.maxHeight <
                             530 * MediaQuery.textScalerOf(context).scale(1) ||
                         MediaQuery.textScalerOf(context).scale(10) > 13;
+                    final target = session?.continueTarget;
+                    final here = _here(t, colors, session, target);
                     final children = <Widget>[
                       _homeHeader(t, session),
                       const SizedBox(height: 6),
-                      if (session != null) ...[
-                        PlayerLevelCard(session: session),
-                        const SizedBox(height: 6),
-                        _playerStrip(t, colors, session),
-                      ] else if (_failed)
+                      if (session != null)
+                        PlayerLevelCard(session: session)
+                      else if (_failed)
                         Column(
                           children: [
                             Text(t.loadError),
@@ -464,9 +467,9 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                         const LinearProgressIndicator(),
                       const SizedBox(height: GameSpacing.small),
                       if (scroll)
-                        SizedBox(height: 320, child: _sky(t, colors, session))
+                        SizedBox(height: 320, child: here)
                       else
-                        Expanded(child: _sky(t, colors, session)),
+                        Expanded(child: here),
                       if (session != null) ..._notices(t, session),
                       const SizedBox(height: GameSpacing.small),
                       FilledButton.icon(
@@ -478,35 +481,51 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                             vertical: 12,
                           ),
                         ),
-                        onPressed: session == null || _opening
+                        onPressed: session == null || target == null || _opening
                             ? null
-                            : () => _open(session.nextLevelId),
-                        icon: const Icon(Icons.play_arrow_rounded, size: 27),
-                        label: Text(
-                          session == null
-                              ? t.preparingGame
-                              : t.playLevel(session.nextLevelId),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 20),
+                            : () => _continue(target),
+                        icon: Icon(
+                          target?.kind == ContinueKind.voyage
+                              ? Icons.sailing_rounded
+                              : Icons.play_arrow_rounded,
+                          size: 27,
+                        ),
+                        label: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            session == null || target == null
+                                ? t.preparingGame
+                                : _continueLabel(t, session, target),
+                            maxLines: 1,
+                            style: const TextStyle(fontSize: 20),
+                          ),
                         ),
                       ),
                       if (session != null) ...[
+                        const SizedBox(height: 6),
+                        _playerStrip(t, colors, session),
                         const SizedBox(height: GameSpacing.small),
-                        _voyageButton(t, colors, session),
+                        IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // 큰 글자·작은 화면에서는 아래의 자세한 Daily 카드가 대신한다.
+                              if (!scroll) ...[
+                                Expanded(child: _dailyTile(t, colors, session)),
+                                const SizedBox(width: GameSpacing.small),
+                              ],
+                              Expanded(child: _voyageTile(t, colors, session)),
+                            ],
+                          ),
+                        ),
                       ],
                       const SizedBox(height: GameSpacing.small),
-                      _menuGrid(t, colors, session),
-                      if (session != null) ...[
+                      _menuGrid(t, colors, session, target),
+                      if (session != null && scroll) ...[
                         const SizedBox(height: GameSpacing.small),
                         DailyPanel(
-                          compact: !scroll,
                           daily: session.daily,
-                          onPlay: _opening
-                              ? null
-                              : () => _open(
-                                  session.daily.today.level.id,
-                                  play: PlayContext.daily(session.daily.today),
-                                ),
+                          onPlay: _opening ? null : () => _openDaily(session),
                         ),
                       ],
                     ];
@@ -571,8 +590,75 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     ),
   );
 
-  /// 별바다 항해 입구. 최고 기록이나 이어서 할 항해를 함께 보여 준다.
-  Widget _voyageButton(
+  /// "이어가기"를 눌렀을 때: 고른 판을 지도 없이 바로 연다.
+  Future<void> _continue(ContinueTarget target) {
+    final id = target.levelId;
+    if (id == null) return _openEndless();
+    return _open(
+      id,
+      play: target.world == 1
+          ? const PlayContext.campaign()
+          : PlayContext.world(target.world),
+    );
+  }
+
+  Future<void> _openDaily(GameSession session) => _open(
+    session.daily.today.level.id,
+    play: PlayContext.daily(session.daily.today),
+  );
+
+  /// "이어가기" 문구. 버튼이 여는 판과 항상 같은 세계·번호를 말한다.
+  String _continueLabel(
+    AppLocalizations t,
+    GameSession session,
+    ContinueTarget target,
+  ) {
+    final lang = t.localeName;
+    final id = target.levelId;
+    if (id == null) return EndlessText.title.resolve(lang);
+    final title = session.saga?.world(target.world).title;
+    final stage = Worlds.stageNumber(id);
+    // 아직 세계 1만 아는 플레이어에게는 세계 이름 없이 별문 번호만 보여 준다.
+    final prelude = target.world == 1 && session.currentExpansionWorld == null;
+    return switch (target.kind) {
+      _ when title == null => t.playLevel(id),
+      ContinueKind.polish => WorldText.polish(title, stage).resolve(lang),
+      ContinueKind.newWorld => WorldText.newWorld(title, stage).resolve(lang),
+      ContinueKind.next when !prelude => WorldText.continueIn(
+        title,
+        stage,
+      ).resolve(lang),
+      _ => t.playLevel(id),
+    };
+  }
+
+  /// 오늘의 Echo 반 칸. 목표 수나 달성 여부를 함께 보여 준다.
+  Widget _dailyTile(
+    AppLocalizations t,
+    GameColors colors,
+    GameSession session,
+  ) {
+    final daily = session.daily;
+    final challenge = daily.today;
+    final done = daily.completed(challenge.date);
+    final perfect =
+        daily.bestMoves(challenge.date) == challenge.level.minimumMoves;
+    return _modeTile(
+      key: const ValueKey('daily-play'),
+      icon: done ? Icons.stars_rounded : Icons.auto_awesome_rounded,
+      color: colors.echo,
+      ink: colors.echoInk,
+      title: done ? t.dailyReplay : t.dailyPlay,
+      detail: perfect
+          ? t.dailyPerfect
+          : WorldText.dailyGoal(challenge.level.minimumMoves)
+                .resolve(t.localeName),
+      onTap: _opening ? null : () => _openDaily(session),
+    );
+  }
+
+  /// 별바다 항해 반 칸. 최고 기록이나 이어서 할 항해를 함께 보여 준다.
+  Widget _voyageTile(
     AppLocalizations t,
     GameColors colors,
     GameSession session,
@@ -590,105 +676,90 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
             session.endless.bestScore,
             session.endless.bestDepth,
           ).resolve(lang)
-        : EndlessText.tagline.resolve(lang);
-    return Material(
-      color: colors.cyan.withValues(alpha: unlocked ? .16 : .06),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(
-          color: colors.cyan.withValues(alpha: unlocked ? .55 : .2),
-        ),
-      ),
-      child: InkWell(
-        key: const ValueKey('home-voyage'),
-        borderRadius: BorderRadius.circular(18),
-        onTap: _opening ? null : _openEndless,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-          child: Row(
-            children: [
-              Icon(
-                unlocked ? Icons.sailing_rounded : Icons.lock_outline_rounded,
-                color: unlocked ? colors.cyan : colors.secondaryText,
-                size: 28,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      EndlessText.title.resolve(lang),
-                      style: GameTypography.label.copyWith(
-                        fontSize: 17,
-                        color: unlocked ? colors.text : colors.secondaryText,
-                      ),
-                    ),
-                    Text(
-                      detail,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GameTypography.body.copyWith(
-                        fontSize: 14,
-                        color: colors.secondaryText,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (unlocked)
-                Icon(Icons.chevron_right_rounded, color: colors.cyan),
-            ],
-          ),
-        ),
-      ),
+        : EndlessText.start.resolve(lang);
+    return _modeTile(
+      key: const ValueKey('home-voyage'),
+      icon: unlocked ? Icons.sailing_rounded : Icons.lock_outline_rounded,
+      color: colors.cyan,
+      ink: unlocked ? colors.cyan : colors.secondaryText,
+      title: EndlessText.title.resolve(lang),
+      detail: detail,
+      dim: !unlocked,
+      onTap: _opening ? null : _openEndless,
     );
   }
 
-  /// 지금 갈 확장 세계 입구와 빛길 지도 버튼.
-  Widget _worldRow(AppLocalizations t, GameSession session) {
-    final current = session.currentExpansionWorld;
-    final saga = session.saga!;
-    final sagaButton = current == null
-        ? FilledButton.tonalIcon(
-            key: const ValueKey('saga-map'),
-            style: FilledButton.styleFrom(minimumSize: const Size(48, 44)),
-            onPressed: _opening ? null : _openSaga,
-            icon: const Icon(Icons.timeline_rounded),
-            label: Text(WorldText.sagaMap.resolve(t.localeName)),
-          )
-        : IconButton.filledTonal(
-            key: const ValueKey('saga-map'),
-            tooltip: WorldText.sagaMap.resolve(t.localeName),
-            constraints: const BoxConstraints(minWidth: 48, minHeight: 44),
-            onPressed: _opening ? null : _openSaga,
-            icon: const Icon(Icons.timeline_rounded),
-          );
-    if (current == null) return Center(child: sagaButton);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Flexible(
-          child: FilledButton.tonalIcon(
-            key: const ValueKey('world-entry'),
-            style: FilledButton.styleFrom(minimumSize: const Size(48, 44)),
-            onPressed: _opening ? null : () => _openWorld(current),
-            icon: const Icon(Icons.light_rounded),
-            label: Text(
-              WorldText.enter(saga.world(current).title).resolve(t.localeName),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+  /// 곁가지 플레이 입구 한 칸: 이름 한 줄, 지금 상태 한 줄.
+  Widget _modeTile({
+    required Key key,
+    required IconData icon,
+    required Color color,
+    required Color ink,
+    required String title,
+    required String detail,
+    required VoidCallback? onTap,
+    bool dim = false,
+  }) {
+    final colors = GameTheme.colorsOf(context);
+    return Material(
+      color: color.withValues(alpha: dim ? .06 : .16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: color.withValues(alpha: dim ? .2 : .55)),
+      ),
+      child: InkWell(
+        key: key,
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        // 큰 글자에서는 칸이 글자만큼 높아진다.
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 56),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            child: Row(
+              children: [
+                Icon(icon, color: ink, size: 24),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          title,
+                          maxLines: 1,
+                          style: GameTypography.label.copyWith(
+                            fontSize: 15,
+                            color: dim ? colors.secondaryText : colors.text,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        detail,
+                        // 반 칸에서는 두 줄까지 써서 글이 잘리지 않게 한다.
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GameTypography.body.copyWith(
+                          fontSize: 12.5,
+                          height: 1.15,
+                          color: colors.secondaryText,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-        const SizedBox(width: 6),
-        sagaButton,
-      ],
+      ),
     );
   }
 
-  /// 진행 요약 한 줄: 완료 스테이지, 모은 별, 친구.
+  /// 모든 세계를 합친 진행 요약 한 줄: 깬 판, 모은 별, 친구.
   Widget _playerStrip(
     AppLocalizations t,
     GameColors colors,
@@ -722,28 +793,26 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
         ),
       ),
     );
+    final overall = session.overall;
     return Semantics(
       label: t.homeProgress,
       child: Row(
         children: [
           pill(
             Icons.flag_rounded,
-            t.completedLevels(session.completedCount, session.levels.length),
+            t.completedLevels(overall.cleared, overall.total),
             colors.goalInk,
           ),
           const SizedBox(width: 6),
           pill(
             Icons.star_rounded,
-            t.collectedStars(session.totalStars),
+            t.collectedStars(overall.stars),
             colors.rewardInk,
           ),
           const SizedBox(width: 6),
           pill(
             Icons.pets_rounded,
-            t.journeyFriends(
-              session.collection.owned.length,
-              session.story.released.length,
-            ),
+            t.journeyFriends(overall.friends, overall.friendTotal),
             colors.echoInk,
           ),
         ],
@@ -751,80 +820,216 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     );
   }
 
-  /// 지금 찾아가는 장의 별자리 하늘과 리크·동행 정령.
-  Widget _sky(AppLocalizations t, GameColors colors, GameSession? session) {
-    final chapterNumber = session?.recommendedChapter.number ?? 1;
-    final atlas = session == null
-        ? null
-        : ConstellationAtlas.derive(session.levels, session.progress);
-    final chapter = atlas == null || atlas.chapters.length < chapterNumber
-        ? null
-        : atlas.chapters[chapterNumber - 1];
-    return Material(
-      color: colors.surface.withValues(alpha: .55),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: colors.reward.withValues(alpha: .35)),
+  /// 빛길 위의 현재 위치: 지나온 세계는 금빛, 지금 세계는 민트.
+  Widget _lightroad(GameColors colors, GameSession session, int here) {
+    final saga = session.saga!;
+    final done = session.progression.completedChapters;
+    final lang = AppLocalizations.of(context)!.localeName;
+    return Semantics(
+      label:
+          '${WorldText.sagaMap.resolve(lang)} · '
+          '${WorldText.worldOf(here, saga.worlds.length).resolve(lang)}',
+      child: ExcludeSemantics(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(28, 2, 28, 4),
+          child: SizedBox(
+            height: 14,
+            child: Row(
+              children: [
+                for (final world in saga.worlds) ...[
+                  if (world.number > 1)
+                    Expanded(
+                      child: Container(
+                        height: 2,
+                        color: world.number <= here
+                            ? colors.reward.withValues(alpha: .8)
+                            : colors.outline.withValues(alpha: .35),
+                      ),
+                    ),
+                  Builder(
+                    builder: (_) {
+                      final now = world.number == here;
+                      final lit = Worlds.isComplete(world.number, done);
+                      final color = now
+                          ? colors.goal
+                          : lit
+                          ? colors.reward
+                          : colors.outline.withValues(alpha: .6);
+                      return Container(
+                        width: now ? 14 : 10,
+                        height: now ? 14 : 10,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: now || lit ? color : null,
+                          border: Border.all(color: color, width: 2),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
       ),
+    );
+  }
+
+  /// "지금 여기" 카드: 빛길 위의 위치, 지금 세계와 장, 그 장의 별자리.
+  /// 누르면 그 세계의 판 고르기가 열린다.
+  Widget _here(
+    AppLocalizations t,
+    GameColors colors,
+    GameSession? session,
+    ContinueTarget? target,
+  ) {
+    final lang = t.localeName;
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(24),
+      side: BorderSide(color: colors.reward.withValues(alpha: .35)),
+    );
+    final surface = colors.surface.withValues(alpha: .55);
+    if (session == null || target == null) {
+      return Material(
+        color: surface,
+        shape: shape,
+        child: const SizedBox.expand(),
+      );
+    }
+    final world = target.world;
+    final worldAtlas = world == 1 ? null : session.worldAtlas(world);
+    final StoryText chapterName;
+    final int chapterNumber, chapterCleared, chapterTotal, cleared, total;
+    final Widget art;
+    if (worldAtlas == null) {
+      final chapter = session.story.chapterForLevel(
+        world == 1 && target.levelId != null
+            ? target.levelId!
+            : session.levels.last.id,
+      );
+      final atlas = ConstellationAtlas.derive(session.levels, session.progress);
+      final view = atlas.chapters.length < chapter.number
+          ? null
+          : atlas.chapters[chapter.number - 1];
+      chapterName = chapter.name;
+      chapterNumber = chapter.number;
+      chapterCleared = session.completedInChapter(chapter.number);
+      chapterTotal = view?.levels.length ?? Worlds.stagesPerChapter;
+      cleared = session.completedCount;
+      total = session.levels.length;
+      art = view == null
+          ? const SizedBox.expand()
+          : ConstellationArt(
+              chapter: view,
+              guardianAsset: guardianAssetFor(session, view),
+            );
+    } else {
+      final view = worldAtlas.forLevel(
+        target.levelId ?? worldAtlas.stages.last.level.id,
+      )!;
+      chapterName = view.chapter.name;
+      chapterNumber = view.chapter.number;
+      chapterCleared = view.cleared;
+      chapterTotal = view.stages.length;
+      cleared = worldAtlas.cleared;
+      total = worldAtlas.stages.length;
+      art = Semantics(
+        label: view.chapter.constellation.inLocale(lang),
+        value: '${view.cleared} / ${view.stages.length}',
+        child: CustomPaint(
+          size: Size.infinite,
+          painter: ConstellationPainter(
+            definition: view.definition,
+            lit: view.lit,
+            colors: colors,
+            golden: view.golden ? 1 : 0,
+          ),
+        ),
+      );
+    }
+    final saga = session.saga;
+    final expansion = worldAtlas != null;
+    return Material(
+      color: surface,
+      shape: shape,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: session == null || _opening ? null : _atlas,
+        key: ValueKey(expansion ? 'world-entry' : 'home-levels'),
+        onTap: _opening
+            ? null
+            : expansion
+            ? () => _openWorld(world)
+            : _chooseLevel,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
           child: Column(
             children: [
-              if (session != null) ...[
-                Text(
-                  session.recommendedChapter.name.inLocale(t.localeName),
-                  textAlign: TextAlign.center,
+              if (saga != null) _lightroad(colors, session, world),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  saga?.world(world).title.inLocale(lang) ??
+                      chapterName.inLocale(lang),
+                  maxLines: 1,
                   style: GameTypography.reward.copyWith(
                     fontSize: 20,
                     color: colors.rewardInk,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 40),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      minHeight: 6,
-                      value:
-                          session.completedInChapter(
-                            session.recommendedChapter.number,
-                          ) /
-                          5,
-                      color: colors.goal,
-                      backgroundColor: colors.outline.withValues(alpha: .25),
+              ),
+              if (saga != null)
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    WorldText.chapterLine(
+                      chapterNumber,
+                      chapterName,
+                    ).resolve(lang),
+                    maxLines: 1,
+                    style: GameTypography.body.copyWith(
+                      fontSize: 13.5,
+                      color: colors.secondaryText,
                     ),
                   ),
                 ),
-              ],
-              Expanded(
-                child: chapter == null
-                    ? const SizedBox.expand()
-                    : ConstellationArt(
-                        chapter: chapter,
-                        guardianAsset: guardianAssetFor(session!, chapter),
-                      ),
+              Expanded(child: art),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 40),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    minHeight: 6,
+                    value: total == 0 ? 0 : cleared / total,
+                    color: colors.goal,
+                    backgroundColor: colors.outline.withValues(alpha: .25),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 2),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  WorldText.hereProgress(
+                    cleared,
+                    total,
+                    chapterCleared,
+                    chapterTotal,
+                  ).resolve(lang),
+                  maxLines: 1,
+                  style: GameTypography.body.copyWith(
+                    fontSize: 12.5,
+                    color: colors.secondaryText,
+                  ),
+                ),
               ),
               JourneyCompanions(
-                companion: session?.collection.companion,
+                companion: session.collection.companion,
                 reduceMotion: prefersReducedMotion(context, widget.settings),
                 inline: true,
                 compact: true,
-                onAlbum: session == null ? null : _album,
+                onAlbum: _album,
               ),
-              if (session != null && session.collection.owned.length == 25)
-                Text(t.seasonComplete, textAlign: TextAlign.center),
-              // 다섯 별자리를 모두 완성하면 예고 문구 대신 진짜 입구가 열린다.
-              // 빛길 지도는 늘 곁에 두어 "다음엔 뭐가 있지?"에 답한다.
-              if (session != null && session.saga != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: _worldRow(t, session),
-                )
-              else if (session != null &&
+              if (saga == null &&
                   session.progression.completedChapters.length >= 5)
                 KeepAllText(
                   t.nextWorldTeaser,
@@ -873,16 +1078,18 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
       Text(t.saveError, textAlign: TextAlign.center),
   ];
 
-  /// 여정·스테이지·별자리·앨범 메뉴 네 칸.
+  /// 살펴보기 메뉴 네 칸. 이름 아래에 그 메뉴의 지금 상태를 한 줄로 보여 준다.
   Widget _menuGrid(
     AppLocalizations t,
     GameColors colors,
     GameSession? session,
+    ContinueTarget? target,
   ) {
     Widget tile(
       Key key,
       IconData icon,
       String label,
+      String? detail,
       Color color,
       VoidCallback? onTap,
     ) => Expanded(
@@ -897,46 +1104,95 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
           borderRadius: BorderRadius.circular(18),
           onTap: onTap,
           child: SizedBox(
-            height: 54,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, color: color),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      label,
-                      style: GameTypography.label.copyWith(color: colors.text),
+            height: 58,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, color: color),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              label,
+                              maxLines: 1,
+                              style: GameTypography.label.copyWith(
+                                color: colors.text,
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (detail != null)
+                          Flexible(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                detail,
+                                maxLines: 1,
+                                style: GameTypography.body.copyWith(
+                                  fontSize: 12.5,
+                                  color: colors.secondaryText,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
+    final lang = t.localeName;
     final ready = session != null && !_opening;
+    final saga = session?.saga;
+    final streak = session?.daily.streak ?? 0;
+    final pending = session?.collection.pendingIds.length ?? 0;
     return Column(
       children: [
         Row(
           children: [
+            if (saga != null)
+              tile(
+                const ValueKey('saga-map'),
+                Icons.timeline_rounded,
+                WorldText.sagaMap.resolve(lang),
+                target == null
+                    ? null
+                    : WorldText.worldOf(
+                        target.world,
+                        saga.worlds.length,
+                      ).resolve(lang),
+                colors.primaryInk,
+                ready ? _openSaga : null,
+              )
+            else
+              tile(
+                const ValueKey('home-map'),
+                Icons.route_rounded,
+                t.journeyMap,
+                null,
+                colors.primaryInk,
+                ready ? _chooseLevel : null,
+              ),
+            const SizedBox(width: GameSpacing.small),
             tile(
               const ValueKey('home-journey'),
               Icons.menu_book_rounded,
               t.journey,
+              streak > 0 ? t.journeyStreak(streak) : null,
               colors.goalInk,
               ready ? _journey : null,
-            ),
-            const SizedBox(width: GameSpacing.small),
-            tile(
-              const ValueKey('home-levels'),
-              Icons.route_rounded,
-              t.journeyMap,
-              colors.primaryInk,
-              ready ? _chooseLevel : null,
             ),
           ],
         ),
@@ -947,6 +1203,12 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
               const ValueKey('home-atlas'),
               Icons.auto_awesome,
               t.constellationAtlas,
+              session == null
+                  ? null
+                  : WorldText.constellations(
+                      session.progression.completedChapters.length,
+                      (1 + session.worlds.length) * Worlds.chapterCount,
+                    ).resolve(lang),
               colors.rewardInk,
               ready ? _atlas : null,
             ),
@@ -955,6 +1217,9 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
               const ValueKey('home-album'),
               Icons.auto_stories_outlined,
               t.album,
+              pending > 0
+                  ? WorldText.newMemories(pending).resolve(lang)
+                  : session?.collection.companion?.name.inLocale(lang),
               colors.echoInk,
               session == null ? null : _album,
             ),

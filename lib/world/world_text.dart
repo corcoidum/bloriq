@@ -59,6 +59,41 @@ abstract final class WorldText {
   );
 
   static const play = ProgressionText('이어하기', 'Continue');
+
+  // 홈 "이어가기" 버튼과 "지금 여기" 카드
+  static ProgressionText continueIn(StoryText title, int stage) =>
+      ProgressionText(
+        '이어가기 · ${title.ko} $stage',
+        'Continue · ${title.en} $stage',
+      );
+  static ProgressionText newWorld(StoryText title, int stage) =>
+      ProgressionText(
+        '새 세계 · ${title.ko} $stage',
+        'New world · ${title.en} $stage',
+      );
+  static ProgressionText polish(StoryText title, int stage) => ProgressionText(
+    '별 더 모으기 · ${title.ko} $stage',
+    'More stars · ${title.en} $stage',
+  );
+  static ProgressionText worldOf(int number, int total) =>
+      ProgressionText('세계 $number / $total', 'World $number / $total');
+  static ProgressionText chapterLine(int number, StoryText name) =>
+      ProgressionText('$number장 · ${name.ko}', 'Chapter $number · ${name.en}');
+  static ProgressionText hereProgress(
+    int cleared,
+    int total,
+    int chapterCleared,
+    int chapterTotal,
+  ) => ProgressionText(
+    '이 세계 $cleared / $total판 · 이번 장 $chapterCleared / $chapterTotal판',
+    'World $cleared / $total · Chapter $chapterCleared / $chapterTotal',
+  );
+  static ProgressionText constellations(int done, int total) =>
+      ProgressionText('완성 $done / $total', '$done / $total complete');
+  static ProgressionText dailyGoal(int moves) =>
+      ProgressionText('Perfect 목표 $moves수', 'Perfect in $moves moves');
+  static ProgressionText newMemories(int count) =>
+      ProgressionText('새 기억 $count개', '$count new memories');
   static const stage = ProgressionText('스테이지', 'Stage');
   static const requiresPower = ProgressionText('권능 필요', 'Power needed');
   static const bareHandedPossible = ProgressionText(

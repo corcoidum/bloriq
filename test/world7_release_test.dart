@@ -139,7 +139,7 @@ void main() {
       await _shot(tester, ready, 'lightroad');
       await tapVisible(tester, releaseKey('saga-close'));
       await enterReleaseWorld(tester, 7);
-      expect(find.text('첫 별'), findsOneWidget);
+      expect(releaseMapText(7, '첫 별'), findsOneWidget);
       expect(_storyText('다섯 등대가 모두 켜졌어'), findsOneWidget);
       await _shot(tester, ready, 'first-star-map');
       await tapVisible(tester, releaseKey('world-continue'));

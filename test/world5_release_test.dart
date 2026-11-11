@@ -37,7 +37,7 @@ void main() {
     await tapVisible(tester, releaseKey('saga-close'));
 
     await enterReleaseWorld(tester, 5);
-    expect(find.text('얼음 동굴 등대'), findsOneWidget);
+    expect(releaseMapText(5, '얼음 동굴 등대'), findsOneWidget);
     expect(_storyText('동굴에서 찬바람이 불어왔어'), findsOneWidget);
     expect(releaseKey('world-guardian-405'), findsNothing);
     await _shot(tester, boundary, 'ice-cave-map');
@@ -105,13 +105,13 @@ void main() {
     );
     await tapVisible(tester, releaseKey('result-next'));
     await waitForReleaseWidget(tester, releaseWorldMap(5));
-    expect(find.text('얼음 동굴 등대'), findsOneWidget);
+    expect(releaseMapText(5, '얼음 동굴 등대'), findsOneWidget);
     await tapVisible(tester, releaseKey('world-close'));
     await waitForHome(tester);
     expect(
       find.descendant(
         of: releaseKey('world-entry'),
-        matching: find.text('얼음 동굴 등대로'),
+        matching: find.text('얼음 동굴 등대'),
       ),
       findsOneWidget,
     );

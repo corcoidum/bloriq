@@ -42,7 +42,7 @@ void main() {
       await tapVisible(tester, releaseKey('clock-guide-skip'));
 
       await enterReleaseWorld(tester, 4);
-      expect(find.text('시계탑 등대'), findsOneWidget);
+      expect(releaseMapText(4, '시계탑 등대'), findsOneWidget);
       expect(releaseKey('world-guardian-305'), findsNothing);
       await _shot(tester, boundary, 'clocktower-map');
       await tapVisible(tester, releaseKey('world-continue'));
@@ -108,13 +108,13 @@ void main() {
     );
     await tapVisible(tester, releaseKey('result-next'));
     await waitForReleaseWidget(tester, releaseWorldMap(4));
-    expect(find.text('시계탑 등대'), findsOneWidget);
+    expect(releaseMapText(4, '시계탑 등대'), findsOneWidget);
     await tapVisible(tester, releaseKey('world-close'));
     await waitForHome(tester);
     expect(
       find.descendant(
         of: releaseKey('world-entry'),
-        matching: find.text('시계탑 등대로'),
+        matching: find.text('시계탑 등대'),
       ),
       findsOneWidget,
     );

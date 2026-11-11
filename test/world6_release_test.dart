@@ -44,7 +44,7 @@ void main() {
       await tapVisible(tester, releaseKey('saga-close'));
 
       await enterReleaseWorld(tester, 6);
-      expect(find.text('꿈의 서고 등대'), findsOneWidget);
+      expect(releaseMapText(6, '꿈의 서고 등대'), findsOneWidget);
       expect(_storyText("'첫 잔상'이라는 빈 책"), findsOneWidget);
       expect(releaseKey('world-guardian-505'), findsNothing);
       await _shot(tester, boundary, 'dream-library-map');
@@ -117,13 +117,13 @@ void main() {
     );
     await tapVisible(tester, releaseKey('result-next'));
     await waitForReleaseWidget(tester, releaseWorldMap(6));
-    expect(find.text('꿈의 서고 등대'), findsOneWidget);
+    expect(releaseMapText(6, '꿈의 서고 등대'), findsOneWidget);
     await tapVisible(tester, releaseKey('world-close'));
     await waitForHome(tester);
     expect(
       find.descendant(
         of: releaseKey('world-entry'),
-        matching: find.text('꿈의 서고 등대로'),
+        matching: find.text('꿈의 서고 등대'),
       ),
       findsOneWidget,
     );
@@ -204,7 +204,7 @@ void main() {
       );
       await tapVisible(tester, releaseKey('result-next'));
       await waitForReleaseWidget(tester, releaseWorldMap(7));
-      expect(find.text('첫 별'), findsOneWidget);
+      expect(releaseMapText(7, '첫 별'), findsOneWidget);
       await tapVisible(tester, releaseKey('world-close'));
       await waitForHome(tester);
       await openLightroad(tester, 6);

@@ -34,7 +34,7 @@ void main() {
       await tapVisible(tester, releaseKey('saga-close'));
 
       await enterReleaseWorld(tester, 3);
-      expect(find.text('거울 호수 등대'), findsOneWidget);
+      expect(releaseMapText(3, '거울 호수 등대'), findsOneWidget);
       expect(releaseKey('world-guardian-205'), findsNothing);
       await _shot(tester, boundary, 'mirror-lake-map');
       await tapVisible(tester, releaseKey('world-continue'));
@@ -97,13 +97,13 @@ void main() {
     );
     await tapVisible(tester, releaseKey('result-next'));
     await waitForReleaseWidget(tester, releaseWorldMap(3));
-    expect(find.text('거울 호수 등대'), findsOneWidget);
+    expect(releaseMapText(3, '거울 호수 등대'), findsOneWidget);
     await tapVisible(tester, releaseKey('world-close'));
     await waitForHome(tester);
     expect(
       find.descendant(
         of: releaseKey('world-entry'),
-        matching: find.text('거울 호수 등대로'),
+        matching: find.text('거울 호수 등대'),
       ),
       findsOneWidget,
     );

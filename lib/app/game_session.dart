@@ -22,6 +22,45 @@ import '../endless/endless_pool.dart';
 import '../endless/endless_repository.dart';
 import '../endless/endless_rules.dart';
 
+/// 홈 "이어가기"가 하는 일.
+enum ContinueKind {
+  /// 진행 중인 세계의 다음 판.
+  next,
+
+  /// 막 열린 세계의 첫 판.
+  newWorld,
+
+  /// 모두 깼고, 별 3개가 안 된 판을 다시.
+  polish,
+
+  /// 모든 판이 별 3개라 별바다 항해로.
+  voyage,
+
+  /// 더 할 것이 없어 첫 판을 다시.
+  replay,
+}
+
+/// 홈 "이어가기"가 가리키는 곳. 저장하지 않고 기록에서 매번 계산한다.
+class ContinueTarget {
+  const ContinueTarget(this.kind, this.world, [this.levelId]);
+  final ContinueKind kind;
+
+  /// 홈이 "지금 여기"로 보여 줄 세계.
+  final int world;
+
+  /// 열 판. [ContinueKind.voyage]일 때만 null.
+  final int? levelId;
+}
+
+/// 모든 세계를 합친 진행 요약.
+typedef OverallProgress = ({
+  int cleared,
+  int total,
+  int stars,
+  int friends,
+  int friendTotal,
+});
+
 /// 홈과 게임은 하나의 기록/오디오 인스턴스를 공유한다.
 class GameSession {
   GameSession({
@@ -225,6 +264,86 @@ class GameSession {
         orElse: () => levels.first,
       )
       .id;
+
+  /// 열려 있는 세계 번호(세계 1 포함), 작은 번호부터.
+  List<int> get openWorlds => [
+    1,
+    for (final number in worlds.keys.toList()..sort())
+      if (worldUnlocked(number)) number,
+  ];
+
+  /// 홈 "이어가기"가 갈 곳. 가장 멀리 온 세계의 열린 판을 먼저 고르고,
+  /// 없으면 앞 세계에 남은 판, 그다음 별 3개가 안 된 판 순서로 찾는다.
+  ContinueTarget get continueTarget {
+    final open = openWorlds;
+    final atlases = <int, WorldAtlas>{
+      for (final number in open) number: ?worldAtlas(number),
+    };
+    WorldStageView? openStage(int number) => atlases[number]?.stages
+        .where((stage) => stage.unlocked && !stage.cleared)
+        .firstOrNull;
+
+    final current = currentExpansionWorld;
+    if (current != null) {
+      if (openStage(current) case final stage?) {
+        return ContinueTarget(
+          atlases[current]!.cleared == 0
+              ? ContinueKind.newWorld
+              : ContinueKind.next,
+          current,
+          stage.level.id,
+        );
+      }
+    }
+    if (completedCount < levels.length) {
+      return ContinueTarget(ContinueKind.next, 1, nextLevelId);
+    }
+    for (final number in open) {
+      if (openStage(number) case final stage?) {
+        return ContinueTarget(ContinueKind.next, number, stage.level.id);
+      }
+    }
+    for (final level in levels) {
+      final stars =
+          progress.forLevel(level.id, revision: level.revision)?.bestStars ?? 0;
+      if (stars < 3) return ContinueTarget(ContinueKind.polish, 1, level.id);
+    }
+    for (final number in open) {
+      final stage = atlases[number]?.stages
+          .where((stage) => stage.cleared && stage.stars < 3)
+          .firstOrNull;
+      if (stage != null) {
+        return ContinueTarget(ContinueKind.polish, number, stage.level.id);
+      }
+    }
+    return endlessUnlocked
+        ? ContinueTarget(ContinueKind.voyage, open.last)
+        : ContinueTarget(ContinueKind.replay, 1, levels.first.id);
+  }
+
+  /// 모든 세계를 합친 판·별·친구 수. 아직 잠긴 세계도 전체 수에 넣는다.
+  OverallProgress get overall {
+    var cleared = completedCount;
+    var total = levels.length;
+    var stars = totalStars;
+    var friends = collection.owned.length;
+    var friendTotal = story.released.length;
+    for (final world in worlds.values) {
+      final atlas = WorldAtlas.derive(world, progress);
+      total += world.levels.length;
+      friendTotal += world.levels.length;
+      cleared += atlas.cleared;
+      friends += atlas.cleared;
+      stars += atlas.stages.fold(0, (sum, stage) => sum + stage.stars);
+    }
+    return (
+      cleared: cleared,
+      total: total,
+      stars: stars,
+      friends: friends,
+      friendTotal: friendTotal,
+    );
+  }
 
   StoryChapter get recommendedChapter => story.chapterForLevel(
     completedCount == levels.length ? levels.last.id : nextLevelId,

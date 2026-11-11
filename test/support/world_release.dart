@@ -115,12 +115,23 @@ Finder releaseWorldMap(int world) => find.byWidgetPredicate(
   (widget) => widget is WorldMap && widget.world == world,
 );
 
+/// 홈에서 [world]의 지도를 연다. "지금 여기" 카드가 다른 세계를 가리키면
+/// (예: 모두 마친 뒤 앞 세계로 돌아간 홈) 빛길 지도로 들어간다.
 Future<void> enterReleaseWorld(WidgetTester tester, int world) async {
   final entry = releaseKey('world-entry');
-  await waitForReleaseWidget(tester, entry.hitTestable());
-  await tapVisible(tester, entry);
+  await waitForReleaseWidget(tester, releaseKey('saga-map').hitTestable());
+  if (entry.hitTestable().evaluate().isNotEmpty) {
+    await tapVisible(tester, entry);
+  } else {
+    await openLightroad(tester, world);
+    await tapVisible(tester, releaseKey('saga-enter-$world'));
+  }
   await waitForReleaseWidget(tester, releaseWorldMap(world));
 }
+
+/// 세계 지도 화면 안의 글자만 찾는다. 홈 카드에도 같은 세계 이름이 있다.
+Finder releaseMapText(int world, String text) =>
+    find.descendant(of: releaseWorldMap(world), matching: find.text(text));
 
 Future<void> waitForReleaseWidget(WidgetTester tester, Finder finder) async {
   for (var i = 0; i < 120 && finder.evaluate().isEmpty; i++) {

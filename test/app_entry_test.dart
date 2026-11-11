@@ -168,7 +168,11 @@ void main() {
         }
         await tester.pumpWidget(BloriqApp(loadLevels: () async => levels));
         await waitForHome(tester);
-        expect(find.text('${completed.length} / 2 completed'), findsOneWidget);
+        // 전체 수는 주입한 2판에 확장 세계 150판을 더한 값이다.
+        expect(
+          find.text('${completed.length} / 152 completed'),
+          findsOneWidget,
+        );
         expect(find.text('${completed.length * 3} stars'), findsOneWidget);
         await _play(tester);
         final expectedId = completed.contains(1) && !completed.contains(2)
@@ -188,7 +192,7 @@ void main() {
     await _move(tester, 1, 1, 1, 0);
     await tapVisible(tester, find.byKey(const ValueKey('game-home')));
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('1 / 25 completed'), findsOneWidget);
+    expect(find.text('1 / 175 completed'), findsOneWidget);
     expect(find.text('3 stars'), findsOneWidget);
     expect(find.text('Continue · Gate 2'), findsOneWidget);
     await _play(tester);

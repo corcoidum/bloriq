@@ -134,7 +134,7 @@ void main() {
         final summary = find.byKey(const ValueKey('dismiss-backfill'));
         expect(summary, launch == 0 ? findsOneWidget : findsNothing);
         expect(find.byKey(const ValueKey('skip-story')), findsNothing);
-        expect(find.text('0 / 25 completed'), findsOneWidget);
+        expect(find.text('0 / 175 completed'), findsOneWidget);
         if (launch == 0) await tapVisible(tester, summary);
         await tapVisible(tester, find.byKey(const ValueKey('home-album')));
         expect(
