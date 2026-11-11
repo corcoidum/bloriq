@@ -124,9 +124,9 @@ void main() {
 
       final world1 = releaseKey('journey-world-1');
       final world2 = releaseKey('journey-world-2');
-      final world6 = releaseKey('journey-world-6');
-      expect(find.text('26 / 150 스테이지'), findsOneWidget);
-      expect(find.text('별 78 / 450'), findsOneWidget);
+      final world7 = releaseKey('journey-world-7');
+      expect(find.text('26 / 175 스테이지'), findsOneWidget);
+      expect(find.text('별 78 / 525'), findsOneWidget);
       expect(
         find.descendant(of: world1, matching: find.text('완료')),
         findsOneWidget,
@@ -140,9 +140,9 @@ void main() {
         findsOneWidget,
       );
       await _captureJourney(tester, boundary, 'journey-status');
-      await _reveal(tester, _status, world6);
+      await _reveal(tester, _status, world7);
       expect(
-        find.descendant(of: world6, matching: find.text('잠김')),
+        find.descendant(of: world7, matching: find.text('잠김')),
         findsOneWidget,
       );
       await _captureJourney(tester, boundary, 'journey-status-later-worlds');
@@ -208,7 +208,7 @@ void main() {
       await _reveal(tester, _rewards, _lastReward);
 
       await tapVisible(tester, _tab('현황'));
-      expect(world6.hitTestable(), findsOneWidget);
+      expect(world7.hitTestable(), findsOneWidget);
       await tapVisible(tester, _tab('동료'));
       expect(last.hitTestable(), findsOneWidget);
       await tapVisible(tester, _tab('보상'));
@@ -252,7 +252,7 @@ void main() {
           ),
         );
         await tapVisible(tester, find.text('OPEN'));
-        await _reveal(tester, _status, releaseKey('journey-world-6'));
+        await _reveal(tester, _status, releaseKey('journey-world-7'));
 
         await tapVisible(tester, _tab(language == 'ko' ? '별자리' : 'Stars'));
         expect(tester.widget<Text>(_pageCount).data, startsWith('2 / 5'));
