@@ -10,6 +10,7 @@ import '../design/arcade_components.dart';
 import '../world/world_catalog.dart';
 import '../world/world_progress.dart';
 import '../world/world_shelf.dart';
+import '../world/world_spirit_album.dart';
 import '../world/world_text.dart';
 import 'companion_view.dart';
 import 'story_catalog.dart';
@@ -232,7 +233,7 @@ class _SpiritAlbumState extends State<SpiritAlbum> {
                       ? AnimationStyle.noAnimation
                       : null,
                   builder: (_) =>
-                      _WorldSpiritDetail(spirit: spirit, chapter: chapter),
+                      _WorldSpiritDetail(stage: stage, chapter: chapter),
                 )
               : null,
           child: Semantics(
@@ -247,7 +248,16 @@ class _SpiritAlbumState extends State<SpiritAlbum> {
                   SizedBox(
                     width: 96,
                     height: 96,
-                    child: _WorldSpiritArt(spirit: spirit, hidden: !met),
+                    child: met
+                        ? WorldSpiritPortrait(
+                            asset: chapter.portraitFor(stage),
+                            size: 96,
+                          )
+                        : Icon(
+                            Icons.bedtime_outlined,
+                            size: 46,
+                            color: colors.outline,
+                          ),
                   ),
                   Text(
                     met ? spirit.name.inLocale(lang) : t.unknownSpirit,
@@ -409,40 +419,9 @@ class _SpiritAlbumState extends State<SpiritAlbum> {
   }
 }
 
-/// 확장 세계 정령의 그림. 아직 못 만났거나 그림이 없으면 자리표시를 쓴다.
-class _WorldSpiritArt extends StatelessWidget {
-  const _WorldSpiritArt({required this.spirit, this.hidden = false});
-  final WorldSpirit spirit;
-  final bool hidden;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = GameTheme.colorsOf(context);
-    final placeholder = Center(
-      child: Icon(
-        hidden
-            ? Icons.bedtime_outlined
-            : spirit.guardian
-            ? Icons.star_rounded
-            : Icons.cloud_rounded,
-        size: 46,
-        color: hidden ? colors.outline : colors.reward,
-      ),
-    );
-    final asset = spirit.asset;
-    if (hidden || asset == null) return placeholder;
-    return Image.asset(
-      asset,
-      fit: BoxFit.contain,
-      excludeFromSemantics: true,
-      errorBuilder: (_, _, _) => placeholder,
-    );
-  }
-}
-
 class _WorldSpiritDetail extends StatelessWidget {
-  const _WorldSpiritDetail({required this.spirit, required this.chapter});
-  final WorldSpirit spirit;
+  const _WorldSpiritDetail({required this.stage, required this.chapter});
+  final WorldStageView stage;
   final WorldChapterView chapter;
 
   @override
@@ -450,6 +429,7 @@ class _WorldSpiritDetail extends StatelessWidget {
     final t = AppLocalizations.of(context)!;
     final colors = GameTheme.colorsOf(context);
     final lang = t.localeName;
+    final spirit = stage.spirit;
     return AlertDialog(
       key: ValueKey('spirit-detail-${spirit.id}'),
       scrollable: true,
@@ -457,11 +437,8 @@ class _WorldSpiritDetail extends StatelessWidget {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: 120,
-            height: 120,
-            child: _WorldSpiritArt(spirit: spirit),
-          ),
+          // 수호 정령 원화는 별자리를 완성한 뒤에만 보인다.
+          WorldSpiritPortrait(asset: chapter.portraitFor(stage), size: 120),
           Text(
             chapter.chapter.familyName.inLocale(lang),
             textAlign: TextAlign.center,
