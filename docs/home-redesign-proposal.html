@@ -1,0 +1,289 @@
+<meta charset="utf-8">
+<title>BLORIQ 홈 화면 개편 제안서</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* 배치: 한 단 문서. 진단 → 현재/제안 화면 비교(휴대폰 목업 2대) → 메뉴 표 → 단계 → 결정할 것 */
+:root{
+  --bg:#f3f5fa; --surface:#ffffff; --ink:#18223d; --muted:#5b6682; --line:#d5dbe9;
+  --gold:#9a6a00; --gold-soft:#fbf0cf; --mint:#0d7a5c; --mint-soft:#dcf3ea; --bad:#b3372c; --bad-soft:#fbe4e0;
+  /* 목업은 게임 화면색 그대로(두 테마 공통) */
+  --m-bg:#101a3a; --m-card:#1a2650; --m-line:#3a4a80; --m-ink:#eef1ff; --m-dim:#9aa6cf; --m-gold:#f0d28a; --m-mint:#9be0c0; --m-cyan:#8fd0e6; --m-violet:#b9a8f5;
+  --display:"Jua","Gowun Dodum",system-ui,sans-serif;
+  --body:"Gowun Dodum","Noto Sans KR",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0c1227; --surface:#141c38; --ink:#e9edfb; --muted:#9aa5c6; --line:#2b3760;
+  --gold:#f0d28a; --gold-soft:#3a3115; --mint:#9be0c0; --mint-soft:#12382d; --bad:#ff9d90; --bad-soft:#44201c; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0c1227; --surface:#141c38; --ink:#e9edfb; --muted:#9aa5c6; --line:#2b3760;
+  --gold:#f0d28a; --gold-soft:#3a3115; --mint:#9be0c0; --mint-soft:#12382d; --bad:#ff9d90; --bad-soft:#44201c; color-scheme:dark }
+
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
+main{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:40px}
+section{display:flex;flex-direction:column;gap:14px;min-width:0}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(26px,6vw,36px);line-height:1.25;margin:0;text-wrap:balance}
+h2{font-family:var(--display);font-weight:400;font-size:22px;margin:0;text-wrap:balance}
+h3{font-family:var(--display);font-weight:400;font-size:17px;margin:0}
+p{margin:0;max-width:66ch}
+.lead{color:var(--muted)}
+code{font-family:var(--mono);font-size:.84em;background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:1px 5px;overflow-wrap:anywhere}
+.summary{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.summary ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.tag{font-family:var(--mono);font-size:12px;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.tag.bad{background:var(--bad-soft);color:var(--bad)} .tag.ok{background:var(--mint-soft);color:var(--mint)} .tag.opt{background:var(--gold-soft);color:var(--gold)}
+.issues{display:flex;flex-direction:column;gap:0;border-top:1px solid var(--line)}
+.issue{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:14px 0;border-bottom:1px solid var(--line)}
+.issue > div{min-width:0;display:flex;flex-direction:column;gap:4px}
+.n{width:26px;height:26px;border-radius:50%;background:var(--bad);color:var(--bg);font-family:var(--mono);font-weight:600;font-size:13px;display:grid;place-items:center;margin-top:2px}
+.issue .why{color:var(--muted);font-size:14.5px}
+pre{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.6}
+.cm{color:var(--muted)} .hl{color:var(--bad);font-weight:600} .gd{color:var(--mint);font-weight:600}
+
+/* 휴대폰 목업 */
+.phones{display:flex;flex-wrap:wrap;gap:24px;justify-content:center}
+.phonewrap{display:flex;flex-direction:column;gap:8px;align-items:center;width:300px;max-width:100%}
+.phonewrap > b{font-family:var(--display);font-weight:400;font-size:16px}
+.phone{width:100%;background:var(--m-bg);color:var(--m-ink);border-radius:26px;border:3px solid var(--m-line);padding:14px 12px;display:flex;flex-direction:column;gap:8px;font-family:var(--display);font-size:13px;line-height:1.35}
+.phone .hd{display:flex;justify-content:space-between;align-items:center;color:var(--m-gold);font-size:20px;letter-spacing:3px}
+.phone .hd i{font-style:normal;font-size:14px;letter-spacing:0;color:var(--m-dim)}
+.box{border:1px solid var(--m-line);background:var(--m-card);border-radius:14px;padding:8px 10px;position:relative}
+.row{display:flex;gap:6px} .row > *{flex:1;min-width:0}
+.pill{border-radius:10px;background:var(--m-card);padding:6px 4px;text-align:center;font-size:11.5px;position:relative}
+.cta{background:var(--m-gold);color:#1a1a2e;border-radius:14px;padding:12px;text-align:center;font-size:17px;position:relative}
+.cta small{display:block;font-size:11.5px;opacity:.75}
+.tile{border:1px solid var(--m-line);background:var(--m-card);border-radius:12px;padding:9px 8px;text-align:center;position:relative}
+.tile small,.box small{display:block;color:var(--m-dim);font-family:var(--body);font-size:11px}
+.gold{color:var(--m-gold)} .mint{color:var(--m-mint)} .cyan{color:var(--m-cyan)} .violet{color:var(--m-violet)} .dim{color:var(--m-dim)}
+.bar{height:5px;border-radius:3px;background:var(--m-line);overflow:hidden;margin:5px 0}
+.bar > span{display:block;height:100%;background:var(--m-mint)}
+.sky{min-height:64px;display:grid;place-items:center;color:var(--m-dim);font-family:var(--body);font-size:11px}
+.road{display:flex;align-items:center;gap:3px;margin:6px 0 2px}
+.road span{flex:1;height:3px;background:var(--m-line)} .road span.on{background:var(--m-gold)}
+.road b{width:13px;height:13px;border-radius:50%;border:2px solid var(--m-line);flex:none}
+.road b.on{background:var(--m-gold);border-color:var(--m-gold)} .road b.now{border-color:var(--m-mint);background:var(--m-mint);box-shadow:0 0 0 3px rgba(155,224,192,.25)}
+.mark{position:absolute;top:-9px;right:-7px;width:20px;height:20px;border-radius:50%;background:#e2574a;color:#fff;font-family:var(--mono);font-size:11px;font-weight:600;display:grid;place-items:center}
+.mark.g{background:#2fa37d}
+.note{font-size:13.5px;color:var(--muted)}
+
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14.5px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--display);font-weight:400;color:var(--muted);font-size:13.5px}
+tr:last-child td{border-bottom:0}
+.steps{display:flex;flex-direction:column;gap:12px}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.step header{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.step ul,.q ul{margin:0;padding-left:20px}
+.q{border-left:3px solid var(--gold);padding-left:14px;display:flex;flex-direction:column;gap:4px}
+</style>
+
+<main>
+<header style="display:flex;flex-direction:column;gap:10px">
+  <span class="tag opt" style="align-self:flex-start">기획 단계 · 코드 변경 없음</span>
+  <h1>BLORIQ 홈 화면 개편 제안서</h1>
+  <p class="lead">올려 주신 화면과 <code>main</code> 브랜치(<code>9576d84</code>) 코드를 대조해 원인을 찾고, 홈 구성안을 정리했습니다. 요청의 "서핑"은 앱을 켜면 나오는 홈(첫 화면)으로 이해했습니다.</p>
+</header>
+
+<section class="summary">
+  <h3>결론 먼저</h3>
+  <ul>
+    <li><b>이어가기 버튼은 링크 오류가 맞습니다.</b> 홈이 세계 1(달빛 숲 정원, 25판)만 보고 다음 판을 고릅니다. 세계 1을 다 깨면 못 깬 판이 없으므로 맨 첫 판인 "별문 1"로 되돌아갑니다.</li>
+    <li><b>같은 원인이 화면 전체에 퍼져 있습니다.</b> 게임은 7세계 175판인데, 완료 수·별·친구·별자리 카드·메뉴 3개가 모두 세계 1 기준입니다. 그래서 지금 어디까지 왔는지가 홈에서 보이지 않습니다.</li>
+    <li><b>제안:</b> 홈의 기준을 "세계 1"에서 "지금 있는 세계"로 바꿉니다. 저장 형식은 건드리지 않고 기존 기록에서 계산합니다. 버그 수정(0단계)만 먼저 내고, 화면 재배치는 그 뒤에 합니다.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>1. 진단: 무엇이 잘못됐나</h2>
+  <div class="issues">
+    <div class="issue"><span class="n">1</span><div>
+      <h3>이어가기가 세계 1의 1번 판으로 간다 <span class="tag bad">버그</span></h3>
+      <p><code>GameSession.nextLevelId</code>(<code>lib/app/game_session.dart:221</code>)가 세계 1 레벨 목록에서만 못 깬 판을 찾고, 없으면 첫 판을 돌려줍니다. 홈 버튼(<code>lib/app/app_entry.dart:483</code>)이 이 값을 그대로 씁니다.</p>
+      <p class="why">실제로 이어서 할 판은 가운데 카드의 작은 "꿈의 서고 등대로" 버튼 안에 있습니다. 누르면 세계 지도가 열리고, 거기서 "이어하기"를 한 번 더 눌러야 합니다.</p>
+    </div></div>
+    <div class="issue"><span class="n">2</span><div>
+      <h3>진행 요약이 세계 1에서 멈춰 있다 <span class="tag bad">표시 오류</span></h3>
+      <p>"25 / 25 완료", "별 57개", "친구 25 / 25"는 모두 세계 1만 센 값입니다(<code>app_entry.dart:731</code>). 세계 2~7에서 깬 판과 모은 별은 홈에 한 번도 잡히지 않습니다.</p>
+    </div></div>
+    <div class="issue"><span class="n">3</span><div>
+      <h3>가운데 카드가 끝난 장을 계속 보여 준다 <span class="tag bad">표시 오류</span></h3>
+      <p>"첫 별의 관측소"는 세계 1의 마지막 장 이름입니다. 세계 1을 마치면 이 카드는 100% 막대와 "시즌 1의 빛이 모두 돌아왔어요"로 고정됩니다(<code>game_session.dart:229</code>, <code>app_entry.dart:755</code>).</p>
+      <p class="why">세계 7의 이름이 "첫 별"이라 지금 세계 7에 있는 것처럼 읽히는 문제도 있습니다.</p>
+    </div></div>
+    <div class="issue"><span class="n">4</span><div>
+      <h3>메뉴 이름과 실제 내용이 어긋난다 <span class="tag bad">구조</span></h3>
+      <p>"여정 지도"는 세계 1의 판 고르기만 엽니다. 7세계 전체를 보는 진짜 지도(빛길 지도)는 이름표 없는 작은 아이콘 버튼입니다. "별자리 도감"과 "정령 도감"도 세계 1 내용만 다룹니다. "여정"의 현황 탭은 홈의 요약 3개를 그대로 반복합니다.</p>
+    </div></div>
+    <div class="issue"><span class="n">5</span><div>
+      <h3>한 화면에 같은 무게의 버튼이 11개 <span class="tag bad">구조</span></h3>
+      <p>플레이 입구만 4개(이어가기, 등대로, 별바다 항해, Daily Echo)인데 서로의 관계가 보이지 않습니다. Daily Echo 제목과 목표는 말줄임표로 잘립니다.</p>
+    </div></div>
+  </div>
+
+  <h3>원인 코드</h3>
+  <pre><span class="cm">// lib/app/game_session.dart:221 — levels는 세계 1의 25판뿐</span>
+int get nextLevelId => levels
+    .firstWhere(
+      (level) => progress.forLevel(level.id, revision: level.revision) == null,
+      <span class="hl">orElse: () => levels.first,</span>   <span class="cm">// 다 깼으면 1번 판 → "이어가기 · 별문 1"</span>
+    ).id;
+
+<span class="cm">// 이미 있는 재료 — 홈 버튼이 쓰지 않고 있을 뿐</span>
+<span class="gd">session.currentExpansionWorld</span>            <span class="cm">// 열린 세계 중 아직 못 마친 첫 세계 (지금은 6)</span>
+<span class="gd">session.worldAtlas(world).nextLevelId</span>    <span class="cm">// 그 세계에서 열려 있고 못 깬 첫 판</span></pre>
+</section>
+
+<section>
+  <h2>2. 화면 비교</h2>
+  <p class="lead">번호는 위 진단 번호와 같습니다. 제안 화면의 숫자 중 레벨·별가루·항해 정보만 스크린샷 값이고, 나머지는 자리 확인용 예시입니다.</p>
+  <div class="phones">
+    <div class="phonewrap">
+      <b>현재</b>
+      <div class="phone">
+        <div class="hd"><i>?</i>BLORIQ<i>설정</i></div>
+        <div class="box"><span class="mint">Lv 23</span> 초승달 견습생 <span class="gold" style="float:right">✦ 4907</span></div>
+        <div class="row">
+          <div class="pill mint">25 / 25 완료<span class="mark">2</span></div>
+          <div class="pill gold">별 57개</div>
+          <div class="pill violet">친구 25 / 25</div>
+        </div>
+        <div class="box" style="text-align:center">
+          <span class="mark">3</span>
+          <span class="gold" style="font-size:16px">첫 별의 관측소</span>
+          <div class="bar"><span style="width:100%"></span></div>
+          <div class="sky">별자리 그림 · 리크와 동행 정령</div>
+          <small>시즌 1의 빛이 모두 돌아왔어요.</small>
+          <div class="row" style="margin-top:6px"><div class="tile" style="flex:3">꿈의 서고 등대로</div><div class="tile" style="flex:1">〰</div></div>
+        </div>
+        <div class="cta">▶ 이어가기 · 별문 1<span class="mark">1</span></div>
+        <div class="box"><span class="cyan">별바다 항해</span><small>이어서 항해 · 4번째 바다</small></div>
+        <div class="row"><div class="tile">여정</div><div class="tile">여정 지도<span class="mark">4</span></div></div>
+        <div class="row"><div class="tile">별자리 도감</div><div class="tile">정령 도감</div></div>
+        <div class="box">Daily Echo · 오늘…<span class="mark">5</span><small>Perfect 목표: 8회 이동 …</small></div>
+      </div>
+    </div>
+
+    <div class="phonewrap">
+      <b>제안</b>
+      <div class="phone">
+        <div class="hd"><i>?</i>BLORIQ<i>설정</i></div>
+        <div class="box" style="padding:6px 10px"><span class="mint">Lv 23</span> 초승달 견습생 <span class="gold" style="float:right">✦ 4907</span></div>
+        <div class="box">
+          <span class="mark g">A</span>
+          <small>빛길 · 7세계 중 6번째</small>
+          <div class="road"><b class="on"></b><span class="on"></span><b class="on"></b><span class="on"></span><b class="on"></b><span class="on"></span><b class="on"></b><span class="on"></span><b class="on"></b><span class="on"></span><b class="now"></b><span></span><b></b></div>
+          <div style="text-align:center;margin-top:6px">
+            <span class="gold" style="font-size:17px">꿈의 서고 등대</span>
+            <small>다섯째 등대 · 3장 진행 중</small>
+            <div class="sky">지금 장의 별자리 · 리크와 동행 정령</div>
+            <div class="bar"><span style="width:48%"></span></div>
+            <small>이 세계 12 / 25판 · 이번 장 2 / 5판</small>
+          </div>
+        </div>
+        <div class="cta">▶ 이어가기 · 꿈의 서고 13<span class="mark g">B</span><small>3장 · 열려 있는 다음 판</small></div>
+        <div class="row">
+          <div class="pill mint">전체 137 / 175<span class="mark g">C</span></div>
+          <div class="pill gold">별 311 / 525</div>
+          <div class="pill violet">친구 137 / 175</div>
+        </div>
+        <div class="row">
+          <div class="tile"><span class="gold">오늘의 Echo</span><small>아직 안 함 · 목표 8수</small><span class="mark g">D</span></div>
+          <div class="tile"><span class="cyan">별바다 항해</span><small>이어서 · 4번째 바다</small></div>
+        </div>
+        <div class="row">
+          <div class="tile">빛길 지도<small>6 / 7 세계</small><span class="mark g">E</span></div>
+          <div class="tile">내 기록<small>받을 보상 2</small></div>
+        </div>
+        <div class="row">
+          <div class="tile">별자리 도감<small>27 / 35 완성</small></div>
+          <div class="tile">정령 도감<small>새 친구 1</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tablewrap"><table>
+    <tr><th style="width:44px"></th><th>구역</th><th>보여 줄 것</th><th>누르면</th></tr>
+    <tr><td><b>A</b></td><td>지금 여기</td><td>7세계 빛길 위의 현재 위치, 세계 이름, 진행 중인 장의 별자리, 세계와 장 진행도</td><td>그 세계의 지도(판 고르기)</td></tr>
+    <tr><td><b>B</b></td><td>이어가기</td><td>세계 이름과 판 번호. 버튼 문구와 실제로 열리는 판이 항상 같아야 함</td><td>그 판으로 바로 진입(지도 거치지 않음)</td></tr>
+    <tr><td><b>C</b></td><td>전체 요약</td><td>7세계 합계: 깬 판, 별, 친구</td><td>내 기록의 현황 탭</td></tr>
+    <tr><td><b>D</b></td><td>곁가지 플레이</td><td>오늘의 Echo(했는지, 목표 수), 별바다 항해(이어하기 또는 최고 기록). 반 칸씩이라 글이 잘리지 않음</td><td>각 모드</td></tr>
+    <tr><td><b>E</b></td><td>메뉴 4칸</td><td>이름 아래에 그 메뉴의 현재 상태 한 줄</td><td>3장 표 참고</td></tr>
+  </table></div>
+  <p class="note">위에서 아래로 "어디에 있나 → 바로 이어하기 → 전체로는 얼마나 왔나 → 다른 놀거리 → 살펴보기" 순서입니다. 지금과 같이 보통 휴대폰(360×740)에서 스크롤 없이 한 화면에 들어가는 것을 조건으로 둡니다.</p>
+</section>
+
+<section>
+  <h2>3. 이어가기가 고를 판</h2>
+  <p>저장 데이터에는 "마지막으로 한 판"이나 시각이 없습니다. 그래서 1차로는 기록에서 계산하는 방식을 권합니다. 저장 형식을 바꾸지 않아 <code>AGENTS.md</code>의 이전(migration) 규칙에 걸리지 않습니다.</p>
+  <div class="tablewrap"><table>
+    <tr><th>상태</th><th>열리는 판</th><th>버튼 문구 예</th></tr>
+    <tr><td>세계 1을 아직 못 마침</td><td>세계 1의 못 깬 첫 판(지금과 동일)</td><td>이어가기 · 달빛 숲 정원 7</td></tr>
+    <tr><td>확장 세계 진행 중</td><td>열린 세계 중 못 마친 첫 세계에서, 열려 있고 못 깬 첫 판</td><td>이어가기 · 꿈의 서고 13</td></tr>
+    <tr><td>새 세계가 막 열림</td><td>그 세계 1번 판(세계 안내가 먼저 뜸)</td><td>새 세계 · 첫 별 1</td></tr>
+    <tr><td>175판 모두 깸</td><td>별 3개가 안 된 첫 판. 그것도 없으면 별바다 항해</td><td>별 더 모으기 · 거울 호수 4</td></tr>
+  </table></div>
+  <p class="note">장 안에서는 다섯 판을 아무 순서로나 할 수 있는 규칙이라, "못 깬 첫 판"이 방금 막힌 판과 다를 수 있습니다. 마지막으로 연 판을 기억하게 하려면 새 저장 키가 필요합니다(4장의 3단계).</p>
+</section>
+
+<section>
+  <h2>4. 메뉴 재구성</h2>
+  <p>원칙은 두 가지입니다. 메뉴 이름은 열리는 내용과 같게 하고, 모든 메뉴는 7세계 전체를 다루되 지금 있는 세계를 먼저 펼칩니다.</p>
+  <div class="tablewrap"><table>
+    <tr><th>지금</th><th>문제</th><th>제안</th><th>홈 타일의 한 줄</th><th>열었을 때 첫 화면</th></tr>
+    <tr><td>여정 지도</td><td>세계 1 판 고르기만 열림</td><td><b>빛길 지도</b>로 교체. 세계 1 판 고르기는 지도 안의 세계 1로 들어감</td><td>6 / 7 세계</td><td>7세계 지도, 현재 세계에 초점</td></tr>
+    <tr><td>여정</td><td>현황 탭이 홈과 중복, 별자리 탭이 도감과 중복</td><td><b>내 기록</b>: 현황(세계별 표) · 권능 · 업적 · 상점</td><td>받을 보상 수, 없으면 레벨 칭호</td><td>세계별 판·별 표</td></tr>
+    <tr><td>별자리 도감</td><td>세계 1의 5개만</td><td>세계 탭 7개, 35개 별자리</td><td>27 / 35 완성</td><td>현재 세계 탭</td></tr>
+    <tr><td>정령 도감</td><td>시즌 1 친구만</td><td>세계별 묶음, 새로 만난 친구 먼저</td><td>새 친구 수, 없으면 만난 수</td><td>새 친구가 있으면 그 카드</td></tr>
+    <tr><td>(등대로 버튼)</td><td>진짜 이어가기가 보조 버튼에 숨음</td><td>없앰. 역할을 A 카드와 B 버튼이 나눠 가짐</td><td>—</td><td>—</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>5. 진행 순서</h2>
+  <div class="steps">
+    <div class="step">
+      <header><h3>0단계 · 버그 수정만</h3><span class="tag ok">작음 · 먼저 권장</span></header>
+      <ul>
+        <li>세션에 "이어갈 판" 계산을 하나 추가하고 홈 버튼이 그것을 쓰게 함. 문구에 세계 이름을 넣음.</li>
+        <li>요약 3칸을 7세계 합계로 바꿈.</li>
+        <li>가운데 카드 제목과 막대를 현재 세계의 진행 중인 장으로 바꿈.</li>
+        <li>대상 파일: <code>game_session.dart</code>, <code>app_entry.dart</code>, <code>app_ko.arb</code>·<code>app_en.arb</code>. 배치는 그대로.</li>
+        <li>테스트: 세계 1 완료 후, 세계 중간, 전부 완료의 세 경우에 버튼이 여는 판을 확인.</li>
+      </ul>
+    </div>
+    <div class="step">
+      <header><h3>1단계 · 홈 재배치</h3><span class="tag opt">중간</span></header>
+      <ul>
+        <li>2장의 제안 배치 적용: 지금 여기 카드, 반 칸 타일 2개, 메뉴 타일의 상태 한 줄.</li>
+        <li>등대로 버튼 제거에 따라 <code>world-entry</code>를 누르는 기존 테스트 10여 개를 함께 고쳐야 함.</li>
+        <li>360×740 캡처 테스트로 한 화면에 들어가는지 확인.</li>
+      </ul>
+    </div>
+    <div class="step">
+      <header><h3>2단계 · 메뉴 화면 범위 통일</h3><span class="tag opt">큼</span></header>
+      <ul>
+        <li>별자리 도감, 정령 도감, 내 기록을 7세계 기준으로 확장.</li>
+        <li>화면 3개를 각각 손대므로 메뉴 하나씩 나눠서 진행.</li>
+      </ul>
+    </div>
+    <div class="step">
+      <header><h3>3단계 · 마지막으로 한 판 기억</h3><span class="tag opt">선택</span></header>
+      <ul>
+        <li>새 저장 키 추가. 옛 데이터에는 값이 없으므로 없을 때 3장의 계산 방식으로 돌아가게 하고 그 테스트를 넣음.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>6. 정해 주실 것</h2>
+  <div class="q"><h3>이어가기 기준</h3><p>기록에서 계산(권장, 0단계에 바로 가능)으로 시작하고, 써 보신 뒤 필요하면 "마지막으로 한 판"을 3단계로 추가하는 순서를 권합니다.</p></div>
+  <div class="q"><h3>메뉴 이름</h3><p>"여정" → "내 기록", "여정 지도" → "빛길 지도"로 바꾸는 안입니다. 세계관 용어를 유지하고 싶으시면 "여정"은 두고 내용만 정리할 수 있습니다.</p></div>
+  <div class="q"><h3>175판을 모두 깬 뒤의 큰 버튼</h3><p>"별 더 모으기"(별 3개 미달 판)와 "별바다 항해" 중 어느 쪽을 앞세울지입니다. 권장은 별 더 모으기입니다.</p></div>
+  <div class="q"><h3>범위</h3><p>0단계만 먼저 낼지, 0~1단계를 한 번에 낼지 알려 주시면 그 범위로 작업 지시서를 만들겠습니다.</p></div>
+</section>
+</main>
