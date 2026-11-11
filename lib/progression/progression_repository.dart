@@ -21,6 +21,7 @@ class ClearReward {
     required this.starsAwarded,
     required this.firstClear,
     required this.xpGained,
+    this.companionXpBonus = 0,
     required this.clearStardust,
     required this.levelsGained,
     required this.newPower,
@@ -39,6 +40,7 @@ class ClearReward {
   final int starsAwarded;
   final bool firstClear;
   final int xpGained;
+  final int companionXpBonus;
 
   /// 클리어 자체의 별가루(숲 보너스 포함, 레벨 보상 제외).
   final int clearStardust;
@@ -419,11 +421,19 @@ class ProgressionRepository {
       return _reward(starsAwarded: awarded, firstClear: firstClear, bare: bare);
     }
 
-    var xpGained = campaignClearXp(
-      stars: awarded,
-      previousBestStars: previousBestStars,
-    );
     // 유대 보너스는 이번 클리어 이전의 유대 레벨로 판단한다.
+    final companionXpBonus =
+        companionId != null &&
+            firstClear &&
+            !_rewardedStars.containsKey(levelKey)
+        ? companionFirstClearXp(
+            SpiritFamily.tryParse(companionFamily),
+            bondLevel(companionId),
+          )
+        : 0;
+    var xpGained =
+        campaignClearXp(stars: awarded, previousBestStars: previousBestStars) +
+        companionXpBonus;
     final abilities = abilitiesFor(
       companionId: companionId,
       companionFamily: companionFamily,
@@ -489,6 +499,7 @@ class ProgressionRepository {
       bare: bare,
       newBare: newBare,
       xpGained: xpGained,
+      companionXpBonus: companionXpBonus,
       clearStardust: dust + goldenDust,
       achievements: reached,
       levels: levels,
@@ -639,6 +650,7 @@ class ProgressionRepository {
         freeUsedThisAttempt ||
         (levelKey != null && _freeStarlightUsed.contains(levelKey)),
     charges: _charges,
+    goldenConstellations: _goldenChapters.length,
     starlightDiscount: abilitiesFor(
       companionId: companionId,
       companionFamily: companionFamily,
@@ -787,6 +799,7 @@ class ProgressionRepository {
     required bool bare,
     bool newBare = false,
     int xpGained = 0,
+    int companionXpBonus = 0,
     int clearStardust = 0,
     List<LevelUp> levels = const [],
     PowerDefinition? newPower,
@@ -798,6 +811,7 @@ class ProgressionRepository {
     starsAwarded: starsAwarded,
     firstClear: firstClear,
     xpGained: xpGained,
+    companionXpBonus: companionXpBonus,
     clearStardust: clearStardust,
     levelsGained: List.unmodifiable(levels),
     newPower: newPower,

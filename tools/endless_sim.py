@@ -21,7 +21,13 @@ PLAYERS = {
 
 
 def tier(depth: int) -> int:
-    return 1 if depth <= 5 else 2 if depth <= 15 else 3 if depth <= 35 else 4
+    if depth <= 3:
+        return 1
+    if depth <= 10:
+        return 2
+    if depth <= 22:
+        return 3
+    return 4
 
 
 def waste(mean: float, rng: random.Random) -> int:

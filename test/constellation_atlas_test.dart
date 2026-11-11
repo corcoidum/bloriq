@@ -162,6 +162,15 @@ void main() {
       ),
       findsOneWidget,
     );
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('atlas-chapter-2')),
+      120,
+      scrollable: find.descendant(
+        of: find.byKey(const ValueKey('atlas-list')),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    await tester.pump();
     expect(
       find.bySemanticsLabel(
         RegExp(

@@ -616,6 +616,8 @@ class _GameScreenState extends State<GameScreen>
     _clearCap = starCap;
     final usedStarlight = _starlightUsed || guided || starCap < 3;
     final usedPower = controller.usedPower;
+    // 이번 판에서 새로 만난 정령은 다음 판부터 동행 보상을 준다.
+    final companion = widget.session.collection.companion;
     final worldBefore = _worldBefore;
     final worldWasComplete = Worlds.isComplete(
       widget.play.world,
@@ -650,6 +652,7 @@ class _GameScreenState extends State<GameScreen>
       previousStars: previousStars,
       usedStarlight: usedStarlight,
       usedPower: usedPower,
+      companion: companion,
       worldBefore: worldBefore,
       worldWasComplete: worldWasComplete,
     );
@@ -668,12 +671,12 @@ class _GameScreenState extends State<GameScreen>
     required int? previousStars,
     required bool usedStarlight,
     required bool usedPower,
+    required SpiritDefinition? companion,
     required WorldAtlas? worldBefore,
     required bool worldWasComplete,
   }) async {
     final event = _constellation;
     final chapter = _atlasAfter?.forLevel(state.level.id);
-    final companion = widget.session.collection.companion;
     final worldAfter = worldBefore == null
         ? null
         : widget.session.worldAtlas(worldBefore.world);
@@ -2705,6 +2708,11 @@ class _GameScreenState extends State<GameScreen>
                 ),
             ],
           ),
+          if (reward.companionXpBonus > 0)
+            Text(
+              t.rewardCompanionXp(reward.companionXpBonus),
+              style: GameTypography.body.copyWith(color: colors.echoInk),
+            ),
           // 특별 보상은 가장 중요한 두 개만 보여 준다(레벨 업·권능이 먼저).
           for (final (icon, label, color) in badges.take(2))
             Padding(

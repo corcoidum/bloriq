@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:bloriq/audio/game_audio.dart';
+import 'package:bloriq/design/star_art.dart';
 import 'package:bloriq/domain/puzzle.dart';
 import 'package:bloriq/game/bloriq_game.dart';
 import 'package:bloriq/main.dart';
@@ -10,6 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/start_game.dart';
+import 'support/world_release.dart';
 
 final _board = find.byType(GameWidget<BloriqGame>);
 BloriqGame _game(WidgetTester tester) =>
@@ -64,6 +69,85 @@ void main() {
       expect(saved.stardust, 25);
     },
   );
+
+  testWidgets('atlas and companion perks reach the campaign board and result', (
+    tester,
+  ) async {
+    const capture = bool.fromEnvironment('CAPTURE_COLLECTION_PERKS');
+    final levels = (jsonDecode(
+      File('assets/levels/levels.json').readAsStringSync(),
+    ) as List).cast<Map<String, dynamic>>();
+    seedCampaign({1}, cleared: levels.take(5).map(Level.fromJson));
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      ProgressionRepository.storageKey,
+      jsonEncode({
+        'version': ProgressionRepository.schemaVersion,
+        'backfilled': true,
+        'stardust': 40,
+        'completedChapters': [1],
+        'goldenChapters': [1],
+        'claimedAchievements': ['golden-1'],
+        'bonds': {'s1-01': 8},
+      }),
+    );
+    final boundary = await openReleaseApp(tester, captureArt: capture);
+    if (capture) {
+      await tester.runAsync(() => StarArt.loadPortrait(StarArt.lunabel));
+    }
+    final backfill = releaseKey('dismiss-backfill');
+    if (backfill.evaluate().isNotEmpty) await tapVisible(tester, backfill);
+
+    await tapVisible(tester, releaseKey('home-atlas'));
+    expect(find.text('유료 별빛 길 할인 · 별가루 2'), findsOneWidget);
+    await tapVisible(tester, releaseKey('atlas-chapter-1'));
+    expect(find.textContaining('최고 별 15/15'), findsOneWidget);
+    if (capture) {
+      await captureReleaseScreen(
+        tester,
+        boundary,
+        'docs/screenshots/economy/ko-golden-starlight-discount.png',
+      );
+    }
+    await tapVisible(tester, find.text('닫기').last);
+
+    await tapVisible(tester, releaseKey('home-album'));
+    await tapVisible(tester, releaseKey('spirit-s1-01'));
+    expect(find.text('동행 혜택 · 유대 Lv 3'), findsOneWidget);
+    if (capture) {
+      await tester.ensureVisible(releaseKey('spirit-companion-benefits'));
+      await captureReleaseScreen(
+        tester,
+        boundary,
+        'docs/screenshots/economy/ko-companion-perks.png',
+      );
+    }
+    await tapVisible(tester, find.text('닫기').last);
+    await tapVisible(tester, find.byTooltip('닫기'));
+
+    await tapVisible(tester, releaseKey('home-levels'));
+    await selectOpenLevel(tester, 6);
+    await waitForReleaseWidget(tester, _board);
+    expect(
+      find.descendant(
+        of: releaseKey('starlight-path'),
+        matching: find.text('18'),
+      ),
+      findsOneWidget,
+    );
+    await _solve(tester);
+    expect(find.text('+75 경험치'), findsOneWidget);
+    expect(find.text('동행 보너스 +5 경험치 포함'), findsOneWidget);
+    expect((await ProgressionRepository.load()).xp, 75);
+    if (capture) {
+      await captureReleaseScreen(
+        tester,
+        boundary,
+        'docs/screenshots/economy/ko-companion-first-clear.png',
+      );
+    }
+    await closeReleaseApp(tester);
+  });
 
   testWidgets('the starlight path shows a move and caps the clear at 2 stars', (
     tester,
