@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../world/world_catalog.dart';
 import 'progression_rules.dart';
 
 /// 레벨 업 한 번과 그때 받은 트랙 보상(20 초과 레벨은 null).
@@ -20,6 +21,7 @@ class ClearReward {
     required this.starsAwarded,
     required this.firstClear,
     required this.xpGained,
+    this.companionXpBonus = 0,
     required this.clearStardust,
     required this.levelsGained,
     required this.newPower,
@@ -38,6 +40,7 @@ class ClearReward {
   final int starsAwarded;
   final bool firstClear;
   final int xpGained;
+  final int companionXpBonus;
 
   /// 클리어 자체의 별가루(숲 보너스 포함, 레벨 보상 제외).
   final int clearStardust;
@@ -176,6 +179,7 @@ class ProgressionRepository {
   String _equippedTrail = defaultTrailId;
   String? _title, _raw;
   bool _backfilled = false;
+  bool _endingSeen = false;
   Map<String, dynamic> _extra = {};
 
   bool saveFailed = false, corrupt = false, futureSchema = false;
@@ -219,6 +223,7 @@ class ProgressionRepository {
   bool freeStarlightUsed(String levelKey) =>
       _freeStarlightUsed.contains(levelKey);
   bool get backfilled => _backfilled;
+  bool get endingSeen => _endingSeen;
 
   Set<String> get claimedAchievements => Set.unmodifiable(_claimedAchievements);
 
@@ -348,6 +353,8 @@ class ProgressionRepository {
     final title = optionalString('title');
     _title = title != null && _ownedTitles.contains(title) ? title : null;
     _backfilled = data['backfilled'] == true;
+    // 1.0 이전 저장에는 이 필드가 없다.
+    _endingSeen = data['endingSeen'] == true;
     _extra = data;
   }
 
@@ -371,6 +378,7 @@ class ProgressionRepository {
     _equippedTrail = defaultTrailId;
     _title = null;
     _backfilled = false;
+    _endingSeen = false;
     _extra = {};
   }
 
@@ -413,11 +421,19 @@ class ProgressionRepository {
       return _reward(starsAwarded: awarded, firstClear: firstClear, bare: bare);
     }
 
-    var xpGained = campaignClearXp(
-      stars: awarded,
-      previousBestStars: previousBestStars,
-    );
     // 유대 보너스는 이번 클리어 이전의 유대 레벨로 판단한다.
+    final companionXpBonus =
+        companionId != null &&
+            firstClear &&
+            !_rewardedStars.containsKey(levelKey)
+        ? companionFirstClearXp(
+            SpiritFamily.tryParse(companionFamily),
+            bondLevel(companionId),
+          )
+        : 0;
+    var xpGained =
+        campaignClearXp(stars: awarded, previousBestStars: previousBestStars) +
+        companionXpBonus;
     final abilities = abilitiesFor(
       companionId: companionId,
       companionFamily: companionFamily,
@@ -471,6 +487,11 @@ class ProgressionRepository {
     _stardust += dust + goldenDust;
     final levels = _claimLevelRewards(newTrails);
     final reached = _claimAchievements(newTrails);
+    if (constellationCompletedChapter != null &&
+        worldOfChapter(constellationCompletedChapter) == Worlds.finalWorld &&
+        _finalWorldComplete) {
+      _grantSagaRewards(newTrails);
+    }
     final saved = await retrySave();
     return _reward(
       starsAwarded: awarded,
@@ -478,6 +499,7 @@ class ProgressionRepository {
       bare: bare,
       newBare: newBare,
       xpGained: xpGained,
+      companionXpBonus: companionXpBonus,
       clearStardust: dust + goldenDust,
       achievements: reached,
       levels: levels,
@@ -486,6 +508,23 @@ class ProgressionRepository {
       newTrails: newTrails,
       saved: saved,
     );
+  }
+
+  bool get _finalWorldComplete =>
+      Worlds.isComplete(Worlds.finalWorld, _completedChapters);
+
+  void _grantSagaRewards(List<String> newTrails) {
+    for (final reward in sagaCompletionRewards) {
+      _apply(reward, newTrails);
+    }
+  }
+
+  Future<bool> markEndingSeen() {
+    if (!_writable || !_finalWorldComplete) return Future.value(false);
+    _endingSeen = true;
+    // 7-C에서 이미 세계 7을 마친 저장에도 같은 완료 보상을 지급한다.
+    _grantSagaRewards([]);
+    return retrySave();
   }
 
   /// 일일 퍼즐 클리어. [streak] 는 오늘을 포함한 연속 일수.
@@ -611,6 +650,7 @@ class ProgressionRepository {
         freeUsedThisAttempt ||
         (levelKey != null && _freeStarlightUsed.contains(levelKey)),
     charges: _charges,
+    goldenConstellations: _goldenChapters.length,
     starlightDiscount: abilitiesFor(
       companionId: companionId,
       companionFamily: companionFamily,
@@ -759,6 +799,7 @@ class ProgressionRepository {
     required bool bare,
     bool newBare = false,
     int xpGained = 0,
+    int companionXpBonus = 0,
     int clearStardust = 0,
     List<LevelUp> levels = const [],
     PowerDefinition? newPower,
@@ -770,6 +811,7 @@ class ProgressionRepository {
     starsAwarded: starsAwarded,
     firstClear: firstClear,
     xpGained: xpGained,
+    companionXpBonus: companionXpBonus,
     clearStardust: clearStardust,
     levelsGained: List.unmodifiable(levels),
     newPower: newPower,
@@ -806,6 +848,7 @@ class ProgressionRepository {
       _rewardedStars.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
     ),
     'backfilled': _backfilled,
+    'endingSeen': _endingSeen,
     'assistCaps': Map.fromEntries(
       _assistCaps.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
     ),

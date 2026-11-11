@@ -45,3 +45,8 @@ class OpenWorld {
   const OpenWorld(this.world);
   final int world;
 }
+
+/// 최종 결과에서 게임을 닫은 뒤 엔딩을 연다.
+class OpenEnding {
+  const OpenEnding();
+}

@@ -35,6 +35,7 @@ void main() {
     }
     for (final (family, file) in [
       ('Jua', 'Jua-Regular.ttf'),
+      ('GamjaFlower', 'GamjaFlower-Subset.ttf'),
       ('GowunDodum', 'GowunDodum-Regular.ttf'),
     ]) {
       await (FontLoader(
@@ -128,25 +129,25 @@ void main() {
     await launch();
     await tapVisible(tester, find.byKey(const ValueKey('home-journey')));
     await tapVisible(tester, find.text('보상'));
-    Future<void> next() async {
-      await tester.fling(
-        find.byType(PageView).last,
-        const Offset(-300, 0),
-        1200,
+    Future<void> section(String id) async {
+      final list = find.byKey(const PageStorageKey('journey-rewards-list'));
+      await tester.scrollUntilVisible(
+        find.byKey(ValueKey('journey-rewards-$id')),
+        240,
+        maxScrolls: 100,
+        scrollable: find.descendant(
+          of: list,
+          matching: find.byType(Scrollable),
+        ),
       );
-      for (var i = 0; i < 10; i++) {
-        await tester.pump(const Duration(milliseconds: 50));
-      }
+      await tester.pumpAndSettle();
     }
 
-    for (var i = 0; i < 4; i++) {
-      await next();
-    }
+    await section('golden');
     await capture('ko-rewards-golden');
-    await next();
-    await next();
+    await section('shop');
     await capture('ko-rewards-workshop');
-    await next();
+    await section('trails');
     await capture('ko-rewards-trails');
     await tester.pumpWidget(const SizedBox());
 

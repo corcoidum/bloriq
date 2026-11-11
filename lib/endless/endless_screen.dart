@@ -27,6 +27,37 @@ import 'endless_repository.dart';
 import 'endless_rules.dart';
 import 'endless_run.dart';
 
+Future<void> showStarseaVoyage(
+  BuildContext context,
+  GameSession session,
+  GameSettings settings, {
+  bool resumeGame = false,
+  String? resumeMusicTrack,
+}) async {
+  final audio = session.audio;
+  audio.setMusicTrack(null);
+  audio.setGameVisible(true);
+  audio.onUserInteraction();
+  final transition = prefersReducedMotion(context, settings)
+      ? Duration.zero
+      : GameEffects.panelDuration;
+  try {
+    await Navigator.of(context).push<void>(
+      PageRouteBuilder<void>(
+        transitionDuration: transition,
+        reverseTransitionDuration: transition,
+        pageBuilder: (_, _, _) =>
+            EndlessScreen(session: session, settings: settings),
+        transitionsBuilder: (_, animation, _, child) =>
+            FadeTransition(opacity: animation, child: child),
+      ),
+    );
+  } finally {
+    audio.setMusicTrack(resumeMusicTrack);
+    audio.setGameVisible(resumeGame);
+  }
+}
+
 enum _Phase { loading, harbor, sailing, over }
 
 /// 별바다 항해: 판이 끝없이 이어지고, 등불이 꺼지면 끝나는 모드.

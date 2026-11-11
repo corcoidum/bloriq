@@ -140,6 +140,10 @@ class GameSession {
       (worlds.containsKey(number) &&
           Worlds.isUnlocked(number, progression.completedChapters));
 
+  bool get sagaComplete =>
+      worldUnlocked(Worlds.finalWorld) &&
+      Worlds.isComplete(Worlds.finalWorld, progression.completedChapters);
+
   WorldAtlas? worldAtlas(int number) => switch (worlds[number]) {
     final world? => WorldAtlas.derive(world, progress),
     null => null,

@@ -62,6 +62,7 @@ List<Level> releaseLevels(int world) => Worlds.parseLevels(
 Future<GlobalKey> openReleaseApp(
   WidgetTester tester, {
   bool captureArt = false,
+  bool reduceMotion = true,
   Locale locale = const Locale('ko'),
   Future<List<Level>> Function()? loadLevels,
 }) async {
@@ -71,7 +72,7 @@ Future<GlobalKey> openReleaseApp(
   tester.platformDispatcher.localesTestValue = [locale];
   addTearDown(tester.platformDispatcher.clearLocalesTestValue);
   if (captureArt) await preloadReleaseArt(tester);
-  final settings = GameSettings(reduceMotion: true);
+  final settings = GameSettings(reduceMotion: reduceMotion);
   addTearDown(settings.dispose);
   final boundary = GlobalKey();
   await tester.pumpWidget(

@@ -194,6 +194,7 @@ class _GameScreenState extends State<GameScreen>
   bool _gateBlocked = false;
   ProgressRepository? _progress;
   CompletionResult? _completion;
+  Future<void> Function()? _pendingCampaignReward;
   bool _replaying = false;
   bool _reduceMotion = false;
   bool _isNewBest = false;
@@ -615,6 +616,8 @@ class _GameScreenState extends State<GameScreen>
     _clearCap = starCap;
     final usedStarlight = _starlightUsed || guided || starCap < 3;
     final usedPower = controller.usedPower;
+    // 이번 판에서 새로 만난 정령은 다음 판부터 동행 보상을 준다.
+    final companion = widget.session.collection.companion;
     final worldBefore = _worldBefore;
     final worldWasComplete = Worlds.isComplete(
       widget.play.world,
@@ -642,10 +645,38 @@ class _GameScreenState extends State<GameScreen>
       _discovery = added.where((f) => f.levelId == state.level.id).firstOrNull;
       _updateConstellation(state.level.id, saved: result.saved);
     });
-    if (!result.saved) return;
+    Future<void> award() => _recordCampaignReward(
+      controller,
+      state,
+      stars: result.stars,
+      previousStars: previousStars,
+      usedStarlight: usedStarlight,
+      usedPower: usedPower,
+      companion: companion,
+      worldBefore: worldBefore,
+      worldWasComplete: worldWasComplete,
+    );
+    if (result.saved) {
+      await award();
+    } else {
+      // 스테이지 기록을 다시 저장하면 클리어 보상과 세계 공개도 이어서 처리한다.
+      _pendingCampaignReward = award;
+    }
+  }
+
+  Future<void> _recordCampaignReward(
+    PuzzleController controller,
+    PuzzleState state, {
+    required int stars,
+    required int? previousStars,
+    required bool usedStarlight,
+    required bool usedPower,
+    required SpiritDefinition? companion,
+    required WorldAtlas? worldBefore,
+    required bool worldWasComplete,
+  }) async {
     final event = _constellation;
     final chapter = _atlasAfter?.forLevel(state.level.id);
-    final companion = widget.session.collection.companion;
     final worldAfter = worldBefore == null
         ? null
         : widget.session.worldAtlas(worldBefore.world);
@@ -654,10 +685,7 @@ class _GameScreenState extends State<GameScreen>
         : WorldAtlas.diff(worldBefore, worldAfter, state.level.id);
     final reward = await widget.session.progression.recordClear(
       levelKey: '${state.level.id}:${state.level.revision}',
-      stars: math.min(
-        starRating(moves: state.moves, minimumMoves: state.level.minimumMoves),
-        starCap,
-      ),
+      stars: stars,
       previousBestStars: previousStars,
       usedStarlightPath: usedStarlight,
       companionId: companion?.id,
@@ -700,6 +728,7 @@ class _GameScreenState extends State<GameScreen>
 
   void _resetAssist() {
     _reward = null;
+    _pendingCampaignReward = null;
     _armedPower = null;
     _starlightUsed = false;
     _starlightFreeUsed = false;
@@ -909,6 +938,7 @@ class _GameScreenState extends State<GameScreen>
     if (_retryingSave) return;
     setState(() => _retryingSave = true);
     final controller = _controller;
+    final state = controller?.state;
     final result = _completion;
     final saved = await _progress!.retrySave();
     final added = saved
@@ -917,9 +947,12 @@ class _GameScreenState extends State<GameScreen>
           )
         : <SpiritDefinition>[];
     if (!mounted) return;
+    final sameAttempt =
+        identical(controller, _controller) &&
+        identical(state, controller?.state);
     setState(() {
       _retryingSave = false;
-      if (identical(controller, _controller) && result != null) {
+      if (sameAttempt && state != null && result != null) {
         _completion = CompletionResult(
           progress: result.progress,
           stars: result.stars,
@@ -927,11 +960,16 @@ class _GameScreenState extends State<GameScreen>
           saved: saved,
         );
         _discovery ??= added
-            .where((f) => f.levelId == controller!.state.level.id)
+            .where((f) => f.levelId == state.level.id)
             .firstOrNull;
-        _updateConstellation(controller!.state.level.id, saved: saved);
+        _updateConstellation(state.level.id, saved: saved);
       }
     });
+    if (saved && sameAttempt) {
+      final award = _pendingCampaignReward;
+      _pendingCampaignReward = null;
+      if (award != null) await award();
+    }
   }
 
   /// 저장 결과로만 별을 켠다. 실패하면 점선 고리로 대기 상태를 보여 준다.
@@ -1193,9 +1231,12 @@ class _GameScreenState extends State<GameScreen>
       () => showExperienceSettings(
         context,
         widget.settings,
-        _audio!,
+        widget.session,
         resumeGame: true,
-        analytics: widget.session.analytics,
+        resumeMusicTrack: widget.session.saga
+            ?.world(widget.play.world)
+            .theme
+            ?.bgm,
       ),
     );
     if (mounted) setState(() {});
@@ -1531,12 +1572,13 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
-  /// 결과 화면을 닫고 홈에서 다음 세계 지도를 바로 연다.
-  void _goToWorld(int world) {
+  /// 결과 화면을 닫고 홈에서 다음 세계나 엔딩을 연다.
+  void _leaveFor(Object destination) {
+    if (_allowPop) return;
     _acknowledgeDiscovery();
     setState(() => _allowPop = true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) Navigator.pop(context, OpenWorld(world));
+      if (mounted) Navigator.pop(context, destination);
     });
   }
 
@@ -1553,6 +1595,12 @@ class _GameScreenState extends State<GameScreen>
     final finished = _worldFinished;
     final worldFinished = finished != null;
     final nextWorld = finished?.next;
+    final ending = finished?.world.number == Worlds.finalWorld;
+    final awaitingFinalSave =
+        widget.play.world == Worlds.finalWorld &&
+        (_completion == null ||
+            _retryingSave ||
+            (_completion?.saved == true && _reward == null));
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1563,15 +1611,23 @@ class _GameScreenState extends State<GameScreen>
             minimumSize: const Size(0, 54),
             textStyle: GameTypography.label.copyWith(fontSize: 18),
           ),
-          onPressed: () => widget.play.mode != PlayMode.campaign
-              ? Navigator.pop(context)
-              : nextWorld != null
-              ? _goToWorld(nextWorld.number)
-              : worldFinished
-              ? _withModal<int>(
-                  () => showSagaMap(context, widget.session, selectable: false),
-                )
-              : _select(_nextIndex()),
+          onPressed: awaitingFinalSave
+              ? null
+              : () => widget.play.mode != PlayMode.campaign
+                    ? Navigator.pop(context)
+                    : ending
+                    ? _leaveFor(const OpenEnding())
+                    : nextWorld != null
+                    ? _leaveFor(OpenWorld(nextWorld.number))
+                    : worldFinished
+                    ? _withModal<int>(
+                        () => showSagaMap(
+                          context,
+                          widget.session,
+                          selectable: false,
+                        ),
+                      )
+                    : _select(_nextIndex()),
           icon: Icon(
             nextWorld != null
                 ? Icons.light_rounded
@@ -1582,6 +1638,8 @@ class _GameScreenState extends State<GameScreen>
           label: Text(
             widget.play.mode != PlayMode.campaign
                 ? t.close
+                : ending
+                ? t.endingEntry
                 : nextWorld != null
                 ? WorldText.enter(nextWorld.title).resolve(t.localeName)
                 : worldFinished
@@ -2650,6 +2708,11 @@ class _GameScreenState extends State<GameScreen>
                 ),
             ],
           ),
+          if (reward.companionXpBonus > 0)
+            Text(
+              t.rewardCompanionXp(reward.companionXpBonus),
+              style: GameTypography.body.copyWith(color: colors.echoInk),
+            ),
           // 특별 보상은 가장 중요한 두 개만 보여 준다(레벨 업·권능이 먼저).
           for (final (icon, label, color) in badges.take(2))
             Padding(

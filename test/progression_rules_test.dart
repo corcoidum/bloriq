@@ -275,6 +275,13 @@ void main() {
     test('cost and discount', () {
       expect(starlightPathCost(), 20);
       expect(starlightPathCost(starlightDiscount: true), 15);
+      expect(starlightPathCost(goldenConstellations: 1), 18);
+      expect(starlightPathCost(goldenConstellations: 5), 10);
+      expect(starlightPathCost(goldenConstellations: 6), 10);
+      expect(
+        starlightPathCost(starlightDiscount: true, goldenConstellations: 6),
+        5,
+      );
     });
 
     test('free once per attempt, then charges, then stardust', () {
@@ -283,6 +290,7 @@ void main() {
           powerUnlocked: true,
           freeUsedThisAttempt: false,
           charges: 2,
+          goldenConstellations: 2,
         ),
         const StarlightPathQuote(StarlightPathSource.free, 0),
       );
@@ -291,6 +299,7 @@ void main() {
           powerUnlocked: true,
           freeUsedThisAttempt: true,
           charges: 1,
+          goldenConstellations: 2,
         ),
         const StarlightPathQuote(StarlightPathSource.charge, 0),
       );
@@ -329,6 +338,17 @@ void main() {
   });
 
   group('bonds', () {
+    test('companion first-clear XP scales with bond and the letter family', () {
+      for (final family in SpiritFamily.values) {
+        expect(companionFirstClearXp(family, 1), 5);
+      }
+      expect(companionFirstClearXp(SpiritFamily.forest, 4), 5);
+      expect(companionFirstClearXp(SpiritFamily.forest, 5), 10);
+      expect(companionFirstClearXp(SpiritFamily.letter, 2), 5);
+      expect(companionFirstClearXp(SpiritFamily.letter, 3), 10);
+      expect(companionFirstClearXp(SpiritFamily.letter, 5), 15);
+    });
+
     test('thresholds 0/3/8/15/25 map to Lv1..5', () {
       const expected = {
         0: 1,

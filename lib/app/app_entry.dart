@@ -22,6 +22,7 @@ import '../constellation/constellation_state.dart';
 import 'play_context.dart';
 import '../endless/endless_rules.dart';
 import '../endless/endless_screen.dart';
+import '../world/ending_screen.dart';
 import '../world/saga_map.dart';
 import '../world/world_catalog.dart';
 import '../world/world_map.dart';
@@ -203,6 +204,8 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
           if (mounted) await _openWorld(world);
         }),
       );
+    } else if (result is OpenEnding && mounted) {
+      await showEnding(context, session, widget.settings);
     }
   }
 
@@ -218,25 +221,9 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
       return;
     }
     setState(() => _opening = true);
-    session.audio.setMusicTrack(null);
-    session.audio.setGameVisible(true);
-    session.audio.onUserInteraction();
-    final transition = prefersReducedMotion(context, widget.settings)
-        ? Duration.zero
-        : GameEffects.panelDuration;
     try {
-      await Navigator.of(context).push<void>(
-        PageRouteBuilder<void>(
-          transitionDuration: transition,
-          reverseTransitionDuration: transition,
-          pageBuilder: (_, animation, secondaryAnimation) =>
-              EndlessScreen(session: session, settings: widget.settings),
-          transitionsBuilder: (_, animation, secondaryAnimation, child) =>
-              FadeTransition(opacity: animation, child: child),
-        ),
-      );
+      await showStarseaVoyage(context, session, widget.settings);
     } finally {
-      session.audio.setGameVisible(false);
       if (mounted) setState(() => _opening = false);
     }
   }
@@ -579,9 +566,8 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                 : () => showExperienceSettings(
                     context,
                     widget.settings,
-                    session.audio,
+                    session,
                     resumeGame: false,
-                    analytics: session.analytics,
                   ),
             icon: const Icon(Icons.tune_rounded),
           ),
