@@ -174,6 +174,11 @@ class GameSession {
     null => null,
   };
 
+  Map<int, int> get starflowersByWorld => {
+    for (final world in worlds.values)
+      world.number: progress.starflowerCount(world.levels),
+  };
+
   /// 세계 안에서 깬 스테이지 수(사가 지도 진행 표시).
   int clearedInWorld(int number) =>
       number == 1 ? completedCount : worldAtlas(number)?.cleared ?? 0;
@@ -265,7 +270,7 @@ class GameSession {
         debugPrint('World ${info.number} unavailable: $error');
       }
     }
-    return GameSession(
+    final session = GameSession(
       levels: levels,
       progress: progress,
       lastPlayed: await LastPlayedRepository.load(),
@@ -280,6 +285,14 @@ class GameSession {
       saga: saga,
       worlds: worlds,
     );
+    await progress.backfillStageChallenges(
+      worlds.expand((world) => world.levels),
+      hasBareHandedStar: progression.isBareHandedLevel,
+    );
+    await progression.reconcileStarflowerAchievements(
+      session.starflowersByWorld,
+    );
+    return session;
   }
 
   int get nextLevelId => levels

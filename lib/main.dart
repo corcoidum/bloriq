@@ -17,10 +17,12 @@ import 'game/mechanic_legend.dart';
 import 'design/keep_all_text.dart';
 import 'game/board_geometry.dart';
 import 'game/hint_search.dart';
+import 'game/stage_challenge_card.dart';
 import 'game/victory_panel.dart';
 import 'l10n/app_localizations.dart';
 import 'postcard/echo_postcard.dart';
 import 'progress/progress_repository.dart';
+import 'progress/stage_challenges.dart';
 import 'settings/game_settings.dart';
 import 'app/app_entry.dart';
 import 'app/game_session.dart';
@@ -205,6 +207,7 @@ class _GameScreenState extends State<GameScreen>
 
   /// 이번 시도에서 별빛 길을 썼는지(2별 상한), 무료 사용을 이미 했는지.
   bool _starlightUsed = false;
+  bool _keyHintSeen = false;
   bool _hintBusy = false;
   PuzzleState? _guideState;
   List<PuzzleMove>? _guidePath;
@@ -651,6 +654,14 @@ class _GameScreenState extends State<GameScreen>
       moves: state.moves,
       minimumMoves: state.level.minimumMoves,
       maxStars: starCap,
+      stageChallenges: stageChallengesForClear(
+        state.level,
+        moves: state.moves,
+        powerUses: controller.moveHistory
+            .where((move) => move.power != null)
+            .length,
+        usedHelp: usedStarlight || _keyHintSeen,
+      ),
     );
     final added = result.saved
         ? await widget.session.collection.reconcile(
@@ -730,6 +741,7 @@ class _GameScreenState extends State<GameScreen>
               usedStarlightPath: usedStarlight,
             )
           : null,
+      starflowersByWorld: widget.session.starflowersByWorld,
     );
     if (!mounted ||
         !identical(_controller, controller) ||
@@ -757,6 +769,7 @@ class _GameScreenState extends State<GameScreen>
     _pendingCampaignReward = null;
     _armedPower = null;
     _starlightUsed = false;
+    _keyHintSeen = false;
     _starlightFreeUsed = false;
     _clearCap = null;
     _guided = false;
@@ -874,6 +887,7 @@ class _GameScreenState extends State<GameScreen>
     }
     final clue = keyHint(level, solution).resolve(t.localeName);
     final lang = t.localeName;
+    _keyHintSeen = true;
     final choice = await _withModal<_HelpChoice>(
       () => showModalBottomSheet<_HelpChoice>(
         context: context,
@@ -984,6 +998,7 @@ class _GameScreenState extends State<GameScreen>
           stars: result.stars,
           isNewBest: result.isNewBest,
           saved: saved,
+          newStageChallenges: result.newStageChallenges,
         );
         _discovery ??= added
             .where((f) => f.levelId == state.level.id)
@@ -1333,6 +1348,30 @@ class _GameScreenState extends State<GameScreen>
     });
   }
 
+  Future<void> _showStageChallenges(AppLocalizations t, Level level) async {
+    final record = _progress!.forLevel(level.id, revision: level.revision);
+    await _withModal<void>(
+      () => showDialog<void>(
+        context: context,
+        animationStyle: _reduceMotion ? AnimationStyle.noAnimation : null,
+        builder: (context) => AlertDialog(
+          scrollable: true,
+          title: Text(t.stageChallenges),
+          content: StageChallengeCard(
+            level: level,
+            earned: record?.stageChallenges ?? const {},
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(t.close),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _skipTutorial() {
     widget.session.analytics.record('tutorial_skip', {
       ..._eventContext,
@@ -1456,6 +1495,20 @@ class _GameScreenState extends State<GameScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (_completion case final completion?
+                  when _expansion && widget.play.mode == PlayMode.campaign)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: GameSpacing.small),
+                  child: StageChallengeCard(
+                    key: const ValueKey('result-stage-challenges'),
+                    level: state.level,
+                    earned: completion.progress.stageChallenges,
+                    blooming: completion.saved
+                        ? completion.newStageChallenges
+                        : const {},
+                    reduceMotion: _reduceMotion,
+                  ),
+                ),
               _resultStats(t, colors, state),
               // 기록 갱신 배지가 뜨면 같은 칭찬을 두 번 하지 않는다.
               if (state.moves == state.level.minimumMoves && !_isNewBest)
@@ -1974,7 +2027,7 @@ class _GameScreenState extends State<GameScreen>
                       ),
                     );
                     final clockPhase = _game!.clockPhase;
-                    final boardHeading = clockPhase == null
+                    final boardTitle = clockPhase == null
                         ? levelLabel
                         : Row(
                             mainAxisSize: MainAxisSize.min,
@@ -2017,6 +2070,42 @@ class _GameScreenState extends State<GameScreen>
                               ),
                             ],
                           );
+                    final showChallenges =
+                        _expansion && widget.play.mode == PlayMode.campaign;
+                    final boardHeading = showChallenges
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(child: boardTitle),
+                              IconButton(
+                                key: const ValueKey('stage-challenge-card'),
+                                tooltip: t.stageChallenges,
+                                constraints: const BoxConstraints(
+                                  minHeight: 40,
+                                  minWidth: 48,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                ),
+                                onPressed: () => _showStageChallenges(
+                                  t,
+                                  controller.state.level,
+                                ),
+                                icon: StageChallengeFlowers(
+                                  earned:
+                                      _progress!
+                                          .forLevel(
+                                            controller.state.level.id,
+                                            revision:
+                                                controller.state.level.revision,
+                                          )
+                                          ?.stageChallenges ??
+                                      const {},
+                                ),
+                              ),
+                            ],
+                          )
+                        : boardTitle;
                     return Center(
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 560),
@@ -2875,7 +2964,11 @@ class _GameScreenState extends State<GameScreen>
         48 +
         (fit.index >= _GameFit.tight.index
             ? row + gap
-            : 26 * _textScale + 8 + gap + row + gap) +
+            : math.max(_expansion ? 40.0 : 0.0, 26 * _textScale) +
+                  8 +
+                  gap +
+                  row +
+                  gap) +
         (_expansion && _ownedPowers.isNotEmpty
             ? math.max(44.0, 17 * _textScale + 8) + (compact ? 4 : 6)
             : 0) +

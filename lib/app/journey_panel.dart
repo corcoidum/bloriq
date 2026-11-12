@@ -1014,6 +1014,14 @@ class _RewardsTab extends StatelessWidget {
           ),
         ),
         ...achievementSection(
+          'starflowers',
+          AchievementText.starflowers.resolve(lang),
+          achievements.where(
+            (achievement) =>
+                achievement.kind == AchievementKind.worldStarflowers,
+          ),
+        ),
+        ...achievementSection(
           'bare-handed',
           AchievementText.bareHanded.resolve(lang),
           achievements.where(

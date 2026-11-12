@@ -166,6 +166,7 @@ class ProgressionRepository {
   final Map<String, int> _bonds = {};
   final Set<String> _bareHanded = {};
   final Set<String> _claimedAchievements = {};
+  Map<int, int> _starflowersByWorld = const {};
 
   /// 단계 키(`id:revision`)별로 이미 보상한 최고 별 수. 백필 중복 방지용.
   final Map<String, int> _rewardedStars = {};
@@ -239,6 +240,8 @@ class ProgressionRepository {
   int achievementProgress(Achievement achievement) =>
       switch (achievement.kind) {
         AchievementKind.worldStars => worldStars(achievement.world!),
+        AchievementKind.worldStarflowers =>
+          _starflowersByWorld[achievement.world] ?? 0,
         AchievementKind.goldenConstellations => _goldenChapters.length,
         AchievementKind.bareHandedStars => _bareHanded.length,
         AchievementKind.worldGolden =>
@@ -403,7 +406,11 @@ class ProgressionRepository {
     int? constellationCompletedChapter,
     int? constellationGoldenChapter,
     bool? bareHandedClear,
+    Map<int, int>? starflowersByWorld,
   }) async {
+    if (starflowersByWorld != null) {
+      _starflowersByWorld = Map.unmodifiable(starflowersByWorld);
+    }
     final pendingCap = assistCap(levelKey);
     final assisted = usedStarlightPath || pendingCap < 3;
     final capped = capAssistedStars(stars, usedStarlightPath: assisted);
@@ -600,6 +607,17 @@ class ProgressionRepository {
     );
   }
 
+  /// ProgressRepository의 저장을 기준으로 이전 기록과 미지급 보상을 복구한다.
+  Future<void> reconcileStarflowerAchievements(Map<int, int> totals) async {
+    _starflowersByWorld = Map.unmodifiable(totals);
+    if (!_writable) return;
+    final reached = _claimAchievements(
+      [],
+      only: AchievementKind.worldStarflowers,
+    );
+    if (reached.isNotEmpty) await retrySave();
+  }
+
   // ---- 소비와 꾸미기 ---------------------------------------------------------
 
   /// 별가루가 충분하면 차감하고 true.
@@ -764,10 +782,14 @@ class ProgressionRepository {
 
   /// 목표에 닿았지만 아직 받지 않은 업적 보상을 모두 적용한다.
   /// 업데이트 전에 이미 모은 별도 다음 클리어 때 한꺼번에 받는다.
-  List<Achievement> _claimAchievements(List<String> newTrails) {
+  List<Achievement> _claimAchievements(
+    List<String> newTrails, {
+    AchievementKind? only,
+  }) {
     final reached = <Achievement>[];
     for (final achievement in achievements) {
-      if (achievementProgress(achievement) < achievement.target ||
+      if ((only != null && achievement.kind != only) ||
+          achievementProgress(achievement) < achievement.target ||
           !_claimedAchievements.add(achievement.id)) {
         continue;
       }

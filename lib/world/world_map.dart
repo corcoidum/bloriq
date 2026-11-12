@@ -5,6 +5,7 @@ import '../constellation/constellation_painter.dart';
 import '../design/game_theme.dart';
 import '../design/keep_all_text.dart';
 import '../game/power_bar.dart';
+import '../game/stage_challenge_card.dart';
 import '../l10n/app_localizations.dart';
 import '../progression/progression_rules.dart';
 import '../world/saga.dart';
@@ -94,32 +95,20 @@ class _WorldMapState extends State<WorldMap> {
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: KeepAllText(
-                story.prologue.inLocale(lang),
-                textAlign: TextAlign.center,
-                style: GameTypography.body.copyWith(
-                  fontSize: 13.5,
-                  color: colors.secondaryText,
-                ),
-              ),
-            ),
             Expanded(
               child: PageView(
                 controller: _pages,
                 children: [
                   for (final chapter in _atlas.chapters)
-                    _ChapterPage(chapter: chapter, lang: lang),
+                    _ChapterPage(
+                      chapter: chapter,
+                      lang: lang,
+                      prologue: story.prologue.inLocale(lang),
+                      next: _atlas.complete ? next : null,
+                    ),
                 ],
               ),
             ),
-            // 세계를 다 마치면 다음 세계를 한 줄로 예고한다.
-            if (_atlas.complete && next != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-                child: _NextStory(world: next, lang: lang),
-              ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
               child: FilledButton.icon(
@@ -144,9 +133,15 @@ class _WorldMapState extends State<WorldMap> {
 }
 
 class _ChapterPage extends StatelessWidget {
-  const _ChapterPage({required this.chapter, required this.lang});
+  const _ChapterPage({
+    required this.chapter,
+    required this.lang,
+    required this.prologue,
+    required this.next,
+  });
   final WorldChapterView chapter;
-  final String lang;
+  final String lang, prologue;
+  final SagaWorld? next;
 
   static const _minSkyHeight = 48.0;
 
@@ -165,6 +160,17 @@ class _ChapterPage extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: KeepAllText(
+                    prologue,
+                    textAlign: TextAlign.center,
+                    style: GameTypography.body.copyWith(
+                      fontSize: 13.5,
+                      color: colors.secondaryText,
+                    ),
+                  ),
+                ),
                 Text(
                   '${info.number}. ${info.name.inLocale(lang)}',
                   style: GameTypography.reward.copyWith(
@@ -246,6 +252,11 @@ class _ChapterPage extends StatelessWidget {
                 const SizedBox(height: 8),
                 for (final stage in chapter.stages)
                   _StageTile(stage: stage, lang: lang),
+                if (next case final world?)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: _NextStory(world: world, lang: lang),
+                  ),
               ],
             ),
           ),
@@ -443,14 +454,33 @@ class _StageTile extends StatelessWidget {
                       ],
                     ),
                   ),
-                  for (var star = 0; star < 3; star++)
-                    Icon(
-                      star < stage.stars
-                          ? Icons.star_rounded
-                          : Icons.star_outline_rounded,
-                      size: 16,
-                      color: colors.reward,
-                    ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Semantics(
+                        label: AppLocalizations.of(context)!
+                            .starsLabel(stage.stars),
+                        excludeSemantics: true,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            for (var star = 0; star < 3; star++)
+                              Icon(
+                                star < stage.stars
+                                    ? Icons.star_rounded
+                                    : Icons.star_outline_rounded,
+                                size: 16,
+                                color: colors.reward,
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      StageChallengeFlowers(
+                        earned: stage.record?.stageChallenges ?? const {},
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),

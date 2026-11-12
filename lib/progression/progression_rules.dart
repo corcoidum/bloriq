@@ -194,6 +194,13 @@ abstract final class TrailIds {
   static const goldCloud = 'gold_cloud';
   static const goldMirror = 'gold_mirror';
 
+  static const cloudBloom = 'cloud_bloom';
+  static const lakeBloom = 'lake_bloom';
+  static const brassBloom = 'brass_bloom';
+  static const frostBloom = 'frost_bloom';
+  static const inkBloom = 'ink_bloom';
+  static const starBloom = 'star_bloom';
+
   static bool isGolden(String id) => id.startsWith('gold_');
 }
 
@@ -226,6 +233,12 @@ const trails = <TrailDefinition>[
     TrailIds.goldMirror,
     ProgressionText('황금 물결', 'Golden Ripple'),
   ),
+  TrailDefinition(TrailIds.cloudBloom, ProgressionText('구름꽃', 'Cloud Bloom')),
+  TrailDefinition(TrailIds.lakeBloom, ProgressionText('물빛꽃', 'Lake Bloom')),
+  TrailDefinition(TrailIds.brassBloom, ProgressionText('금빛 꽃잎', 'Brass Bloom')),
+  TrailDefinition(TrailIds.frostBloom, ProgressionText('서리꽃', 'Frost Bloom')),
+  TrailDefinition(TrailIds.inkBloom, ProgressionText('잉크꽃', 'Ink Bloom')),
+  TrailDefinition(TrailIds.starBloom, ProgressionText('별빛 꽃잎', 'Star Bloom')),
 ];
 
 /// 별빛 공방: 별가루로 사는 잔영과 값. 세계 하나(별가루 약 1,700)를
@@ -349,6 +362,30 @@ const titles = <TitleDefinition>[
   TitleDefinition(
     'voyage_endless',
     ProgressionText('끝없는 항해자', 'Endless Voyager'),
+  ),
+  TitleDefinition(
+    'cloud_bloom_keeper',
+    ProgressionText('구름꽃 정원지기', 'Cloud Bloom Gardener'),
+  ),
+  TitleDefinition(
+    'lake_bloom_keeper',
+    ProgressionText('물빛꽃 정원지기', 'Lake Bloom Gardener'),
+  ),
+  TitleDefinition(
+    'brass_bloom_keeper',
+    ProgressionText('금빛 꽃잎의 종지기', 'Brass Bloom Bellkeeper'),
+  ),
+  TitleDefinition(
+    'frost_bloom_keeper',
+    ProgressionText('서리꽃 지기', 'Frost Bloom Keeper'),
+  ),
+  TitleDefinition(
+    'ink_bloom_keeper',
+    ProgressionText('잉크꽃의 사서', 'Ink Bloom Librarian'),
+  ),
+  TitleDefinition(
+    'star_bloom_keeper',
+    ProgressionText('첫 별의 정원지기', 'Gardener of the First Star'),
   ),
 ];
 
@@ -729,6 +766,9 @@ enum AchievementKind {
   /// 한 세계에서 모은 별(판마다 최고 별, 최대 75).
   worldStars,
 
+  /// 한 세계에서 달성한 판 도전 과제(최대 75).
+  worldStarflowers,
+
   /// 황금 별자리(장의 다섯 판을 모두 3별로) 개수. 모든 세계를 합친다.
   goldenConstellations,
 
@@ -755,7 +795,7 @@ class Achievement {
   final AchievementKind kind;
   final int target;
 
-  /// [AchievementKind.worldStars], [AchievementKind.worldGolden]일 때 세계 번호.
+  /// 세계 단위 업적의 세계 번호.
   final int? world;
   final ProgressionText name;
   final List<TrackReward> rewards;
@@ -767,8 +807,7 @@ const sagaCompletionRewards = [
   TrailUnlock(TrailIds.firstStarlight),
 ];
 
-/// 목표에 닿으면 다음 클리어 때 자동으로 받는다(한 번만).
-const achievements = <Achievement>[
+const _starAchievements = <Achievement>[
   Achievement(
     id: 'w1-stars-25',
     kind: AchievementKind.worldStars,
@@ -1008,6 +1047,67 @@ const achievements = <Achievement>[
   ),
 ];
 
+const _starflowerRewards = [
+  (
+    2,
+    ProgressionText('구름바다', 'Cloud Sea'),
+    TrailIds.cloudBloom,
+    'cloud_bloom_keeper',
+  ),
+  (
+    3,
+    ProgressionText('거울 호수', 'Mirror Lake'),
+    TrailIds.lakeBloom,
+    'lake_bloom_keeper',
+  ),
+  (
+    4,
+    ProgressionText('시계탑', 'Clocktower'),
+    TrailIds.brassBloom,
+    'brass_bloom_keeper',
+  ),
+  (
+    5,
+    ProgressionText('얼음 동굴', 'Ice Cave'),
+    TrailIds.frostBloom,
+    'frost_bloom_keeper',
+  ),
+  (
+    6,
+    ProgressionText('꿈의 서고', 'Dream Library'),
+    TrailIds.inkBloom,
+    'ink_bloom_keeper',
+  ),
+  (
+    7,
+    ProgressionText('첫 별', 'First Star'),
+    TrailIds.starBloom,
+    'star_bloom_keeper',
+  ),
+];
+
+/// 목표에 닿으면 자동으로 받는다(한 번만).
+final achievements = List<Achievement>.unmodifiable([
+  ..._starAchievements,
+  for (final (world, name, trailId, titleId) in _starflowerRewards)
+    for (final (target, reward) in <(int, TrackReward)>[
+      (25, const StardustBundle(200)),
+      (50, TrailUnlock(trailId)),
+      (75, TitleUnlock(titleId)),
+    ])
+      Achievement(
+        id: 'w$world-starflowers-$target',
+        kind: AchievementKind.worldStarflowers,
+        world: world,
+        target: target,
+        name: ProgressionText(
+          '${name.ko} 별꽃 $target개',
+          '${name.en} · $target starflowers',
+        ),
+        rewards: List.unmodifiable([reward]),
+      ),
+]);
+
 Achievement? achievementById(String id) {
   for (final achievement in achievements) {
     if (achievement.id == id) return achievement;
@@ -1024,6 +1124,7 @@ ProgressionText achievementReached(ProgressionText name) =>
 abstract final class AchievementText {
   static const heading = ProgressionText('별 모으기', 'Star collection');
   static const stars = ProgressionText('세계별 별', 'Stars by world');
+  static const starflowers = ProgressionText('세계별 별꽃', 'Starflowers by world');
   static const mastery = ProgressionText('황금 별자리 · 맨손 별', 'Gold & bare-handed');
   static const golden = ProgressionText('황금 별자리', 'Golden constellations');
   static const bareHanded = ProgressionText('맨손 별', 'Bare-handed stars');

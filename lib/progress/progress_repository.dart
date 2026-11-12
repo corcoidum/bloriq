@@ -3,6 +3,9 @@ import 'dart:math' as math;
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../domain/puzzle.dart';
+import 'stage_challenges.dart';
+
 /// 모든 스테이지에 같은 이동 수 기준을 적용한다.
 int starRating({required int moves, required int minimumMoves}) {
   if (minimumMoves < 1 || moves < minimumMoves) {
@@ -20,6 +23,7 @@ class LevelProgress {
     required this.bestMoves,
     required this.bestStars,
     required this.completionCount,
+    this.stageChallenges = const {},
   });
 
   final int levelId;
@@ -27,6 +31,17 @@ class LevelProgress {
   final int bestMoves;
   final int bestStars;
   final int completionCount;
+  final Set<StageChallenge> stageChallenges;
+
+  LevelProgress withStageChallenges(Set<StageChallenge> earned) =>
+      LevelProgress(
+        levelId: levelId,
+        revision: revision,
+        bestMoves: bestMoves,
+        bestStars: bestStars,
+        completionCount: completionCount,
+        stageChallenges: Set.unmodifiable(earned),
+      );
 
   Map<String, Object> toJson() => {
     'levelId': levelId,
@@ -34,6 +49,11 @@ class LevelProgress {
     'bestMoves': bestMoves,
     'bestStars': bestStars,
     'completionCount': completionCount,
+    if (stageChallenges.isNotEmpty)
+      'stageChallenges': [
+        for (final challenge in StageChallenge.values)
+          if (stageChallenges.contains(challenge)) challenge.name,
+      ],
   };
 
   static LevelProgress? fromJson(Object? value) {
@@ -43,6 +63,7 @@ class LevelProgress {
     final moves = value['bestMoves'];
     final stars = value['bestStars'];
     final count = value['completionCount'];
+    final challenges = value['stageChallenges'];
     if (revision is! int ||
         revision < 1 ||
         id is! int ||
@@ -62,6 +83,11 @@ class LevelProgress {
       bestMoves: moves,
       bestStars: stars,
       completionCount: count,
+      stageChallenges: Set.unmodifiable({
+        if (challenges is List)
+          for (final challenge in StageChallenge.values)
+            if (challenges.contains(challenge.name)) challenge,
+      }),
     );
   }
 }
@@ -72,11 +98,13 @@ class CompletionResult {
     required this.stars,
     required this.isNewBest,
     required this.saved,
+    this.newStageChallenges = const {},
   });
 
   final LevelProgress progress;
   final int stars;
   final bool isNewBest;
+  final Set<StageChallenge> newStageChallenges;
 
   /// false이면 이번 세션의 기록은 남지만 영구 저장은 실패했다.
   final bool saved;
@@ -91,7 +119,7 @@ class ProgressRepository {
     this.writer,
   }) {
     saveFailed = !_writable;
-    _persistedLevelIds = _levels.values.map((e) => e.levelId).toSet();
+    _persistedLevels = Map.of(_levels);
   }
 
   // 같은 단계 번호라도 리디자인된 퍼즐은 이전 코스의 기록과 섞지 않는다.
@@ -103,7 +131,7 @@ class ProgressRepository {
   final SharedPreferences? _preferences;
   final Future<bool> Function(String, String)? writer;
   final Map<String, LevelProgress> _levels;
-  late final Set<int> _persistedLevelIds;
+  late Map<String, LevelProgress> _persistedLevels;
   final bool _writable;
   Future<void> _writeQueue = Future.value();
 
@@ -158,7 +186,7 @@ class ProgressRepository {
 
   /// 수집 권리는 성공적으로 읽거나 쓴 스냅샷만 근거로 삼는다.
   Set<int> get completedCampaignLevelIds =>
-      Set.unmodifiable(_persistedLevelIds);
+      Set.unmodifiable(_persistedLevels.values.map((record) => record.levelId));
   Future<bool> retrySave() => _persist();
   Future<void> flush() => _writeQueue;
   bool get hasHistoricalStorage =>
@@ -169,11 +197,48 @@ class ProgressRepository {
   LevelProgress? forLevel(int levelId, {int revision = 1}) =>
       _levels['$levelId:$revision'];
 
+  /// 업적은 지금 플레이할 수 있는 판의 저장된 기록만 센다.
+  int starflowerCount(Iterable<Level> levels) => levels.fold(0, (sum, level) {
+    final record = _persistedLevels['${level.id}:${level.revision}'];
+    return sum + (record?.stageChallenges.length ?? 0);
+  });
+
+  Future<void> backfillStageChallenges(
+    Iterable<Level> levels, {
+    required bool Function(String levelKey) hasBareHandedStar,
+  }) async {
+    if (!_writable) return;
+    var changed = false;
+    for (final level in levels) {
+      if (level.world < 2) continue;
+      final key = '${level.id}:${level.revision}';
+      final record = _levels[key];
+      if (record == null ||
+          record.stageChallenges.contains(StageChallenge.clear)) {
+        continue;
+      }
+      final uses = stageChallengePowerUses(level);
+      // 권능마다 한 번만 쓸 수 있다. 필수 권능만 있는 판의 클리어는 사용 횟수도 증명한다.
+      final provenTechnique = uses == 0
+          ? hasBareHandedStar(key)
+          : level.requiredPowers.length == uses &&
+                level.availablePowers.length == uses;
+      _levels[key] = record.withStageChallenges({
+        ...record.stageChallenges,
+        StageChallenge.clear,
+        if (record.bestMoves <= level.minimumMoves) StageChallenge.optimal,
+        if (provenTechnique) StageChallenge.technique,
+      });
+      changed = true;
+    }
+    if (changed) await _persist();
+  }
+
   Future<bool> _persist() async {
-    final snapshotIds = _levels.values.map((e) => e.levelId).toSet();
+    final snapshotLevels = Map.of(_levels);
     final snapshot = jsonEncode({
       'version': schemaVersion,
-      'levels': _levels.values.map((entry) => entry.toJson()).toList(),
+      'levels': snapshotLevels.values.map((entry) => entry.toJson()).toList(),
     });
     var saved = false;
     final write = _writeQueue.then((_) async {
@@ -182,11 +247,7 @@ class ProgressRepository {
         saved =
             await (writer?.call(storageKey, snapshot) ??
                 _preferences.setString(storageKey, snapshot));
-        if (saved) {
-          _persistedLevelIds
-            ..clear()
-            ..addAll(snapshotIds);
-        }
+        if (saved) _persistedLevels = snapshotLevels;
       } catch (_) {
         saved = false;
       }
@@ -203,6 +264,7 @@ class ProgressRepository {
     required int moves,
     required int minimumMoves,
     int maxStars = 3,
+    Set<StageChallenge> stageChallenges = const {},
   }) async {
     if (revision < 1 || levelId < 1) {
       throw ArgumentError.value(levelId, 'levelId');
@@ -213,6 +275,8 @@ class ProgressRepository {
       maxStars,
     );
     final previous = forLevel(levelId, revision: revision);
+    final previousChallenges =
+        previous?.stageChallenges ?? const <StageChallenge>{};
     final isNewBest = previous == null || moves < previous.bestMoves;
     final progress = LevelProgress(
       levelId: levelId,
@@ -220,6 +284,10 @@ class ProgressRepository {
       bestMoves: isNewBest ? moves : previous.bestMoves,
       bestStars: previous == null ? stars : math.max(stars, previous.bestStars),
       completionCount: (previous?.completionCount ?? 0) + 1,
+      stageChallenges: Set.unmodifiable({
+        ...previousChallenges,
+        ...stageChallenges,
+      }),
     );
     _levels['$levelId:$revision'] = progress;
 
@@ -229,6 +297,9 @@ class ProgressRepository {
       stars: stars,
       isNewBest: isNewBest,
       saved: saved,
+      newStageChallenges: Set.unmodifiable(
+        stageChallenges.difference(previousChallenges),
+      ),
     );
   }
 }

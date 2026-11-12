@@ -587,5 +587,16 @@
   "resultBest": "Best",
   "resultFewest": "Fewest",
   "watchReplayShort": "Replay",
-  "moreActions": "More"
+  "moreActions": "More",
+  "stageChallenges": "Stage challenges",
+  "starflowerCount": "Starflowers {count} / {total}",
+  "@starflowerCount": {"placeholders": {"count": {"type": "int"}, "total": {"type": "int"}}},
+  "challengeClear": "Clear the stage",
+  "challengeOptimal": "Clear in {count} moves or fewer",
+  "@challengeOptimal": {"placeholders": {"count": {"type": "int"}}},
+  "challengeUnassisted": "Clear without powers or hints",
+  "challengeOnePower": "Clear using a power exactly once",
+  "challengeRequiredPowers": "Clear using each required power once",
+  "challengeEarned": "Earned",
+  "challengeUnearned": "To earn"
 }

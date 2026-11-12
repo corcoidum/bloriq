@@ -210,9 +210,15 @@ void main() {
         'gold_forest',
         'gold_cloud',
         'gold_mirror',
+        'cloud_bloom',
+        'lake_bloom',
+        'brass_bloom',
+        'frost_bloom',
+        'ink_bloom',
+        'star_bloom',
       ]);
       expect(defaultTrailId, 'moonlight');
-      expect(titles.length, 21);
+      expect(titles.length, 27);
       for (final text in [
         ...trails.map((t) => t.name),
         ...titles.map((t) => t.name),
