@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:bloriq/design/star_art.dart';
 import 'package:bloriq/world/world_catalog.dart';
 import 'package:bloriq/world/world_spirit_album.dart';
@@ -5,13 +7,52 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/saga_seed.dart';
 import 'support/start_game.dart';
 import 'support/world_release.dart';
 
 const _capture = bool.fromEnvironment('CAPTURE_WORLD_ART');
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   setUp(rootBundle.clear);
+
+  test(
+    'all 150 expansion spirit portraits are bundled and decodable',
+    () async {
+      final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+      final assets = manifest.listAssets().toSet();
+      final portraits = <String>{};
+      for (var world = 2; world <= Worlds.finalWorld; world++) {
+        final source = await rootBundle.loadString(
+          'assets/story/world$world.json',
+        );
+        final story = WorldStory.parse(source, world);
+        for (final spirit in story.spirits) {
+          final asset = 'assets/art/world$world/spirits/${spirit.id}.png';
+          expect(spirit.asset, asset);
+          expect(assets, contains(asset));
+          expect(portraits.add(asset), isTrue);
+          final data = await rootBundle.load(asset);
+          final codec = await ui.instantiateImageCodec(
+            data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+          );
+          try {
+            final frame = await codec.getNextFrame();
+            expect(
+              (frame.image.width, frame.image.height),
+              (512, 512),
+              reason: asset,
+            );
+            frame.image.dispose();
+          } finally {
+            codec.dispose();
+          }
+        }
+      }
+      expect(portraits, hasLength(150));
+    },
+  );
 
   for (var world = 2; world <= Worlds.finalWorld; world++) {
     testWidgets(
@@ -95,6 +136,56 @@ void main() {
         await closeReleaseApp(tester);
       },
     );
+
+    testWidgets('world $world shows ordinary spirits in the home album', (
+      tester,
+    ) async {
+      seedSaga(throughWorld: world - 1, extra: Worlds.stagesPerChapter - 1);
+      final boundary = await openReleaseApp(tester, captureArt: _capture);
+      await tapVisible(tester, releaseKey('home-album'));
+      final first = releaseKey('spirit-s$world-01');
+      await waitForReleaseWidget(tester, first);
+      final portraits = [
+        for (var stage = 1; stage < Worlds.stagesPerChapter; stage++)
+          (
+            releaseKey('spirit-s$world-0$stage'),
+            'assets/art/world$world/spirits/s$world-0$stage.png',
+          ),
+      ];
+      await tester.runAsync(() async {
+        for (final (tile, asset) in portraits) {
+          await precacheImage(
+            ResizeImage(AssetImage(asset), width: 512),
+            tester.element(tile),
+          );
+        }
+      });
+      await Scrollable.ensureVisible(tester.element(first), alignment: .08);
+      await tester.pumpAndSettle();
+      for (final (tile, asset) in portraits) {
+        _expectPortrait(tester, tile, asset);
+        final image = find.descendant(
+          of: tile,
+          matching: find.byType(RawImage),
+        );
+        expect(tester.widget<RawImage>(image).image?.width, 512);
+      }
+      expect(
+        find.descendant(
+          of: releaseKey('spirit-s$world-05'),
+          matching: find.byType(WorldSpiritPortrait),
+        ),
+        findsNothing,
+      );
+      await _shot(tester, boundary, world, 'ordinary-spirits');
+      await tapVisible(tester, first);
+      _expectPortrait(
+        tester,
+        releaseKey('spirit-detail-s$world-01'),
+        portraits.first.$2,
+      );
+      await closeReleaseApp(tester);
+    });
   }
 }
 

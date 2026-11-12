@@ -250,7 +250,7 @@
       "chapter": 1,
       "family": "mist",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-01.png",
       "motionKind": "float",
       "name": {
         "ko": "뭉게",
@@ -283,7 +283,7 @@
       "chapter": 1,
       "family": "mist",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-02.png",
       "motionKind": "sway",
       "name": {
         "ko": "이슬",
@@ -316,7 +316,7 @@
       "chapter": 1,
       "family": "mist",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-03.png",
       "motionKind": "wave",
       "name": {
         "ko": "포롱",
@@ -349,7 +349,7 @@
       "chapter": 1,
       "family": "mist",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-04.png",
       "motionKind": "tilt",
       "name": {
         "ko": "안개솜",
@@ -415,7 +415,7 @@
       "chapter": 2,
       "family": "tide",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-06.png",
       "motionKind": "wave",
       "name": {
         "ko": "물비",
@@ -448,7 +448,7 @@
       "chapter": 2,
       "family": "tide",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-07.png",
       "motionKind": "sway",
       "name": {
         "ko": "달그림",
@@ -481,7 +481,7 @@
       "chapter": 2,
       "family": "tide",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-08.png",
       "motionKind": "tilt",
       "name": {
         "ko": "조약",
@@ -514,7 +514,7 @@
       "chapter": 2,
       "family": "tide",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-09.png",
       "motionKind": "float",
       "name": {
         "ko": "너울",
@@ -580,7 +580,7 @@
       "chapter": 3,
       "family": "key",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-11.png",
       "motionKind": "tilt",
       "name": {
         "ko": "딸깍",
@@ -613,7 +613,7 @@
       "chapter": 3,
       "family": "key",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-12.png",
       "motionKind": "sway",
       "name": {
         "ko": "봉봉",
@@ -646,7 +646,7 @@
       "chapter": 3,
       "family": "key",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-13.png",
       "motionKind": "float",
       "name": {
         "ko": "나선",
@@ -679,7 +679,7 @@
       "chapter": 3,
       "family": "key",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-14.png",
       "motionKind": "wave",
       "name": {
         "ko": "쇠별",
@@ -745,7 +745,7 @@
       "chapter": 4,
       "family": "gale",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-16.png",
       "motionKind": "float",
       "name": {
         "ko": "휘리",
@@ -778,7 +778,7 @@
       "chapter": 4,
       "family": "gale",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-17.png",
       "motionKind": "wave",
       "name": {
         "ko": "돛폭",
@@ -811,7 +811,7 @@
       "chapter": 4,
       "family": "gale",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-18.png",
       "motionKind": "tilt",
       "name": {
         "ko": "풍향",
@@ -844,7 +844,7 @@
       "chapter": 4,
       "family": "gale",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-19.png",
       "motionKind": "sway",
       "name": {
         "ko": "소나기",
@@ -910,7 +910,7 @@
       "chapter": 5,
       "family": "beacon",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-21.png",
       "motionKind": "float",
       "name": {
         "ko": "불티",
@@ -943,7 +943,7 @@
       "chapter": 5,
       "family": "beacon",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-22.png",
       "motionKind": "tilt",
       "name": {
         "ko": "렌즈",
@@ -976,7 +976,7 @@
       "chapter": 5,
       "family": "beacon",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-23.png",
       "motionKind": "wave",
       "name": {
         "ko": "별종",
@@ -1009,7 +1009,7 @@
       "chapter": 5,
       "family": "beacon",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world2/spirits/s2-24.png",
       "motionKind": "sway",
       "name": {
         "ko": "아스타",

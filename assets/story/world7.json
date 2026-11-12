@@ -398,7 +398,7 @@
       "chapter": 1,
       "family": "lightroad_kin",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-01.png",
       "motionKind": "sway",
       "name": {
         "ko": "포아",
@@ -431,7 +431,7 @@
       "chapter": 1,
       "family": "lightroad_kin",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-02.png",
       "motionKind": "sway",
       "name": {
         "ko": "누비",
@@ -464,7 +464,7 @@
       "chapter": 1,
       "family": "lightroad_kin",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-03.png",
       "motionKind": "sway",
       "name": {
         "ko": "물솔",
@@ -497,7 +497,7 @@
       "chapter": 1,
       "family": "lightroad_kin",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-04.png",
       "motionKind": "sway",
       "name": {
         "ko": "키온",
@@ -563,7 +563,7 @@
       "chapter": 2,
       "family": "mirror_clock_kin",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-06.png",
       "motionKind": "sway",
       "name": {
         "ko": "연루",
@@ -596,7 +596,7 @@
       "chapter": 2,
       "family": "mirror_clock_kin",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-07.png",
       "motionKind": "sway",
       "name": {
         "ko": "물린",
@@ -629,7 +629,7 @@
       "chapter": 2,
       "family": "mirror_clock_kin",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-08.png",
       "motionKind": "sway",
       "name": {
         "ko": "태루",
@@ -662,7 +662,7 @@
       "chapter": 2,
       "family": "mirror_clock_kin",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-09.png",
       "motionKind": "sway",
       "name": {
         "ko": "종아",
@@ -728,7 +728,7 @@
       "chapter": 3,
       "family": "thawed_pages_kin",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-11.png",
       "motionKind": "sway",
       "name": {
         "ko": "서리나",
@@ -761,7 +761,7 @@
       "chapter": 3,
       "family": "thawed_pages_kin",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-12.png",
       "motionKind": "sway",
       "name": {
         "ko": "눈소",
@@ -794,7 +794,7 @@
       "chapter": 3,
       "family": "thawed_pages_kin",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-13.png",
       "motionKind": "sway",
       "name": {
         "ko": "갈피",
@@ -827,7 +827,7 @@
       "chapter": 3,
       "family": "thawed_pages_kin",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-14.png",
       "motionKind": "sway",
       "name": {
         "ko": "잉온",
@@ -893,7 +893,7 @@
       "chapter": 4,
       "family": "lighthouse_kin",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-16.png",
       "motionKind": "sway",
       "name": {
         "ko": "등솔",
@@ -926,7 +926,7 @@
       "chapter": 4,
       "family": "lighthouse_kin",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-17.png",
       "motionKind": "sway",
       "name": {
         "ko": "온솔",
@@ -959,7 +959,7 @@
       "chapter": 4,
       "family": "lighthouse_kin",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-18.png",
       "motionKind": "sway",
       "name": {
         "ko": "자루",
@@ -992,7 +992,7 @@
       "chapter": 4,
       "family": "lighthouse_kin",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-19.png",
       "motionKind": "sway",
       "name": {
         "ko": "서린",
@@ -1058,7 +1058,7 @@
       "chapter": 5,
       "family": "first_star_wardens",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-21.png",
       "motionKind": "sway",
       "name": {
         "ko": "노아와 온빛",
@@ -1091,7 +1091,7 @@
       "chapter": 5,
       "family": "first_star_wardens",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-22.png",
       "motionKind": "sway",
       "name": {
         "ko": "자정지기 오르",
@@ -1124,7 +1124,7 @@
       "chapter": 5,
       "family": "first_star_wardens",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-23.png",
       "motionKind": "sway",
       "name": {
         "ko": "서람",
@@ -1157,7 +1157,7 @@
       "chapter": 5,
       "family": "first_star_wardens",
       "guardian": false,
-      "asset": null,
+      "asset": "assets/art/world7/spirits/s7-24.png",
       "motionKind": "sway",
       "name": {
         "ko": "책별",
