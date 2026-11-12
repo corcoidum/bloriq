@@ -349,5 +349,9 @@
   "trialClear": "시련을 깼어요!",
   "trialRewardGoal": "시련 10판을 깨면 이 세계의 칭호와 이동 잔영을 받아요.",
   "trialRewardUnlocked": "세계 시련 보상을 얻었어요",
-  "trialReturn": "시련 목록으로"
+  "trialReturn": "시련 목록으로",
+  "endlessMirrorSea": "거울 바다",
+  "endlessClockSea": "시계 바다",
+  "endlessIceSea": "얼음 바다",
+  "endlessShelfSea": "서고 바다"
 }

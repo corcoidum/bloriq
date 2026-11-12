@@ -620,5 +620,9 @@
   "trialClear": "Trial cleared!",
   "trialRewardGoal": "Clear all 10 trials for this world's title and trail.",
   "trialRewardUnlocked": "World trial rewards unlocked",
-  "trialReturn": "Back to trials"
+  "trialReturn": "Back to trials",
+  "endlessMirrorSea": "Mirror Sea",
+  "endlessClockSea": "Clock Sea",
+  "endlessIceSea": "Ice Sea",
+  "endlessShelfSea": "Library Sea"
 }
