@@ -54,6 +54,9 @@ import 'world/world_progress.dart';
 import 'world/world_spirit_album.dart';
 import 'world/world_text.dart';
 import 'world/world_theme.dart';
+import 'weekly/weekly_pool.dart';
+import 'weekly/weekly_repository.dart';
+import 'weekly/weekly_screen.dart' show weeklyRewardLabel;
 
 void main() => runApp(const BloriqApp());
 
@@ -195,6 +198,7 @@ class _GameScreenState extends State<GameScreen>
   bool _gateBlocked = false;
   ProgressRepository? _progress;
   CompletionResult? _completion;
+  WeeklyClearResult? _weeklyResult;
   Future<void> Function()? _pendingCampaignReward;
   bool _replaying = false;
   bool _reduceMotion = false;
@@ -421,6 +425,9 @@ class _GameScreenState extends State<GameScreen>
 
   int? get _bestMoves {
     final level = _controller!.state.level;
+    if (widget.play.weeklyStage case final stage?) {
+      return widget.session.weekly.bestMoves(stage);
+    }
     if (widget.play.mode == PlayMode.daily) {
       return widget.session.daily.bestMoves(widget.play.dailyDate!);
     }
@@ -443,15 +450,10 @@ class _GameScreenState extends State<GameScreen>
 
   void _beginCompletion(PuzzleController controller) {
     final state = controller.state;
-    final previous = widget.play.mode == PlayMode.campaign
-        ? _progress!.forLevel(state.level.id, revision: state.level.revision)
-        : null;
-    _isNewBest = widget.play.mode == PlayMode.daily
-        ? (widget.session.daily.bestMoves(widget.play.dailyDate!) == null ||
-              state.moves <
-                  widget.session.daily.bestMoves(widget.play.dailyDate!)!)
-        : widget.play.mode == PlayMode.campaign &&
-              (previous == null || state.moves < previous.bestMoves);
+    final previous = _bestMoves;
+    _isNewBest =
+        widget.play.mode != PlayMode.tutorialReplay &&
+        (previous == null || state.moves < previous);
     _attempt?.finish(
       widget.play.mode == PlayMode.daily ? 'daily_complete' : 'level_complete',
       state.moves,
@@ -603,6 +605,10 @@ class _GameScreenState extends State<GameScreen>
 
   Future<void> _recordCompletion(PuzzleController controller) async {
     final state = controller.state;
+    if (widget.play.weeklyStage case final stage?) {
+      await _recordWeekly(controller, stage);
+      return;
+    }
     if (_tutorial?.complete == true) {
       _tutorial = null;
       if (widget.play.mode == PlayMode.campaign) {
@@ -686,6 +692,32 @@ class _GameScreenState extends State<GameScreen>
     }
   }
 
+  Future<void> _recordWeekly(
+    PuzzleController controller,
+    WeeklyStage stage,
+  ) async {
+    final state = controller.state;
+    final result = await widget.session.recordWeeklyClear(stage, state.moves);
+    if (mounted &&
+        identical(controller, _controller) &&
+        identical(state, controller.state)) {
+      setState(() => _weeklyResult = result);
+    }
+  }
+
+  Future<void> _retryWeeklySave(
+    PuzzleController controller,
+    WeeklyStage stage,
+  ) async {
+    if (_retryingSave) return;
+    setState(() => _retryingSave = true);
+    try {
+      await _recordWeekly(controller, stage);
+    } finally {
+      if (mounted) setState(() => _retryingSave = false);
+    }
+  }
+
   Future<void> _recordCampaignReward(
     PuzzleController controller,
     PuzzleState state, {
@@ -753,6 +785,7 @@ class _GameScreenState extends State<GameScreen>
 
   void _resetAssist() {
     _reward = null;
+    _weeklyResult = null;
     _guardianReveal = null;
     _pendingCampaignReward = null;
     _armedPower = null;
@@ -1101,9 +1134,12 @@ class _GameScreenState extends State<GameScreen>
             moves: state.moves,
             minimumMoves: state.level.minimumMoves,
           ),
-          levelText: widget.play.mode == PlayMode.daily
-              ? '${t.dailyEcho} ${widget.play.dailyDate}'
-              : t.level(_displayNumber(state.level)),
+          levelText: switch (widget.play.weeklyStage) {
+            final stage? => t.weeklyStage(stage.index + 1),
+            null when widget.play.mode == PlayMode.daily =>
+              '${t.dailyEcho} ${widget.play.dailyDate}',
+            null => t.level(_displayNumber(state.level)),
+          },
           movesText: t.moves(state.moves),
           bestText: t.bestMoves(best),
           mirrorSteps: mirrorSteps,
@@ -1262,6 +1298,7 @@ class _GameScreenState extends State<GameScreen>
       _game!.clearEffects();
       _gateBlocked = false;
       _completion = null;
+      _weeklyResult = null;
       _refreshGuide();
     });
   }
@@ -1457,6 +1494,9 @@ class _GameScreenState extends State<GameScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               _resultStats(t, colors, state),
+              if (widget.play.weeklyStage case final stage?
+                  when _weeklyResult != null)
+                _weeklyResultView(t, colors, controller, stage, _weeklyResult!),
               // 기록 갱신 배지가 뜨면 같은 칭찬을 두 번 하지 않는다.
               if (state.moves == state.level.minimumMoves && !_isNewBest)
                 Padding(
@@ -1494,6 +1534,51 @@ class _GameScreenState extends State<GameScreen>
           ),
         ),
         actions: _victoryActions(t, controller),
+      ),
+    );
+  }
+
+  Widget _weeklyResultView(
+    AppLocalizations t,
+    GameColors colors,
+    PuzzleController controller,
+    WeeklyStage stage,
+    WeeklyClearResult result,
+  ) {
+    final complete = result.cleared == WeeklyPool.stageCount;
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Column(
+        children: [
+          Text(
+            complete ? t.weeklyComplete : t.weeklyProgress(result.cleared),
+            key: const ValueKey('weekly-result-progress'),
+            textAlign: TextAlign.center,
+            style: GameTypography.label.copyWith(color: colors.goalInk),
+          ),
+          if (result.newReward) ...[
+            Text(
+              t.weeklyRewardEarned,
+              key: const ValueKey('weekly-result-reward'),
+            ),
+            Text(
+              weeklyRewardLabel(
+                t,
+                widget.session.weekly.forWeek(stage.week)!.rotation,
+              ),
+            ),
+          ],
+          if (!result.saved) ...[
+            Text(t.saveError),
+            TextButton(
+              key: const ValueKey('retry-weekly'),
+              onPressed: _retryingSave
+                  ? null
+                  : () => _retryWeeklySave(controller, stage),
+              child: Text(t.retrySave),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -1654,6 +1739,9 @@ class _GameScreenState extends State<GameScreen>
         (_completion == null ||
             _retryingSave ||
             (_completion?.saved == true && _reward == null));
+    final weekly = widget.play.weeklyStage != null;
+    final awaitingWeeklySave =
+        weekly && (_weeklyResult == null || _retryingSave);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1664,9 +1752,11 @@ class _GameScreenState extends State<GameScreen>
             minimumSize: const Size(0, 54),
             textStyle: GameTypography.label.copyWith(fontSize: 18),
           ),
-          onPressed: awaitingFinalSave
+          onPressed: awaitingFinalSave || awaitingWeeklySave
               ? null
-              : () => widget.play.mode != PlayMode.campaign
+              : () => weekly
+                    ? _leaveGame()
+                    : widget.play.mode != PlayMode.campaign
                     ? Navigator.pop(context)
                     : ending
                     ? _leaveFor(const OpenEnding())
@@ -1689,7 +1779,9 @@ class _GameScreenState extends State<GameScreen>
                 : Icons.arrow_forward,
           ),
           label: Text(
-            widget.play.mode != PlayMode.campaign
+            weekly
+                ? t.weeklyReturn
+                : widget.play.mode != PlayMode.campaign
                 ? t.close
                 : ending
                 ? t.endingEntry
@@ -1933,11 +2025,18 @@ class _GameScreenState extends State<GameScreen>
                             children: [
                               Flexible(
                                 child: Text(
-                                  widget.play.mode == PlayMode.daily
-                                      ? t.dailyEcho
-                                      : t.level(
-                                          _displayNumber(_loaded[_index]),
-                                        ),
+                                  switch (widget.play.weeklyStage) {
+                                    final stage? => t.weeklyStage(
+                                      stage.index + 1,
+                                    ),
+                                    null
+                                        when widget.play.mode ==
+                                            PlayMode.daily =>
+                                      t.dailyEcho,
+                                    null => t.level(
+                                      _displayNumber(_loaded[_index]),
+                                    ),
+                                  },
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: labelStyle,

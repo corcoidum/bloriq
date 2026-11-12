@@ -29,6 +29,8 @@ import '../world/world_map.dart';
 import '../world/world_text.dart';
 import '../tutorial/world_tutorial.dart';
 import '../daily/daily_panel.dart';
+import '../weekly/weekly_pool.dart';
+import '../weekly/weekly_screen.dart';
 
 class AppEntry extends StatefulWidget {
   const AppEntry({
@@ -63,6 +65,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   bool _loading = false;
   bool _choosing = false;
   GameSession? _session;
+  Timer? _weeklyRefresh;
 
   @override
   void initState() {
@@ -98,6 +101,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
         _session = session;
         _loading = false;
       });
+      _scheduleWeeklyRefresh();
       if (!session.levels.any((level) => level.id == 1)) {
         _startingTutorial = false;
       }
@@ -152,7 +156,21 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && mounted) setState(() {});
+    if (state == AppLifecycleState.resumed && mounted) {
+      setState(() {});
+      _scheduleWeeklyRefresh();
+    }
+  }
+
+  void _scheduleWeeklyRefresh() {
+    _weeklyRefresh?.cancel();
+    final now = _session?.weekly.clock();
+    if (now == null) return;
+    _weeklyRefresh = Timer(nextWeeklyBoundary(now).difference(now), () {
+      if (!mounted) return;
+      setState(() {});
+      _scheduleWeeklyRefresh();
+    });
   }
 
   void _retry() {
@@ -360,6 +378,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _weeklyRefresh?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     unawaited(_session?.dispose());
     super.dispose();
@@ -498,19 +517,22 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                         const SizedBox(height: 6),
                         _playerStrip(t, colors, session),
                         const SizedBox(height: GameSpacing.small),
-                        IntrinsicHeight(
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              // 큰 글자·작은 화면에서는 아래의 자세한 Daily 카드가 대신한다.
-                              if (!scroll) ...[
+                        if (!scroll) ...[
+                          IntrinsicHeight(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
                                 Expanded(child: _dailyTile(t, colors, session)),
                                 const SizedBox(width: GameSpacing.small),
+                                Expanded(
+                                  child: _weeklyTile(t, colors, session),
+                                ),
                               ],
-                              Expanded(child: _voyageTile(t, colors, session)),
-                            ],
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: GameSpacing.small),
+                        ],
+                        _voyageTile(t, colors, session),
                       ],
                       const SizedBox(height: GameSpacing.small),
                       _menuGrid(t, colors, session, target),
@@ -520,6 +542,8 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                           daily: session.daily,
                           onPlay: _opening ? null : () => _openDaily(session),
                         ),
+                        const SizedBox(height: GameSpacing.small),
+                        _weeklyTile(t, colors, session),
                       ],
                     ];
                     final column = Column(
@@ -610,6 +634,25 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     play: PlayContext.daily(session.daily.today),
   );
 
+  Future<void> _openWeekly(GameSession session) async {
+    if (_opening || _choosing) return;
+    _choosing = true;
+    try {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) => WeeklyScreen(
+            session: session,
+            onPlay: (stage) =>
+                _open(stage.level.id, play: PlayContext.weekly(stage)),
+          ),
+        ),
+      );
+    } finally {
+      _choosing = false;
+      if (mounted) setState(() {});
+    }
+  }
+
   /// "이어가기" 문구. 버튼이 여는 판과 항상 같은 세계·번호를 말한다.
   String _continueLabel(
     AppLocalizations t,
@@ -660,7 +703,26 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     );
   }
 
-  /// 별바다 항해 반 칸. 최고 기록이나 이어서 할 항해를 함께 보여 준다.
+  Widget _weeklyTile(
+    AppLocalizations t,
+    GameColors colors,
+    GameSession session,
+  ) {
+    final count = session.weekly.cleared(session.weekly.currentKey);
+    return _modeTile(
+      key: const ValueKey('home-weekly'),
+      icon: count == WeeklyPool.stageCount
+          ? Icons.stars_rounded
+          : Icons.auto_awesome_outlined,
+      color: colors.reward,
+      ink: colors.rewardInk,
+      title: t.weeklyTitle,
+      detail: t.weeklyProgress(count),
+      onTap: _opening ? null : () => _openWeekly(session),
+    );
+  }
+
+  /// 별바다 항해 입구. 최고 기록이나 이어서 할 항해를 함께 보여 준다.
   Widget _voyageTile(
     AppLocalizations t,
     GameColors colors,

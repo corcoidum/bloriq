@@ -35,6 +35,7 @@ flutter:
     - assets/levels/world6.json
     - assets/levels/world7.json
     - assets/levels/endless_pool_v1.json
+    - assets/levels/endless_pool_v2.json
     - assets/audio/
     - assets/art/star_courier/
     - assets/art/last_echo/

@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../world/world_catalog.dart';
 import 'progression_rules.dart';
 
+enum WeeklyRewardStatus { granted, alreadyOwned, saveFailed }
+
 /// 레벨 업 한 번과 그때 받은 트랙 보상(20 초과 레벨은 null).
 class LevelUp {
   const LevelUp(this.level, this.reward);
@@ -716,6 +718,24 @@ class ProgressionRepository {
     }
     _title = id;
     return retrySave();
+  }
+
+  Future<WeeklyRewardStatus> awardWeeklyReward(int rotation) async {
+    if (!_writable) return WeeklyRewardStatus.saveFailed;
+    final reward = weeklyRewards[rotation];
+    final owned = switch (reward) {
+      TrailUnlock(:final trailId) => _ownedTrails.contains(trailId),
+      TitleUnlock(:final titleId) => _ownedTitles.contains(titleId),
+      _ => throw StateError('Invalid weekly reward'),
+    };
+    if (owned) {
+      await flush();
+      if (!saveFailed) return WeeklyRewardStatus.alreadyOwned;
+    } else {
+      _apply(reward, []);
+    }
+    if (!await retrySave()) return WeeklyRewardStatus.saveFailed;
+    return owned ? WeeklyRewardStatus.alreadyOwned : WeeklyRewardStatus.granted;
   }
 
   // ---- 내부 -------------------------------------------------------------------

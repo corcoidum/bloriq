@@ -323,5 +323,15 @@
   "resultBest": "최고 기록",
   "resultFewest": "최소 이동",
   "watchReplayShort": "리플레이",
-  "moreActions": "더 보기"
+  "moreActions": "더 보기",
+  "weeklyTitle": "주간 별자리",
+  "weeklyProgress": "5판 중 {count}판 완료",
+  "weeklyWeekStarting": "{date} 시작",
+  "weeklyStage": "주간 {number}판",
+  "weeklyComplete": "이번 주 별자리를 완성했어요!",
+  "weeklyReward": "이번 주 보상",
+  "weeklyRewardEarned": "주간 보상을 받았어요",
+  "weeklyRewardTrail": "이동 잔영 · {name}",
+  "weeklyRewardTitle": "칭호 · {name}",
+  "weeklyReturn": "주간 별자리로"
 }

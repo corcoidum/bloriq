@@ -22,6 +22,8 @@ import '../world/world_theme.dart';
 import '../endless/endless_pool.dart';
 import '../endless/endless_repository.dart';
 import '../endless/endless_rules.dart';
+import '../weekly/weekly_pool.dart';
+import '../weekly/weekly_repository.dart';
 
 /// 홈 "이어가기"가 하는 일.
 enum ContinueKind {
@@ -62,6 +64,8 @@ typedef OverallProgress = ({
   int friendTotal,
 });
 
+typedef WeeklyClearResult = ({bool saved, int cleared, bool newReward});
+
 /// 홈과 게임은 하나의 기록/오디오 인스턴스를 공유한다.
 class GameSession {
   GameSession({
@@ -75,11 +79,13 @@ class GameSession {
     required this.collection,
     required this.progression,
     required this.endless,
+    WeeklyRepository? weekly,
     this.saga,
     LastPlayedRepository? lastPlayed,
     Iterable<LoadedWorld> worlds = const [],
     Map<int, WorldBoardSkin> boardSkins = const {},
   }) : levels = List.unmodifiable(levels),
+       weekly = weekly ?? WeeklyRepository.memory(clock: daily.clock),
        lastPlayed = lastPlayed ?? LastPlayedRepository.memory(),
        worlds = Map.unmodifiable({
          for (final world in worlds) world.number: world,
@@ -98,6 +104,8 @@ class GameSession {
   final GameAudio audio;
   final Onboarding onboarding;
   final DailyRepository daily;
+  final WeeklyRepository weekly;
+  Future<WeeklyPool>? _weeklyPool;
   final LocalAnalytics analytics;
   final StoryCatalog story;
   final CollectionRepository collection;
@@ -111,6 +119,40 @@ class GameSession {
 
   /// 끝없는 모드 판 묶음. 처음 항해를 열 때 한 번 읽는다.
   Future<EndlessPool> get endlessPool => _endlessPool ??= EndlessPool.load();
+
+  Future<WeeklyChallenge?> openWeekly(String week) async {
+    if (weekly.forWeek(week) case final saved?) return saved;
+    final WeeklyPool pool;
+    try {
+      pool = await (_weeklyPool ??= WeeklyPool.load(daily));
+    } on Object {
+      _weeklyPool = null;
+      rethrow;
+    }
+    final chapters = progression.completedChapters;
+    return weekly.assign(week, pool, {
+      for (var world = 1; world <= Worlds.finalWorld; world++)
+        if (Worlds.isComplete(world, chapters)) world,
+    });
+  }
+
+  Future<WeeklyClearResult> recordWeeklyClear(
+    WeeklyStage stage,
+    int moves,
+  ) async {
+    final stored = await weekly.recordClear(stage, moves);
+    final cleared = weekly.cleared(stage.week);
+    final reward = stored && cleared == WeeklyPool.stageCount
+        ? await progression.awardWeeklyReward(
+            weekly.forWeek(stage.week)!.rotation,
+          )
+        : WeeklyRewardStatus.alreadyOwned;
+    return (
+      saved: stored && reward != WeeklyRewardStatus.saveFailed,
+      cleared: cleared,
+      newReward: reward == WeeklyRewardStatus.granted,
+    );
+  }
 
   /// 세계 1의 첫 별자리를 완성하면 별바다 항해가 열린다.
   bool get endlessUnlocked =>
@@ -246,6 +288,11 @@ class GameSession {
       );
     }
     final daily = await DailyRepository.load(clock: clock);
+    final weekly = await WeeklyRepository.load(clock: clock);
+    // 클리어와 보상 사이에 앱이 종료됐으면 다음 실행에서 이어서 지급한다.
+    for (final rotation in weekly.completedRotations) {
+      await progression.awardWeeklyReward(rotation);
+    }
     final analytics = await LocalAnalytics.load(clock: clock);
     final audio = await GameAudio.load();
     final endless = await EndlessRepository.load(clock: clock);
@@ -272,6 +319,7 @@ class GameSession {
       audio: audio,
       onboarding: onboarding,
       daily: daily,
+      weekly: weekly,
       analytics: analytics,
       story: story,
       collection: collection,
@@ -419,6 +467,7 @@ class GameSession {
     await progression.flush();
     analytics.dispose();
     await daily.flush();
+    await weekly.flush();
     await endless.flush();
     await audio.dispose();
     for (final skin in _boardSkins.values) {

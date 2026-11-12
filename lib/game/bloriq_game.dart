@@ -24,6 +24,7 @@ import '../domain/mechanics/mirror_pair.dart';
 import '../domain/mechanics/one_way.dart';
 import '../domain/mechanics/shelf_door.dart';
 import '../domain/puzzle.dart';
+import '../progression/progression_rules.dart';
 import '../world/world_theme.dart';
 import 'mirror_pair_art.dart';
 import 'shelf_door_art.dart';
@@ -206,6 +207,12 @@ class BloriqGame extends FlameGame {
     'gold_forest': Color(0xffffcf4a),
     'gold_cloud': Color(0xffffe08a),
     'gold_mirror': Color(0xfff0b84a),
+    TrailIds.weeklyMoonlight: Color(0xffd1d2ff),
+    TrailIds.weeklyRipple: Color(0xff68e9dc),
+    TrailIds.weeklyAmber: Color(0xffffb75f),
+    TrailIds.weeklyFrost: Color(0xffa7dfff),
+    TrailIds.weeklyNebula: Color(0xffd9abff),
+    TrailIds.weeklyDaybreak: Color(0xffffb7ca),
   };
 
   static const firstStarlightColors = [

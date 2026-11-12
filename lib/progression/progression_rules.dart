@@ -194,6 +194,13 @@ abstract final class TrailIds {
   static const goldCloud = 'gold_cloud';
   static const goldMirror = 'gold_mirror';
 
+  static const weeklyMoonlight = 'weekly_moonlight';
+  static const weeklyRipple = 'weekly_ripple';
+  static const weeklyAmber = 'weekly_amber';
+  static const weeklyFrost = 'weekly_frost';
+  static const weeklyNebula = 'weekly_nebula';
+  static const weeklyDaybreak = 'weekly_daybreak';
+
   static bool isGolden(String id) => id.startsWith('gold_');
 }
 
@@ -226,6 +233,27 @@ const trails = <TrailDefinition>[
     TrailIds.goldMirror,
     ProgressionText('황금 물결', 'Golden Ripple'),
   ),
+  TrailDefinition(
+    TrailIds.weeklyMoonlight,
+    ProgressionText('은월빛', 'Silver Moonlight'),
+  ),
+  TrailDefinition(
+    TrailIds.weeklyRipple,
+    ProgressionText('물빛 별무리', 'Ripple Stars'),
+  ),
+  TrailDefinition(
+    TrailIds.weeklyAmber,
+    ProgressionText('호박 별빛', 'Amber Stars'),
+  ),
+  TrailDefinition(
+    TrailIds.weeklyFrost,
+    ProgressionText('서리 별빛', 'Frost Starlight'),
+  ),
+  TrailDefinition(
+    TrailIds.weeklyNebula,
+    ProgressionText('보랏빛 성운', 'Violet Nebula'),
+  ),
+  TrailDefinition(TrailIds.weeklyDaybreak, ProgressionText('첫새벽', 'Daybreak')),
 ];
 
 /// 별빛 공방: 별가루로 사는 잔영과 값. 세계 하나(별가루 약 1,700)를
@@ -350,6 +378,30 @@ const titles = <TitleDefinition>[
     'voyage_endless',
     ProgressionText('끝없는 항해자', 'Endless Voyager'),
   ),
+  TitleDefinition(
+    'weekly_dawn_keeper',
+    ProgressionText('새벽 별자리지기', 'Dawn Sky Keeper'),
+  ),
+  TitleDefinition(
+    'weekly_star_friend',
+    ProgressionText('길 잃은 별의 벗', 'Friend of Wandering Stars'),
+  ),
+  TitleDefinition(
+    'weekly_chronicler',
+    ProgressionText('별자리 기록가', 'Constellation Chronicler'),
+  ),
+  TitleDefinition(
+    'weekly_navigator',
+    ProgressionText('밤하늘 항해자', 'Night Sky Navigator'),
+  ),
+  TitleDefinition(
+    'weekly_nebula_guide',
+    ProgressionText('성운의 길잡이', 'Nebula Guide'),
+  ),
+  TitleDefinition(
+    'weekly_calendar_keeper',
+    ProgressionText('별빛 달력지기', 'Star Calendar Keeper'),
+  ),
 ];
 
 TitleDefinition? titleById(String? id) {
@@ -381,6 +433,22 @@ final class TitleUnlock extends TrackReward {
   const TitleUnlock(this.titleId);
   final String titleId;
 }
+
+/// 월요일 키로 고르는 12주 순환. 같은 색과 칭호는 소유 목록에 한 번만 들어간다.
+const weeklyRewards = <TrackReward>[
+  TrailUnlock(TrailIds.weeklyMoonlight),
+  TitleUnlock('weekly_dawn_keeper'),
+  TrailUnlock(TrailIds.weeklyRipple),
+  TitleUnlock('weekly_star_friend'),
+  TrailUnlock(TrailIds.weeklyAmber),
+  TitleUnlock('weekly_chronicler'),
+  TrailUnlock(TrailIds.weeklyFrost),
+  TitleUnlock('weekly_navigator'),
+  TrailUnlock(TrailIds.weeklyNebula),
+  TitleUnlock('weekly_nebula_guide'),
+  TrailUnlock(TrailIds.weeklyDaybreak),
+  TitleUnlock('weekly_calendar_keeper'),
+];
 
 /// 별빛 길 무료 사용권 +[charges].
 final class StarlightCharge extends TrackReward {
