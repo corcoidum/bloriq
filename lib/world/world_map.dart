@@ -8,6 +8,7 @@ import '../game/power_bar.dart';
 import '../game/stage_challenge_card.dart';
 import '../l10n/app_localizations.dart';
 import '../progression/progression_rules.dart';
+import '../trials/trial_screen.dart';
 import '../world/saga.dart';
 import 'world_catalog.dart';
 import 'world_progress.dart';
@@ -18,11 +19,16 @@ import 'world_text.dart';
 Future<int?> showWorldMap(
   BuildContext context,
   GameSession session,
-  int world,
-) => Navigator.of(context).push<int>(
+  int world, {
+  TrialGameBuilder? buildTrialGame,
+}) => Navigator.of(context).push<int>(
   MaterialPageRoute(
     fullscreenDialog: true,
-    builder: (_) => WorldMap(session: session, world: world),
+    builder: (_) => WorldMap(
+      session: session,
+      world: world,
+      buildTrialGame: buildTrialGame,
+    ),
   ),
 );
 
@@ -38,9 +44,15 @@ Future<void> showWorldGuardian(
 );
 
 class WorldMap extends StatefulWidget {
-  const WorldMap({super.key, required this.session, required this.world});
+  const WorldMap({
+    super.key,
+    required this.session,
+    required this.world,
+    this.buildTrialGame,
+  });
   final GameSession session;
   final int world;
+  final TrialGameBuilder? buildTrialGame;
 
   @override
   State<WorldMap> createState() => _WorldMapState();
@@ -65,6 +77,7 @@ class _WorldMapState extends State<WorldMap> {
     final lang = Localizations.localeOf(context).languageCode;
     final story = widget.session.world(widget.world)!.story;
     final next = widget.session.saga?.next(widget.world);
+    final trialGame = widget.buildTrialGame;
     return Scaffold(
       backgroundColor: colors.background,
       appBar: AppBar(
@@ -105,10 +118,42 @@ class _WorldMapState extends State<WorldMap> {
                       lang: lang,
                       prologue: story.prologue.inLocale(lang),
                       next: _atlas.complete ? next : null,
+                      onGoldenTrials:
+                          trialGame != null &&
+                              widget.session.canPlayTrials(
+                                widget.world,
+                                chapter: chapter.chapter.number,
+                              )
+                          ? () => showTrials(
+                              context,
+                              widget.session,
+                              widget.world,
+                              trialGame,
+                              chapter: chapter.chapter.number,
+                            )
+                          : null,
                     ),
                 ],
               ),
             ),
+            if (trialGame != null && widget.session.canPlayTrials(widget.world))
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                child: OutlinedButton.icon(
+                  key: const ValueKey('world-trials'),
+                  onPressed: () => showTrials(
+                    context,
+                    widget.session,
+                    widget.world,
+                    trialGame,
+                  ),
+                  icon: const Icon(Icons.flag_outlined),
+                  label: Text(t.trials),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                  ),
+                ),
+              ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
               child: FilledButton.icon(
@@ -138,10 +183,12 @@ class _ChapterPage extends StatelessWidget {
     required this.lang,
     required this.prologue,
     required this.next,
+    required this.onGoldenTrials,
   });
   final WorldChapterView chapter;
   final String lang, prologue;
   final SagaWorld? next;
+  final VoidCallback? onGoldenTrials;
 
   static const _minSkyHeight = 48.0;
 
@@ -220,6 +267,13 @@ class _ChapterPage extends StatelessWidget {
                         ),
                       ],
                     ),
+                  ),
+                if (onGoldenTrials != null)
+                  OutlinedButton.icon(
+                    key: ValueKey('golden-trials-${info.globalChapter}'),
+                    onPressed: onGoldenTrials,
+                    icon: const Icon(Icons.workspace_premium_outlined),
+                    label: Text(AppLocalizations.of(context)!.goldenTrials),
                   ),
                 Expanded(
                   child: ConstrainedBox(

@@ -28,6 +28,7 @@ import '../world/world_catalog.dart';
 import '../world/world_map.dart';
 import '../world/world_text.dart';
 import '../tutorial/world_tutorial.dart';
+import '../trials/trial_catalog.dart';
 import '../daily/daily_panel.dart';
 
 class AppEntry extends StatefulWidget {
@@ -242,7 +243,12 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     session.audio.setGameVisible(true);
     session.audio.onUserInteraction();
     try {
-      final id = await showWorldMap(context, session, world);
+      final id = await showWorldMap(
+        context,
+        session,
+        world,
+        buildTrialGame: _buildTrialGame,
+      );
       if (id != null && mounted) {
         await _open(id, play: PlayContext.world(world));
       }
@@ -287,12 +293,16 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
         session,
         widget.settings,
         currentLevelId: session.nextLevelId,
+        buildTrialGame: _buildTrialGame,
       );
       if (id != null && mounted) await _open(id);
     } finally {
       _choosing = false;
     }
   }
+
+  Widget _buildTrialGame(TrialStage stage, Level board) =>
+      widget.gameBuilder(_session!, board.id, PlayContext.trial(stage, board));
 
   Future<void> _album() async {
     if (_session == null) return;

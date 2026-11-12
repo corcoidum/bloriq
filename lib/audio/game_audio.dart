@@ -97,6 +97,7 @@ class GameAudio with WidgetsBindingObserver {
 
   bool get musicEnabled => _musicEnabled;
   bool get effectsEnabled => _effectsEnabled;
+  bool get gameVisible => _gameVisible;
 
   void setMusicTrack(String? asset) {
     final track = asset ?? defaultMusicAsset;

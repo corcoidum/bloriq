@@ -56,6 +56,8 @@ import 'world/world_progress.dart';
 import 'world/world_spirit_album.dart';
 import 'world/world_text.dart';
 import 'world/world_theme.dart';
+import 'trials/trial_catalog.dart';
+import 'trials/trial_screen.dart';
 
 void main() => runApp(const BloriqApp());
 
@@ -197,6 +199,7 @@ class _GameScreenState extends State<GameScreen>
   bool _gateBlocked = false;
   ProgressRepository? _progress;
   CompletionResult? _completion;
+  TrialClearResult? _trialResult;
   Future<void> Function()? _pendingCampaignReward;
   bool _replaying = false;
   bool _reduceMotion = false;
@@ -254,11 +257,19 @@ class _GameScreenState extends State<GameScreen>
 
   /// 세계 2부터는 [LoadedWorld] 데이터와 권능 막대를 쓴다.
   bool get _expansion => widget.play.world >= 2;
+  TrialStage? get _trial => widget.play.trialStage;
+  bool get _undoAllowed => _trial?.permitsUndo ?? true;
+  bool get _trialAtLimit {
+    final state = _controller!.state;
+    return !state.isComplete && _trial?.canMove(state.moves) == false;
+  }
+
   LoadedWorld? get _world => widget.session.world(widget.play.world);
   WorldBoardSkin? _boardSkin;
 
   /// 확장 세계에서 쓸 수 있는 권능(성장 기록 기준). 세계 1은 늘 비어 있다.
-  Set<PuzzlePower> get _ownedPowers => _expansion
+  Set<PuzzlePower> get _ownedPowers =>
+      _expansion && _trial?.permitsPowers != false
       ? ownedBoardPowers(widget.session.progression.hasPower)
       : const {};
 
@@ -327,6 +338,7 @@ class _GameScreenState extends State<GameScreen>
   }
 
   void _maybeShowWorldGuide() {
+    if (widget.play.mode != PlayMode.campaign) return;
     final controller = _controller!;
     final level = controller.state.level;
     final tutorial = WorldTutorial.forWorld(widget.play.world);
@@ -424,6 +436,9 @@ class _GameScreenState extends State<GameScreen>
 
   int? get _bestMoves {
     final level = _controller!.state.level;
+    if (_trial case final stage?) {
+      return widget.session.trialProgress.bestMoves(stage);
+    }
     if (widget.play.mode == PlayMode.daily) {
       return widget.session.daily.bestMoves(widget.play.dailyDate!);
     }
@@ -446,15 +461,10 @@ class _GameScreenState extends State<GameScreen>
 
   void _beginCompletion(PuzzleController controller) {
     final state = controller.state;
-    final previous = widget.play.mode == PlayMode.campaign
-        ? _progress!.forLevel(state.level.id, revision: state.level.revision)
-        : null;
-    _isNewBest = widget.play.mode == PlayMode.daily
-        ? (widget.session.daily.bestMoves(widget.play.dailyDate!) == null ||
-              state.moves <
-                  widget.session.daily.bestMoves(widget.play.dailyDate!)!)
-        : widget.play.mode == PlayMode.campaign &&
-              (previous == null || state.moves < previous.bestMoves);
+    final previous = _bestMoves;
+    _isNewBest =
+        widget.play.mode != PlayMode.tutorialReplay &&
+        (previous == null || state.moves < previous);
     _attempt?.finish(
       widget.play.mode == PlayMode.daily ? 'daily_complete' : 'level_complete',
       state.moves,
@@ -606,6 +616,10 @@ class _GameScreenState extends State<GameScreen>
 
   Future<void> _recordCompletion(PuzzleController controller) async {
     final state = controller.state;
+    if (_trial case final stage?) {
+      await _recordTrial(controller, stage);
+      return;
+    }
     if (_tutorial?.complete == true) {
       _tutorial = null;
       if (widget.play.mode == PlayMode.campaign) {
@@ -697,6 +711,19 @@ class _GameScreenState extends State<GameScreen>
     }
   }
 
+  Future<void> _recordTrial(
+    PuzzleController controller,
+    TrialStage stage,
+  ) async {
+    final state = controller.state;
+    final result = await widget.session.recordTrialClear(stage, state.moves);
+    if (mounted &&
+        identical(controller, _controller) &&
+        identical(state, controller.state)) {
+      setState(() => _trialResult = result);
+    }
+  }
+
   Future<void> _recordCampaignReward(
     PuzzleController controller,
     PuzzleState state, {
@@ -765,6 +792,7 @@ class _GameScreenState extends State<GameScreen>
 
   void _resetAssist() {
     _reward = null;
+    _trialResult = null;
     _guardianReveal = null;
     _pendingCampaignReward = null;
     _armedPower = null;
@@ -920,7 +948,7 @@ class _GameScreenState extends State<GameScreen>
   Future<void> _useStarlight(AppLocalizations t) async {
     final controller = _controller!;
     final state = controller.state;
-    if (state.isComplete || _replaying || _modalOpen) return;
+    if (state.isComplete || _replaying || _modalOpen || _trialAtLimit) return;
     bool current() => identical(state, _controller?.state);
 
     await _withHint(() async {
@@ -934,6 +962,13 @@ class _GameScreenState extends State<GameScreen>
       final move = result.moves?.firstOrNull;
       if (move == null) {
         messenger.showSnackBar(SnackBar(content: Text(t.starlightNoMove)));
+        return;
+      }
+      if (_trial?.moveLimit case final limit?
+          when state.moves + result.moves!.length > limit) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(t.trialNoRouteWithinLimit)),
+        );
         return;
       }
       final companion = widget.session.collection.companion;
@@ -954,7 +989,7 @@ class _GameScreenState extends State<GameScreen>
             if (used.source == StarlightPathSource.free) {
               _starlightFreeUsed = true;
             }
-            if (!_starlightUsed) {
+            if (!_starlightUsed && _trial == null) {
               messenger.showSnackBar(
                 SnackBar(content: Text(t.starlightCapped)),
               );
@@ -1139,7 +1174,7 @@ class _GameScreenState extends State<GameScreen>
 
   void _start(DragStartDetails details) {
     final controller = _controller!;
-    if (controller.state.isComplete || _replaying) return;
+    if (controller.state.isComplete || _replaying || _trialAtLimit) return;
     final cell = _cell(details.localPosition);
     _dragStart = details.localPosition;
     _dragEnd = details.localPosition;
@@ -1178,6 +1213,10 @@ class _GameScreenState extends State<GameScreen>
 
   void _end() {
     final controller = _controller!;
+    if (_trialAtLimit) {
+      _cancelDrag();
+      return;
+    }
     if (_dragBlock != null && _dragStart != null && _dragEnd != null) {
       final delta = _dragEnd! - _dragStart!;
       final threshold = _geometry!.dragThreshold;
@@ -1260,11 +1299,12 @@ class _GameScreenState extends State<GameScreen>
   }
 
   void _togglePower(PuzzlePower power) {
-    if (_replaying || _celebrating || _modalOpen) return;
+    if (_replaying || _celebrating || _modalOpen || _trialAtLimit) return;
     setState(() => _armedPower = _armedPower == power ? null : power);
   }
 
   void _undo(PuzzleController controller) {
+    if (!_undoAllowed) return;
     _acknowledgeDiscovery();
     _discovery = null;
     _storyHidden = false;
@@ -1277,6 +1317,7 @@ class _GameScreenState extends State<GameScreen>
       _game!.clearEffects();
       _gateBlocked = false;
       _completion = null;
+      _trialResult = null;
       _refreshGuide();
     });
   }
@@ -1386,17 +1427,31 @@ class _GameScreenState extends State<GameScreen>
   Future<void> _pickLevel() async {
     final id = await _withModal<int>(
       () => _expansion
-          ? showWorldMap(context, widget.session, widget.play.world)
+          ? showWorldMap(
+              context,
+              widget.session,
+              widget.play.world,
+              buildTrialGame: _buildTrialGame,
+            )
           : showLevelPicker(
               context,
               widget.session,
               widget.settings,
               currentLevelId: _loaded[_index].id,
+              buildTrialGame: _buildTrialGame,
             ),
     );
     final index = _loaded.indexWhere((level) => level.id == id);
     if (id != null && mounted && index >= 0) _select(index);
   }
+
+  Widget _buildTrialGame(TrialStage stage, Level board) => GameScreen(
+    session: widget.session,
+    initialLevelId: board.id,
+    play: PlayContext.trial(stage, board),
+    settings: widget.settings,
+    hintSearch: widget.hintSearch,
+  );
 
   /// 화면에 보이는 스테이지 번호. 확장 세계는 세계 안에서 1..25로 센다.
   int _displayNumber(Level level) =>
@@ -1459,6 +1514,9 @@ class _GameScreenState extends State<GameScreen>
   }
 
   Widget _buildVictory(AppLocalizations t, PuzzleController controller) {
+    if (_trial case final stage?) {
+      return _buildTrialVictory(t, controller, stage);
+    }
     final state = controller.state;
     final colors = GameTheme.colorsOf(context);
     final stars = math.min(
@@ -1547,6 +1605,88 @@ class _GameScreenState extends State<GameScreen>
           ),
         ),
         actions: _victoryActions(t, controller),
+      ),
+    );
+  }
+
+  Widget _buildTrialVictory(
+    AppLocalizations t,
+    PuzzleController controller,
+    TrialStage stage,
+  ) {
+    final colors = GameTheme.colorsOf(context);
+    final result = _trialResult;
+    final reward = trialRewards[stage.world]!;
+    return AnimatedBuilder(
+      key: const ValueKey('complete'),
+      animation: _victory,
+      builder: (context, _) => VictoryPanel(
+        heading: t.trialClear,
+        progress: _victory.value,
+        stars: null,
+        isNewBest: _isNewBest,
+        reduceMotion: _reduceMotion,
+        onSkip: _skipCelebration,
+        result: Column(
+          children: [
+            _resultStats(t, colors, controller.state),
+            if (result != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                t.trialProgress(result.cleared, TrialCatalog.stagesPerWorld),
+                textAlign: TextAlign.center,
+              ),
+              if (result.newReward) ...[
+                Text(
+                  t.trialRewardUnlocked,
+                  style: GameTypography.label.copyWith(color: colors.rewardInk),
+                  textAlign: TextAlign.center,
+                ),
+                Text(
+                  reward.title.name.resolve(t.localeName),
+                  textAlign: TextAlign.center,
+                ),
+                Text(
+                  t.rewardTrail(reward.trail.name.resolve(t.localeName)),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+              if (!result.saved) ...[
+                Text(t.saveError, textAlign: TextAlign.center),
+                TextButton(
+                  key: const ValueKey('retry-trial-save'),
+                  onPressed: _retryingSave
+                      ? null
+                      : () async {
+                          setState(() => _retryingSave = true);
+                          try {
+                            await _recordTrial(controller, stage);
+                          } finally {
+                            if (mounted) setState(() => _retryingSave = false);
+                          }
+                        },
+                  child: Text(t.retrySave),
+                ),
+              ],
+            ],
+          ],
+        ),
+        actions: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            FilledButton(
+              key: const ValueKey('trial-result-return'),
+              onPressed: result == null || _retryingSave ? null : _leaveGame,
+              child: Text(t.trialReturn, textAlign: TextAlign.center),
+            ),
+            OutlinedButton(
+              onPressed: result == null || _retryingSave
+                  ? null
+                  : () => setState(() => _restartBoard(controller)),
+              child: Text(t.restart, textAlign: TextAlign.center),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1847,7 +1987,9 @@ class _GameScreenState extends State<GameScreen>
         }),
       ];
     }
-    if (_hasNoMoves(controller)) return [note(t.noMoves)];
+    if (_hasNoMoves(controller)) {
+      return [note(_undoAllowed ? t.noMoves : t.trialRestartNeeded)];
+    }
     if (_armedPower case final power?) {
       return [note(WorldText.armed(power).resolve(t.localeName))];
     }
@@ -1956,9 +2098,15 @@ class _GameScreenState extends State<GameScreen>
                     final buttonHeight = 48.0 + math.min(8.0, spare * .1);
                     _buttonHeight = buttonHeight;
                     final rowHeight = _rowHeight(fit);
+                    final trialLimit = _trial?.moveLimit;
                     final movePill = StatPill(
                       icon: Icons.swipe_rounded,
-                      label: _abilities.showMinimumMoves
+                      label: trialLimit != null
+                          ? t.trialMoveCounter(
+                              controller.state.moves,
+                              trialLimit,
+                            )
+                          : _abilities.showMinimumMoves
                           ? '${t.moves(controller.state.moves)} · '
                                 '${t.minimumMovesChip(controller.state.level.minimumMoves)}'
                           : t.moves(controller.state.moves),
@@ -1988,6 +2136,8 @@ class _GameScreenState extends State<GameScreen>
                                 child: Text(
                                   widget.play.mode == PlayMode.daily
                                       ? t.dailyEcho
+                                      : _trial != null
+                                      ? t.echoTrials
                                       : t.level(
                                           _displayNumber(_loaded[_index]),
                                         ),
@@ -1997,7 +2147,8 @@ class _GameScreenState extends State<GameScreen>
                                 ),
                               ),
                               if (_world?.story.forLevel(_loaded[_index].id)
-                                  case final spirit? when !tight)
+                                  case final spirit?
+                                  when !tight && _trial == null)
                                 Flexible(
                                   child: Text(
                                     ' · ${spirit.levelTitle.inLocale(t.localeName)}',
@@ -2280,11 +2431,31 @@ class _GameScreenState extends State<GameScreen>
                                     enabled:
                                         !controller.state.isComplete &&
                                         !_replaying &&
-                                        !_celebrating,
+                                        !_celebrating &&
+                                        !_trialAtLimit,
                                     onToggle: _togglePower,
                                   ),
                                   SizedBox(height: compact ? 4 : 6),
                                 ],
+                                if (_trial case final stage?)
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 4),
+                                    child: Semantics(
+                                      liveRegion: _trialAtLimit,
+                                      child: Text(
+                                        _trialAtLimit
+                                            ? t.trialLimitReached
+                                            : trialConditionLabel(t, stage),
+                                        key: const ValueKey('trial-condition'),
+                                        textAlign: TextAlign.center,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GameTypography.label.copyWith(
+                                          color: colors.rewardInk,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 // 결과는 보드 위 팝업으로 띄우므로 판 크기는 끝까지 그대로다.
                                 if (scroll)
                                   SizedBox(
@@ -2371,6 +2542,7 @@ class _GameScreenState extends State<GameScreen>
                                           ],
                                           // 좁은 화면에서는 아래의 되돌리기 버튼으로 충분하다.
                                           if (fit == _GameFit.full &&
+                                              _undoAllowed &&
                                               _hasNoMoves(controller)) ...[
                                             const SizedBox(height: 8),
                                             FilledButton.icon(
@@ -2404,7 +2576,8 @@ class _GameScreenState extends State<GameScreen>
                                             ),
                                           ),
                                           onPressed:
-                                              controller.canUndo &&
+                                              _undoAllowed &&
+                                                  controller.canUndo &&
                                                   !_replaying &&
                                                   !_celebrating
                                               ? () => _undo(controller)
@@ -2662,8 +2835,9 @@ class _GameScreenState extends State<GameScreen>
         !controller.state.isComplete &&
         !_replaying &&
         !_celebrating &&
-        !_hintBusy;
-    final cap = _starCap;
+        !_hintBusy &&
+        !_trialAtLimit;
+    final cap = _trial == null ? _starCap : 3;
     final button = Tooltip(
       message: cap < 3
           ? '${t.starlightPath} · ${AssistCapText.kept.resolve(t.localeName)}'
@@ -2972,6 +3146,7 @@ class _GameScreenState extends State<GameScreen>
         (_expansion && _ownedPowers.isNotEmpty
             ? math.max(44.0, 17 * _textScale + 8) + (compact ? 4 : 6)
             : 0) +
+        (_trial != null ? 30 * _textScale + 4 : 0) +
         (fit == _GameFit.minimal
             ? 4.0
             : compact
@@ -2981,7 +3156,9 @@ class _GameScreenState extends State<GameScreen>
         (_guided || _offerHelp(controller)
             ? 6 + math.max(48.0, 42 * _textScale + 4)
             : 0) +
-        (fit == _GameFit.full && _hasNoMoves(controller) ? 56 : 0) +
+        (fit == _GameFit.full && _undoAllowed && _hasNoMoves(controller)
+            ? 56
+            : 0) +
         (_tutorial == null
             ? math.max(48.0, 22 * _textScale + 18)
             : 22 * _textScale + 24);
@@ -3003,6 +3180,7 @@ class _GameScreenState extends State<GameScreen>
           ? [t.tutorialMove, t.tutorialBlock, t.tutorialFinish]
           : [
               t.noMoves,
+              if (!_undoAllowed) t.trialRestartNeeded,
               t.instruction,
               t.echoInstruction,
               for (final power in _ownedPowers)

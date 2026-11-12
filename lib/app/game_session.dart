@@ -22,6 +22,9 @@ import '../world/world_theme.dart';
 import '../endless/endless_pool.dart';
 import '../endless/endless_repository.dart';
 import '../endless/endless_rules.dart';
+import '../trials/trial_catalog.dart';
+import '../trials/trial_repository.dart';
+import '../progression/progression_rules.dart';
 
 /// 홈 "이어가기"가 하는 일.
 enum ContinueKind {
@@ -62,6 +65,8 @@ typedef OverallProgress = ({
   int friendTotal,
 });
 
+typedef TrialClearResult = ({bool saved, int cleared, bool newReward});
+
 /// 홈과 게임은 하나의 기록/오디오 인스턴스를 공유한다.
 class GameSession {
   GameSession({
@@ -75,11 +80,13 @@ class GameSession {
     required this.collection,
     required this.progression,
     required this.endless,
+    TrialRepository? trialProgress,
     this.saga,
     LastPlayedRepository? lastPlayed,
     Iterable<LoadedWorld> worlds = const [],
     Map<int, WorldBoardSkin> boardSkins = const {},
   }) : levels = List.unmodifiable(levels),
+       trialProgress = trialProgress ?? TrialRepository.memory(),
        lastPlayed = lastPlayed ?? LastPlayedRepository.memory(),
        worlds = Map.unmodifiable({
          for (final world in worlds) world.number: world,
@@ -111,6 +118,55 @@ class GameSession {
 
   /// 끝없는 모드 판 묶음. 처음 항해를 열 때 한 번 읽는다.
   Future<EndlessPool> get endlessPool => _endlessPool ??= EndlessPool.load();
+
+  final TrialRepository trialProgress;
+  Future<TrialCatalog>? _trialCatalog;
+
+  /// 판 목록은 제작 때 굽고, 기기에서는 필요할 때 읽기만 한다.
+  Future<TrialCatalog> get trialCatalog =>
+      _trialCatalog ??= TrialCatalog.load();
+
+  bool canPlayTrials(int world, {int? chapter}) =>
+      worldUnlocked(world) &&
+      (chapter == null
+          ? Worlds.isComplete(world, progression.completedChapters)
+          : progression.goldenChapters.contains(
+              Worlds.globalChapter(world, chapter),
+            ));
+
+  Future<TrialClearResult> recordTrialClear(TrialStage stage, int moves) async {
+    final stages = (await trialCatalog).forWorld(stage.world);
+    if (!stages.contains(stage) ||
+        !(canPlayTrials(stage.world) ||
+            canPlayTrials(stage.world, chapter: stage.chapter))) {
+      throw StateError('Trial is unavailable: ${stage.sourceId}');
+    }
+    final stored = await trialProgress.recordClear(stage, moves);
+    final cleared = trialProgress.clearedCount(stages);
+    final reward = stored && cleared == TrialCatalog.stagesPerWorld
+        ? await progression.awardTrialReward(stage.world)
+        : TrialRewardStatus.alreadyOwned;
+    return (
+      saved: stored && reward != TrialRewardStatus.saveFailed,
+      cleared: cleared,
+      newReward: reward == TrialRewardStatus.granted,
+    );
+  }
+
+  Future<void> _restoreTrialRewards() async {
+    if (!trialProgress.mayHaveCompletedWorld) return;
+    try {
+      final catalog = await trialCatalog;
+      for (final world in trialRewards.keys) {
+        if (trialProgress.clearedCount(catalog.forWorld(world)) ==
+            TrialCatalog.stagesPerWorld) {
+          await progression.awardTrialReward(world);
+        }
+      }
+    } on Object catch (error) {
+      debugPrint('Trials unavailable: $error');
+    }
+  }
 
   /// 세계 1의 첫 별자리를 완성하면 별바다 항해가 열린다.
   bool get endlessUnlocked =>
@@ -282,6 +338,7 @@ class GameSession {
       collection: collection,
       progression: progression,
       endless: endless,
+      trialProgress: await TrialRepository.load(),
       saga: saga,
       worlds: worlds,
     );
@@ -292,6 +349,7 @@ class GameSession {
     await progression.reconcileStarflowerAchievements(
       session.starflowersByWorld,
     );
+    await session._restoreTrialRewards();
     return session;
   }
 
@@ -433,6 +491,7 @@ class GameSession {
     analytics.dispose();
     await daily.flush();
     await endless.flush();
+    await trialProgress.flush();
     await audio.dispose();
     for (final skin in _boardSkins.values) {
       skin.dispose();
