@@ -112,7 +112,7 @@ void main() {
 
     // 1. 별빛 길을 쓰고 다시 시작해도 남는 "최대 ★2" 표시
     await launch();
-    await tapVisible(tester, find.byKey(const ValueKey('home-levels')));
+    await openCampaignMap(tester);
     await selectOpenLevel(tester, 6);
     for (var i = 0; i < 40; i++) {
       await tester.pump(const Duration(milliseconds: 50));
@@ -151,10 +151,10 @@ void main() {
     await capture('ko-rewards-trails');
     await tester.pumpWidget(const SizedBox());
 
-    // 3. 황금 별자리의 수호 정령(금빛 후광)
+    // 3. 여정의 황금 별자리
     await launch();
-    await tapVisible(tester, find.byKey(const ValueKey('home-atlas')));
-    await tapVisible(tester, find.byKey(const ValueKey('atlas-chapter-1')));
+    await openHomeJourney(tester, tab: 'constellations');
+    await tapVisible(tester, find.byKey(const ValueKey('journey-chapter-1')));
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 200)),
     );

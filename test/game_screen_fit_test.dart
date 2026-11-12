@@ -192,7 +192,8 @@ void main() {
         SharedPreferences.setMockInitialValues(_worldTwoSeed(id));
         await tester.pumpWidget(const BloriqApp());
         await waitForHome(tester);
-        await tapVisible(tester, find.byKey(const ValueKey('world-entry')));
+        await openHomeJourney(tester);
+        await tapVisible(tester, find.byKey(const ValueKey('journey-world-2')));
         await tester.pump(const Duration(milliseconds: 400));
         await tapVisible(tester, find.byKey(const ValueKey('world-continue')));
         for (var i = 0; i < 100 && _game.evaluate().isEmpty; i++) {
@@ -243,6 +244,7 @@ void main() {
       });
       await tester.pumpWidget(const BloriqApp());
       await waitForHome(tester);
+      await openPlayModes(tester);
       await tapVisible(tester, find.byKey(const ValueKey('home-voyage')));
       for (var i = 0; i < 50; i++) {
         await tester.pump(const Duration(milliseconds: 20));
@@ -281,15 +283,8 @@ void main() {
         SharedPreferences.setMockInitialValues(_worldTwoSeed(next));
         await tester.pumpWidget(const BloriqApp());
         await waitForHome(tester);
-        // 세계 2를 다 깬 홈은 "지금 여기"가 세계 2가 아니므로 빛길 지도로 들어간다.
-        final entry = find.byKey(const ValueKey('world-entry'));
-        if (entry.evaluate().isNotEmpty) {
-          await tapVisible(tester, entry);
-        } else {
-          await tapVisible(tester, find.byKey(const ValueKey('saga-map')));
-          await tester.pump(const Duration(milliseconds: 400));
-          await tapVisible(tester, find.byKey(const ValueKey('saga-enter-2')));
-        }
+        await openHomeJourney(tester);
+        await tapVisible(tester, find.byKey(const ValueKey('journey-world-2')));
         await tester.pump(const Duration(milliseconds: 400));
         final play = find.byKey(const ValueKey('world-continue'));
         expect(play, findsOneWidget, reason: 'map $next did not open');
@@ -329,7 +324,8 @@ void main() {
     SharedPreferences.setMockInitialValues(_worldTwoSeed(101));
     await tester.pumpWidget(const BloriqApp());
     await waitForHome(tester);
-    await tapVisible(tester, find.byKey(const ValueKey('world-entry')));
+    await openHomeJourney(tester);
+    await tapVisible(tester, find.byKey(const ValueKey('journey-world-2')));
     await tester.pump(const Duration(milliseconds: 400));
     final page = find.byKey(const ValueKey('world-chapter-scroll')).first;
     final scroll = tester.state<ScrollableState>(

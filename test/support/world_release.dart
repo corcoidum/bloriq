@@ -98,9 +98,8 @@ Future<void> closeReleaseApp(WidgetTester tester) async {
 }
 
 Future<Finder> openLightroad(WidgetTester tester, int world) async {
-  final mapButton = releaseKey('saga-map');
-  await waitForReleaseWidget(tester, mapButton.hitTestable());
-  await tapVisible(tester, mapButton);
+  await openHomeJourney(tester);
+  await tapVisible(tester, releaseKey('journey-lightroad-story'));
   final node = releaseKey('saga-world-$world');
   await tester.scrollUntilVisible(
     node,
@@ -112,6 +111,11 @@ Future<Finder> openLightroad(WidgetTester tester, int world) async {
   await Scrollable.ensureVisible(tester.element(node), alignment: .8);
   await tester.pump();
   return node;
+}
+
+Future<void> closeLightroad(WidgetTester tester) async {
+  await tapVisible(tester, releaseKey('saga-close'));
+  await tester.pumpAndSettle();
 }
 
 /// 확장 세계 판의 정령 id(assets/story/worldN.json).
@@ -129,17 +133,10 @@ Finder releaseWorldMap(int world) => find.byWidgetPredicate(
   (widget) => widget is WorldMap && widget.world == world,
 );
 
-/// 홈에서 [world]의 지도를 연다. "지금 여기" 카드가 다른 세계를 가리키면
-/// (예: 모두 마친 뒤 앞 세계로 돌아간 홈) 빛길 지도로 들어간다.
+/// 홈의 여정에서 [world]의 스테이지 지도를 연다.
 Future<void> enterReleaseWorld(WidgetTester tester, int world) async {
-  final entry = releaseKey('world-entry');
-  await waitForReleaseWidget(tester, releaseKey('saga-map').hitTestable());
-  if (entry.hitTestable().evaluate().isNotEmpty) {
-    await tapVisible(tester, entry);
-  } else {
-    await openLightroad(tester, world);
-    await tapVisible(tester, releaseKey('saga-enter-$world'));
-  }
+  await openHomeJourney(tester);
+  await tapVisible(tester, releaseKey('journey-world-$world'));
   await waitForReleaseWidget(tester, releaseWorldMap(world));
 }
 

@@ -35,7 +35,11 @@ Future<void> _seed(Set<int> chapters) async {
 }
 
 Future<void> _openSaga(WidgetTester tester) async {
-  await tapVisible(tester, find.byKey(const ValueKey('saga-map')));
+  await openHomeJourney(tester);
+  await tapVisible(
+    tester,
+    find.byKey(const ValueKey('journey-lightroad-story')),
+  );
   await tester.pump(const Duration(milliseconds: 400));
 }
 
@@ -111,7 +115,6 @@ void main() {
     await _seed({1, 2});
     await tester.pumpWidget(const BloriqApp());
     await waitForHome(tester);
-    expect(find.byKey(const ValueKey('world-entry')), findsNothing);
     await _openSaga(tester);
 
     expect(find.text('Lighthouses lit 0 / 5'), findsOneWidget);
@@ -135,7 +138,6 @@ void main() {
     await _seed({for (var c = 1; c <= 10; c++) c});
     await tester.pumpWidget(const BloriqApp());
     await waitForHome(tester);
-    expect(find.byKey(const ValueKey('world-entry')), findsOneWidget);
     await _openSaga(tester);
 
     expect(find.text('Lighthouses lit 1 / 5'), findsOneWidget);
@@ -207,7 +209,7 @@ void main() {
     });
     await tester.pumpWidget(const BloriqApp());
     await waitForHome(tester);
-    await tapVisible(tester, find.byKey(const ValueKey('home-levels')));
+    await openCampaignMap(tester);
     await selectOpenLevel(tester, 25);
     final board = find.byType(GameWidget<BloriqGame>);
     BloriqGame game() => tester.widget<GameWidget<BloriqGame>>(board).game!;

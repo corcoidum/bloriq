@@ -34,6 +34,40 @@ Future<void> waitForHome(WidgetTester tester) async {
   fail('Home did not become ready');
 }
 
+Future<void> openHomeJourney(
+  WidgetTester tester, {
+  String tab = 'status',
+}) async {
+  final open = find.byKey(const ValueKey('journey-close')).hitTestable();
+  final alreadyOpen = open.evaluate().isNotEmpty;
+  if (!alreadyOpen) {
+    await tapVisible(tester, find.byKey(const ValueKey('home-journey')));
+  }
+  if (alreadyOpen || tab != 'status') {
+    await tapVisible(tester, find.byKey(ValueKey('journey-tab-$tab')));
+  }
+}
+
+Future<void> openCampaignMap(WidgetTester tester) async {
+  await openHomeJourney(tester);
+  await tapVisible(tester, find.byKey(const ValueKey('journey-world-1')));
+}
+
+Future<void> openPlayModes(WidgetTester tester) =>
+    tapVisible(tester, find.byKey(const ValueKey('home-play-modes')));
+
+Future<void> chooseJourneyWorld(
+  WidgetTester tester,
+  Finder picker,
+  int world,
+) async {
+  await tapVisible(tester, picker);
+  await tapVisible(
+    tester,
+    find.byKey(ValueKey('journey-world-option-$world')).last,
+  );
+}
+
 Future<void> selectOpenLevel(WidgetTester tester, int id) async {
   final target = find.byKey(ValueKey('level-$id'));
   final grid = find.byKey(const ValueKey('level-grid'));
@@ -57,7 +91,7 @@ Future<void> pumpGame(
   await preferences.setString('bloriq.onboarding.v1', 'skipped');
   await tester.pumpWidget(widget);
   await waitForHome(tester);
-  await tapVisible(tester, find.byKey(const ValueKey('home-levels')));
+  await openCampaignMap(tester);
   await selectOpenLevel(tester, levelId);
   for (
     var i = 0;

@@ -137,7 +137,7 @@ void main() {
       expect(_storyText(_identity), findsNothing);
       await tester.scrollUntilVisible(node, 170, scrollable: scrollable);
       await _shot(tester, ready, 'lightroad');
-      await tapVisible(tester, releaseKey('saga-close'));
+      await closeLightroad(tester);
       await enterReleaseWorld(tester, 7);
       expect(releaseMapText(7, '첫 별'), findsOneWidget);
       expect(_storyText('다섯 등대가 모두 켜졌어'), findsOneWidget);

@@ -139,23 +139,17 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('home shows the atlas and opens a picked gate', (tester) async {
+  testWidgets('home journey opens a stage chosen from its constellation', (
+    tester,
+  ) async {
     _seed([_entry(1, 3)]);
     final preferences = await SharedPreferences.getInstance();
     await preferences.setString('bloriq.onboarding.v1', 'skipped');
     await tester.pumpWidget(const BloriqApp());
     await waitForHome(tester);
-    await tapVisible(tester, find.byKey(const ValueKey('home-atlas')));
-    await tapVisible(tester, find.byKey(const ValueKey('atlas-chapter-1')));
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('atlas-play-3')),
-      120,
-      scrollable: find.descendant(
-        of: find.byKey(const ValueKey('atlas-detail-1')),
-        matching: find.byType(Scrollable),
-      ),
-    );
-    await tapVisible(tester, find.byKey(const ValueKey('atlas-play-3')));
+    await openHomeJourney(tester, tab: 'constellations');
+    await tapVisible(tester, find.byKey(const ValueKey('journey-stage-3')));
+    await tapVisible(tester, find.byKey(const ValueKey('journey-play-stage')));
     for (var i = 0; i < 50 && _board.evaluate().isEmpty; i++) {
       await tester.pump(const Duration(milliseconds: 20));
     }

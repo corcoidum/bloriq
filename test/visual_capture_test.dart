@@ -135,7 +135,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
       await waitForHome(tester);
       await capture('$prefix-home');
-      await tap(find.byKey(const ValueKey('home-levels')));
+      await openCampaignMap(tester);
       await capture('$prefix-levels');
       await selectOpenLevel(tester, 1);
       for (var frame = 0; frame < 100 && board.evaluate().isEmpty; frame++) {
@@ -198,9 +198,10 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
       await capture('$prefix-home-ko');
-      await tap(find.byKey(const ValueKey('home-levels')));
+      await openCampaignMap(tester);
       await capture('$prefix-levels-ko');
       await tap(find.text('닫기'));
+      await tapVisible(tester, find.byKey(const ValueKey('journey-close')));
       await tap(find.byTooltip('설정'));
       await capture('$prefix-settings-ko');
       await tap(find.text('닫기'));

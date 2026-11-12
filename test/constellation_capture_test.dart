@@ -144,7 +144,7 @@ void main() {
       await launch(mode, locale, seeded);
       await waitForHome(tester);
       await capture('${mode.name}-$locale-home');
-      await tapVisible(tester, find.byKey(const ValueKey('home-levels')));
+      await openCampaignMap(tester);
       await selectOpenLevel(tester, 5);
       for (var i = 0; i < 100 && board.evaluate().isEmpty; i++) {
         await tester.pump(const Duration(milliseconds: 20));

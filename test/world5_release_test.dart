@@ -34,7 +34,7 @@ void main() {
     );
     expect(releaseKey('saga-enter-5'), findsOneWidget);
     await _shot(tester, boundary, 'lightroad');
-    await tapVisible(tester, releaseKey('saga-close'));
+    await closeLightroad(tester);
 
     await enterReleaseWorld(tester, 5);
     expect(releaseMapText(5, '얼음 동굴 등대'), findsOneWidget);
@@ -88,8 +88,9 @@ void main() {
     await openReleaseApp(tester);
     await openLightroad(tester, 5);
     expect(releaseKey('saga-enter-5'), findsNothing);
-    await tapVisible(tester, releaseKey('saga-close'));
+    await closeLightroad(tester);
 
+    await tapVisible(tester, releaseKey('journey-close'));
     await tapVisible(tester, find.byTooltip('게임 방법'));
     expect(releaseKey('replay-ice-guide'), findsNothing);
     await tapVisible(tester, find.text('닫기'));
@@ -108,13 +109,7 @@ void main() {
     expect(releaseMapText(5, '얼음 동굴 등대'), findsOneWidget);
     await tapVisible(tester, releaseKey('world-close'));
     await waitForHome(tester);
-    expect(
-      find.descendant(
-        of: releaseKey('world-entry'),
-        matching: find.text('얼음 동굴 등대'),
-      ),
-      findsOneWidget,
-    );
+    expect(find.text('얼음 동굴 등대 · 스테이지 1'), findsOneWidget);
     await closeReleaseApp(tester);
   });
 

@@ -5,6 +5,83 @@ import '../design/game_theme.dart';
 import '../l10n/app_localizations.dart';
 import 'world_progress.dart';
 
+/// 여정의 별자리와 정령이 같은 세계 목록과 잠금 상태를 쓴다.
+class WorldPicker extends StatelessWidget {
+  const WorldPicker({
+    super.key,
+    required this.session,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final GameSession session;
+  final int selected;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final saga = session.saga;
+    if (saga == null || saga.worlds.length < 2) return const SizedBox.shrink();
+    final t = AppLocalizations.of(context)!;
+    final colors = GameTheme.colorsOf(context);
+    return Semantics(
+      label: t.journeyWorldPicker,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colors.outline.withValues(alpha: .4)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<int>(
+              value: selected,
+              isExpanded: true,
+              itemHeight: null,
+              borderRadius: BorderRadius.circular(12),
+              dropdownColor: colors.surface,
+              items: [
+                for (final world in saga.worlds)
+                  DropdownMenuItem(
+                    key: ValueKey('journey-world-option-${world.number}'),
+                    value: world.number,
+                    enabled: session.worldUnlocked(world.number),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              t.journeyWorldName(
+                                world.number,
+                                world.title.inLocale(t.localeName),
+                              ),
+                            ),
+                          ),
+                          if (!session.worldUnlocked(world.number))
+                            Icon(
+                              Icons.lock_outline_rounded,
+                              semanticLabel: t.journeyWorldLocked,
+                              size: 16,
+                              color: colors.secondaryText,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+              onChanged: (world) {
+                if (world != null) onSelected(world);
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// 도감 위쪽의 세계 고르기. 열린 세계만 보여 주고, 고른 세계를 알려 준다.
 /// 세계가 하나뿐이거나 사가를 읽지 못했으면 아무것도 그리지 않는다.
 class WorldChips extends StatefulWidget {

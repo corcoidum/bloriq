@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../app/game_session.dart';
@@ -33,7 +35,7 @@ Future<void> showSpiritAlbum(
   ),
 );
 
-class SpiritAlbum extends StatefulWidget {
+class SpiritAlbum extends StatelessWidget {
   const SpiritAlbum({
     super.key,
     required this.session,
@@ -47,10 +49,73 @@ class SpiritAlbum extends StatefulWidget {
   /// 비우면 홈 "이어가기"가 가리키는 세계부터 연다.
   final int? initialWorld;
   @override
-  State<SpiritAlbum> createState() => _SpiritAlbumState();
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
+    return Dialog(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 520,
+          maxHeight: MediaQuery.sizeOf(context).height * .86,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 8, 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      t.album,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: t.close,
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ],
+              ),
+            ),
+            Flexible(
+              child: SpiritAlbumShelf(
+                session: session,
+                initialWorld: initialWorld,
+                reduceMotion: reduceMotion,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-class _SpiritAlbumState extends State<SpiritAlbum> {
+/// 여정과 발견 화면에서 같은 해금 규칙과 정령 상세를 사용한다.
+class SpiritAlbumShelf extends StatefulWidget {
+  const SpiritAlbumShelf({
+    super.key,
+    required this.session,
+    this.initialWorld,
+    this.reduceMotion = false,
+    this.showCampaignTotal = false,
+  });
+
+  final GameSession session;
+  final int? initialWorld;
+  final bool reduceMotion;
+  final bool showCampaignTotal;
+
+  @override
+  State<SpiritAlbumShelf> createState() => _SpiritAlbumShelfState();
+}
+
+class _SpiritAlbumShelfState extends State<SpiritAlbumShelf>
+    with AutomaticKeepAliveClientMixin<SpiritAlbumShelf> {
+  @override
+  bool get wantKeepAlive => true;
+
   bool _busy = false;
 
   /// 보고 있는 세계.
@@ -86,7 +151,54 @@ class _SpiritAlbumState extends State<SpiritAlbum> {
     if (mounted) setState(() => _busy = false);
   }
 
-  Widget _tile(SpiritDefinition friend, double width) {
+  RoundedRectangleBorder _portraitShape(GameColors colors) =>
+      RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(widget.showCampaignTotal ? 12 : 18),
+        side: widget.showCampaignTotal
+            ? BorderSide(color: colors.outline.withValues(alpha: .3))
+            : BorderSide.none,
+      );
+
+  Widget _chapterTile({
+    required Key key,
+    required int number,
+    required String title,
+    required int count,
+    required bool expanded,
+    required List<Widget> children,
+  }) {
+    final t = AppLocalizations.of(context)!;
+    final colors = GameTheme.colorsOf(context);
+    final compact = widget.showCampaignTotal;
+    return ExpansionTile(
+      key: key,
+      initiallyExpanded: expanded,
+      tilePadding: const EdgeInsets.symmetric(horizontal: 4),
+      childrenPadding: const EdgeInsets.only(bottom: 12),
+      minTileHeight: compact ? 48 : null,
+      title: compact
+          ? Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${t.journeyChapter(number)} · $title',
+                    style: GameTypography.label,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '$count / ${Worlds.stagesPerChapter}',
+                  style: GameTypography.label.copyWith(color: colors.goalInk),
+                ),
+              ],
+            )
+          : Text(title, style: TextStyle(color: colors.rewardInk)),
+      subtitle: compact ? null : Text(t.chapterFriends(count)),
+      children: children,
+    );
+  }
+
+  Widget _tile(SpiritDefinition friend, double width, double portrait) {
     final t = AppLocalizations.of(context)!,
         colors = GameTheme.colorsOf(context),
         repo = widget.session.collection;
@@ -96,8 +208,10 @@ class _SpiritAlbumState extends State<SpiritAlbum> {
       child: Material(
         color: repo.companion?.id == friend.id
             ? colors.echo.withValues(alpha: .13)
+            : widget.showCampaignTotal
+            ? colors.surface
             : colors.boardSurface.withValues(alpha: .4),
-        borderRadius: BorderRadius.circular(18),
+        shape: _portraitShape(colors),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           key: ValueKey('spirit-${friend.id}'),
@@ -107,22 +221,34 @@ class _SpiritAlbumState extends State<SpiritAlbum> {
                 ? friend.name.inLocale(t.localeName)
                 : '${t.unknownSpirit}, ${t.level(friend.levelId)}',
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(widget.showCampaignTotal ? 7 : 12),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SpiritPortrait(spirit: friend, size: 96, hidden: !owned),
+                  SpiritPortrait(
+                    spirit: friend,
+                    size: portrait,
+                    hidden: !owned,
+                  ),
                   Text(
                     owned
                         ? friend.name.inLocale(t.localeName)
                         : t.unknownSpirit,
                     textAlign: TextAlign.center,
+                    style: widget.showCampaignTotal
+                        ? GameTypography.label
+                        : null,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    t.level(friend.levelId),
-                    style: TextStyle(color: colors.secondaryText, fontSize: 12),
-                  ),
+                  if (!widget.showCampaignTotal) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      t.level(friend.levelId),
+                      style: TextStyle(
+                        color: colors.secondaryText,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                   if (repo.companion?.id == friend.id)
                     Icon(
                       Icons.favorite_rounded,
@@ -153,52 +279,43 @@ class _SpiritAlbumState extends State<SpiritAlbum> {
     final title = session.saga?.world(atlas.world).title.inLocale(lang);
     final total = atlas.stages.length;
     final target = session.continueTarget;
-    final current = target.world == atlas.world && target.levelId != null
+    final current =
+        !widget.showCampaignTotal &&
+            target.world == atlas.world &&
+            target.levelId != null
         ? Worlds.chapterOf(target.levelId!)
         : 1;
     return [
       Text(
-        '${title == null ? '' : '$title · '}'
-        '${t.journeyFriends(atlas.cleared, total)}',
+        widget.showCampaignTotal
+            ? t.journeyWorldCollection(atlas.cleared, total)
+            : '${title == null ? '' : '$title · '}${t.journeyFriends(atlas.cleared, total)}',
         key: const ValueKey('album-world-progress'),
-        style: TextStyle(color: colors.rewardInk),
+        style: TextStyle(color: colors.secondaryText),
       ),
+      if (!widget.showCampaignTotal) ...[
+        const SizedBox(height: 8),
+        LinearProgressIndicator(
+          value: total == 0 ? 0 : atlas.cleared / total,
+          color: colors.goal,
+        ),
+      ],
       const SizedBox(height: 8),
-      LinearProgressIndicator(
-        value: total == 0 ? 0 : atlas.cleared / total,
-        color: colors.goal,
-      ),
-      const SizedBox(height: 12),
       for (final chapter in atlas.chapters)
-        ExpansionTile(
+        _chapterTile(
           key: ValueKey(
             'album-world-${atlas.world}-chapter-${chapter.chapter.number}',
           ),
-          initiallyExpanded: chapter.chapter.number == current,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 4),
-          childrenPadding: const EdgeInsets.only(bottom: 16),
-          title: Text(
-            chapter.chapter.name.inLocale(lang),
-            style: TextStyle(color: colors.rewardInk),
-          ),
-          subtitle: Text(t.chapterFriends(chapter.cleared)),
+          number: chapter.chapter.number,
+          title: chapter.chapter.name.inLocale(lang),
+          count: chapter.cleared,
+          expanded: chapter.chapter.number == current,
           children: [
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final columns = MediaQuery.textScalerOf(context).scale(14) > 21
-                    ? 1
-                    : 2;
-                final width =
-                    (constraints.maxWidth - (columns - 1) * 12) / columns;
-                return Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: [
-                    for (final stage in chapter.stages)
-                      _worldTile(stage, chapter, width),
-                  ],
-                );
-              },
+            _grid(
+              (width, portrait) => [
+                for (final stage in chapter.stages)
+                  _worldTile(stage, chapter, width, portrait),
+              ],
             ),
           ],
         ),
@@ -209,6 +326,7 @@ class _SpiritAlbumState extends State<SpiritAlbum> {
     WorldStageView stage,
     WorldChapterView chapter,
     double width,
+    double portrait,
   ) {
     final t = AppLocalizations.of(context)!;
     final colors = GameTheme.colorsOf(context);
@@ -221,8 +339,10 @@ class _SpiritAlbumState extends State<SpiritAlbum> {
     return SizedBox(
       width: width,
       child: Material(
-        color: colors.boardSurface.withValues(alpha: .4),
-        borderRadius: BorderRadius.circular(18),
+        color: widget.showCampaignTotal
+            ? colors.surface
+            : colors.boardSurface.withValues(alpha: .4),
+        shape: _portraitShape(colors),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           key: ValueKey('spirit-${spirit.id}'),
@@ -241,33 +361,41 @@ class _SpiritAlbumState extends State<SpiritAlbum> {
                 ? spirit.name.inLocale(lang)
                 : '${t.unknownSpirit}, $number',
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(widget.showCampaignTotal ? 7 : 12),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SizedBox(
-                    width: 96,
-                    height: 96,
+                    width: portrait,
+                    height: portrait,
                     child: met
                         ? WorldSpiritPortrait(
                             asset: chapter.portraitFor(stage),
-                            size: 96,
+                            size: portrait,
                           )
                         : Icon(
                             Icons.bedtime_outlined,
-                            size: 46,
+                            size: portrait * .5,
                             color: colors.outline,
                           ),
                   ),
                   Text(
                     met ? spirit.name.inLocale(lang) : t.unknownSpirit,
                     textAlign: TextAlign.center,
+                    style: widget.showCampaignTotal
+                        ? GameTypography.label
+                        : null,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    number,
-                    style: TextStyle(color: colors.secondaryText, fontSize: 12),
-                  ),
+                  if (!widget.showCampaignTotal) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      number,
+                      style: TextStyle(
+                        color: colors.secondaryText,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -277,143 +405,132 @@ class _SpiritAlbumState extends State<SpiritAlbum> {
     );
   }
 
+  Widget _grid(List<Widget> Function(double width, double portrait) tiles) =>
+      LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = widget.showCampaignTotal;
+          final largeText = MediaQuery.textScalerOf(context).scale(14) > 21;
+          final columns = largeText || constraints.maxWidth < 180
+              ? 1
+              : compact && constraints.maxWidth >= 260
+              ? 3
+              : 2;
+          final gap = compact ? 8.0 : 12.0;
+          final width = (constraints.maxWidth - (columns - 1) * gap) / columns;
+          return Wrap(
+            spacing: gap,
+            runSpacing: gap,
+            children: tiles(width, math.min(width - 14, compact ? 58 : 96)),
+          );
+        },
+      );
+
   @override
   Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context)!,
-        colors = GameTheme.colorsOf(context),
-        session = widget.session,
-        repo = session.collection;
-    final initialChapter =
-        repo.companion?.chapter ?? session.recommendedChapter.number;
-    return Dialog(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: 520,
-          maxHeight: MediaQuery.sizeOf(context).height * .86,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 8, 0),
-              child: Row(
+    super.build(context);
+    final t = AppLocalizations.of(context)!;
+    final colors = GameTheme.colorsOf(context);
+    final session = widget.session;
+    final repo = session.collection;
+    final inJourney = widget.showCampaignTotal;
+    final initialChapter = inJourney
+        ? 1
+        : repo.companion?.chapter ?? session.recommendedChapter.number;
+    final overall = inJourney ? session.overall : null;
+    return SingleChildScrollView(
+      key: inJourney ? const ValueKey('journey-companion-list') : null,
+      primary: false,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (overall != null) ...[
+            Text(
+              t.journeyCollectionTotal(overall.friends, overall.friendTotal),
+              key: const ValueKey('journey-companion-total'),
+              style: GameTypography.reward.copyWith(fontSize: 22),
+            ),
+            const SizedBox(height: 8),
+            WorldPicker(
+              key: const ValueKey('journey-companion-world'),
+              session: session,
+              selected: _world,
+              onSelected: (world) => setState(() => _world = world),
+            ),
+            const SizedBox(height: 8),
+            if (_world != 1 && repo.pendingIds.isNotEmpty)
+              TextButton(
+                onPressed: () => setState(() => _world = 1),
+                child: Text(t.pendingMemories(repo.pendingIds.length)),
+              ),
+          ] else
+            WorldChips(
+              session: session,
+              selected: _world,
+              onSelected: (world) => setState(() => _world = world),
+            ),
+          if (session.worldAtlas(_world) case final atlas? when _world > 1)
+            ..._worldShelf(atlas)
+          else ...[
+            Text(
+              inJourney
+                  ? t.journeyWorldCollection(
+                      repo.owned.length,
+                      session.story.released.length,
+                    )
+                  : t.seasonProgress(repo.owned.length),
+              key: const ValueKey('album-progress'),
+              style: TextStyle(color: colors.secondaryText),
+            ),
+            if (!inJourney) ...[
+              const SizedBox(height: 8),
+              LinearProgressIndicator(
+                value: repo.owned.length / session.story.spirits.length,
+                color: colors.goal,
+              ),
+            ],
+            const SizedBox(height: 8),
+            CollectionStorageNotice(
+              session: session,
+              onChanged: () => setState(() {}),
+            ),
+            for (final chapter in session.story.chapters.where(
+              (c) => c.released,
+            ))
+              _chapterTile(
+                key: ValueKey('album-chapter-${chapter.number}'),
+                number: chapter.number,
+                title: chapter.name.inLocale(t.localeName),
+                count: repo.inChapter(chapter.number).length,
+                expanded: chapter.number == initialChapter,
                 children: [
-                  Expanded(
-                    child: Text(
-                      t.album,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
+                  _grid(
+                    (width, portrait) => [
+                      for (final friend in session.story.inChapter(
+                        chapter.number,
+                      ))
+                        _tile(friend, width, portrait),
+                    ],
                   ),
-                  IconButton(
-                    tooltip: t.close,
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close_rounded),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    key: ValueKey(
+                      chapter.number == 1
+                          ? 'share-collection'
+                          : 'share-chapter-${chapter.number}',
+                    ),
+                    onPressed: _busy || repo.inChapter(chapter.number).isEmpty
+                        ? null
+                        : () => _share(chapter),
+                    icon: const Icon(Icons.ios_share_rounded),
+                    label: Text(
+                      t.chapterCard(chapter.name.inLocale(t.localeName)),
+                    ),
                   ),
                 ],
               ),
-            ),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    WorldChips(
-                      session: session,
-                      selected: _world,
-                      onSelected: (world) => setState(() => _world = world),
-                    ),
-                    if (session.worldAtlas(_world) case final atlas?
-                        when _world > 1)
-                      ..._worldShelf(atlas)
-                    else ...[
-                      Text(
-                        t.seasonProgress(repo.owned.length),
-                        key: const ValueKey('album-progress'),
-                        style: TextStyle(color: colors.rewardInk),
-                      ),
-                      const SizedBox(height: 8),
-                      LinearProgressIndicator(
-                        value: repo.owned.length / session.story.spirits.length,
-                        color: colors.goal,
-                      ),
-                      const SizedBox(height: 12),
-                      CollectionStorageNotice(
-                        session: session,
-                        onChanged: () => setState(() {}),
-                      ),
-                      for (final chapter in session.story.chapters.where(
-                        (c) => c.released,
-                      ))
-                        ExpansionTile(
-                          key: ValueKey('album-chapter-${chapter.number}'),
-                          initiallyExpanded: chapter.number == initialChapter,
-                          tilePadding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                          ),
-                          childrenPadding: const EdgeInsets.only(bottom: 16),
-                          title: Text(
-                            chapter.name.inLocale(t.localeName),
-                            style: TextStyle(color: colors.rewardInk),
-                          ),
-                          subtitle: Text(
-                            t.chapterFriends(
-                              repo.inChapter(chapter.number).length,
-                            ),
-                          ),
-                          children: [
-                            LayoutBuilder(
-                              builder: (context, constraints) {
-                                final columns =
-                                    MediaQuery.textScalerOf(context).scale(14) >
-                                        21
-                                    ? 1
-                                    : 2;
-                                final width =
-                                    (constraints.maxWidth -
-                                        (columns - 1) * 12) /
-                                    columns;
-                                return Wrap(
-                                  spacing: 12,
-                                  runSpacing: 12,
-                                  children: [
-                                    for (final friend
-                                        in session.story.inChapter(
-                                          chapter.number,
-                                        ))
-                                      _tile(friend, width),
-                                  ],
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 12),
-                            OutlinedButton.icon(
-                              key: ValueKey(
-                                chapter.number == 1
-                                    ? 'share-collection'
-                                    : 'share-chapter-${chapter.number}',
-                              ),
-                              onPressed:
-                                  _busy ||
-                                      repo.inChapter(chapter.number).isEmpty
-                                  ? null
-                                  : () => _share(chapter),
-                              icon: const Icon(Icons.ios_share_rounded),
-                              label: Text(
-                                t.chapterCard(
-                                  chapter.name.inLocale(t.localeName),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
           ],
-        ),
+        ],
       ),
     );
   }

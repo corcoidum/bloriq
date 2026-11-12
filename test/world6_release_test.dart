@@ -41,7 +41,7 @@ void main() {
       );
       expect(releaseKey('saga-enter-6'), findsOneWidget);
       await _shot(tester, boundary, 'lightroad');
-      await tapVisible(tester, releaseKey('saga-close'));
+      await closeLightroad(tester);
 
       await enterReleaseWorld(tester, 6);
       expect(releaseMapText(6, '꿈의 서고 등대'), findsOneWidget);
@@ -98,7 +98,8 @@ void main() {
     await openReleaseApp(tester);
     await openLightroad(tester, 6);
     expect(releaseKey('saga-enter-6'), findsNothing);
-    await tapVisible(tester, releaseKey('saga-close'));
+    await closeLightroad(tester);
+    await tapVisible(tester, releaseKey('journey-close'));
     final help = find.byTooltip('게임 방법').hitTestable();
     await waitForReleaseWidget(tester, help);
     await tapVisible(tester, help);
@@ -120,13 +121,7 @@ void main() {
     expect(releaseMapText(6, '꿈의 서고 등대'), findsOneWidget);
     await tapVisible(tester, releaseKey('world-close'));
     await waitForHome(tester);
-    expect(
-      find.descendant(
-        of: releaseKey('world-entry'),
-        matching: find.text('꿈의 서고 등대'),
-      ),
-      findsOneWidget,
-    );
+    expect(find.text('꿈의 서고 등대 · 스테이지 1'), findsOneWidget);
     await closeReleaseApp(tester);
   });
 

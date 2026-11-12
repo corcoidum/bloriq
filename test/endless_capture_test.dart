@@ -108,6 +108,7 @@ void main() {
     }
 
     Future<void> openVoyage() async {
+      await openPlayModes(tester);
       await tapVisible(tester, find.byKey(const ValueKey('home-voyage')));
       for (var i = 0; i < 50; i++) {
         await tester.pump(const Duration(milliseconds: 20));

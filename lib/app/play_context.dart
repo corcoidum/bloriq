@@ -74,6 +74,12 @@ class OpenWorld {
   final int world;
 }
 
+/// 여정에서 다른 세계의 캠페인 판을 골랐을 때 홈에 돌려주는 요청.
+class OpenStage {
+  const OpenStage(this.levelId);
+  final int levelId;
+}
+
 /// 최종 결과에서 게임을 닫은 뒤 엔딩을 연다.
 class OpenEnding {
   const OpenEnding();

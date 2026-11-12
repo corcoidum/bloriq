@@ -112,6 +112,7 @@ void main() {
       var now = DateTime(2026, 10, 29, 23, 59);
       await tester.pumpWidget(BloriqApp(clock: () => now));
       await waitForHome(tester);
+      await openPlayModes(tester);
       await tapVisible(tester, find.byKey(const ValueKey('daily-play')));
       await tester.pump(const Duration(milliseconds: 350));
       final screen = tester.widget<GameScreen>(find.byType(GameScreen));
@@ -124,6 +125,7 @@ void main() {
       expect((await ProgressRepository.load()).hasAnyProgress, false);
       await tapVisible(tester, find.byKey(const ValueKey('game-home')));
       await tester.pump(const Duration(milliseconds: 350));
+      await openPlayModes(tester);
       expect(find.text('Replay today’s Echo'), findsOneWidget);
       now = DateTime(2026, 10, 30);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);

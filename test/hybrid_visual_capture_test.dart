@@ -146,12 +146,18 @@ void main() {
         await tapVisible(tester, find.byKey(const ValueKey('game-home')));
         await tester.pump(const Duration(milliseconds: 350));
         await capture('$prefix-home');
+        await openPlayModes(tester);
         await tester.ensureVisible(find.byKey(const ValueKey('daily-play')));
         await tester.pump();
         await capture('$prefix-daily');
-        await tapVisible(tester, find.byKey(const ValueKey('home-levels')));
+        await tapVisible(
+          tester,
+          find.byKey(const ValueKey('play-modes-close')),
+        );
+        await openCampaignMap(tester);
         await capture('$prefix-chapters');
         await tapVisible(tester, find.text(locale == 'ko' ? '닫기' : 'Close'));
+        await tapVisible(tester, find.byKey(const ValueKey('journey-close')));
         await tapVisible(
           tester,
           find.byTooltip(locale == 'ko' ? '설정' : 'Settings'),

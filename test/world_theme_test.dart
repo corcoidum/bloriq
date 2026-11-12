@@ -91,7 +91,8 @@ void main() {
     final backdrop = find.byType(ArcadeBackdrop);
     expect(tester.widget<ArcadeBackdrop>(backdrop).background, isNull);
 
-    await tapVisible(tester, find.byKey(const ValueKey('world-entry')));
+    await openHomeJourney(tester);
+    await tapVisible(tester, find.byKey(const ValueKey('journey-world-2')));
     final mapScaffold = find.descendant(
       of: find.byType(WorldMap),
       matching: find.byType(Scaffold),

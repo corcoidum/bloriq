@@ -84,7 +84,9 @@ void main() {
     await _seed({1, 2, 3, 4});
     await tester.pumpWidget(const BloriqApp());
     await waitForHome(tester);
-    expect(find.byKey(const ValueKey('world-entry')), findsNothing);
+    await openHomeJourney(tester);
+    final world = find.byKey(const ValueKey('journey-world-2'));
+    expect(tester.widget<InkWell>(world).onTap, isNull);
   });
 
   testWidgets(
@@ -93,7 +95,8 @@ void main() {
       await _seed({1, 2, 3, 4, 5});
       await tester.pumpWidget(const BloriqApp());
       await waitForHome(tester);
-      final entry = find.byKey(const ValueKey('world-entry'));
+      await openHomeJourney(tester);
+      final entry = find.byKey(const ValueKey('journey-world-2'));
       expect(entry, findsOneWidget);
       await tapVisible(tester, entry);
       await tester.pump(const Duration(milliseconds: 400));
@@ -143,7 +146,8 @@ void main() {
     await _seed({1, 2, 3, 4, 5});
     await tester.pumpWidget(const BloriqApp());
     await waitForHome(tester);
-    await tapVisible(tester, find.byKey(const ValueKey('world-entry')));
+    await openHomeJourney(tester);
+    await tapVisible(tester, find.byKey(const ValueKey('journey-world-2')));
     await tester.pump(const Duration(milliseconds: 400));
     await tapVisible(tester, find.byKey(const ValueKey('world-continue')));
     await tester.pump(const Duration(milliseconds: 400));

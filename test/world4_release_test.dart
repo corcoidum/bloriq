@@ -34,7 +34,8 @@ void main() {
       );
       expect(releaseKey('saga-enter-4'), findsOneWidget);
       await _shot(tester, boundary, 'lightroad');
-      await tapVisible(tester, releaseKey('saga-close'));
+      await closeLightroad(tester);
+      await tapVisible(tester, releaseKey('journey-close'));
 
       await tapVisible(tester, find.byTooltip('게임 방법'));
       await tapVisible(tester, releaseKey('replay-clock-guide'));
@@ -95,7 +96,7 @@ void main() {
     await openReleaseApp(tester);
     await openLightroad(tester, 4);
     expect(releaseKey('saga-enter-4'), findsNothing);
-    await tapVisible(tester, releaseKey('saga-close'));
+    await closeLightroad(tester);
 
     await enterReleaseWorld(tester, 3);
     await tapVisible(tester, releaseKey('world-continue'));
@@ -111,13 +112,7 @@ void main() {
     expect(releaseMapText(4, '시계탑 등대'), findsOneWidget);
     await tapVisible(tester, releaseKey('world-close'));
     await waitForHome(tester);
-    expect(
-      find.descendant(
-        of: releaseKey('world-entry'),
-        matching: find.text('시계탑 등대'),
-      ),
-      findsOneWidget,
-    );
+    expect(find.text('시계탑 등대 · 스테이지 1'), findsOneWidget);
     await closeReleaseApp(tester);
   });
 

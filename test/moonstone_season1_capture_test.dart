@@ -278,9 +278,11 @@ void main() {
           await tapVisible(tester, find.byKey(const ValueKey('game-home')));
           await tester.pump(const Duration(milliseconds: 400));
           await capture('$prefix-home');
-          await tapVisible(tester, find.byKey(const ValueKey('home-levels')));
+          await openCampaignMap(tester);
           await capture('$prefix-map');
           await tapVisible(tester, find.text(t.close));
+          await tapVisible(tester, find.byKey(const ValueKey('journey-close')));
+          await openPlayModes(tester);
           await tester.ensureVisible(find.byKey(const ValueKey('daily-play')));
           await tester.pump();
           await capture('$prefix-daily');

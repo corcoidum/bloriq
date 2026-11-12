@@ -54,9 +54,14 @@ void main() {
     );
     final weekly = releaseKey('home-weekly');
     final daily = releaseKey('daily-play');
+    expect(weekly, findsNothing);
+    await openPlayModes(tester);
     expect(weekly.hitTestable(), findsOneWidget);
     expect(daily.hitTestable(), findsOneWidget);
-    expect(tester.getCenter(weekly).dy, closeTo(tester.getCenter(daily).dy, 1));
+    expect(
+      tester.getCenter(weekly).dy,
+      greaterThan(tester.getCenter(daily).dy),
+    );
     if (_capture) {
       await tester.pump(const Duration(milliseconds: 350));
       await captureReleaseScreen(
@@ -110,6 +115,7 @@ void main() {
       hasLength(5),
     );
     await tapVisible(tester, find.byType(BackButton));
+    await openPlayModes(tester);
     expect(
       find.descendant(of: weekly, matching: find.text('5판 중 5판 완료')),
       findsOneWidget,
@@ -126,6 +132,7 @@ void main() {
     tester.platformDispatcher.textScaleFactorTestValue = 2;
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
     await tester.pump();
+    await openPlayModes(tester);
     final weekly = releaseKey('home-weekly');
     await tapVisible(tester, weekly);
     final stages = releaseKey('weekly-stages');

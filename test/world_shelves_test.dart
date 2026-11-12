@@ -7,6 +7,13 @@ import 'support/start_game.dart';
 import 'support/world_release.dart';
 
 const _capture = bool.fromEnvironment('CAPTURE_HOME');
+final _starWorld = releaseKey('journey-constellation-world');
+final _spiritWorld = releaseKey('journey-companion-world');
+
+DropdownButton<int> _picker(WidgetTester tester, Finder key) =>
+    tester.widget<DropdownButton<int>>(
+      find.descendant(of: key, matching: find.byType(DropdownButton<int>)),
+    );
 
 Future<void> _shot(WidgetTester tester, GlobalKey boundary, String name) async {
   if (!_capture) return;
@@ -17,158 +24,84 @@ Future<void> _shot(WidgetTester tester, GlobalKey boundary, String name) async {
   );
 }
 
-Future<void> _dismissBackfill(WidgetTester tester) async {
-  final backfill = releaseKey('dismiss-backfill');
-  if (backfill.evaluate().isNotEmpty) await tapVisible(tester, backfill);
-}
-
 void main() {
   setUp(rootBundle.clear);
 
-  // 캡처(CAPTURE_HOME)는 그림을 미리 읽으므로 이 테스트가 가장 먼저 돈다.
-  testWidgets('constellation atlas opens on the current world and plays it', (
+  testWidgets('constellations open on the current world and chapter', (
     tester,
   ) async {
     seedSaga(throughWorld: 5, extra: 12);
     final boundary = await openReleaseApp(tester, captureArt: _capture);
-    await _dismissBackfill(tester);
-    await tapVisible(tester, releaseKey('home-atlas'));
-    await tester.pumpAndSettle();
-    // 열린 세계 여섯 개만 고를 수 있고, 진행 중인 세계 6이 골라져 있다.
-    expect(releaseKey('world-chip-7'), findsNothing);
-    expect(
-      tester.widget<ChoiceChip>(releaseKey('world-chip-6')).selected,
-      isTrue,
-    );
-    expect(releaseKey('atlas-list-world-6'), findsOneWidget);
-    expect(releaseKey('atlas-chapter-26'), findsOneWidget);
+    await openHomeJourney(tester, tab: 'constellations');
+    expect(_picker(tester, _starWorld).value, 6);
+    expect(find.text('별자리 복원 27 / 35'), findsOneWidget);
+    expect(releaseKey('journey-stage-513').hitTestable(), findsOneWidget);
     await _shot(tester, boundary, 'atlas-world6');
 
-    // 세계 1로 바꾸면 예전 도감이 그대로 나온다.
-    await tapVisible(tester, releaseKey('world-chip-1'));
-    await tester.pumpAndSettle();
-    expect(releaseKey('atlas-chapter-1'), findsOneWidget);
-    await tapVisible(tester, releaseKey('world-chip-6'));
-    await tester.pumpAndSettle();
-
-    final third = releaseKey('atlas-chapter-28');
-    await tester.scrollUntilVisible(
-      third,
-      160,
-      scrollable: find
-          .descendant(
-            of: releaseKey('atlas-list-world-6'),
-            matching: find.byType(Scrollable),
-          )
-          .first,
-    );
-    await tapVisible(tester, third);
-    await tester.pumpAndSettle();
-    expect(releaseKey('atlas-detail-28'), findsOneWidget);
-    final play = releaseKey('atlas-play-513');
-    await tester.scrollUntilVisible(
-      play,
-      160,
-      scrollable: find
-          .descendant(
-            of: releaseKey('atlas-detail-28'),
-            matching: find.byType(Scrollable),
-          )
-          .first,
-    );
-    await tapVisible(tester, play);
+    await chooseJourneyWorld(tester, _starWorld, 1);
+    expect(releaseKey('journey-stage-1'), findsOneWidget);
+    await chooseJourneyWorld(tester, _starWorld, 6);
+    await tapVisible(tester, releaseKey('journey-chapter-3'));
+    await tapVisible(tester, releaseKey('journey-stage-513'));
+    await tapVisible(tester, releaseKey('journey-play-stage'));
     await waitForReleaseWidget(tester, releaseBoard);
     expect(releaseGame(tester).controller.state.level.id, 513);
     await closeReleaseApp(tester);
   });
 
-  testWidgets('a locked chapter of the current world cannot be opened', (
-    tester,
-  ) async {
-    seedSaga(throughWorld: 5, extra: 12);
-    await openReleaseApp(tester);
-    await _dismissBackfill(tester);
-    await tapVisible(tester, releaseKey('home-atlas'));
-    await tester.pumpAndSettle();
-    final fifth = releaseKey('atlas-chapter-30');
-    await tester.scrollUntilVisible(
-      fifth,
-      160,
-      scrollable: find
-          .descendant(
-            of: releaseKey('atlas-list-world-6'),
-            matching: find.byType(Scrollable),
-          )
-          .first,
-    );
-    expect(tester.widget<InkWell>(fifth).onTap, isNull);
-    await closeReleaseApp(tester);
-  });
+  testWidgets(
+    'locked worlds and stages cannot be started from constellations',
+    (tester) async {
+      seedSaga(throughWorld: 5, extra: 12);
+      await openReleaseApp(tester);
+      await openHomeJourney(tester, tab: 'constellations');
+      expect(_picker(tester, _starWorld).items!.last.enabled, isFalse);
+      await tapVisible(tester, releaseKey('journey-chapter-5'));
+      final locked = releaseKey('journey-stage-521');
+      expect(tester.widget<OutlinedButton>(locked).onPressed, isNull);
+      expect(releaseKey('journey-play-stage'), findsNothing);
+      await closeReleaseApp(tester);
+    },
+  );
 
-  testWidgets('spirit album shows the current world and keeps season 1', (
+  testWidgets('companions shows campaign and world totals and spirit details', (
     tester,
   ) async {
     seedSaga(throughWorld: 5, extra: 12);
     final boundary = await openReleaseApp(tester, captureArt: _capture);
-    await _dismissBackfill(tester);
-    await tapVisible(tester, releaseKey('home-album'));
-    await tester.pumpAndSettle();
-    expect(find.text('꿈의 서고 등대 · 친구 12 / 25'), findsOneWidget);
-    expect(releaseKey('album-progress'), findsNothing);
-    // 진행 중인 3장이 펼쳐져 있고, 만난 친구만 이름이 보인다.
+    await openHomeJourney(tester, tab: 'companions');
+    expect(_picker(tester, _spiritWorld).value, 6);
+    expect(find.text('전체 수집 137 / 175'), findsOneWidget);
+    expect(find.text('이 세계 12 / 25'), findsOneWidget);
+    await tapVisible(tester, releaseKey('album-world-6-chapter-3'));
     final met = releaseKey('spirit-${releaseSpiritId(6, 512)}');
     final unmet = releaseKey('spirit-${releaseSpiritId(6, 513)}');
-    await tester.ensureVisible(met);
-    await tester.pumpAndSettle();
     expect(tester.widget<InkWell>(met).onTap, isNotNull);
     expect(tester.widget<InkWell>(unmet).onTap, isNull);
     await _shot(tester, boundary, 'album-world6');
+
     await tapVisible(tester, met);
-    await tester.pumpAndSettle();
     expect(
       releaseKey('spirit-detail-${releaseSpiritId(6, 512)}'),
       findsOneWidget,
     );
-    await tester.tap(find.text('닫기').last);
-    await tester.pumpAndSettle();
-
-    await tapVisible(tester, releaseKey('world-chip-1'));
-    await tester.pumpAndSettle();
+    await tapVisible(tester, find.text('닫기').last);
+    await chooseJourneyWorld(tester, _spiritWorld, 1);
+    expect(find.text('이 세계 25 / 25'), findsOneWidget);
     expect(releaseKey('album-progress'), findsOneWidget);
-    expect(releaseKey('album-world-progress'), findsNothing);
     await closeReleaseApp(tester);
   });
 
-  testWidgets('journey constellations page through every open world', (
+  testWidgets('a fresh player sees seven worlds with only the first enabled', (
     tester,
   ) async {
-    seedSaga(throughWorld: 5, extra: 12);
-    await openReleaseApp(tester);
-    await _dismissBackfill(tester);
-    await tapVisible(tester, releaseKey('home-journey'));
-    await tester.pumpAndSettle();
-    await tester.fling(find.byType(TabBarView), const Offset(-250, 0), 800);
-    await tester.pumpAndSettle();
-    // 세계 1의 5장 + 세계 2~6의 25장, 그중 세계 6의 3장에서 시작한다.
-    expect(
-      tester.widget<Text>(releaseKey('journey-constellation-page-count')).data,
-      startsWith('28 / 30'),
-    );
-    expect(find.textContaining('꿈의 서고 등대 · '), findsOneWidget);
-    // 열린 판은 세계 안의 번호로 보이고, 누르면 그 판이 열린다.
-    await tapVisible(tester, releaseKey('journey-play-513'));
-    await waitForReleaseWidget(tester, releaseBoard);
-    expect(releaseGame(tester).controller.state.level.id, 513);
-    await closeReleaseApp(tester);
-  });
-
-  testWidgets('a world-1 player sees no world chips', (tester) async {
     seedSaga(throughWorld: 0);
     await openReleaseApp(tester);
-    await tapVisible(tester, releaseKey('home-atlas'));
-    await tester.pumpAndSettle();
-    expect(releaseKey('world-chips'), findsNothing);
-    expect(releaseKey('atlas-chapter-1'), findsOneWidget);
+    await openHomeJourney(tester, tab: 'constellations');
+    final items = _picker(tester, _starWorld).items!;
+    expect(items, hasLength(7));
+    expect(items.where((item) => item.enabled).map((item) => item.value), [1]);
+    expect(releaseKey('journey-stage-1'), findsOneWidget);
     await closeReleaseApp(tester);
   });
 }

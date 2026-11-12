@@ -1500,15 +1500,67 @@ class _GameScreenState extends State<GameScreen>
       level.world >= 2 ? Worlds.stageNumber(level.id) : level.id;
 
   Future<void> _openJourney() async {
-    final id = await _withModal<int>(
-      () => showJourneyPanel(context, widget.session, widget.settings),
-    );
+    final session = widget.session;
+    final current = _loaded[_index].id;
+    final campaign = widget.play.mode == PlayMode.campaign;
+    final id = await _withModal<int>(() async {
+      final picked = await showJourneyPanel(
+        context,
+        session,
+        widget.settings,
+        initialWorld: campaign || _trial != null ? widget.play.world : null,
+        initialLevelId: campaign ? current : null,
+        allowStageSelection: campaign,
+        buildTrialGame: campaign ? _buildTrialGame : null,
+      );
+      if (!mounted || picked == null) return null;
+      if (picked == current) {
+        return _controller!.state.isComplete ? picked : null;
+      }
+
+      final t = AppLocalizations.of(context)!;
+      final world = session.levels.any((level) => level.id == picked)
+          ? 1
+          : Worlds.worldOf(picked);
+      final destination = t.journeyStageLocation(
+        session.saga?.world(world).title.inLocale(t.localeName) ??
+            t.journeyFirstWorld,
+        world == 1 ? picked : Worlds.stageNumber(picked),
+      );
+      final confirmed = await showDialog<bool>(
+        context: context,
+        animationStyle: _reduceMotion ? AnimationStyle.noAnimation : null,
+        builder: (context) => AlertDialog(
+          title: Text(t.journeySwitchTitle),
+          content: Text(
+            _dirty ? '$destination\n\n${t.leaveGameBody}' : destination,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(t.keepPlaying),
+            ),
+            FilledButton(
+              key: const ValueKey('journey-switch-confirm'),
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(t.journeySwitchAction),
+            ),
+          ],
+        ),
+      );
+      return confirmed == true ? picked : null;
+    });
+    if (!mounted) return;
+    if (id == null) {
+      // 판과 되돌리기 기록은 보존하고, 여정에서 바꾼 동료는 화면에 반영한다.
+      setState(() {});
+      return;
+    }
     final index = _loaded.indexWhere((level) => level.id == id);
-    if (id != null &&
-        mounted &&
-        widget.play.mode == PlayMode.campaign &&
-        index >= 0) {
+    if (index >= 0) {
       _select(index);
+    } else {
+      _leaveFor(OpenStage(id));
     }
   }
 
@@ -2118,7 +2170,7 @@ class _GameScreenState extends State<GameScreen>
     final legend = _legend(t, controller);
     final hint = legend.map((item) => item.text).join('\n');
     _game!.tutorialTarget = _tutorial?.target;
-    return PopScope<void>(
+    return PopScope<Object?>(
       canPop: _allowPop || !_dirty,
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop) unawaited(_leaveGame());

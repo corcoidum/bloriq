@@ -31,7 +31,7 @@ void main() {
       );
       expect(releaseKey('saga-enter-3'), findsOneWidget);
       await _shot(tester, boundary, 'lightroad');
-      await tapVisible(tester, releaseKey('saga-close'));
+      await closeLightroad(tester);
 
       await enterReleaseWorld(tester, 3);
       expect(releaseMapText(3, '거울 호수 등대'), findsOneWidget);
@@ -84,7 +84,7 @@ void main() {
     await openReleaseApp(tester);
     await openLightroad(tester, 3);
     expect(releaseKey('saga-enter-3'), findsNothing);
-    await tapVisible(tester, releaseKey('saga-close'));
+    await closeLightroad(tester);
 
     await enterReleaseWorld(tester, 2);
     await tapVisible(tester, releaseKey('world-continue'));
@@ -100,13 +100,7 @@ void main() {
     expect(releaseMapText(3, '거울 호수 등대'), findsOneWidget);
     await tapVisible(tester, releaseKey('world-close'));
     await waitForHome(tester);
-    expect(
-      find.descendant(
-        of: releaseKey('world-entry'),
-        matching: find.text('거울 호수 등대'),
-      ),
-      findsOneWidget,
-    );
+    expect(find.text('거울 호수 등대 · 스테이지 1'), findsOneWidget);
     final world3 = await openLightroad(tester, 3);
     expect(releaseKey('saga-enter-3'), findsOneWidget);
     expect(

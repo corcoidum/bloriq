@@ -704,6 +704,7 @@ void main() {
             tester,
             captureArt: capture && sea == MechanicSea.clock,
           );
+          await openPlayModes(tester);
           await tapVisible(tester, releaseKey('home-voyage'));
           await waitForReleaseWidget(tester, releaseKey('endless-resume'));
           await tapVisible(tester, releaseKey('endless-resume'));
@@ -758,6 +759,7 @@ void main() {
       );
       await tester.pumpWidget(const BloriqApp());
       await waitForHome(tester);
+      await openPlayModes(tester);
       await tapVisible(tester, find.byKey(const ValueKey('home-voyage')));
       final newVoyage = find.byKey(const ValueKey('endless-new'));
       for (var i = 0; i < 50 && newVoyage.evaluate().isEmpty; i++) {
@@ -802,6 +804,7 @@ void main() {
       await _seed(chapters: {});
       await tester.pumpWidget(const BloriqApp());
       await waitForHome(tester);
+      await openPlayModes(tester);
       await tapVisible(tester, find.byKey(const ValueKey('home-voyage')));
       expect(find.byKey(const ValueKey('endless-screen')), findsNothing);
       expect(find.text(EndlessText.locked.en), findsWidgets);
@@ -813,6 +816,7 @@ void main() {
       await _seed();
       await tester.pumpWidget(const BloriqApp());
       await waitForHome(tester);
+      await openPlayModes(tester);
       await tapVisible(tester, find.byKey(const ValueKey('home-voyage')));
       for (var i = 0; i < 50; i++) {
         await tester.pump(const Duration(milliseconds: 20));
@@ -865,6 +869,7 @@ void main() {
       );
       await tester.pumpWidget(const BloriqApp());
       await waitForHome(tester);
+      await openPlayModes(tester);
       await tapVisible(tester, find.byKey(const ValueKey('home-voyage')));
       for (var i = 0; i < 50; i++) {
         await tester.pump(const Duration(milliseconds: 20));
@@ -904,6 +909,7 @@ void main() {
       );
       await tester.pumpWidget(const BloriqApp());
       await waitForHome(tester);
+      await openPlayModes(tester);
       expect(find.textContaining('Continue voyage'), findsOneWidget);
       await tapVisible(tester, find.byKey(const ValueKey('home-voyage')));
       for (var i = 0; i < 50; i++) {

@@ -134,12 +134,16 @@ void main() {
         final summary = find.byKey(const ValueKey('dismiss-backfill'));
         expect(summary, launch == 0 ? findsOneWidget : findsNothing);
         expect(find.byKey(const ValueKey('skip-story')), findsNothing);
-        expect(find.text('0 / 175 completed'), findsOneWidget);
         if (launch == 0) await tapVisible(tester, summary);
-        await tapVisible(tester, find.byKey(const ValueKey('home-album')));
+        await openHomeJourney(tester);
+        expect(find.text('0 / 175 stages'), findsOneWidget);
+        await tapVisible(
+          tester,
+          find.byKey(const ValueKey('journey-tab-companions')),
+        );
         expect(
           find.descendant(
-            of: find.byType(SpiritAlbum),
+            of: find.byType(SpiritAlbumShelf),
             matching: find.text('Pomi'),
           ),
           findsOneWidget,

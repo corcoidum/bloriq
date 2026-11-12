@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../constellation/constellation_atlas.dart';
-import '../constellation/constellation_painter.dart';
 import '../constellation/constellation_state.dart';
 import '../design/arcade_components.dart';
 import '../design/game_theme.dart';
@@ -12,25 +11,27 @@ import '../game/bloriq_game.dart';
 import '../l10n/app_localizations.dart';
 import '../progression/progression_rules.dart';
 import '../settings/game_settings.dart';
-import '../story/companion_view.dart';
-import '../story/story_catalog.dart';
-import '../world/world_catalog.dart';
-import '../world/world_progress.dart';
-import '../world/world_shelf.dart';
+import '../story/spirit_album.dart';
+import '../trials/trial_screen.dart';
+import '../world/saga_map.dart';
+import '../world/world_map.dart';
 import '../world/world_text.dart';
 import 'game_session.dart';
+import 'journey_constellations.dart';
+import 'level_picker.dart';
 
 enum JourneyTab { status, constellations, companions, rewards }
 
-/// 여정 메뉴. 고른 스테이지 id를 돌려준다. 닫으면 null.
-/// 좌우로 탭을 전환하고, 각 탭의 내용은 세로로 탐색한다.
+/// 홈과 게임에서 같은 여정을 열고, 선택한 캠페인 스테이지 id를 돌려준다.
 Future<int?> showJourneyPanel(
   BuildContext context,
   GameSession session,
   GameSettings settings, {
   JourneyTab initial = JourneyTab.status,
-  WidgetBuilder? rewards,
-  bool allWorlds = false,
+  int? initialWorld,
+  int? initialLevelId,
+  bool allowStageSelection = true,
+  TrialGameBuilder? buildTrialGame,
 }) => showDialog<int>(
   context: context,
   animationStyle: prefersReducedMotion(context, settings)
@@ -38,9 +39,12 @@ Future<int?> showJourneyPanel(
       : null,
   builder: (_) => JourneyPanel(
     session: session,
+    settings: settings,
     initial: initial,
-    rewards: rewards,
-    allWorlds: allWorlds,
+    initialWorld: initialWorld,
+    initialLevelId: initialLevelId,
+    allowStageSelection: allowStageSelection,
+    buildTrialGame: buildTrialGame,
   ),
 );
 
@@ -48,19 +52,20 @@ class JourneyPanel extends StatefulWidget {
   const JourneyPanel({
     super.key,
     required this.session,
+    required this.settings,
     this.initial = JourneyTab.status,
-    this.rewards,
-    this.allWorlds = false,
+    this.initialWorld,
+    this.initialLevelId,
+    this.allowStageSelection = true,
+    this.buildTrialGame,
   });
+
   final GameSession session;
+  final GameSettings settings;
   final JourneyTab initial;
-
-  /// 별자리 탭이 열린 세계를 모두 넘겨 보게 할지. 홈에서만 켠다:
-  /// 게임 화면에서는 다른 세계의 판으로 건너갈 수 없다.
-  final bool allWorlds;
-
-  /// 보상 탭 내용. 성장 정보가 없으면 별자리 권능 대신 안내만 보여 준다.
-  final WidgetBuilder? rewards;
+  final int? initialWorld, initialLevelId;
+  final bool allowStageSelection;
+  final TrialGameBuilder? buildTrialGame;
 
   @override
   State<JourneyPanel> createState() => _JourneyPanelState();
@@ -73,9 +78,49 @@ class _JourneyPanelState extends State<JourneyPanel>
     vsync: this,
     initialIndex: widget.initial.index,
   );
+  late final _target = widget.session.continueTarget;
+  late final int _world = widget.initialWorld ?? _target.world;
+  late final int? _levelId =
+      widget.initialLevelId ??
+      (_world == _target.world ? _target.levelId : null);
+  bool _choosingWorld = false;
 
   void _refresh() {
     if (mounted) setState(() {});
+  }
+
+  Future<void> _chooseWorld(int world) async {
+    if (_choosingWorld || !widget.session.worldUnlocked(world)) return;
+    _choosingWorld = true;
+    try {
+      final id = world == 1
+          ? await showLevelPicker(
+              context,
+              widget.session,
+              widget.settings,
+              currentLevelId: _world == 1 ? _levelId : null,
+              buildTrialGame: widget.buildTrialGame,
+            )
+          : await showWorldMap(
+              context,
+              widget.session,
+              world,
+              buildTrialGame: widget.buildTrialGame,
+            );
+      if (mounted && id != null) Navigator.pop(context, id);
+    } finally {
+      _choosingWorld = false;
+      _refresh();
+    }
+  }
+
+  Future<void> _readLightroad() async {
+    final world = await showSagaMap(
+      context,
+      widget.session,
+      selectable: widget.allowStageSelection,
+    );
+    if (mounted && world != null) await _chooseWorld(world);
   }
 
   @override
@@ -89,76 +134,96 @@ class _JourneyPanelState extends State<JourneyPanel>
     final t = AppLocalizations.of(context)!;
     final colors = GameTheme.colorsOf(context);
     final size = MediaQuery.sizeOf(context);
-    Tab tab(IconData icon, String label) => Tab(
-      icon: Icon(icon),
+    final onPlay = widget.allowStageSelection
+        ? (int id) => Navigator.pop(context, id)
+        : null;
+    Tab tab(JourneyTab type, String label) => Tab(
+      key: ValueKey('journey-tab-${type.name}'),
+      height: 46,
       child: FittedBox(fit: BoxFit.scaleDown, child: Text(label, maxLines: 1)),
     );
+
     return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
-      backgroundColor: colors.surface,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      backgroundColor: colors.background,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(28),
-        side: BorderSide(color: colors.reward.withValues(alpha: .45)),
+        borderRadius: BorderRadius.circular(22),
+        side: BorderSide(color: colors.outline.withValues(alpha: .4)),
       ),
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: 520, maxHeight: size.height * .9),
+        constraints: const BoxConstraints(maxWidth: 520),
         child: SizedBox(
-          height: size.height * .9,
+          width: size.width,
+          height: size.height,
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 4, 0),
-                child: Row(
+              SizedBox(
+                height: 52,
+                child: Stack(
+                  alignment: Alignment.center,
                   children: [
-                    Expanded(
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 52),
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
-                        alignment: AlignmentDirectional.centerStart,
-                        child: Text(
-                          t.journey,
-                          maxLines: 1,
-                          style: GameTypography.brand.copyWith(
-                            color: colors.rewardInk,
-                          ),
-                        ),
+                        child: Text(t.journey, style: GameTypography.brand),
                       ),
                     ),
-                    IconButton(
-                      key: const ValueKey('journey-close'),
-                      tooltip: t.close,
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close_rounded),
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: IconButton(
+                        key: const ValueKey('journey-close'),
+                        tooltip: t.close,
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close_rounded),
+                      ),
                     ),
                   ],
                 ),
               ),
               TabBar(
                 controller: _tabs,
-                labelStyle: GameTypography.label.copyWith(fontSize: 13.5),
-                labelPadding: EdgeInsets.zero,
+                labelStyle: GameTypography.label.copyWith(fontSize: 16),
+                labelPadding: const EdgeInsets.symmetric(horizontal: 6),
                 tabs: [
-                  tab(Icons.insights_rounded, t.journeyStatus),
-                  tab(Icons.auto_awesome, t.journeyConstellations),
-                  tab(Icons.pets_rounded, t.journeyCompanions),
-                  tab(Icons.card_giftcard_rounded, t.journeyRewards),
+                  tab(JourneyTab.status, t.journeyStatus),
+                  tab(JourneyTab.constellations, t.journeyConstellations),
+                  tab(JourneyTab.companions, t.journeyCompanions),
+                  tab(JourneyTab.rewards, t.journeyRewards),
                 ],
               ),
               Expanded(
                 child: TabBarView(
                   controller: _tabs,
                   children: [
-                    _StatusTab(session: widget.session),
-                    _ConstellationTab(
+                    _StatusTab(
                       session: widget.session,
-                      allWorlds: widget.allWorlds,
+                      focusWorld: _world,
+                      playing: widget.initialLevelId != null,
+                      onChooseWorld: widget.allowStageSelection
+                          ? _chooseWorld
+                          : null,
+                      onReadLightroad: widget.session.saga == null
+                          ? null
+                          : _readLightroad,
                     ),
-                    _CompanionTab(session: widget.session, onChanged: _refresh),
-                    widget.rewards?.call(context) ??
-                        _RewardsTab(
-                          session: widget.session,
-                          onChanged: _refresh,
-                        ),
+                    JourneyConstellations(
+                      session: widget.session,
+                      initialWorld: _world,
+                      initialLevelId: _levelId,
+                      onPlay: onPlay,
+                    ),
+                    SpiritAlbumShelf(
+                      session: widget.session,
+                      initialWorld: _world,
+                      reduceMotion: prefersReducedMotion(
+                        context,
+                        widget.settings,
+                      ),
+                      showCampaignTotal: true,
+                    ),
+                    _RewardsTab(session: widget.session, onChanged: _refresh),
                   ],
                 ),
               ),
@@ -170,7 +235,7 @@ class _JourneyPanelState extends State<JourneyPanel>
   }
 }
 
-typedef _JourneyWorldProgress = ({
+typedef _WorldProgress = ({
   int number,
   String title,
   int cleared,
@@ -180,462 +245,248 @@ typedef _JourneyWorldProgress = ({
 });
 
 class _StatusTab extends StatelessWidget {
-  const _StatusTab({required this.session});
+  const _StatusTab({
+    required this.session,
+    required this.focusWorld,
+    required this.playing,
+    required this.onChooseWorld,
+    required this.onReadLightroad,
+  });
+
   final GameSession session;
+  final int focusWorld;
+  final bool playing;
+  final ValueChanged<int>? onChooseWorld;
+  final VoidCallback? onReadLightroad;
 
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
     final colors = GameTheme.colorsOf(context);
-    final expansions = session.worlds.values.toList()
-      ..sort((a, b) => a.number.compareTo(b.number));
-    // 달빛 숲과 확장 세계 모두 현재 판 리비전의 진행 기록을 집계한다.
-    final worlds = <_JourneyWorldProgress>[
+    final overall = session.overall;
+    final saga = session.saga;
+    final expansions = session.worlds.keys.toList()..sort();
+    final worlds = <_WorldProgress>[
       (
         number: 1,
         title:
-            session.saga?.world(1).title.inLocale(t.localeName) ??
-            t.journeyFirstWorld,
+            saga?.world(1).title.inLocale(t.localeName) ?? t.journeyFirstWorld,
         cleared: session.completedCount,
         total: session.levels.length,
         stars: session.totalStars,
         unlocked: true,
       ),
       for (final world in expansions)
-        if (session.worldAtlas(world.number) case final atlas?)
+        if (session.worldAtlas(world) case final atlas?)
           (
-            number: world.number,
-            title: world.info.title.inLocale(t.localeName),
+            number: world,
+            title: session.world(world)!.info.title.inLocale(t.localeName),
             cleared: atlas.cleared,
-            total: world.levels.length,
+            total: atlas.stages.length,
             stars: atlas.stages.fold(0, (sum, stage) => sum + stage.stars),
-            unlocked: session.worldUnlocked(world.number),
+            unlocked: session.worldUnlocked(world),
           ),
     ];
-    final total = worlds.fold(0, (sum, world) => sum + world.total);
-    final cleared = worlds.fold(0, (sum, world) => sum + world.cleared);
-    final stars = worlds.fold(0, (sum, world) => sum + world.stars);
-    Widget stat(IconData icon, String label, Color color) => Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: .1),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: GameTypography.label.copyWith(color: color),
-            ),
-          ],
-        ),
-      ),
-    );
-    return ListView(
+    final finished = worlds
+        .where((world) => world.cleared == world.total)
+        .length;
+    final statsStyle = GameTypography.label.copyWith(fontSize: 14);
+    return SingleChildScrollView(
       key: const PageStorageKey('journey-status-list'),
       primary: false,
-      padding: const EdgeInsets.all(16),
-      children: [
-        PlayerLevelCard(session: session),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            stat(
-              Icons.flag_rounded,
-              t.journeyCleared(cleared, total),
-              colors.goalInk,
-            ),
-            const SizedBox(width: 8),
-            stat(
-              Icons.star_rounded,
-              t.journeyStarCount(stars, total * 3),
-              colors.rewardInk,
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            stat(
-              Icons.pets_rounded,
-              t.journeyFriends(
-                session.collection.owned.length,
-                session.story.released.length,
-              ),
-              colors.echoInk,
-            ),
-            const SizedBox(width: 8),
-            stat(
-              Icons.local_fire_department_rounded,
-              t.journeyStreak(session.daily.streak),
-              colors.primaryInk,
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Text(
-          t.journeyWorldProgress,
-          style: GameTypography.reward.copyWith(
-            fontSize: 19,
-            color: colors.rewardInk,
-          ),
-        ),
-        for (final world in worlds) ...[
-          const SizedBox(height: 8),
-          _WorldProgressCard(world: world),
-        ],
-      ],
-    );
-  }
-}
-
-class _WorldProgressCard extends StatelessWidget {
-  const _WorldProgressCard({required this.world});
-  final _JourneyWorldProgress world;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context)!;
-    final colors = GameTheme.colorsOf(context);
-    final (status, statusColor) = !world.unlocked
-        ? (t.journeyWorldLocked, colors.secondaryText)
-        : world.cleared == world.total
-        ? (t.journeyWorldComplete, colors.goalInk)
-        : (t.journeyWorldActive, colors.echoInk);
-    final cleared = t.journeyCleared(world.cleared, world.total);
-    return ArcadeSurface(
-      key: ValueKey('journey-world-${world.number}'),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(
-            width: double.infinity,
-            child: Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 8,
-              runSpacing: 4,
-              children: [
-                Text(
-                  t.journeyWorldName(world.number, world.title),
-                  style: GameTypography.label.copyWith(
-                    fontSize: 16,
-                    color: colors.text,
-                  ),
-                ),
-                Text(
-                  status,
-                  style: GameTypography.label.copyWith(
-                    fontSize: 13,
-                    color: statusColor,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 6),
-          Wrap(
-            spacing: 14,
-            runSpacing: 4,
+          Row(
             children: [
-              Text(
-                cleared,
-                style: GameTypography.label.copyWith(color: colors.goalInk),
+              Expanded(
+                child: Text(
+                  WorldText.sagaMap.resolve(t.localeName),
+                  style: GameTypography.reward.copyWith(fontSize: 22),
+                ),
               ),
-              Text(
-                t.journeyStarCount(world.stars, world.total * 3),
-                style: GameTypography.label.copyWith(color: colors.rewardInk),
+              Flexible(
+                child: Text(
+                  t.journeyWorldsCleared(finished, worlds.length),
+                  textAlign: TextAlign.end,
+                  style: statsStyle.copyWith(color: colors.goalInk),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              minHeight: 7,
-              value: world.cleared / world.total,
-              color: colors.goal,
-              backgroundColor: colors.outline.withValues(alpha: .25),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// 별자리 탭의 한 쪽. 세계 1 장과 확장 세계 장을 같은 모양으로 넘겨 본다.
-class _SkyPage {
-  const _SkyPage({
-    required this.name,
-    required this.status,
-    required this.art,
-    required this.chips,
-  });
-  final String name, status;
-  final Widget art;
-  final List<_LevelChip> chips;
-}
-
-class _ConstellationTab extends StatefulWidget {
-  const _ConstellationTab({required this.session, this.allWorlds = false});
-  final GameSession session;
-  final bool allWorlds;
-
-  @override
-  State<_ConstellationTab> createState() => _ConstellationTabState();
-}
-
-class _ConstellationTabState extends State<_ConstellationTab>
-    with AutomaticKeepAliveClientMixin<_ConstellationTab> {
-  late final List<ChapterConstellation> _chapters;
-  late final List<WorldChapterView> _worldChapters;
-  late final PageController _pages;
-  late int _page;
-
-  @override
-  void initState() {
-    super.initState();
-    final session = widget.session;
-    _chapters = ConstellationAtlas.derive(
-      session.levels,
-      session.progress,
-    ).chapters;
-    _worldChapters = [
-      if (widget.allWorlds)
-        for (final world in session.openWorlds)
-          ...?session.worldAtlas(world)?.chapters,
-    ];
-    _page = math.max(0, _chapters.indexWhere((chapter) => !chapter.complete));
-    // 홈에서 열면 지금 진행 중인 세계의 장부터 보여 준다.
-    final target = widget.allWorlds ? session.continueTarget : null;
-    if (target != null && target.world > 1) {
-      final id = target.levelId;
-      final index = _worldChapters.indexWhere(
-        (chapter) => id == null
-            ? Worlds.worldOf(chapter.stages.first.level.id) == target.world
-            : chapter.stages.any((stage) => stage.level.id == id),
-      );
-      if (index >= 0) _page = _chapters.length + index;
-    }
-    _pages = PageController(initialPage: _page);
-  }
-
-  @override
-  bool get wantKeepAlive => true;
-
-  @override
-  void dispose() {
-    _pages.dispose();
-    super.dispose();
-  }
-
-  _SkyPage _pageAt(BuildContext context, int index) {
-    final t = AppLocalizations.of(context)!;
-    if (index < _chapters.length) {
-      final chapter = _chapters[index];
-      return _SkyPage(
-        name: chapter.definition.name(t),
-        status: constellationStatus(t, chapter),
-        art: ConstellationArt(
-          chapter: chapter,
-          guardianAsset: guardianAssetFor(widget.session, chapter),
-        ),
-        chips: [
-          for (final level in chapter.levels)
-            _LevelChip(
-              id: level.id,
-              stars: chapter.bestStars[level.id] ?? 0,
-              lit: chapter.isLit(level.id),
-            ),
-        ],
-      );
-    }
-    final chapter = _worldChapters[index - _chapters.length];
-    final lang = t.localeName;
-    final world = Worlds.worldOf(chapter.stages.first.level.id);
-    final title = widget.session.saga?.world(world).title.inLocale(lang);
-    final status = worldChapterStatus(t, chapter);
-    return _SkyPage(
-      name: chapter.chapter.constellation.inLocale(lang),
-      status: title == null ? status : '$title · $status',
-      art: Semantics(
-        label: chapter.chapter.constellation.inLocale(lang),
-        value: '${chapter.cleared} / ${chapter.stages.length}',
-        child: CustomPaint(
-          size: Size.infinite,
-          painter: ConstellationPainter(
-            definition: chapter.definition,
-            lit: chapter.lit,
-            colors: GameTheme.colorsOf(context),
-            golden: chapter.golden ? 1 : 0,
-          ),
-        ),
-      ),
-      chips: [
-        for (final stage in chapter.stages)
-          _LevelChip(
-            id: stage.level.id,
-            number: Worlds.stageNumber(stage.level.id),
-            stars: stage.stars,
-            lit: stage.cleared,
-            enabled: stage.unlocked,
-          ),
-      ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    final count = _chapters.length + _worldChapters.length;
-    if (count == 0) return const SizedBox.shrink();
-    final t = AppLocalizations.of(context)!;
-    final colors = GameTheme.colorsOf(context);
-    Widget label(String text, TextStyle style) => FittedBox(
-      fit: BoxFit.scaleDown,
-      child: Text(text, maxLines: 1, style: style),
-    );
-    return Column(
-      children: [
-        Expanded(
-          child: PageView.builder(
-            key: const ValueKey('journey-constellation-pages'),
-            controller: _pages,
-            scrollDirection: Axis.vertical,
-            allowImplicitScrolling: true,
-            itemCount: count,
-            onPageChanged: (page) => setState(() => _page = page),
-            itemBuilder: (context, index) {
-              final page = _pageAt(context, index);
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                child: Column(
-                  children: [
-                    label(
-                      page.name,
-                      GameTypography.reward.copyWith(
-                        color: colors.rewardInk,
-                        fontSize: 22,
-                      ),
-                    ),
-                    label(
-                      page.status,
-                      GameTypography.body.copyWith(
-                        color: colors.secondaryText,
-                        fontSize: 14,
-                      ),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: page.art,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        for (final (slot, chip) in page.chips.indexed) ...[
-                          if (slot > 0) const SizedBox(width: 6),
-                          Expanded(child: chip),
-                        ],
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-        if (count > 1)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                '${_page + 1} / $count · ${t.journeyPageHint}',
-                key: const ValueKey('journey-constellation-page-count'),
-                maxLines: 1,
-                style: GameTypography.label.copyWith(
-                  fontSize: 12,
-                  color: colors.secondaryText,
+          Stack(
+            children: [
+              PositionedDirectional(
+                start: 23,
+                top: 24,
+                bottom: 24,
+                child: Container(
+                  width: 1,
+                  color: colors.goal.withValues(alpha: .34),
                 ),
               ),
-            ),
+              Column(
+                children: [
+                  for (final world in worlds)
+                    _WorldRow(
+                      world: world,
+                      focus: world.number == focusWorld,
+                      playing: playing,
+                      onTap: world.unlocked && onChooseWorld != null
+                          ? () => onChooseWorld!(world.number)
+                          : null,
+                    ),
+                ],
+              ),
+            ],
           ),
-      ],
+          const SizedBox(height: 14),
+          Text(t.journeyProgressSummary, style: GameTypography.label),
+          const SizedBox(height: 4),
+          Divider(color: colors.outline.withValues(alpha: .35)),
+          Wrap(
+            spacing: 12,
+            runSpacing: 4,
+            children: [
+              Text(
+                t.journeyCleared(overall.cleared, overall.total),
+                style: statsStyle.copyWith(color: colors.goalInk),
+              ),
+              Text(
+                t.journeyStarCount(overall.stars, overall.total * 3),
+                style: statsStyle.copyWith(color: colors.rewardInk),
+              ),
+              Text(
+                t.journeySpiritCount(overall.friends, overall.friendTotal),
+                style: statsStyle.copyWith(color: colors.echoInk),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          PlayerLevelCard(session: session),
+          if (session.daily.streak > 0)
+            Text(t.journeyStreak(session.daily.streak)),
+          if (onReadLightroad != null)
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                key: const ValueKey('journey-lightroad-story'),
+                onPressed: onReadLightroad,
+                icon: const Icon(Icons.auto_stories_outlined, size: 18),
+                label: Text(t.journeyLightroadStory),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
 
-class _LevelChip extends StatelessWidget {
-  const _LevelChip({
-    required this.id,
-    required this.stars,
-    required this.lit,
-    this.number,
-    this.enabled = true,
+class _WorldRow extends StatelessWidget {
+  const _WorldRow({
+    required this.world,
+    required this.focus,
+    required this.playing,
+    this.onTap,
   });
-  final int id, stars;
-  final bool lit;
 
-  /// 칩에 적을 번호. 확장 세계는 세계 안에서 센 번호(1..25)를 쓴다.
-  final int? number;
-
-  /// 아직 잠긴 판은 누를 수 없다.
-  final bool enabled;
+  final _WorldProgress world;
+  final bool focus, playing;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     final colors = GameTheme.colorsOf(context);
-    final textScaler = MediaQuery.textScalerOf(context);
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+      side: focus
+          ? BorderSide(color: colors.reward.withValues(alpha: .4))
+          : BorderSide.none,
+    );
     return Material(
-      color: lit ? colors.reward.withValues(alpha: .14) : colors.background,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(
-          color: lit
-              ? colors.reward.withValues(alpha: .6)
-              : colors.outline.withValues(alpha: .4),
-        ),
-      ),
+      color: focus ? colors.reward.withValues(alpha: .1) : Colors.transparent,
+      shape: shape,
       child: InkWell(
-        key: ValueKey('journey-play-$id'),
-        borderRadius: BorderRadius.circular(14),
-        onTap: enabled ? () => Navigator.pop(context, id) : null,
-        child: SizedBox(
-          height: math.max(54.0, textScaler.scale(36) + 12),
+        key: ValueKey('journey-world-${world.number}'),
+        customBorder: shape,
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 49),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-            child: Column(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            child: Row(
               children: [
+                Container(
+                  width: 27,
+                  height: 27,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: focus ? colors.reward : colors.surface,
+                    border: Border.all(
+                      color: world.unlocked ? colors.goal : colors.outline,
+                      width: .8,
+                    ),
+                  ),
+                  child: world.unlocked
+                      ? FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            '${world.number}',
+                            style: GameTypography.label.copyWith(
+                              color: focus
+                                  ? colors.blockSymbol
+                                  : colors.goalInk,
+                            ),
+                          ),
+                        )
+                      : Icon(
+                          Icons.lock_outline_rounded,
+                          size: 14,
+                          color: colors.secondaryText,
+                        ),
+                ),
+                const SizedBox(width: 9),
                 Expanded(
                   flex: 3,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(world.title, style: GameTypography.label),
+                      Text(
+                        world.unlocked
+                            ? '${t.journeyCleared(world.cleared, world.total)} · '
+                                  '${t.journeyStarCount(world.stars, world.total * 3)}'
+                            : t.journeyWorldLocked,
+                        style: TextStyle(
+                          color: colors.secondaryText,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (focus)
+                  Flexible(
                     child: Text(
-                      '${number ?? id}',
-                      style: GameTypography.reward.copyWith(
-                        fontSize: 18,
-                        color: colors.text,
+                      playing ? t.journeyPlayingWorld : t.journeyContinueWorld,
+                      textAlign: TextAlign.end,
+                      style: GameTypography.label.copyWith(
+                        color: colors.rewardInk,
+                        fontSize: 12,
                       ),
                     ),
+                  )
+                else if (onTap != null)
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 18,
+                    color: colors.secondaryText,
                   ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      '${'★' * stars}${'☆' * (3 - stars)}',
-                      style: TextStyle(fontSize: 11, color: colors.rewardInk),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -645,157 +496,6 @@ class _LevelChip extends StatelessWidget {
   }
 }
 
-class _CompanionTab extends StatelessWidget {
-  const _CompanionTab({required this.session, required this.onChanged});
-  final GameSession session;
-  final VoidCallback onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context)!;
-    final colors = GameTheme.colorsOf(context);
-    final spirits = session.story.released;
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
-          child: Text(
-            t.journeyCompanionCollection(
-              session.collection.owned.length,
-              spirits.length,
-            ),
-            style: GameTypography.label.copyWith(color: colors.rewardInk),
-          ),
-        ),
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, area) {
-              const padding = EdgeInsets.fromLTRB(12, 6, 12, 16);
-              const spacing = 8.0;
-              final width = (area.maxWidth - padding.horizontal - spacing) / 2;
-              final textScaler = MediaQuery.textScalerOf(context);
-              final extraTextHeight = math.max(0.0, textScaler.scale(48) - 48);
-              return GridView.builder(
-                key: const PageStorageKey('journey-companion-grid'),
-                primary: false,
-                padding: padding,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: spacing,
-                  mainAxisSpacing: spacing,
-                  mainAxisExtent: math.max(160.0, width) + extraTextHeight,
-                ),
-                itemCount: spirits.length,
-                itemBuilder: (context, index) => _CompanionCard(
-                  key: ValueKey('journey-companion-${spirits[index].id}'),
-                  session: session,
-                  spirit: spirits[index],
-                  onChanged: onChanged,
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _CompanionCard extends StatelessWidget {
-  const _CompanionCard({
-    super.key,
-    required this.session,
-    required this.spirit,
-    required this.onChanged,
-  });
-  final GameSession session;
-  final SpiritDefinition spirit;
-  final VoidCallback onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context)!;
-    final colors = GameTheme.colorsOf(context);
-    final owned = session.collection.owns(spirit.id);
-    final equipped = session.collection.companion?.id == spirit.id;
-    final textScaler = MediaQuery.textScalerOf(context);
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: equipped
-            ? colors.goal.withValues(alpha: .14)
-            : colors.background.withValues(alpha: .5),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: equipped ? colors.goal : colors.outline.withValues(alpha: .3),
-          width: equipped ? 2 : 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, area) => SpiritPortrait(
-                spirit: spirit,
-                size: area.biggest.shortestSide,
-                hidden: !owned,
-              ),
-            ),
-          ),
-          Text(
-            owned ? spirit.name.inLocale(t.localeName) : '???',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: GameTypography.body.copyWith(
-              fontSize: 14,
-              color: colors.text,
-            ),
-          ),
-          if (owned)
-            Text(
-              t.bondLevel(session.progression.bondLevel(spirit.id)),
-              style: GameTypography.label.copyWith(
-                fontSize: 11.5,
-                color: colors.echoInk,
-              ),
-            ),
-          SizedBox(
-            height: math.max(44.0, textScaler.scale(16) + 12),
-            child: !owned
-                ? null
-                : equipped
-                ? Center(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        t.companionEquipped,
-                        style: GameTypography.label.copyWith(
-                          fontSize: 12,
-                          color: colors.goalInk,
-                        ),
-                      ),
-                    ),
-                  )
-                : TextButton(
-                    key: ValueKey('journey-equip-${spirit.id}'),
-                    style: TextButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                    ),
-                    onPressed: () async {
-                      await session.collection.equip(spirit.id);
-                      onChanged();
-                    },
-                    child: FittedBox(child: Text(t.companionEquip)),
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// 별지기 레벨·경험치·별가루·칭호 한 줄 카드. 홈과 여정 현황에서 쓴다.
 class PlayerLevelCard extends StatelessWidget {
   const PlayerLevelCard({super.key, required this.session});
   final GameSession session;
@@ -833,6 +533,7 @@ class PlayerLevelCard extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Expanded(
+            flex: 3,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -860,11 +561,13 @@ class PlayerLevelCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          Icon(Icons.auto_awesome, size: 16, color: colors.rewardInk),
-          const SizedBox(width: 3),
-          Text(
-            '${progression.stardust}',
-            style: GameTypography.label.copyWith(color: colors.rewardInk),
+          Flexible(
+            flex: 2,
+            child: Text(
+              t.stardustCount(progression.stardust),
+              textAlign: TextAlign.end,
+              style: GameTypography.label.copyWith(color: colors.rewardInk),
+            ),
           ),
         ],
       ),
@@ -916,9 +619,11 @@ class _RewardsTab extends StatelessWidget {
     Iterable<Widget> achievementSection(
       String id,
       String title,
-      Iterable<Achievement> items,
-    ) sync* {
+      Iterable<Achievement> items, {
+      Widget? summary,
+    }) sync* {
       yield heading(id, title);
+      if (summary != null) yield summary;
       for (final achievement in items) {
         yield _AchievementRow(
           achievement: achievement,
@@ -1012,6 +717,7 @@ class _RewardsTab extends StatelessWidget {
                 achievement.kind == AchievementKind.worldGolden ||
                 achievement.kind == AchievementKind.goldenConstellations,
           ),
+          summary: GoldenConstellationBenefit(session: session),
         ),
         ...achievementSection(
           'starflowers',

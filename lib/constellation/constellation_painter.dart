@@ -23,6 +23,7 @@ class ConstellationPainter extends CustomPainter {
     this.silhouette,
     this.silhouetteOpacity = 0,
     this.guides = true,
+    this.chart = false,
   });
 
   final ConstellationDefinition definition;
@@ -45,11 +46,16 @@ class ConstellationPainter extends CustomPainter {
   final ui.Image? silhouette;
   final double silhouetteOpacity;
   final bool guides;
+  final bool chart;
 
   bool _isLit(int index) => index < lit.length && lit[index];
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (chart) {
+      _paintChart(canvas, size);
+      return;
+    }
     final extent = math.min(size.width, size.height);
     final radius = (extent * .045).clamp(3.0, 9.0);
     final area = (Offset.zero & size).deflate(radius * 2.4);
@@ -168,6 +174,69 @@ class ConstellationPainter extends CustomPainter {
     }
   }
 
+  /// 여정의 작은 천체도는 별의 원래 비율을 보존해 얇은 선으로 그린다.
+  void _paintChart(Canvas canvas, Size size) {
+    final extent = size.shortestSide * .92;
+    final center = size.center(Offset.zero);
+    final area = Rect.fromCenter(center: center, width: extent, height: extent);
+    Offset point(Offset node) =>
+        area.topLeft + Offset(node.dx * area.width, node.dy * area.height);
+    final points = definition.nodes.map(point).toList();
+    final paint = Paint();
+    final light = Color.lerp(colors.primary, colors.highlight, .4)!;
+    final glow = Color.lerp(light, colors.reward, golden)!;
+    for (var i = 0; i < 48; i++) {
+      final x = ((i * 73 + 31) % 103) * size.width / 103;
+      final y = ((i * 37 + 53) % 89) * size.height / 89;
+      canvas.drawCircle(
+        Offset(x, y),
+        i % 7 == 0 ? .8 : .45,
+        paint..color = light.withValues(alpha: i % 7 == 0 ? .35 : .17),
+      );
+    }
+    paint
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = colors.outline.withValues(alpha: .22);
+    canvas.drawOval(
+      Rect.fromCenter(center: center, width: extent * 1.28, height: extent),
+      paint,
+    );
+    for (final (a, b) in definition.edges) {
+      final lit = _isLit(a) && _isLit(b);
+      canvas.drawLine(
+        points[a],
+        points[b],
+        paint..color = glow.withValues(alpha: lit ? .78 : .18),
+      );
+    }
+    for (final (index, star) in points.indexed) {
+      final selected = index == highlightNode;
+      final lit = _isLit(index);
+      if (lit) {
+        final color = selected ? colors.reward : glow;
+        final radius = selected ? 12.0 : 8.0;
+        paint
+          ..style = PaintingStyle.fill
+          ..shader = ui.Gradient.radial(star, radius, [
+            color.withValues(alpha: .52),
+            color.withValues(alpha: 0),
+          ]);
+        canvas.drawCircle(star, radius, paint);
+        paint
+          ..shader = null
+          ..color = Color.lerp(color, colors.highlight, .5)!;
+        canvas.drawCircle(star, selected ? 2.9 : 2.1, paint);
+      }
+      if (selected || !lit) {
+        paint
+          ..style = PaintingStyle.stroke
+          ..color = selected ? colors.rewardInk : colors.outline;
+        canvas.drawCircle(star, selected ? 5.5 : 2.6, paint);
+      }
+    }
+  }
+
   void _dashedRing(Canvas canvas, Offset center, double radius, Color color) {
     final paint = Paint()
       ..color = color
@@ -206,7 +275,8 @@ class ConstellationPainter extends CustomPainter {
       old.lineReveal != lineReveal ||
       old.silhouette != silhouette ||
       old.silhouetteOpacity != silhouetteOpacity ||
-      old.guides != guides;
+      old.guides != guides ||
+      old.chart != chart;
 
   static bool _sameMask(List<bool> a, List<bool> b) {
     if (a.length != b.length) return false;

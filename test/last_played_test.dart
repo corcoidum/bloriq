@@ -9,9 +9,6 @@ import 'support/saga_seed.dart';
 import 'support/start_game.dart';
 import 'support/world_release.dart';
 
-Finder _inPlay(String text) =>
-    find.descendant(of: releaseKey('home-play'), matching: find.text(text));
-
 void main() {
   setUp(rootBundle.clear);
 
@@ -43,7 +40,7 @@ void main() {
   ) async {
     seedSaga(throughWorld: 5, extra: 12, lastPlayed: 515);
     await openReleaseApp(tester);
-    expect(_inPlay('이어가기 · 꿈의 서고 등대 15'), findsOneWidget);
+    expect(find.text('꿈의 서고 등대 · 스테이지 15'), findsOneWidget);
     await tapVisible(tester, releaseKey('home-play'));
     await waitForReleaseWidget(tester, releaseBoard);
     expect(releaseGame(tester).controller.state.level.id, 515);
@@ -58,7 +55,7 @@ void main() {
       seedSaga(throughWorld: 5, extra: 12, lastPlayed: last);
       await openReleaseApp(tester);
       expect(
-        _inPlay('이어가기 · 꿈의 서고 등대 13'),
+        find.text('꿈의 서고 등대 · 스테이지 13'),
         findsOneWidget,
         reason: 'last played $last',
       );
@@ -77,7 +74,7 @@ void main() {
     expect(releaseGame(tester).controller.state.level.id, 514);
     await tapVisible(tester, releaseKey('game-home'));
     await waitForHome(tester);
-    expect(_inPlay('이어가기 · 꿈의 서고 등대 14'), findsOneWidget);
+    expect(find.text('꿈의 서고 등대 · 스테이지 14'), findsOneWidget);
     expect((await LastPlayedRepository.load()).levelId, 514);
     await closeReleaseApp(tester);
   });

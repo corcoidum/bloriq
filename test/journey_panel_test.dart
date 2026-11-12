@@ -1,41 +1,27 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:bloriq/app/journey_panel.dart';
-import 'package:bloriq/design/game_theme.dart';
 import 'package:bloriq/design/keep_all_text.dart';
-import 'package:bloriq/design/star_art.dart';
-import 'package:bloriq/domain/puzzle.dart';
-import 'package:bloriq/l10n/app_localizations.dart';
 import 'package:bloriq/progression/progression_repository.dart';
 import 'package:bloriq/progression/progression_rules.dart';
-import 'package:bloriq/settings/game_settings.dart';
-import 'package:bloriq/story/story_catalog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'support/saga_seed.dart';
 import 'support/start_game.dart';
-import 'support/story_session.dart';
 import 'support/world_release.dart';
 
 const _capture = bool.fromEnvironment('CAPTURE_JOURNEY');
 
 final _status = find.byKey(const PageStorageKey('journey-status-list'));
-final _pages = releaseKey('journey-constellation-pages');
-final _pageCount = releaseKey('journey-constellation-page-count');
-final _companions = find.byKey(const PageStorageKey('journey-companion-grid'));
+final _stars = find.byKey(const PageStorageKey('journey-constellation-list'));
+final _companions = releaseKey('journey-companion-list');
 final _rewards = find.byKey(const PageStorageKey('journey-rewards-list'));
 final _lastReward = releaseKey('journey-title-${titles.last.id}');
 
-List<Level> _campaign() =>
-    (jsonDecode(File('assets/levels/levels.json').readAsStringSync()) as List)
-        .cast<Map<String, dynamic>>()
-        .map(Level.fromJson)
-        .toList();
-
-Finder _tab(String label) => find.widgetWithText(Tab, label);
+Finder _tab(String name) => releaseKey('journey-tab-$name');
 
 Future<void> _reveal(WidgetTester tester, Finder list, Finder item) async {
   await tester.scrollUntilVisible(
@@ -48,235 +34,238 @@ Future<void> _reveal(WidgetTester tester, Finder list, Finder item) async {
   expect(item.hitTestable(), findsOneWidget);
 }
 
-Future<void> _openJourney(WidgetTester tester) async {
-  final backfill = releaseKey('dismiss-backfill');
-  if (backfill.evaluate().isNotEmpty) await tapVisible(tester, backfill);
-  await tapVisible(tester, releaseKey('home-journey'));
-  await tester.pumpAndSettle();
-}
-
-void _expectStageRow(WidgetTester tester, int firstId) {
-  final first = tester.getRect(
-    releaseKey('journey-play-$firstId').hitTestable(),
-  );
-  expect(first.width, greaterThanOrEqualTo(47.9));
-  expect(first.height, greaterThanOrEqualTo(48));
-  var last = first;
-  for (var id = firstId + 1; id < firstId + 5; id++) {
-    final next = tester.getRect(releaseKey('journey-play-$id').hitTestable());
-    expect(next.top, closeTo(first.top, .01));
-    expect(next.height, closeTo(first.height, .01));
-    expect(next.width, closeTo(first.width, .01));
-    expect(next.left, greaterThan(last.right));
-    last = next;
-  }
-}
-
 Future<void> _captureJourney(
   WidgetTester tester,
-  GlobalKey key,
+  GlobalKey boundary,
   String name,
 ) async {
   if (!_capture) return;
   await tester.pumpAndSettle();
   await captureReleaseScreen(
     tester,
-    key,
-    'docs/screenshots/journey-ui/$name.png',
+    boundary,
+    'docs/screenshots/journey-redesign/$name.png',
   );
 }
 
 void main() {
   setUp(rootBundle.clear);
 
-  testWidgets(
-    'journey separates tab swipes from vertical content and keeps positions',
-    (tester) async {
-      final cleared = [..._campaign(), releaseLevels(2).first];
-      seedCampaign({1, 2, 3, 4, 5}, cleared: cleared);
+  testWidgets('home and play use all worlds and preserve the active board', (
+    tester,
+  ) async {
+    seedSaga(throughWorld: 7, stars: {623: 2, 624: 2, 625: 2});
+    if (_capture) {
       final prefs = await SharedPreferences.getInstance();
-      final progression = jsonDecode(
+      final growth = jsonDecode(
         prefs.getString(ProgressionRepository.storageKey)!,
       ) as Map<String, dynamic>;
-      progression['stardust'] = 650;
-      progression['rewardedStars'] = {
-        for (final level in cleared) '${level.id}:${level.revision}': 3,
-      };
+      growth['xp'] = [
+        for (var level = 1; level < 33; level++) xpToNextLevel(level),
+      ].fold(0, (sum, xp) => sum + xp);
+      growth['stardust'] = 12742;
       await prefs.setString(
         ProgressionRepository.storageKey,
-        jsonEncode(progression),
+        jsonEncode(growth),
       );
-      final boundary = await openReleaseApp(tester, captureArt: _capture);
-      if (_capture) {
-        await tester.runAsync(() async {
-          await StarArt.loadPortrait(StarArt.lunabel);
-          final story = await StoryCatalog.load();
-          final context = tester.element(find.byType(MaterialApp));
-          for (final spirit in story.released.take(6)) {
-            await precacheImage(
-              ResizeImage(AssetImage(spirit.asset!), width: 384),
-              context,
-            );
-          }
-        });
-      }
-      await _openJourney(tester);
-
-      final world1 = releaseKey('journey-world-1');
-      final world2 = releaseKey('journey-world-2');
-      final world7 = releaseKey('journey-world-7');
-      expect(find.text('26 / 175 스테이지'), findsOneWidget);
-      expect(find.text('별 78 / 525'), findsOneWidget);
-      expect(
-        find.descendant(of: world1, matching: find.text('완료')),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(of: world2, matching: find.text('진행 중')),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(of: world2, matching: find.text('별 3 / 75')),
-        findsOneWidget,
-      );
-      await _captureJourney(tester, boundary, 'journey-status');
-      await _reveal(tester, _status, world7);
-      expect(
-        find.descendant(of: world7, matching: find.text('잠김')),
-        findsOneWidget,
-      );
-      await _captureJourney(tester, boundary, 'journey-status-later-worlds');
-
-      await tester.fling(_status, const Offset(-250, 0), 800);
-      await tester.pumpAndSettle();
-      // 홈에서 열면 진행 중인 세계 2의 첫 장(6번째 쪽)에서 시작한다.
-      // 세계 1의 5장 뒤에 세계 2의 5장이 이어진다.
-      expect(tester.widget<Text>(_pageCount).data, startsWith('6 / 10'));
-      for (var back = 0; back < 5; back++) {
-        final swipe = tester.getSize(_pages).height * .6;
-        await tester.fling(_pages, Offset(0, swipe), 800);
-        await tester.pumpAndSettle();
-      }
-      for (var chapter = 1; chapter <= 5; chapter++) {
-        expect(
-          tester.widget<Text>(_pageCount).data,
-          startsWith('$chapter / 10'),
-        );
-        _expectStageRow(tester, 1 + (chapter - 1) * 5);
-        if (chapter == 1) {
-          await _captureJourney(tester, boundary, 'journey-constellations');
+    }
+    final boundary = await openReleaseApp(tester, captureArt: _capture);
+    final backfill = releaseKey('dismiss-backfill');
+    if (backfill.evaluate().isNotEmpty) await tapVisible(tester, backfill);
+    if (_capture) {
+      final context = tester.element(find.byKey(const ValueKey('home-screen')));
+      await tester.runAsync(() async {
+        for (var stage = 1; stage <= 5; stage++) {
+          await precacheImage(
+            ResizeImage(
+              AssetImage('assets/art/world7/spirits/s7-0$stage.png'),
+              width: 512,
+            ),
+            context,
+          );
         }
-        if (chapter < 5) {
-          final swipe = tester.getSize(_pages).height * .6;
-          await tester.fling(_pages, Offset(0, -swipe), 800);
-          await tester.pumpAndSettle();
-        }
-      }
+      });
+    }
+    expect(find.text('첫 별 · 스테이지 23'), findsOneWidget);
+    await _captureJourney(tester, boundary, 'home');
 
-      await tapVisible(tester, _tab('동료'));
-      expect(find.text('수집 25 / 25'), findsOneWidget);
-      final first = releaseKey('journey-companion-s1-01');
-      final second = releaseKey('journey-companion-s1-02');
-      final last = releaseKey('journey-companion-s1-25');
-      expect(tester.getTopLeft(first).dy, tester.getTopLeft(second).dy);
-      expect(last, findsNothing);
-      await _captureJourney(tester, boundary, 'journey-companions');
-      await _reveal(tester, _companions, last);
-      await tapVisible(tester, releaseKey('journey-equip-s1-25'));
-      expect(
-        find.descendant(of: last, matching: find.text('함께 여행 중')),
-        findsOneWidget,
-      );
+    await openHomeJourney(tester);
+    expect(find.text('빛길 지도'), findsOneWidget);
+    expect(find.text('175 / 175 스테이지'), findsOneWidget);
+    expect(find.text('별 522 / 525'), findsOneWidget);
+    expect(find.text('정령 175 / 175'), findsOneWidget);
+    expect(find.text('이어서 할 곳'), findsOneWidget);
+    await _captureJourney(tester, boundary, 'status');
 
-      await tapVisible(tester, _tab('보상'));
-      await _reveal(tester, _rewards, releaseKey('journey-rewards-stars'));
-      final a = releaseKey('achievement-w1-stars-75');
-      final b = releaseKey('achievement-w2-stars-25');
-      final aCount = find.descendant(of: a, matching: find.text('75 / 75'));
-      final bCount = find.descendant(of: b, matching: find.text('3 / 25'));
-      expect(
-        tester.getRect(aCount).right,
-        closeTo(tester.getRect(bCount).right, .01),
+    await tester.fling(_status, const Offset(-250, 0), 800);
+    await tester.pumpAndSettle();
+    expect(find.text('별자리 복원 35 / 35'), findsOneWidget);
+    expect(find.text('첫별자리'), findsOneWidget);
+    expect(find.text('복원 완료 · 별 12 / 15'), findsOneWidget);
+    for (var stage = 621; stage <= 625; stage++) {
+      final size = tester.getSize(
+        releaseKey('journey-stage-$stage').hitTestable(),
       );
-      final longReward = find.descendant(
-        of: a,
-        matching: find.byType(KeepAllText),
-      );
-      expect(
-        tester.getRect(longReward).bottom,
-        lessThan(tester.getRect(b).top),
-      );
-      await _captureJourney(tester, boundary, 'journey-rewards');
+      expect(size.width, greaterThanOrEqualTo(44));
+      expect(size.height, greaterThanOrEqualTo(44));
+    }
+    await _captureJourney(tester, boundary, 'constellations');
 
-      final item = trailShop.first;
-      final buy = releaseKey('shop-buy-${item.trailId}');
-      await _reveal(tester, _rewards, buy);
-      await tapVisible(tester, buy);
-      expect(buy, findsNothing);
-      await _reveal(tester, _rewards, _lastReward);
+    await tapVisible(tester, _tab('companions'));
+    expect(find.text('전체 수집 175 / 175'), findsOneWidget);
+    expect(find.text('이 세계 25 / 25'), findsOneWidget);
+    expect(releaseKey('spirit-s7-01').hitTestable(), findsOneWidget);
+    await _captureJourney(tester, boundary, 'companions');
+    await tapVisible(tester, releaseKey('spirit-s7-01'));
+    expect(releaseKey('spirit-detail-s7-01'), findsOneWidget);
+    await tapVisible(tester, find.text('닫기').last);
+    await tapVisible(tester, releaseKey('journey-close'));
 
-      await tapVisible(tester, _tab('현황'));
-      expect(world7.hitTestable(), findsOneWidget);
-      await tapVisible(tester, _tab('동료'));
-      expect(last.hitTestable(), findsOneWidget);
-      await tapVisible(tester, _tab('보상'));
-      expect(_lastReward.hitTestable(), findsOneWidget);
-      await tapVisible(tester, _tab('별자리'));
-      _expectStageRow(tester, 21);
-      await tapVisible(tester, releaseKey('journey-play-25'));
-      await waitForReleaseWidget(tester, releaseBoard);
-      expect(releaseGame(tester).controller.state.level.id, 25);
-      await closeReleaseApp(tester);
-    },
-  );
+    await tapVisible(tester, releaseKey('home-play'));
+    await waitForReleaseWidget(tester, releaseBoard);
+    final controller = releaseGame(tester).controller;
+    expect(controller.state.level.id, 623);
+    expect(controller.apply(controller.state.level.solution.first), isTrue);
+    expect(controller.canUndo, isTrue);
+
+    await tapVisible(tester, releaseKey('game-journey'));
+    expect(find.text('플레이 중'), findsOneWidget);
+    await tapVisible(tester, _tab('constellations'));
+    expect(find.text('별자리 복원 35 / 35'), findsOneWidget);
+    expect(find.text('첫별자리'), findsOneWidget);
+    expect(find.text('23 다시 도전'), findsOneWidget);
+    await tapVisible(tester, _tab('companions'));
+    expect(find.text('전체 수집 175 / 175'), findsOneWidget);
+    await tapVisible(tester, releaseKey('journey-close'));
+    expect(releaseGame(tester).controller, same(controller));
+    expect(controller.state.moves, 1);
+
+    await tapVisible(tester, releaseKey('game-journey'));
+    await tapVisible(tester, _tab('constellations'));
+    await chooseJourneyWorld(
+      tester,
+      releaseKey('journey-constellation-world'),
+      2,
+    );
+    await tapVisible(tester, releaseKey('journey-play-stage'));
+    expect(find.text('다른 스테이지로 이동할까요?'), findsOneWidget);
+    await tapVisible(tester, find.text('계속 플레이'));
+    expect(releaseGame(tester).controller, same(controller));
+    expect(controller.state.moves, 1);
+    expect(controller.canUndo, isTrue);
+
+    await tapVisible(tester, releaseKey('game-journey'));
+    await tapVisible(tester, releaseKey('journey-world-2'));
+    await tapVisible(tester, releaseKey('world-continue'));
+    expect(find.textContaining('구름바다 등대 · 스테이지 1'), findsOneWidget);
+    await tapVisible(tester, releaseKey('journey-switch-confirm'));
+    await tester.pump(const Duration(milliseconds: 500));
+    await waitForReleaseWidget(tester, releaseBoard);
+    expect(releaseGame(tester).controller.state.level.id, 101);
+    expect(releaseGame(tester).controller.state.moves, 0);
+    await tapVisible(tester, releaseKey('game-home'));
+    await waitForHome(tester);
+    await closeReleaseApp(tester);
+  });
+
+  testWidgets('journey preserves equipment and reward flows across its tabs', (
+    tester,
+  ) async {
+    seedSaga(throughWorld: 1, extra: 1);
+    final prefs = await SharedPreferences.getInstance();
+    final progression = jsonDecode(
+      prefs.getString(ProgressionRepository.storageKey)!,
+    ) as Map<String, dynamic>;
+    final levels = (jsonDecode(
+      File('assets/levels/levels.json').readAsStringSync(),
+    ) as List).cast<Map<String, dynamic>>();
+    progression['stardust'] = 650;
+    progression['rewardedStars'] = {
+      for (final level in levels) '${level['id']}:${level['revision']}': 3,
+      '101:${releaseLevels(2).first.revision}': 3,
+    };
+    await prefs.setString(
+      ProgressionRepository.storageKey,
+      jsonEncode(progression),
+    );
+    await openReleaseApp(tester);
+    await openHomeJourney(tester);
+    expect(find.text('26 / 175 스테이지'), findsOneWidget);
+    expect(find.text('별 78 / 525'), findsOneWidget);
+    expect(find.text('정령 26 / 175'), findsOneWidget);
+    final world7 = releaseKey('journey-world-7');
+    await _reveal(tester, _status, world7);
+    expect(tester.widget<InkWell>(world7).onTap, isNull);
+
+    await tapVisible(tester, _tab('companions'));
+    await chooseJourneyWorld(tester, releaseKey('journey-companion-world'), 1);
+    await _reveal(tester, _companions, releaseKey('album-chapter-5'));
+    await tapVisible(tester, releaseKey('album-chapter-5'));
+    final last = releaseKey('spirit-s1-25');
+    await _reveal(tester, _companions, last);
+    await tapVisible(tester, last);
+    await tapVisible(tester, releaseKey('equip-companion'));
+    expect(
+      tester.widget<FilledButton>(releaseKey('equip-companion')).onPressed,
+      isNull,
+    );
+    await tapVisible(tester, find.text('닫기').last);
+
+    await tapVisible(tester, _tab('rewards'));
+    await _reveal(tester, _rewards, releaseKey('journey-rewards-stars'));
+    final a = releaseKey('achievement-w1-stars-75');
+    final b = releaseKey('achievement-w2-stars-25');
+    final aCount = find.descendant(of: a, matching: find.text('75 / 75'));
+    final bCount = find.descendant(of: b, matching: find.text('3 / 25'));
+    expect(
+      tester.getRect(aCount).right,
+      closeTo(tester.getRect(bCount).right, .01),
+    );
+    final longReward = find.descendant(
+      of: a,
+      matching: find.byType(KeepAllText),
+    );
+    expect(tester.getRect(longReward).bottom, lessThan(tester.getRect(b).top));
+    final buy = releaseKey('shop-buy-${trailShop.first.trailId}');
+    await _reveal(tester, _rewards, buy);
+    await tapVisible(tester, buy);
+    expect(buy, findsNothing);
+    await _reveal(tester, _rewards, _lastReward);
+
+    await tapVisible(tester, _tab('companions'));
+    expect(last.hitTestable(), findsOneWidget);
+    await tapVisible(tester, _tab('rewards'));
+    expect(_lastReward.hitTestable(), findsOneWidget);
+    await closeReleaseApp(tester);
+  });
 
   for (final language in ['ko', 'en']) {
-    testWidgets(
-      '320px with 200% text keeps $language journey content reachable',
-      (tester) async {
-        seedCampaign({1}, cleared: _campaign().take(5));
-        final session = await loadStorySession(tester);
-        final settings = GameSettings(reduceMotion: true);
-        addTearDown(settings.dispose);
-        tester.view.physicalSize = const Size(320, 568);
-        tester.view.devicePixelRatio = 1;
-        addTearDown(tester.view.reset);
-        tester.platformDispatcher.textScaleFactorTestValue = 2;
-        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: GameTheme.dark,
-            locale: Locale(language),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Builder(
-              builder: (context) => Scaffold(
-                body: TextButton(
-                  onPressed: () => showJourneyPanel(context, session, settings),
-                  child: const Text('OPEN'),
-                ),
-              ),
-            ),
-          ),
-        );
-        await tapVisible(tester, find.text('OPEN'));
-        await _reveal(tester, _status, releaseKey('journey-world-7'));
-
-        await tapVisible(tester, _tab(language == 'ko' ? '별자리' : 'Stars'));
-        expect(tester.widget<Text>(_pageCount).data, startsWith('2 / 5'));
-        _expectStageRow(tester, 6);
-        await tapVisible(tester, _tab(language == 'ko' ? '동료' : 'Friends'));
-        await _reveal(
-          tester,
-          _companions,
-          releaseKey('journey-companion-s1-25'),
-        );
-        await tapVisible(tester, _tab(language == 'ko' ? '보상' : 'Rewards'));
-        await _reveal(tester, _rewards, releaseKey('achievement-w1-stars-75'));
-        await _reveal(tester, _rewards, _lastReward);
-        await closeReleaseApp(tester);
-        await disposeStorySession(tester, session);
-      },
-    );
+    testWidgets('320px with 200% text keeps $language journey reachable', (
+      tester,
+    ) async {
+      seedSaga(throughWorld: 0);
+      await openReleaseApp(tester, locale: Locale(language));
+      tester.view.physicalSize = const Size(320, 568);
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await tester.pump();
+      await openHomeJourney(tester);
+      await _reveal(tester, _status, releaseKey('journey-world-7'));
+      await tapVisible(tester, _tab('constellations'));
+      await _reveal(tester, _stars, releaseKey('journey-stage-5'));
+      expect(
+        tester.getSize(releaseKey('journey-stage-5')).width,
+        greaterThanOrEqualTo(44),
+      );
+      await _reveal(tester, _stars, releaseKey('journey-play-stage'));
+      await tapVisible(tester, _tab('companions'));
+      await _reveal(tester, _companions, releaseKey('album-chapter-5'));
+      await tapVisible(tester, releaseKey('album-chapter-5'));
+      await _reveal(tester, _companions, releaseKey('spirit-s1-25'));
+      await tapVisible(tester, _tab('rewards'));
+      await _reveal(tester, _rewards, releaseKey('achievement-w1-stars-75'));
+      await _reveal(tester, _rewards, _lastReward);
+      await closeReleaseApp(tester);
+    });
   }
 }

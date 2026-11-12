@@ -98,10 +98,20 @@ void main() {
     final backfill = releaseKey('dismiss-backfill');
     if (backfill.evaluate().isNotEmpty) await tapVisible(tester, backfill);
 
-    await tapVisible(tester, releaseKey('home-atlas'));
+    await openHomeJourney(tester, tab: 'constellations');
+    await tapVisible(tester, releaseKey('journey-chapter-1'));
+    expect(find.textContaining('별 15 / 15'), findsOneWidget);
+    await tapVisible(tester, releaseKey('journey-tab-rewards'));
+    final benefit = releaseKey('atlas-golden-benefit');
+    await tester.scrollUntilVisible(
+      benefit,
+      240,
+      scrollable: find.descendant(
+        of: find.byKey(const PageStorageKey('journey-rewards-list')),
+        matching: find.byType(Scrollable),
+      ),
+    );
     expect(find.text('유료 별빛 길 할인 · 별가루 2'), findsOneWidget);
-    await tapVisible(tester, releaseKey('atlas-chapter-1'));
-    expect(find.textContaining('최고 별 15/15'), findsOneWidget);
     if (capture) {
       await captureReleaseScreen(
         tester,
@@ -109,9 +119,7 @@ void main() {
         'docs/screenshots/economy/ko-golden-starlight-discount.png',
       );
     }
-    await tapVisible(tester, find.text('닫기').last);
-
-    await tapVisible(tester, releaseKey('home-album'));
+    await tapVisible(tester, releaseKey('journey-tab-companions'));
     await tapVisible(tester, releaseKey('spirit-s1-01'));
     expect(find.text('동행 혜택 · 유대 Lv 3'), findsOneWidget);
     if (capture) {
@@ -123,9 +131,8 @@ void main() {
       );
     }
     await tapVisible(tester, find.text('닫기').last);
-    await tapVisible(tester, find.byTooltip('닫기'));
 
-    await tapVisible(tester, releaseKey('home-levels'));
+    await openCampaignMap(tester);
     await selectOpenLevel(tester, 6);
     await waitForReleaseWidget(tester, _board);
     expect(

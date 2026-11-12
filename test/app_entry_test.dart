@@ -168,12 +168,14 @@ void main() {
         }
         await tester.pumpWidget(BloriqApp(loadLevels: () async => levels));
         await waitForHome(tester);
+        await openHomeJourney(tester);
         // 전체 수는 주입한 2판에 확장 세계 150판을 더한 값이다.
+        expect(find.text('${completed.length} / 152 stages'), findsOneWidget);
         expect(
-          find.text('${completed.length} / 152 completed'),
+          find.text('Stars ${completed.length * 3} / 456'),
           findsOneWidget,
         );
-        expect(find.text('${completed.length * 3} stars'), findsOneWidget);
+        await tapVisible(tester, find.byKey(const ValueKey('journey-close')));
         await _play(tester);
         final expectedId = completed.contains(1) && !completed.contains(2)
             ? 2
@@ -192,9 +194,11 @@ void main() {
     await _move(tester, 1, 1, 1, 0);
     await tapVisible(tester, find.byKey(const ValueKey('game-home')));
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('1 / 175 completed'), findsOneWidget);
-    expect(find.text('3 stars'), findsOneWidget);
-    expect(find.text('Continue · Gate 2'), findsOneWidget);
+    expect(find.text('Moonlit Forest Garden · Stage 2'), findsOneWidget);
+    await openHomeJourney(tester);
+    expect(find.text('1 / 175 stages'), findsOneWidget);
+    expect(find.text('Stars 3 / 525'), findsOneWidget);
+    await tapVisible(tester, find.byKey(const ValueKey('journey-close')));
     await _play(tester);
     expect(_game(tester).controller.state.level.id, 2);
     await tester.pumpWidget(const SizedBox());
@@ -314,7 +318,7 @@ void main() {
   ) async {
     await tester.pumpWidget(const BloriqApp());
     await waitForHome(tester);
-    await tapVisible(tester, find.byKey(const ValueKey('home-levels')));
+    await openCampaignMap(tester);
     await selectOpenLevel(tester, 25);
     expect(_game(tester).controller.state.level.id, 25);
     await tester.pumpWidget(const SizedBox());
@@ -344,7 +348,7 @@ void main() {
             await tester.pumpWidget(BloriqApp(settings: settings));
             await waitForHome(tester);
             expect(tester.takeException(), isNull);
-            await tapVisible(tester, find.byKey(const ValueKey('home-levels')));
+            await openCampaignMap(tester);
             expect(tester.takeException(), isNull);
             await selectOpenLevel(tester, 25);
             expect(tester.takeException(), isNull);

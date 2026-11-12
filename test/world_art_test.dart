@@ -137,12 +137,12 @@ void main() {
       },
     );
 
-    testWidgets('world $world shows ordinary spirits in the home album', (
+    testWidgets('world $world shows ordinary spirits in the journey album', (
       tester,
     ) async {
       seedSaga(throughWorld: world - 1, extra: Worlds.stagesPerChapter - 1);
       final boundary = await openReleaseApp(tester, captureArt: _capture);
-      await tapVisible(tester, releaseKey('home-album'));
+      await openHomeJourney(tester, tab: 'companions');
       final first = releaseKey('spirit-s$world-01');
       await waitForReleaseWidget(tester, first);
       final portraits = [

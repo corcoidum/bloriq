@@ -48,7 +48,10 @@ void main() {
     await enterReleaseWorld(tester, 2);
     expect(_entry, findsNothing);
     expect(releaseKey('golden-trials-7'), findsNothing);
-    await tester.drag(find.byType(PageView), const Offset(300, 0));
+    await tester.drag(
+      find.descendant(of: releaseWorldMap(2), matching: find.byType(PageView)),
+      const Offset(300, 0),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 450));
     final golden = releaseKey('golden-trials-6');
