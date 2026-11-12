@@ -8,7 +8,7 @@ import 'endless_rules.dart';
 
 /// 최단 수를 보존하며 판을 돌리거나 뒤집는다.
 /// [symmetry] 0..7: 비트 2는 좌우 뒤집기, 아래 두 비트는 90° 회전 수.
-Level transformLevel(Level level, int symmetry) {
+Level transformLevel(Level level, int symmetry, {bool withoutPowers = false}) {
   if (symmetry < 0 || symmetry > 7) {
     throw ArgumentError.value(symmetry, 'symmetry');
   }
@@ -16,7 +16,13 @@ Level transformLevel(Level level, int symmetry) {
       symmetry >= 4 &&
       level.mechanics.values.every((mechanic) => mechanic.reflectionSymmetric);
   final turns = symmetry % 4;
-  if (turns == 0 && !mirror) return level;
+  if (turns == 0 && !mirror && !withoutPowers) return level;
+  final minimum = !withoutPowers || level.world == 1
+      ? level.minimumMoves
+      : level.bareHandedMoves;
+  if (minimum == null) {
+    throw ArgumentError('Level ${level.id} requires powers');
+  }
   final width = level.boardWidth, height = level.boardHeight;
 
   Position point(Position p) {
@@ -55,21 +61,22 @@ Level transformLevel(Level level, int symmetry) {
     exitPosition: point(level.exitPosition),
     blocks: [for (final b in level.blocks) b.at(point(b.position))],
     obstacles: [for (final o in level.obstacles) point(o)],
-    minimumMoves: level.minimumMoves,
+    minimumMoves: minimum,
     difficulty: level.difficulty,
     mechanics: [
       for (final mechanic in level.mechanics.values)
         mechanic.reorient(point, direction),
     ],
     solution: [
-      for (final move in level.solution)
-        PuzzleMove(move.blockId, point(move.target), power: move.power),
+      if (!withoutPowers || level.solution.every((move) => move.power == null))
+        for (final move in level.solution)
+          PuzzleMove(move.blockId, point(move.target), power: move.power),
     ],
     world: level.world,
     bareHandedMoves: level.bareHandedMoves,
-    requiredPowers: level.requiredPowers,
-    featuredPower: level.featuredPower,
-    availablePowers: level.availablePowers,
+    requiredPowers: withoutPowers ? const {} : level.requiredPowers,
+    featuredPower: withoutPowers ? null : level.featuredPower,
+    availablePowers: withoutPowers ? const {} : level.availablePowers,
   );
 }
 

@@ -199,7 +199,7 @@ abstract final class TrailIds {
 
 const defaultTrailId = TrailIds.moonlight;
 
-const trails = <TrailDefinition>[
+const _baseTrails = <TrailDefinition>[
   TrailDefinition(TrailIds.moonlight, ProgressionText('달빛', 'Moonlight')),
   TrailDefinition(TrailIds.petal, ProgressionText('꽃잎', 'Petal')),
   TrailDefinition(TrailIds.firefly, ProgressionText('반딧불', 'Firefly')),
@@ -275,7 +275,7 @@ class TitleDefinition {
   final ProgressionText name;
 }
 
-const titles = <TitleDefinition>[
+const _baseTitles = <TitleDefinition>[
   TitleDefinition(
     'crescent_apprentice',
     ProgressionText('초승달 견습생', 'Crescent Apprentice'),
@@ -351,6 +351,80 @@ const titles = <TitleDefinition>[
     ProgressionText('끝없는 항해자', 'Endless Voyager'),
   ),
 ];
+
+class TrialReward {
+  const TrialReward(this.trail, this.title);
+  final TrailDefinition trail;
+  final TitleDefinition title;
+}
+
+const trialRewards = <int, TrialReward>{
+  1: TrialReward(
+    TrailDefinition(
+      'trial_forest',
+      ProgressionText('숲의 달빛', 'Forest Moonlight'),
+    ),
+    TitleDefinition(
+      'trial_forest_keeper',
+      ProgressionText('달빛 숲의 시련지기', 'Forest Trial Keeper'),
+    ),
+  ),
+  2: TrialReward(
+    TrailDefinition('trial_cloud', ProgressionText('여명의 구름', 'Dawn Cloud')),
+    TitleDefinition(
+      'trial_cloud_keeper',
+      ProgressionText('구름바다의 시련지기', 'Cloud Sea Trial Keeper'),
+    ),
+  ),
+  3: TrialReward(
+    TrailDefinition('trial_lake', ProgressionText('푸른 물비늘', 'Blue Ripple')),
+    TitleDefinition(
+      'trial_lake_keeper',
+      ProgressionText('거울 호수의 시련지기', 'Mirror Lake Trial Keeper'),
+    ),
+  ),
+  4: TrialReward(
+    TrailDefinition('trial_clock', ProgressionText('호박빛 진자', 'Amber Pendulum')),
+    TitleDefinition(
+      'trial_clock_keeper',
+      ProgressionText('시계탑의 시련지기', 'Clocktower Trial Keeper'),
+    ),
+  ),
+  5: TrialReward(
+    TrailDefinition('trial_ice', ProgressionText('새벽 서리', 'Morning Frost')),
+    TitleDefinition(
+      'trial_ice_keeper',
+      ProgressionText('얼음 동굴의 시련지기', 'Ice Cave Trial Keeper'),
+    ),
+  ),
+  6: TrialReward(
+    TrailDefinition('trial_library', ProgressionText('자줏빛 잉크', 'Violet Ink')),
+    TitleDefinition(
+      'trial_library_keeper',
+      ProgressionText('꿈의 서고의 시련지기', 'Dream Library Trial Keeper'),
+    ),
+  ),
+  7: TrialReward(
+    TrailDefinition(
+      'trial_star',
+      ProgressionText('새벽 별빛', 'Daybreak Starlight'),
+    ),
+    TitleDefinition(
+      'trial_star_keeper',
+      ProgressionText('첫 별의 시련지기', 'First Star Trial Keeper'),
+    ),
+  ),
+};
+
+final trails = List<TrailDefinition>.unmodifiable([
+  ..._baseTrails,
+  for (final reward in trialRewards.values) reward.trail,
+]);
+
+final titles = List<TitleDefinition>.unmodifiable([
+  ..._baseTitles,
+  for (final reward in trialRewards.values) reward.title,
+]);
 
 TitleDefinition? titleById(String? id) {
   for (final title in titles) {

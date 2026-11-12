@@ -4,6 +4,7 @@ import '../design/arcade_components.dart';
 import '../design/game_theme.dart';
 import '../l10n/app_localizations.dart';
 import '../settings/game_settings.dart';
+import '../trials/trial_screen.dart';
 import 'game_session.dart';
 import '../progress/chapter_progress.dart';
 import '../story/companion_view.dart';
@@ -13,18 +14,29 @@ Future<int?> showLevelPicker(
   GameSession session,
   GameSettings settings, {
   int? currentLevelId,
+  TrialGameBuilder? buildTrialGame,
 }) => showDialog<int>(
   context: context,
   animationStyle: prefersReducedMotion(context, settings)
       ? AnimationStyle.noAnimation
       : null,
-  builder: (_) => LevelPicker(session: session, currentLevelId: currentLevelId),
+  builder: (_) => LevelPicker(
+    session: session,
+    currentLevelId: currentLevelId,
+    buildTrialGame: buildTrialGame,
+  ),
 );
 
 class LevelPicker extends StatelessWidget {
-  const LevelPicker({super.key, required this.session, this.currentLevelId});
+  const LevelPicker({
+    super.key,
+    required this.session,
+    this.currentLevelId,
+    this.buildTrialGame,
+  });
   final GameSession session;
   final int? currentLevelId;
+  final TrialGameBuilder? buildTrialGame;
 
   Widget _tile(BuildContext context, int index) {
     final t = AppLocalizations.of(context)!;
@@ -164,6 +176,7 @@ class LevelPicker extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
     final colors = GameTheme.colorsOf(context);
+    final trialGame = buildTrialGame;
     return AlertDialog(
       icon: Icon(Icons.route_rounded, color: colors.rewardInk),
       title: Text(t.journeyMap),
@@ -206,6 +219,22 @@ class LevelPicker extends StatelessWidget {
                             color: colors.goal,
                             backgroundColor: colors.goal.withValues(alpha: .12),
                           ),
+                          if (trialGame != null &&
+                              session.canPlayTrials(1, chapter: chapter.number))
+                            OutlinedButton.icon(
+                              key: ValueKey('golden-trials-${chapter.number}'),
+                              onPressed: () => showTrials(
+                                context,
+                                session,
+                                1,
+                                trialGame,
+                                chapter: chapter.number,
+                              ),
+                              icon: const Icon(
+                                Icons.workspace_premium_outlined,
+                              ),
+                              label: Text(t.goldenTrials),
+                            ),
                         ],
                       ),
                     ),
@@ -226,6 +255,13 @@ class LevelPicker extends StatelessWidget {
         ),
       ),
       actions: [
+        if (trialGame != null && session.canPlayTrials(1))
+          TextButton.icon(
+            key: const ValueKey('world-trials'),
+            onPressed: () => showTrials(context, session, 1, trialGame),
+            icon: const Icon(Icons.flag_outlined),
+            label: Text(t.trials),
+          ),
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(t.close),

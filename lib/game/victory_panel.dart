@@ -20,10 +20,12 @@ class VictoryPanel extends StatelessWidget {
     this.discovery,
     this.constellation,
     this.reward,
+    this.heading,
   });
 
   final double progress;
-  final int stars;
+  final int? stars;
+  final String? heading;
   final bool isNewBest;
   final bool reduceMotion;
   final VoidCallback onSkip;
@@ -100,13 +102,14 @@ class VictoryPanel extends StatelessWidget {
     GameColors colors,
     double panel,
   ) {
+    final stars = this.stars;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Semantics(
           liveRegion: true,
           child: Text(
-            t.complete,
+            heading ?? t.complete,
             textAlign: TextAlign.center,
             style: GameTypography.reward.copyWith(
               color: colors.goalInk,
@@ -115,49 +118,50 @@ class VictoryPanel extends StatelessWidget {
           ),
         ),
         const SizedBox(height: GameSpacing.small),
-        Semantics(
-          label: t.starsLabel(stars),
-          excludeSemantics: true,
-          child: SizedBox(
-            height: math.max(52, MediaQuery.textScalerOf(context).scale(44)),
-            child: progress >= 1 || reduceMotion
-                ? Center(
-                    child: Text(
-                      '${'★' * stars}${'☆' * (3 - stars)}',
-                      style: GameTypography.reward.copyWith(
-                        color: colors.rewardInk,
-                        fontSize: 40,
-                        height: 1.1,
-                      ),
-                    ),
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(3, (index) {
-                      final reveal = ((progress - (.42 + index * .14)) / .12)
-                          .clamp(0.0, 1.0);
-                      final earned = index < stars;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Transform.scale(
-                          scale: earned
-                              ? .8 + .2 * Curves.easeOutBack.transform(reveal)
-                              : 1,
-                          child: Icon(
-                            earned && reveal > 0
-                                ? Icons.star_rounded
-                                : Icons.star_outline_rounded,
-                            size: 46,
-                            color: earned && reveal > 0
-                                ? colors.reward
-                                : colors.outline,
-                          ),
+        if (stars != null)
+          Semantics(
+            label: t.starsLabel(stars),
+            excludeSemantics: true,
+            child: SizedBox(
+              height: math.max(52, MediaQuery.textScalerOf(context).scale(44)),
+              child: progress >= 1 || reduceMotion
+                  ? Center(
+                      child: Text(
+                        '${'★' * stars}${'☆' * (3 - stars)}',
+                        style: GameTypography.reward.copyWith(
+                          color: colors.rewardInk,
+                          fontSize: 40,
+                          height: 1.1,
                         ),
-                      );
-                    }),
-                  ),
+                      ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(3, (index) {
+                        final reveal = ((progress - (.42 + index * .14)) / .12)
+                            .clamp(0.0, 1.0);
+                        final earned = index < stars;
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Transform.scale(
+                            scale: earned
+                                ? .8 + .2 * Curves.easeOutBack.transform(reveal)
+                                : 1,
+                            child: Icon(
+                              earned && reveal > 0
+                                  ? Icons.star_rounded
+                                  : Icons.star_outline_rounded,
+                              size: 46,
+                              color: earned && reveal > 0
+                                  ? colors.reward
+                                  : colors.outline,
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+            ),
           ),
-        ),
         if (progress < 1 && !reduceMotion)
           TextButton.icon(
             key: const ValueKey('skip-celebration'),

@@ -206,6 +206,13 @@ class BloriqGame extends FlameGame {
     'gold_forest': Color(0xffffcf4a),
     'gold_cloud': Color(0xffffe08a),
     'gold_mirror': Color(0xfff0b84a),
+    'trial_forest': Color(0xffacdab7),
+    'trial_cloud': Color(0xfff4b7d2),
+    'trial_lake': Color(0xff55e3e4),
+    'trial_clock': Color(0xffffa951),
+    'trial_ice': Color(0xffb4e2ff),
+    'trial_library': Color(0xffceabff),
+    'trial_star': Color(0xffffe7bc),
   };
 
   static const firstStarlightColors = [

@@ -323,5 +323,22 @@
   "resultBest": "최고 기록",
   "resultFewest": "최소 이동",
   "watchReplayShort": "리플레이",
-  "moreActions": "더 보기"
+  "moreActions": "더 보기",
+  "echoTrials": "Echo의 시련",
+  "trials": "시련",
+  "goldenTrials": "황금 시련",
+  "trialNumber": "시련 {number}",
+  "trialSource": "스테이지 {number} · 최소 {moves}수",
+  "trialMoveLimit": "{limit}수 이내",
+  "trialMoveCounter": "이동 {moves} / {limit}",
+  "trialNoUndo": "되돌리기 금지",
+  "trialNoPowers": "권능 금지",
+  "trialLimitReached": "이동 한도 도달 · 되돌리거나 다시 시작하세요",
+  "trialNoRouteWithinLimit": "남은 이동 수 안에 풀 수 없어요. 되돌리거나 다시 시작하세요.",
+  "trialRestartNeeded": "움직일 수 없어요. 다시 시작해 보세요.",
+  "trialProgress": "시련 {cleared} / {total} 완료",
+  "trialClear": "시련을 깼어요!",
+  "trialRewardGoal": "시련 10판을 깨면 이 세계의 칭호와 이동 잔영을 받아요.",
+  "trialRewardUnlocked": "세계 시련 보상을 얻었어요",
+  "trialReturn": "시련 목록으로"
 }

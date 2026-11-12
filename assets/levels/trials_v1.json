@@ -1,0 +1,496 @@
+{
+  "version": 1,
+  "seed": 936241,
+  "trials": [
+    {
+      "sourceId": 5,
+      "sourceRevision": 2,
+      "symmetry": 1,
+      "condition": "moveLimit",
+      "minimumMoves": 6
+    },
+    {
+      "sourceId": 1,
+      "sourceRevision": 1,
+      "symmetry": 7,
+      "condition": "noUndo",
+      "minimumMoves": 2
+    },
+    {
+      "sourceId": 9,
+      "sourceRevision": 1,
+      "symmetry": 3,
+      "condition": "moveLimit",
+      "minimumMoves": 7
+    },
+    {
+      "sourceId": 7,
+      "sourceRevision": 1,
+      "symmetry": 6,
+      "condition": "noUndo",
+      "minimumMoves": 7
+    },
+    {
+      "sourceId": 14,
+      "sourceRevision": 1,
+      "symmetry": 5,
+      "condition": "moveLimit",
+      "minimumMoves": 8
+    },
+    {
+      "sourceId": 11,
+      "sourceRevision": 1,
+      "symmetry": 5,
+      "condition": "noUndo",
+      "minimumMoves": 7
+    },
+    {
+      "sourceId": 19,
+      "sourceRevision": 1,
+      "symmetry": 5,
+      "condition": "noUndo",
+      "minimumMoves": 10
+    },
+    {
+      "sourceId": 17,
+      "sourceRevision": 1,
+      "symmetry": 4,
+      "condition": "moveLimit",
+      "minimumMoves": 10
+    },
+    {
+      "sourceId": 21,
+      "sourceRevision": 1,
+      "symmetry": 3,
+      "condition": "noUndo",
+      "minimumMoves": 12
+    },
+    {
+      "sourceId": 22,
+      "sourceRevision": 1,
+      "symmetry": 3,
+      "condition": "moveLimit",
+      "minimumMoves": 13
+    },
+    {
+      "sourceId": 104,
+      "sourceRevision": 1,
+      "symmetry": 6,
+      "condition": "noUndo",
+      "minimumMoves": 12
+    },
+    {
+      "sourceId": 103,
+      "sourceRevision": 1,
+      "symmetry": 4,
+      "condition": "moveLimit",
+      "minimumMoves": 11
+    },
+    {
+      "sourceId": 108,
+      "sourceRevision": 1,
+      "symmetry": 3,
+      "condition": "noUndo",
+      "minimumMoves": 13
+    },
+    {
+      "sourceId": 109,
+      "sourceRevision": 1,
+      "symmetry": 4,
+      "condition": "moveLimit",
+      "minimumMoves": 13
+    },
+    {
+      "sourceId": 114,
+      "sourceRevision": 1,
+      "symmetry": 4,
+      "condition": "noPowers",
+      "minimumMoves": 17
+    },
+    {
+      "sourceId": 112,
+      "sourceRevision": 1,
+      "symmetry": 1,
+      "condition": "noUndo",
+      "minimumMoves": 15
+    },
+    {
+      "sourceId": 117,
+      "sourceRevision": 1,
+      "symmetry": 5,
+      "condition": "noPowers",
+      "minimumMoves": 15
+    },
+    {
+      "sourceId": 119,
+      "sourceRevision": 1,
+      "symmetry": 5,
+      "condition": "moveLimit",
+      "minimumMoves": 17
+    },
+    {
+      "sourceId": 124,
+      "sourceRevision": 1,
+      "symmetry": 1,
+      "condition": "noPowers",
+      "minimumMoves": 20
+    },
+    {
+      "sourceId": 122,
+      "sourceRevision": 1,
+      "symmetry": 3,
+      "condition": "noUndo",
+      "minimumMoves": 14
+    },
+    {
+      "sourceId": 205,
+      "sourceRevision": 1,
+      "symmetry": 1,
+      "condition": "moveLimit",
+      "minimumMoves": 14
+    },
+    {
+      "sourceId": 203,
+      "sourceRevision": 1,
+      "symmetry": 6,
+      "condition": "noUndo",
+      "minimumMoves": 11
+    },
+    {
+      "sourceId": 208,
+      "sourceRevision": 1,
+      "symmetry": 5,
+      "condition": "noUndo",
+      "minimumMoves": 12
+    },
+    {
+      "sourceId": 209,
+      "sourceRevision": 1,
+      "symmetry": 1,
+      "condition": "moveLimit",
+      "minimumMoves": 13
+    },
+    {
+      "sourceId": 215,
+      "sourceRevision": 1,
+      "symmetry": 6,
+      "condition": "noUndo",
+      "minimumMoves": 16
+    },
+    {
+      "sourceId": 214,
+      "sourceRevision": 1,
+      "symmetry": 4,
+      "condition": "moveLimit",
+      "minimumMoves": 14
+    },
+    {
+      "sourceId": 220,
+      "sourceRevision": 1,
+      "symmetry": 6,
+      "condition": "moveLimit",
+      "minimumMoves": 16
+    },
+    {
+      "sourceId": 217,
+      "sourceRevision": 1,
+      "symmetry": 1,
+      "condition": "noUndo",
+      "minimumMoves": 13
+    },
+    {
+      "sourceId": 222,
+      "sourceRevision": 1,
+      "symmetry": 7,
+      "condition": "noUndo",
+      "minimumMoves": 14
+    },
+    {
+      "sourceId": 224,
+      "sourceRevision": 1,
+      "symmetry": 6,
+      "condition": "moveLimit",
+      "minimumMoves": 16
+    },
+    {
+      "sourceId": 302,
+      "sourceRevision": 1,
+      "symmetry": 2,
+      "condition": "moveLimit",
+      "minimumMoves": 11
+    },
+    {
+      "sourceId": 301,
+      "sourceRevision": 1,
+      "symmetry": 1,
+      "condition": "noUndo",
+      "minimumMoves": 9
+    },
+    {
+      "sourceId": 307,
+      "sourceRevision": 1,
+      "symmetry": 2,
+      "condition": "moveLimit",
+      "minimumMoves": 12
+    },
+    {
+      "sourceId": 308,
+      "sourceRevision": 1,
+      "symmetry": 1,
+      "condition": "noUndo",
+      "minimumMoves": 13
+    },
+    {
+      "sourceId": 311,
+      "sourceRevision": 1,
+      "symmetry": 2,
+      "condition": "noUndo",
+      "minimumMoves": 11
+    },
+    {
+      "sourceId": 312,
+      "sourceRevision": 1,
+      "symmetry": 2,
+      "condition": "moveLimit",
+      "minimumMoves": 13
+    },
+    {
+      "sourceId": 318,
+      "sourceRevision": 1,
+      "symmetry": 1,
+      "condition": "noPowers",
+      "minimumMoves": 27
+    },
+    {
+      "sourceId": 320,
+      "sourceRevision": 1,
+      "symmetry": 3,
+      "condition": "moveLimit",
+      "minimumMoves": 18
+    },
+    {
+      "sourceId": 325,
+      "sourceRevision": 1,
+      "symmetry": 3,
+      "condition": "noUndo",
+      "minimumMoves": 19
+    },
+    {
+      "sourceId": 321,
+      "sourceRevision": 1,
+      "symmetry": 2,
+      "condition": "moveLimit",
+      "minimumMoves": 12
+    },
+    {
+      "sourceId": 402,
+      "sourceRevision": 1,
+      "symmetry": 2,
+      "condition": "moveLimit",
+      "minimumMoves": 11
+    },
+    {
+      "sourceId": 401,
+      "sourceRevision": 1,
+      "symmetry": 3,
+      "condition": "noUndo",
+      "minimumMoves": 9
+    },
+    {
+      "sourceId": 408,
+      "sourceRevision": 1,
+      "symmetry": 4,
+      "condition": "noPowers",
+      "minimumMoves": 15
+    },
+    {
+      "sourceId": 407,
+      "sourceRevision": 1,
+      "symmetry": 6,
+      "condition": "moveLimit",
+      "minimumMoves": 12
+    },
+    {
+      "sourceId": 413,
+      "sourceRevision": 1,
+      "symmetry": 5,
+      "condition": "noUndo",
+      "minimumMoves": 14
+    },
+    {
+      "sourceId": 411,
+      "sourceRevision": 1,
+      "symmetry": 1,
+      "condition": "moveLimit",
+      "minimumMoves": 11
+    },
+    {
+      "sourceId": 420,
+      "sourceRevision": 1,
+      "symmetry": 1,
+      "condition": "noUndo",
+      "minimumMoves": 19
+    },
+    {
+      "sourceId": 419,
+      "sourceRevision": 1,
+      "symmetry": 2,
+      "condition": "moveLimit",
+      "minimumMoves": 17
+    },
+    {
+      "sourceId": 425,
+      "sourceRevision": 1,
+      "symmetry": 6,
+      "condition": "moveLimit",
+      "minimumMoves": 20
+    },
+    {
+      "sourceId": 424,
+      "sourceRevision": 1,
+      "symmetry": 1,
+      "condition": "noUndo",
+      "minimumMoves": 18
+    },
+    {
+      "sourceId": 503,
+      "sourceRevision": 1,
+      "symmetry": 6,
+      "condition": "moveLimit",
+      "minimumMoves": 13
+    },
+    {
+      "sourceId": 505,
+      "sourceRevision": 1,
+      "symmetry": 1,
+      "condition": "noUndo",
+      "minimumMoves": 16
+    },
+    {
+      "sourceId": 509,
+      "sourceRevision": 1,
+      "symmetry": 6,
+      "condition": "noUndo",
+      "minimumMoves": 15
+    },
+    {
+      "sourceId": 508,
+      "sourceRevision": 1,
+      "symmetry": 4,
+      "condition": "moveLimit",
+      "minimumMoves": 14
+    },
+    {
+      "sourceId": 515,
+      "sourceRevision": 1,
+      "symmetry": 5,
+      "condition": "noUndo",
+      "minimumMoves": 18
+    },
+    {
+      "sourceId": 511,
+      "sourceRevision": 1,
+      "symmetry": 6,
+      "condition": "moveLimit",
+      "minimumMoves": 11
+    },
+    {
+      "sourceId": 517,
+      "sourceRevision": 1,
+      "symmetry": 3,
+      "condition": "moveLimit",
+      "minimumMoves": 14
+    },
+    {
+      "sourceId": 518,
+      "sourceRevision": 1,
+      "symmetry": 2,
+      "condition": "noUndo",
+      "minimumMoves": 15
+    },
+    {
+      "sourceId": 522,
+      "sourceRevision": 1,
+      "symmetry": 3,
+      "condition": "moveLimit",
+      "minimumMoves": 15
+    },
+    {
+      "sourceId": 524,
+      "sourceRevision": 1,
+      "symmetry": 3,
+      "condition": "noUndo",
+      "minimumMoves": 18
+    },
+    {
+      "sourceId": 604,
+      "sourceRevision": 1,
+      "symmetry": 4,
+      "condition": "noUndo",
+      "minimumMoves": 15
+    },
+    {
+      "sourceId": 605,
+      "sourceRevision": 1,
+      "symmetry": 7,
+      "condition": "noPowers",
+      "minimumMoves": 18
+    },
+    {
+      "sourceId": 609,
+      "sourceRevision": 1,
+      "symmetry": 3,
+      "condition": "noUndo",
+      "minimumMoves": 17
+    },
+    {
+      "sourceId": 607,
+      "sourceRevision": 1,
+      "symmetry": 1,
+      "condition": "moveLimit",
+      "minimumMoves": 14
+    },
+    {
+      "sourceId": 615,
+      "sourceRevision": 1,
+      "symmetry": 6,
+      "condition": "noUndo",
+      "minimumMoves": 20
+    },
+    {
+      "sourceId": 614,
+      "sourceRevision": 1,
+      "symmetry": 1,
+      "condition": "moveLimit",
+      "minimumMoves": 18
+    },
+    {
+      "sourceId": 618,
+      "sourceRevision": 1,
+      "symmetry": 3,
+      "condition": "noUndo",
+      "minimumMoves": 17
+    },
+    {
+      "sourceId": 617,
+      "sourceRevision": 1,
+      "symmetry": 5,
+      "condition": "moveLimit",
+      "minimumMoves": 15
+    },
+    {
+      "sourceId": 623,
+      "sourceRevision": 1,
+      "symmetry": 2,
+      "condition": "moveLimit",
+      "minimumMoves": 18
+    },
+    {
+      "sourceId": 624,
+      "sourceRevision": 1,
+      "symmetry": 1,
+      "condition": "noUndo",
+      "minimumMoves": 20
+    }
+  ]
+}

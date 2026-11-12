@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../world/world_catalog.dart';
 import 'progression_rules.dart';
 
+enum TrialRewardStatus { granted, alreadyOwned, saveFailed }
+
 /// 레벨 업 한 번과 그때 받은 트랙 보상(20 초과 레벨은 null).
 class LevelUp {
   const LevelUp(this.level, this.reward);
@@ -716,6 +718,24 @@ class ProgressionRepository {
     }
     _title = id;
     return retrySave();
+  }
+
+  /// 시련 기록 저장이 끝난 뒤 부른다. 기존 소유 목록이 중복 지급을 막는다.
+  Future<TrialRewardStatus> awardTrialReward(int world) async {
+    final reward = trialRewards[world];
+    if (reward == null) throw ArgumentError.value(world, 'world');
+    if (!_writable) return TrialRewardStatus.saveFailed;
+    final missing =
+        !_ownedTrails.contains(reward.trail.id) ||
+        !_ownedTitles.contains(reward.title.id);
+    if (!missing) {
+      await flush();
+      if (!saveFailed) return TrialRewardStatus.alreadyOwned;
+    }
+    _apply(TrailUnlock(reward.trail.id), []);
+    _apply(TitleUnlock(reward.title.id), []);
+    if (!await retrySave()) return TrialRewardStatus.saveFailed;
+    return missing ? TrialRewardStatus.granted : TrialRewardStatus.alreadyOwned;
   }
 
   // ---- 내부 -------------------------------------------------------------------
