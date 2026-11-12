@@ -624,5 +624,20 @@
   "endlessMirrorSea": "Mirror Sea",
   "endlessClockSea": "Clock Sea",
   "endlessIceSea": "Ice Sea",
-  "endlessShelfSea": "Library Sea"
+  "endlessShelfSea": "Library Sea",
+  "weeklyTitle": "Weekly Constellation",
+  "weeklyProgress": "{count} / 5 cleared",
+  "@weeklyProgress": {"placeholders": {"count": {"type": "int"}}},
+  "weeklyWeekStarting": "Week of {date}",
+  "@weeklyWeekStarting": {"placeholders": {"date": {"type": "String"}}},
+  "weeklyStage": "Weekly stage {number}",
+  "@weeklyStage": {"placeholders": {"number": {"type": "int"}}},
+  "weeklyComplete": "Weekly constellation complete!",
+  "weeklyReward": "This week's reward",
+  "weeklyRewardEarned": "Weekly reward unlocked",
+  "weeklyRewardTrail": "Move trail · {name}",
+  "@weeklyRewardTrail": {"placeholders": {"name": {"type": "String"}}},
+  "weeklyRewardTitle": "Title · {name}",
+  "@weeklyRewardTitle": {"placeholders": {"name": {"type": "String"}}},
+  "weeklyReturn": "Back to constellation"
 }

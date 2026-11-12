@@ -65,6 +65,7 @@ Future<GlobalKey> openReleaseApp(
   bool reduceMotion = true,
   Locale locale = const Locale('ko'),
   Future<List<Level>> Function()? loadLevels,
+  DateTime Function()? clock,
 }) async {
   tester.view.physicalSize = const Size(360, 740);
   tester.view.devicePixelRatio = 1;
@@ -82,6 +83,7 @@ Future<GlobalKey> openReleaseApp(
         settings: settings,
         firstRunIntro: false,
         loadLevels: loadLevels,
+        clock: clock,
       ),
     ),
   );

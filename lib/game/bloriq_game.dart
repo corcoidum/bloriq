@@ -220,6 +220,12 @@ class BloriqGame extends FlameGame {
     'trial_ice': Color(0xffb4e2ff),
     'trial_library': Color(0xffceabff),
     'trial_star': Color(0xffffe7bc),
+    TrailIds.weeklyMoonlight: Color(0xffd1d2ff),
+    TrailIds.weeklyRipple: Color(0xff68e9dc),
+    TrailIds.weeklyAmber: Color(0xffffb75f),
+    TrailIds.weeklyFrost: Color(0xffa7dfff),
+    TrailIds.weeklyNebula: Color(0xffd9abff),
+    TrailIds.weeklyDaybreak: Color(0xffffb7ca),
   };
 
   static const firstStarlightColors = [

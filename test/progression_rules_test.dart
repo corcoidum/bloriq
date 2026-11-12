@@ -172,7 +172,6 @@ void main() {
       }
       expect(trailUnlocks, [TrailIds.petal, TrailIds.firefly, TrailIds.meteor]);
       expect(trailUnlocks.every((id) => trailById(id) != null), true);
-      // 레벨 트랙, 업적, 항해 이정표와 시련이 모든 칭호를 나눠 준다.
       final achievementTitles = {
         for (final achievement in achievements)
           for (final reward in achievement.rewards)
@@ -188,6 +187,8 @@ void main() {
         ...achievementTitles,
         ...voyageTitles,
         for (final reward in trialRewards.values) reward.title.id,
+        for (final reward in weeklyRewards)
+          if (reward case TitleUnlock(:final titleId)) titleId,
       }, titles.map((t) => t.id).toSet());
       expect(charges, greaterThan(0));
     });
@@ -217,6 +218,12 @@ void main() {
         'frost_bloom',
         'ink_bloom',
         'star_bloom',
+        'weekly_moonlight',
+        'weekly_ripple',
+        'weekly_amber',
+        'weekly_frost',
+        'weekly_nebula',
+        'weekly_daybreak',
         'trial_forest',
         'trial_cloud',
         'trial_lake',
@@ -226,7 +233,7 @@ void main() {
         'trial_star',
       ]);
       expect(defaultTrailId, 'moonlight');
-      expect(titles.length, 34);
+      expect(titles.length, 40);
       for (final text in [
         ...trails.map((t) => t.name),
         ...titles.map((t) => t.name),

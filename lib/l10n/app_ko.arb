@@ -353,5 +353,15 @@
   "endlessMirrorSea": "거울 바다",
   "endlessClockSea": "시계 바다",
   "endlessIceSea": "얼음 바다",
-  "endlessShelfSea": "서고 바다"
+  "endlessShelfSea": "서고 바다",
+  "weeklyTitle": "주간 별자리",
+  "weeklyProgress": "5판 중 {count}판 완료",
+  "weeklyWeekStarting": "{date} 시작",
+  "weeklyStage": "주간 {number}판",
+  "weeklyComplete": "이번 주 별자리를 완성했어요!",
+  "weeklyReward": "이번 주 보상",
+  "weeklyRewardEarned": "주간 보상을 받았어요",
+  "weeklyRewardTrail": "이동 잔영 · {name}",
+  "weeklyRewardTitle": "칭호 · {name}",
+  "weeklyReturn": "주간 별자리로"
 }
