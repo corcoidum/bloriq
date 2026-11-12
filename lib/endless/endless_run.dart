@@ -93,7 +93,11 @@ class VoyageRun {
   void hinted() => hintsSpent += EndlessRules.hintCost;
 
   /// 판을 깼다. 점수와 등불을 정산하고 다음 판으로 넘어간다.
-  BoardResult clear(int minimum, EndlessPool pool) {
+  BoardResult clear(
+    int minimum,
+    EndlessPool pool, {
+    Set<int> completedWorlds = const {},
+  }) {
     final perfect = pushes <= minimum && hintsSpent == 0;
     combo = perfect ? combo + 1 : 0;
     if (perfect) perfects++;
@@ -125,9 +129,28 @@ class VoyageRun {
     depth++;
     pushes = 0;
     hintsSpent = 0;
-    board = pool.pick(seed: seed, depth: depth, used: _used);
-    _used.add(board.id);
+    _pickBoard(pool, completedWorlds);
     return result;
+  }
+
+  /// 저장한 판을 열 수 있을 때는 그 배치를 그대로 이어서 한다.
+  bool replaceUnavailableBoard(
+    EndlessPool pool, {
+    required Set<int> completedWorlds,
+  }) {
+    if (pool.isAvailable(board, completedWorlds)) return false;
+    _pickBoard(pool, completedWorlds);
+    return true;
+  }
+
+  void _pickBoard(EndlessPool pool, Set<int> completedWorlds) {
+    board = pool.pick(
+      seed: seed,
+      depth: depth,
+      used: _used,
+      completedWorlds: completedWorlds,
+    );
+    _used.add(board.id);
   }
 
   Map<String, dynamic> toJson() => {

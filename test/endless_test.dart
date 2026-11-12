@@ -19,6 +19,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
 import 'support/start_game.dart';
+import 'support/world_release.dart'
+    show
+        captureReleaseScreen,
+        closeReleaseApp,
+        openReleaseApp,
+        releaseKey,
+        waitForReleaseWidget;
 
 class _FailingVoyageStore extends InMemorySharedPreferencesStore {
   _FailingVoyageStore(super.data) : super.withData();
@@ -28,8 +35,29 @@ class _FailingVoyageStore extends InMemorySharedPreferencesStore {
       false;
 }
 
-EndlessPool _pool() =>
-    EndlessPool.parse(File(EndlessPool.asset).readAsStringSync());
+EndlessPool _pool({bool includeWorlds = false}) => EndlessPool.parse(
+  File(EndlessPool.asset).readAsStringSync(),
+  worldSource: includeWorlds
+      ? File(EndlessPool.worldAsset).readAsStringSync()
+      : null,
+);
+
+VoyageRun _runAtDepth(
+  EndlessPool pool,
+  int depth, {
+  required int seed,
+  Set<int> completedWorlds = const {},
+}) {
+  final run = VoyageRun.start(pool, seed: seed);
+  while (run.depth < depth) {
+    final minimum = pool.level(run.board)!.minimumMoves;
+    for (var i = 0; i < minimum; i++) {
+      run.pushed();
+    }
+    run.clear(minimum, pool, completedWorlds: completedWorlds);
+  }
+  return run;
+}
 
 List<Level> _campaign() =>
     (jsonDecode(File('assets/levels/levels.json').readAsStringSync()) as List)
@@ -179,6 +207,180 @@ void main() {
       expect((a.id, a.symmetry), (b.id, b.symmetry));
       expect(pool.tiers[2]!.map((l) => l.id), contains(a.id));
     });
+  });
+
+  group('world mechanic seas', () {
+    late final EndlessPool pool;
+    setUpAll(() => pool = _pool(includeWorlds: true));
+
+    test('adds 120 bare-handed boards per mechanic after the v1 IDs', () {
+      expect(
+        File('pubspec.yaml').readAsStringSync(),
+        contains(EndlessPool.worldAsset),
+      );
+      final v1Ids =
+          pool.tiers.values
+              .expand((list) => list)
+              .map((level) => level.id)
+              .toList()
+            ..sort();
+      expect(v1Ids, hasLength(530));
+      expect(pool.length, 1010);
+      final solver = const PuzzleSolver(maxStates: 1000000);
+      for (final sea in MechanicSea.values) {
+        final levels = pool.seas[sea]!;
+        expect(levels, hasLength(120));
+        for (final level in levels) {
+          expect(level.id, greaterThan(v1Ids.last));
+          expect(level.mechanics.keys, contains(sea.mechanic));
+          expect(level.availablePowers, isEmpty);
+          expect(level.minimumMoves, inInclusiveRange(6, 14));
+        }
+        for (var index = 0; index < levels.length; index += 24) {
+          final level = levels[index];
+          for (final symmetry in [0, 1, if (sea != MechanicSea.clock) 7]) {
+            final board = pool.level(VoyageBoard(level.id, symmetry))!;
+            expect(
+              solver.solve(board),
+              hasLength(level.minimumMoves),
+              reason: '${sea.name} ${level.id}, symmetry $symmetry',
+            );
+          }
+        }
+      }
+    });
+
+    test('only completed worlds enter every third slot starting at sea 6', () {
+      final seen = <int>{};
+      final selected = <MechanicSea>{};
+      for (var depth = 1; depth <= 36; depth++) {
+        final mirror = pool.pick(
+          seed: 42,
+          depth: depth,
+          used: {},
+          completedWorlds: {3},
+        );
+        final board = pool.pick(
+          seed: 42,
+          depth: depth,
+          used: seen,
+          completedWorlds: {3, 4},
+        );
+        final sea = pool.seaOf(board.id);
+        expect(
+          board.toJson(),
+          pool
+              .pick(seed: 42, depth: depth, used: seen, completedWorlds: {4, 3})
+              .toJson(),
+        );
+        final slot = depth >= 6 && depth % 3 == 0;
+        expect(pool.seaOf(mirror.id), slot ? MechanicSea.mirror : null);
+        if (slot) {
+          expect(sea, isIn([MechanicSea.mirror, MechanicSea.clock]));
+          selected.add(sea!);
+          if (sea == MechanicSea.clock) expect(board.symmetry, lessThan(4));
+        } else {
+          expect(sea, isNull);
+          expect(
+            board.toJson(),
+            pool.pick(seed: 42, depth: depth, used: seen).toJson(),
+          );
+        }
+        expect(seen.add(board.id), isTrue);
+      }
+      expect(selected, {MechanicSea.mirror, MechanicSea.clock});
+    });
+
+    test(
+      'same seed and eligibility repeat the draw and prefer unused boards',
+      () {
+        final list = pool.seas[MechanicSea.ice]!;
+        final used = {for (final level in list.skip(1)) level.id};
+        final first = pool.pick(
+          seed: 78,
+          depth: 6,
+          used: used,
+          completedWorlds: {5, 7},
+        );
+        final second = pool.pick(
+          seed: 78,
+          depth: 6,
+          used: used,
+          completedWorlds: {7, 5},
+        );
+        expect(first.toJson(), second.toJson());
+        expect(first.id, list.first.id);
+        expect(
+          pool.seaOf(
+            pool
+                .pick(seed: 78, depth: 6, used: {}, completedWorlds: {1, 2, 7})
+                .id,
+          ),
+          isNull,
+        );
+      },
+    );
+
+    test(
+      'a v1 save keeps the exact board and counters even at a new sea slot',
+      () async {
+        final legacy = _pool();
+        final original = _runAtDepth(legacy, 6, seed: 138)
+          ..pushed()
+          ..hinted();
+        final snapshot = original.toJson();
+        await _seed(
+          extra: {
+            EndlessRepository.storageKey: jsonEncode({
+              'version': 1,
+              'run': snapshot,
+            }),
+          },
+        );
+        final restored = (await EndlessRepository.load()).savedRun!;
+        expect(
+          restored.replaceUnavailableBoard(pool, completedWorlds: {3, 4, 5, 6}),
+          isFalse,
+        );
+        expect(restored.toJson(), snapshot);
+        final oldLevel = legacy.level(original.board)!;
+        final level = pool.level(restored.board)!;
+        expect(level.startPosition, oldLevel.startPosition);
+        expect(level.exitPosition, oldLevel.exitPosition);
+        expect(
+          level.blocks.map((block) => block.position),
+          oldLevel.blocks.map((block) => block.position),
+        );
+        expect(
+          restored.lanternFor(level.minimumMoves),
+          original.lanternFor(oldLevel.minimumMoves),
+        );
+      },
+    );
+
+    test(
+      'a saved mechanic board is kept only while its world is completed',
+      () {
+        final original = _runAtDepth(pool, 6, seed: 42, completedWorlds: {6})
+          ..pushed()
+          ..hinted();
+        final restored = VoyageRun.fromJson(original.toJson());
+        expect(
+          restored.replaceUnavailableBoard(pool, completedWorlds: {6}),
+          isFalse,
+        );
+        expect(restored.toJson(), original.toJson());
+        expect(
+          restored.replaceUnavailableBoard(pool, completedWorlds: {3}),
+          isTrue,
+        );
+        expect(pool.seaOf(restored.board.id), MechanicSea.mirror);
+        expect(restored.depth, original.depth);
+        expect(restored.score, original.score);
+        expect(restored.pushes, original.pushes);
+        expect(restored.hintsSpent, original.hintsSpent);
+      },
+    );
   });
 
   group('voyage run', () {
@@ -463,6 +665,83 @@ void main() {
   });
 
   group('screen', () {
+    for (final (chapterCount, sea, seaName) in [
+      (19, MechanicSea.mirror, '거울 바다'),
+      (20, MechanicSea.clock, '시계 바다'),
+    ]) {
+      testWidgets(
+        'crossing sea 5 after $chapterCount chapters shows ${sea.name}',
+        (tester) async {
+          const capture = bool.fromEnvironment('CAPTURE_ENDLESS_V2');
+          final pool = _pool(includeWorlds: true);
+          final seed = Iterable<int>.generate(64).firstWhere(
+            (seed) =>
+                pool.seaOf(
+                  pool
+                      .pick(
+                        seed: seed,
+                        depth: 6,
+                        used: {},
+                        completedWorlds: {3, 4},
+                      )
+                      .id,
+                ) ==
+                MechanicSea.clock,
+          );
+          final run = _runAtDepth(_pool(), 5, seed: seed);
+          await _seed(
+            chapters: {
+              for (var chapter = 1; chapter <= chapterCount; chapter++) chapter,
+            },
+            extra: {
+              EndlessRepository.storageKey: jsonEncode({
+                'version': 1,
+                'run': run.toJson(),
+              }),
+            },
+          );
+          final boundary = await openReleaseApp(
+            tester,
+            captureArt: capture && sea == MechanicSea.clock,
+          );
+          await tapVisible(tester, releaseKey('home-voyage'));
+          await waitForReleaseWidget(tester, releaseKey('endless-resume'));
+          await tapVisible(tester, releaseKey('endless-resume'));
+          final level = _game(tester).controller.state.level;
+          expect(level.id, run.board.id);
+          expect(find.text('5번째 바다'), findsOneWidget);
+          for (final move in const PuzzleSolver().solve(level)!) {
+            await _drag(tester, move);
+          }
+          await tester.pump(const Duration(seconds: 2));
+          expect(find.text('6번째 바다 · $seaName'), findsOneWidget);
+          final saved = (await EndlessRepository.load()).savedRun!;
+          expect(pool.seaOf(saved.board.id), sea);
+          expect(
+            _game(tester).controller.state.level.mechanics.keys,
+            contains(sea.mechanic),
+          );
+          if (capture && sea == MechanicSea.clock) {
+            await tester.pump();
+            await tester.pump(const Duration(milliseconds: 400));
+            await captureReleaseScreen(
+              tester,
+              boundary,
+              'docs/screenshots/endless/v2-clock-sea.png',
+            );
+          }
+          tester.view.physicalSize = const Size(320, 568);
+          tester.platformDispatcher.textScaleFactorTestValue = 2;
+          addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 400));
+          expect(find.text('6번째 바다 · $seaName'), findsOneWidget);
+          expect(_game(tester).geometry.cellSize, greaterThanOrEqualTo(40));
+          await closeReleaseApp(tester);
+        },
+      );
+    }
+
     testWidgets('Sea 45 shows progress and new voyage requires confirmation', (
       tester,
     ) async {

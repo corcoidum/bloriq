@@ -323,5 +323,9 @@
   "resultBest": "최고 기록",
   "resultFewest": "최소 이동",
   "watchReplayShort": "리플레이",
-  "moreActions": "더 보기"
+  "moreActions": "더 보기",
+  "endlessMirrorSea": "거울 바다",
+  "endlessClockSea": "시계 바다",
+  "endlessIceSea": "얼음 바다",
+  "endlessShelfSea": "서고 바다"
 }

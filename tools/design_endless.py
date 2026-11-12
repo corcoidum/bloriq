@@ -6,9 +6,11 @@
 
     python3 -m tools.design_endless                 # 목표 수가 찰 때까지 생성(이어서 생성)
     python3 -m tools.design_endless --tier 4 --count 20
+    python3 -m tools.design_endless --world 3 4 5 6  # 세계 기믹 묶음만 생성
     python3 -m tools.design_endless --check         # 묶음 전체를 다시 푼다
 
-결과: assets/levels/endless_pool_v1.json. 생성 중에도 주기적으로 저장하므로 끊겨도 이어서 만든다.
+결과: assets/levels/endless_pool_v1.json 및 endless_pool_v2.json.
+생성 중에도 주기적으로 저장하므로 끊겨도 이어서 만든다.
 """
 from __future__ import annotations
 
@@ -22,10 +24,12 @@ from pathlib import Path
 
 from tools.design_world import cells, occupied, pt
 from tools.level_audit import canonical
-from tools.validate_levels import decorative_mechanic, validate_level
+from tools.mechanics import populate_random_rules
+from tools.validate_levels import LEVELS_FILE, decorative_mechanic, published_worlds, validate_level
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / 'assets/levels/endless_pool_v1.json'
+WORLD_OUTPUT = OUTPUT.with_name('endless_pool_v2.json')
 QUICK_BUDGET = 120_000
 FULL_BUDGET = 1_000_000
 JOB_SECONDS = 45
@@ -39,37 +43,38 @@ TIERS = {
     3: (9, 12, [(5, 4), (5, 5)], (2, 2), (2, 6), (1, 2), 200),
     4: (12, 16, [(5, 5)], (2, 3), (3, 7), (2, 2), 150),
 }
+WORLD_MECHANICS = {3: 'mirrorPair', 4: 'clockArrow', 5: 'ice', 6: 'shelfDoor'}
+WORLD_TIER = (6, 14, [(4, 4), (5, 4), (5, 5)], (2, 2), (2, 5), (1, 2), 120)
+Stage = tuple[str, int]
+STAGES = {**{('tier', t): spec for t, spec in TIERS.items()},
+          **{('mechanicWorld', w): WORLD_TIER for w in WORLD_MECHANICS}}
 
 
-def random_level(tier: int, rng: random.Random) -> dict:
-    _, _, sizes, blocks, walls, mechanics, _ = TIERS[tier]
+def random_level(stage: Stage, rng: random.Random) -> dict:
+    _, _, sizes, blocks, walls, mechanics, _ = STAGES[stage]
     w, h = rng.choice(sizes)
     if rng.random() < .5:
         w, h = h, w
     free = cells(w, h)
     rng.shuffle(free)
-    take = free.pop
+    def take() -> dict:
+        return pt(free.pop())
+
     level = {'id': 1, 'boardWidth': w, 'boardHeight': h,
-             'startPosition': pt(take()), 'exitPosition': pt(take()),
+             'startPosition': take(), 'exitPosition': take(),
              'blocks': [], 'obstacles': [], 'specialRules': []}
     for index in range(rng.randint(*blocks)):
-        level['blocks'].append({'id': f'b{index + 1}', **pt(take())})
+        level['blocks'].append({'id': f'b{index + 1}', **take()})
     for _ in range(rng.randint(*walls)):
-        level['obstacles'].append(pt(take()))
-    for kind in rng.sample(MECHANICS, rng.randint(*mechanics)):
-        if kind == 'echoGate':
-            level['specialRules'].append({'type': 'echoGate', 'switch': pt(take()), 'gate': pt(take())})
-        elif kind == 'oneWay':
-            level['specialRules'].append({'type': 'oneWay', 'tiles': [
-                {**pt(take()), 'dx': d[0], 'dy': d[1]}
-                for d in rng.sample([(1, 0), (-1, 0), (0, 1), (0, -1)], rng.randint(1, 2))]})
-        else:
-            level['specialRules'].append({'type': kind, 'positions': [pt(take()) for _ in range(rng.randint(1, 2))]})
+        level['obstacles'].append(take())
+    primary = [WORLD_MECHANICS[stage[1]]] if stage[0] == 'mechanicWorld' else []
+    kinds = primary + rng.sample(MECHANICS, rng.randint(*mechanics) - len(primary))
+    populate_random_rules(level, kinds, rng, take)
     return level
 
 
-def mutate(level: dict, tier: int, rng: random.Random) -> dict:
-    walls = TIERS[tier][4]
+def mutate(level: dict, stage: Stage, rng: random.Random) -> dict:
+    walls = STAGES[stage][4]
     level = copy.deepcopy(level)
     w, h = level['boardWidth'], level['boardHeight']
     empty = [c for c in cells(w, h) if c not in occupied(level)]
@@ -86,6 +91,8 @@ def mutate(level: dict, tier: int, rng: random.Random) -> dict:
         for rule in level['specialRules']:
             if rule['type'] == 'echoGate':
                 handles += [rule['switch'], rule['gate']]
+            elif rule['type'] == 'shelfDoor':
+                handles += [point for pair in rule['pairs'] for point in pair.values()]
             else:
                 handles += rule.get('positions', rule.get('tiles', []))
         handle = rng.choice(handles)
@@ -99,17 +106,17 @@ def mutate(level: dict, tier: int, rng: random.Random) -> dict:
     return level
 
 
-def minimum(level: dict, budget: int) -> int | None:
+def minimum(level: dict, budget: int, max_moves: int | None = None) -> int | None:
     try:
-        return len(validate_level(level, max_states=budget))
+        return len(validate_level(level, max_states=budget, max_moves=max_moves))
     except (ValueError, AssertionError, RuntimeError):
         return None
 
 
-def accept(level: dict, tier: int) -> int | None:
+def accept(level: dict, stage: Stage) -> int | None:
     """단계 범위에 들고 모든 기믹이 풀이에 영향을 주면 최단 수를, 아니면 None 을 돌려준다."""
-    low, high = TIERS[tier][:2]
-    best = minimum(level, FULL_BUDGET)
+    low, high = STAGES[stage][:2]
+    best = minimum(level, FULL_BUDGET, high)
     if best is None or not low <= best <= high:
         return None
     try:
@@ -118,19 +125,19 @@ def accept(level: dict, tier: int) -> int | None:
         return None
 
 
-def design(tier: int, seed: int) -> dict | None:
+def design(stage: Stage, seed: int) -> dict | None:
     """최단 수를 단계 범위로 끌어올리는 언덕 오르기."""
     rng = random.Random(seed)
-    low, high = TIERS[tier][:2]
+    low, high = STAGES[stage][:2]
     goal = rng.randint(low, high)
     started = time.time()
     while time.time() - started < JOB_SECONDS:
-        current = random_level(tier, rng)
+        current = random_level(stage, rng)
         score = None
         stale = 0
         while stale < 250 and time.time() - started < JOB_SECONDS:
-            candidate = mutate(current, tier, rng)
-            moves = minimum(candidate, QUICK_BUDGET)
+            candidate = mutate(current, stage, rng)
+            moves = minimum(candidate, QUICK_BUDGET, high + 2)
             if moves is None:
                 stale += 1
                 continue
@@ -139,30 +146,38 @@ def design(tier: int, seed: int) -> dict | None:
                 stale = 0 if score is None or candidate_score < score else stale + 1
                 current, score = candidate, candidate_score
                 if low <= moves <= high:
-                    best = accept(current, tier)
+                    best = accept(current, stage)
                     if best is not None:
-                        return finish(current, tier, best)
+                        return finish(current, stage, best)
             else:
                 stale += 1
     return None
 
 
-def finish(level: dict, tier: int, best: int) -> dict:
-    out = {'tier': tier, 'boardWidth': level['boardWidth'], 'boardHeight': level['boardHeight'],
+def finish(level: dict, stage: Stage, best: int) -> dict:
+    field, number = stage
+    out = {field: number, 'boardWidth': level['boardWidth'], 'boardHeight': level['boardHeight'],
            'startPosition': level['startPosition'], 'exitPosition': level['exitPosition'],
            'blocks': level['blocks'], 'obstacles': level['obstacles'], 'specialRules': level['specialRules'],
            'minimumMoves': best}
+    if field == 'mechanicWorld':
+        out['availablePowers'] = []
     return out
 
 
-def _job(args: tuple[int, int]) -> tuple[int, dict | None]:
-    tier, seed = args
-    return tier, design(tier, seed)
+def _job(args: tuple[Stage, int]) -> tuple[Stage, dict | None]:
+    stage, seed = args
+    return stage, design(stage, seed)
 
 
 def _check(level: dict) -> str | None:
-    probe = {**level, 'id': level['id']}
-    best = accept(probe, level['tier'])
+    stage = stage_of(level)
+    if stage[0] == 'mechanicWorld':
+        primary = WORLD_MECHANICS[stage[1]]
+        kinds = {rule['type'] for rule in level['specialRules']}
+        if primary not in kinds or kinds - {*MECHANICS, primary} or level.get('availablePowers') != []:
+            return f"board {level['id']}: expected {primary}, only earlier basic mechanics and no powers"
+    best = accept(level, stage)
     if best != level['minimumMoves']:
         return f"board {level['id']}: recorded {level['minimumMoves']}, solver {best}"
     return None
@@ -171,20 +186,54 @@ def _check(level: dict) -> str | None:
 def check(workers: int) -> None:
     """묶음 전체를 다시 푼다: 단계 범위, 기록한 최단 수, 기믹의 쓸모, 중복."""
     pool = load()
+    ids = {level['id'] for level in pool}
+    assert len(ids) == len(pool), 'duplicate board IDs'
     keys = [canonical(level) for level in pool]
     assert len(keys) == len(set(keys)), 'duplicate boards in the pool'
+    assert not set(keys) & campaign_keys(), 'duplicate of a campaign board'
+    counts = counts_by_stage(pool)
+    for stage, spec in STAGES.items():
+        target = spec[6]
+        count = counts[stage]
+        if count < target or (stage[0] == 'mechanicWorld' and count != target):
+            raise ValueError(f'{stage}: expected {target} boards, got {count}')
     with ProcessPoolExecutor(max_workers=workers) as executor:
         problems = [p for p in executor.map(_check, pool, chunksize=8) if p]
     for problem in problems:
         print(problem)
-    counts = {t: sum(1 for level in pool if level['tier'] == t) for t in sorted(TIERS)}
     print(f'{len(pool)} boards checked {counts}: {len(problems)} problems')
     if problems:
         raise SystemExit(1)
 
 
 def load() -> list[dict]:
-    return json.loads(OUTPUT.read_text(encoding='utf-8')) if OUTPUT.exists() else []
+    pool = []
+    for path, field in [(OUTPUT, 'tier'), (WORLD_OUTPUT, 'mechanicWorld')]:
+        if path.exists():
+            levels = json.loads(path.read_text(encoding='utf-8'))
+            if any(stage_of(level)[0] != field for level in levels):
+                raise ValueError(f'Wrong stage in {path}')
+            pool.extend(levels)
+    return pool
+
+
+def stage_of(level: dict) -> Stage:
+    for field in ('tier', 'mechanicWorld'):
+        if (field, level.get(field)) in STAGES:
+            return field, level[field]
+    raise ValueError(f"board {level['id']}: unknown stage")
+
+
+def counts_by_stage(pool: list[dict]) -> dict[Stage, int]:
+    counts = dict.fromkeys(STAGES, 0)
+    for level in pool:
+        counts[stage_of(level)] += 1
+    return counts
+
+
+def campaign_keys() -> set[str]:
+    return {canonical(level) for path in [LEVELS_FILE, *(path for _, path in published_worlds())]
+            for level in json.loads(path.read_text(encoding='utf-8'))}
 
 
 def save(pool: list[dict]) -> None:
@@ -196,15 +245,25 @@ def save(pool: list[dict]) -> None:
             level['id'] = next_id
             next_id += 1
     ordered = sorted(pool, key=lambda level: level['id'])
-    lines = ',\n'.join(json.dumps({'id': level['id'], **{k: v for k, v in level.items() if k != 'id'}},
-                                   ensure_ascii=False, separators=(',', ':'))
-                       for level in ordered)
-    OUTPUT.write_text('[\n' + lines + '\n]\n', encoding='utf-8')
+    for path, field in [(OUTPUT, 'tier'), (WORLD_OUTPUT, 'mechanicWorld')]:
+        lines = ',\n'.join(json.dumps({'id': level['id'], **{k: v for k, v in level.items() if k != 'id'}},
+                                       ensure_ascii=False, separators=(',', ':'))
+                           for level in ordered if stage_of(level)[0] == field)
+        if not lines:
+            continue
+        content = '[\n' + lines + '\n]\n'
+        if path.exists() and path.read_text(encoding='utf-8') == content:
+            continue
+        temporary = path.with_suffix('.tmp')
+        temporary.write_text(content, encoding='utf-8')
+        temporary.replace(path)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument('--tier', type=int, nargs='*', choices=sorted(TIERS))
+    selection = parser.add_mutually_exclusive_group()
+    selection.add_argument('--tier', type=int, nargs='+', choices=sorted(TIERS))
+    selection.add_argument('--world', type=int, nargs='+', choices=sorted(WORLD_MECHANICS))
     parser.add_argument('--count', type=int, help='단계마다 이만큼만 더 만든다')
     parser.add_argument('--seed', type=int, default=int(time.time()))
     parser.add_argument('--workers', type=int, default=8)
@@ -213,13 +272,15 @@ def main() -> None:
     if args.check:
         return check(args.workers)
     pool = load()
-    campaign = []
-    for path in ['assets/levels/levels.json', 'assets/levels/world2.json']:
-        campaign += json.loads((ROOT / path).read_text(encoding='utf-8'))
-    seen = {canonical(level) for level in campaign} | {canonical(level) for level in pool}
-    tiers = args.tier or sorted(TIERS)
-    want = {t: (args.count if args.count is not None
-                else max(0, TIERS[t][6] - sum(1 for level in pool if level['tier'] == t))) for t in tiers}
+    seen = campaign_keys() | {canonical(level) for level in pool}
+    stages = ([('tier', t) for t in args.tier] if args.tier else
+              [('mechanicWorld', w) for w in args.world] if args.world else list(STAGES))
+    have = counts_by_stage(pool)
+    want = {}
+    for stage in stages:
+        remaining = max(0, STAGES[stage][6] - have[stage])
+        want[stage] = remaining if args.count is None else (
+            min(remaining, args.count) if stage[0] == 'mechanicWorld' else args.count)
     print('need', want, flush=True)
     seed = args.seed
     last_save = time.time()
@@ -228,40 +289,39 @@ def main() -> None:
 
         def submit() -> None:
             nonlocal seed
-            def flying(t: int) -> int:
-                return sum(1 for f in running.values() if f == t)
+            def flying(stage: Stage) -> int:
+                return sum(1 for active in running.values() if active == stage)
 
-            open_tiers = [t for t in tiers if want[t] > flying(t)]
-            if not open_tiers:
+            open_stages = [stage for stage in stages if want[stage] > flying(stage)]
+            if not open_stages:
                 return
             # 단계마다 목표 대비 채운 비율이 가장 낮은 단계부터 돌린다. 오래 걸리는 단계는
             # 일꾼이 오래 붙잡혀 있으므로 자연히 더 많은 일꾼이 몰린다.
-            have = {t: sum(1 for level in pool if level['tier'] == t) for t in tiers}
-            tier = min(open_tiers, key=lambda t: (have[t] + flying(t)) / TIERS[t][6])
+            stage = min(open_stages, key=lambda candidate: (have[candidate] + flying(candidate)) / STAGES[candidate][6])
             seed += 7919
-            running[executor.submit(_job, (tier, seed))] = tier
+            running[executor.submit(_job, (stage, seed))] = stage
 
         for _ in range(args.workers * 2):
             submit()
         while running:
             future = next(as_completed(list(running)))
             running.pop(future)
-            tier, level = future.result()
-            if level is not None and want[tier] > 0:
+            stage, level = future.result()
+            if level is not None and want[stage] > 0:
                 key = canonical(level)
                 if key not in seen:
                     seen.add(key)
                     pool.append(level)
-                    want[tier] -= 1
-                    print(f'tier {tier}: +1 ({level["minimumMoves"]} moves) left {want[tier]}', flush=True)
+                    want[stage] -= 1
+                    have[stage] += 1
+                    print(f'{stage}: +1 ({level["minimumMoves"]} moves) left {want[stage]}', flush=True)
             if time.time() - last_save > 30:
                 save(pool)
                 last_save = time.time()
-            if any(want[t] > 0 for t in tiers):
+            if any(want.values()):
                 submit()
     save(pool)
-    counts = {t: sum(1 for level in pool if level['tier'] == t) for t in sorted(TIERS)}
-    print(f'{len(pool)} endless boards written to {OUTPUT.relative_to(ROOT)}: {counts}')
+    print(f'{len(pool)} endless boards saved: {counts_by_stage(pool)}')
 
 
 if __name__ == '__main__':

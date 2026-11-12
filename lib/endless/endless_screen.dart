@@ -22,6 +22,7 @@ import '../l10n/app_localizations.dart';
 import '../progression/progression_repository.dart';
 import '../progression/progression_rules.dart';
 import '../settings/game_settings.dart';
+import '../world/world_catalog.dart';
 import 'endless_pool.dart';
 import 'endless_repository.dart';
 import 'endless_rules.dart';
@@ -106,6 +107,13 @@ class _EndlessScreenState extends State<EndlessScreen> {
   GameAudio get _audio => widget.session.audio;
   int get _minimum => _controller!.state.level.minimumMoves;
   bool get _busy => _flash != null || _finishing || _phase != _Phase.sailing;
+  Set<int> get _completedWorlds {
+    final chapters = widget.session.progression.completedChapters;
+    return {
+      for (final sea in MechanicSea.values)
+        if (Worlds.isComplete(sea.world, chapters)) sea.world,
+    };
+  }
 
   @override
   void initState() {
@@ -204,14 +212,14 @@ class _EndlessScreenState extends State<EndlessScreen> {
     });
   }
 
-  /// 지금 깊이의 판을 보드에 놓는다. 판 묶음이 바뀌어 판이 없으면 새로 고른다.
+  /// 지금 깊이의 판을 보드에 놓는다. 저장한 판을 열 수 없을 때만 새로 고른다.
   void _loadBoard() {
     final run = _run!;
-    var level = _pool!.level(run.board);
-    if (level == null) {
-      run.board = _pool!.pick(seed: run.seed, depth: run.depth, used: {});
-      level = _pool!.level(run.board)!;
+    final pool = _pool!;
+    if (run.replaceUnavailableBoard(pool, completedWorlds: _completedWorlds)) {
+      unawaited(_repo.saveRun(run));
     }
+    final level = pool.level(run.board)!;
     _controller = PuzzleController(level);
     _game = BloriqGame(_controller!)
       ..trailStyle = widget.session.progression.equippedTrail;
@@ -220,7 +228,11 @@ class _EndlessScreenState extends State<EndlessScreen> {
 
   void _boardCleared() {
     final run = _run!;
-    final result = run.clear(_minimum, _pool!);
+    final result = run.clear(
+      _minimum,
+      _pool!,
+      completedWorlds: _completedWorlds,
+    );
     unawaited(_repo.saveRun(run, clearedBoard: true));
     _flash = result;
     final reduce = prefersReducedMotion(context, widget.settings);
@@ -735,6 +747,14 @@ class _EndlessScreenState extends State<EndlessScreen> {
     );
     final lanternColor = lantern <= 3 ? colors.error : colors.reward;
     final legend = _legend(t, controller.state);
+    final depth = EndlessText.depth(_flash?.depth ?? run.depth).resolve(lang);
+    final seaName = switch (_pool!.seaOf(controller.state.level.id)) {
+      MechanicSea.mirror => t.endlessMirrorSea,
+      MechanicSea.clock => t.endlessClockSea,
+      MechanicSea.ice => t.endlessIceSea,
+      MechanicSea.shelf => t.endlessShelfSea,
+      null => null,
+    };
     final column = Column(
       mainAxisSize: _scrollLayout ? MainAxisSize.min : MainAxisSize.max,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -751,8 +771,7 @@ class _EndlessScreenState extends State<EndlessScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      EndlessText.depth(_flash?.depth ?? run.depth)
-                          .resolve(lang),
+                      seaName == null ? depth : '$depth · $seaName',
                       key: const ValueKey('endless-depth-label'),
                       style: GameTypography.label.copyWith(color: colors.cyan),
                     ),

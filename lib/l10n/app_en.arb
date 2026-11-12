@@ -587,5 +587,9 @@
   "resultBest": "Best",
   "resultFewest": "Fewest",
   "watchReplayShort": "Replay",
-  "moreActions": "More"
+  "moreActions": "More",
+  "endlessMirrorSea": "Mirror Sea",
+  "endlessClockSea": "Clock Sea",
+  "endlessIceSea": "Ice Sea",
+  "endlessShelfSea": "Library Sea"
 }
