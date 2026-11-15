@@ -176,6 +176,16 @@ void main() {
     await tapVisible(tester, releaseKey('starlight-path'));
     expect(label('starlight-price').data, '−20');
     expect(label('starlight-balance').data, '137');
+    final badge = tester.widget<Badge>(releaseKey('assist-cap-badge'));
+    final luminance = [
+      badge.backgroundColor!.computeLuminance(),
+      badge.textColor!.computeLuminance(),
+    ]..sort();
+    expect(
+      (luminance.last + .05) / (luminance.first + .05),
+      greaterThanOrEqualTo(4.5),
+    );
+    expect(find.text('최대 ★2'), findsOneWidget);
     expect(releaseKey('starlight-spent'), findsNothing);
     await tapVisible(tester, releaseKey('starlight-path'));
     expect(label('starlight-balance').data, '117');

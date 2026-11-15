@@ -3161,7 +3161,8 @@ class _GameScreenState extends State<GameScreen>
     return Badge(
       key: const ValueKey('assist-cap-badge'),
       backgroundColor: colors.reward,
-      textColor: colors.rewardInk,
+      // 금색 바탕 위에는 테마와 관계없이 어두운 글자를 쓴다.
+      textColor: colors.blockSymbol,
       label: Text(AssistCapText.badge(cap).resolve(t.localeName)),
       // 버튼 위 가운데에 붙여서 화면 오른쪽 끝을 넘지 않게 한다.
       alignment: Alignment.topCenter,
