@@ -104,3 +104,20 @@ python -m http.server 8768 --bind 192.168.0.2 --directory build/web
 macOS에서 `python` 명령을 찾지 못하면 설치된 Python 3의 `python3` 명령을 사용합니다. 휴대폰 Chrome에서 `http://컴퓨터_IP:8768/`을 엽니다. 서버를 실행한 컴퓨터가 켜져 있어야 하며, 같은 네트워크의 다른 기기도 접근할 수 있습니다. 서버는 터미널에서 `Ctrl+C`로 종료합니다.
 
 브라우저 미리보기는 화면과 터치 확인을 돕지만 **Android APK 설치, 앱 오프라인 동작, Android 전용 소리·진동을 검증하지 않습니다.**
+
+## 전체 캠페인 클리어 테스트 APK
+
+`lib/dev/random_clear_main.dart`는 게임 현황 확인용 진입점이다. 처음 실행할 때 7개 세계의 캠페인 175판을 모두 클리어하고, 별점 1~3개와 별점에 맞는 이동 수를 고정 시드로 무작위 배정한다. 35개 장의 별자리와 모든 세계가 열리며 경험치·별가루·권능·세계 1의 정령 수집은 기존 보상 API로 맞춘다. 추가 도전과 일일·주간 모드의 클리어 기록은 주입하지 않는다.
+
+Android에서는 **BLORIQ Test**(`com.corcoidum.bloriq.preview`)라는 별도 앱으로 설치된다. 최초 기록 주입 뒤에는 플레이한 결과를 보존하고, 다른 저장 기록이 있으면 덮어쓰지 않는다. 테스트 앱을 새로 설치해 같은 시드를 쓰면 같은 분포를 볼 수 있다.
+
+```bash
+export PATH="$HOME/development/flutter/bin:$PATH"
+flutter build apk --release \
+  --target lib/dev/random_clear_main.dart \
+  --dart-define=PREVIEW_SEED=20261115 \
+  --dart-define=BUILD_TAG=random-clear-preview-20261115 \
+  --build-number=11
+```
+
+결과: `build/app/outputs/flutter-apk/app-release.apk`. 이 테스트 앱은 debug 키로 서명한다. 일반 `flutter build apk --release`는 기존 앱 ID와 기본 진입점을 사용하며 가짜 기록을 만들지 않는다.
