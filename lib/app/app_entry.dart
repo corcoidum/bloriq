@@ -4,13 +4,14 @@ import 'package:flutter/material.dart';
 
 import '../design/arcade_components.dart';
 import '../design/game_theme.dart';
-import '../design/star_art.dart';
 import '../domain/puzzle.dart';
 import '../l10n/app_localizations.dart';
+import '../progression/progression_rules.dart';
 import '../settings/game_settings.dart';
 import 'experience_dialogs.dart';
 import 'intro_screen.dart';
 import 'game_session.dart';
+import 'home_scene.dart';
 import '../story/spirit_album.dart';
 import 'journey_panel.dart';
 import 'play_context.dart';
@@ -449,170 +450,323 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     final t = AppLocalizations.of(context)!;
     final colors = GameTheme.colorsOf(context);
     final session = _session;
-    return Scaffold(
-      key: const ValueKey('home-screen'),
-      body: ArcadeBackdrop(
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              stops: const [0, .46, .82, 1],
-              colors: [
-                colors.background.withValues(alpha: .30),
-                colors.background.withValues(alpha: .15),
-                colors.background.withValues(alpha: .96),
-                colors.background,
-              ],
-            ),
-          ),
-          child: SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 480),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 18),
-                  child: LayoutBuilder(
-                    builder: (context, area) {
-                      final target = session?.continueTarget;
-                      final ready =
-                          session != null && target != null && !_opening;
-                      final scroll =
-                          area.maxHeight < 480 ||
-                          MediaQuery.textScalerOf(context).scale(10) > 14;
-                      final hero = Align(
-                        alignment: Alignment.bottomCenter,
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: Image.asset(
-                            StarArt.riq,
-                            width: 138,
-                            height: 138,
-                            cacheWidth: 384,
-                            fit: BoxFit.contain,
-                            excludeFromSemantics: true,
-                          ),
+    final target = session?.continueTarget;
+    final scene = session == null || target == null
+        ? null
+        : HomeSceneData.of(session, target, t);
+    final sky = scene?.sky(
+      colors,
+      dark: Theme.of(context).brightness == Brightness.dark,
+    );
+    final content = SafeArea(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+            child: LayoutBuilder(
+              builder: (context, area) {
+                final ready = session != null && target != null && !_opening;
+                final scroll =
+                    area.maxHeight < 480 ||
+                    MediaQuery.textScalerOf(context).scale(10) > 14;
+                final hero = scene == null
+                    ? const SizedBox.shrink()
+                    : HomeScene(
+                        data: scene,
+                        reduceMotion: prefersReducedMotion(
+                          context,
+                          widget.settings,
                         ),
                       );
-                      final id = target?.levelId;
-                      final column = Column(
-                        mainAxisSize: scroll
-                            ? MainAxisSize.min
-                            : MainAxisSize.max,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _homeHeader(t, session),
-                          if (scroll)
-                            SizedBox(height: 160, child: hero)
-                          else
-                            Expanded(child: hero),
-                          if (session != null && target != null && id != null)
-                            Text(
-                              t.journeyStageLocation(
-                                session.saga
-                                        ?.world(target.world)
-                                        .title
-                                        .inLocale(t.localeName) ??
-                                    t.journeyFirstWorld,
-                                target.world == 1 ? id : Worlds.stageNumber(id),
-                              ),
-                              key: const ValueKey('home-destination'),
-                              textAlign: TextAlign.center,
-                              style: GameTypography.label.copyWith(
-                                fontSize: 18,
-                              ),
+                final id = target?.levelId;
+                final title = titleById(session?.progression.title)?.name
+                    .resolve(t.localeName);
+                final column = Column(
+                  mainAxisSize: scroll ? MainAxisSize.min : MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _homeHeader(t, session),
+                    if (scroll)
+                      SizedBox(height: 200, child: hero)
+                    else
+                      Expanded(child: hero),
+                    if (title != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Row(
+                          key: const ValueKey('home-title'),
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.workspace_premium_rounded,
+                              size: 15,
+                              color: colors.rewardInk,
                             ),
-                          if (session != null) ..._notices(t, session),
-                          if (_failed) ...[
-                            Text(t.loadError, textAlign: TextAlign.center),
-                            TextButton.icon(
-                              key: const ValueKey('retry-load'),
-                              onPressed: _retry,
-                              icon: const Icon(Icons.refresh_rounded),
-                              label: Text(t.retry),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GameTypography.label.copyWith(
+                                  fontSize: 13,
+                                  color: colors.rewardInk,
+                                ),
+                              ),
                             ),
                           ],
-                          const SizedBox(height: 12),
-                          FilledButton.icon(
-                            key: const ValueKey('home-play'),
-                            style: FilledButton.styleFrom(
-                              minimumSize: const Size(48, 54),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
-                            ),
-                            onPressed: ready ? () => _continue(target) : null,
-                            icon: Icon(
-                              target?.kind == ContinueKind.voyage
-                                  ? Icons.sailing_rounded
-                                  : Icons.play_arrow_rounded,
-                            ),
-                            label: Text(
-                              switch (target?.kind) {
-                                ContinueKind.polish => t.homeMoreStars,
-                                ContinueKind.voyage =>
-                                  EndlessText.title.resolve(t.localeName),
-                                ContinueKind.replay => t.homeReplayStage,
-                                ContinueKind.next || ContinueKind.newWorld =>
-                                  WorldText.play.resolve(t.localeName),
-                                null => t.preparingGame,
-                              },
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 20),
-                            ),
+                        ),
+                      ),
+                    if (session != null && target != null && id != null)
+                      _destination(t, colors, session, target, id, scene),
+                    if (session != null) ..._notices(t, session),
+                    if (_failed) ...[
+                      Text(t.loadError, textAlign: TextAlign.center),
+                      TextButton.icon(
+                        key: const ValueKey('retry-load'),
+                        onPressed: _retry,
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: Text(t.retry),
+                      ),
+                    ],
+                    const SizedBox(height: 10),
+                    FilledButton.icon(
+                      key: const ValueKey('home-play'),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(48, 54),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                      onPressed: ready ? () => _continue(target) : null,
+                      icon: Icon(
+                        target?.kind == ContinueKind.voyage
+                            ? Icons.sailing_rounded
+                            : Icons.play_arrow_rounded,
+                      ),
+                      label: Text(
+                        switch (target?.kind) {
+                          ContinueKind.polish => t.homeMoreStars,
+                          ContinueKind.voyage => EndlessText.title.resolve(
+                            t.localeName,
                           ),
-                          const SizedBox(height: 12),
-                          Divider(color: colors.outline.withValues(alpha: .3)),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextButton(
-                                  key: const ValueKey('home-journey'),
-                                  onPressed: ready ? _journey : null,
-                                  child: Text(
-                                    t.journey,
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
+                          ContinueKind.replay => t.homeReplayStage,
+                          ContinueKind.next || ContinueKind.newWorld =>
+                            WorldText.play.resolve(t.localeName),
+                          null => t.preparingGame,
+                        },
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 20),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        _dock(
+                          key: const ValueKey('home-journey'),
+                          icon: Icons.map_outlined,
+                          label: t.journey,
+                          onPressed: ready ? _journey : null,
+                        ),
+                        _dock(
+                          key: const ValueKey('home-daily'),
+                          icon: Icons.today_rounded,
+                          label: t.homeDaily,
+                          onPressed: ready ? () => _openDaily(session) : null,
+                          dot:
+                              session != null &&
+                              !session.daily.completed(
+                                session.daily.today.date,
                               ),
-                              Container(
-                                height: 24,
-                                width: 1,
-                                color: colors.outline.withValues(alpha: .3),
-                              ),
-                              Expanded(
-                                child: TextButton(
-                                  key: const ValueKey('home-play-modes'),
-                                  onPressed: ready
-                                      ? () => _openPlayModes(session)
-                                      : null,
-                                  child: Text(
-                                    t.homePlayModes,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: colors.secondaryText,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      );
-                      return scroll
-                          ? SingleChildScrollView(child: column)
-                          : column;
-                    },
-                  ),
-                ),
-              ),
+                          dotLabel: t.homeDailyTodo,
+                          dotColor: colors.reward,
+                        ),
+                        _dock(
+                          key: const ValueKey('home-play-modes'),
+                          icon: Icons.grid_view_rounded,
+                          label: t.homePlayModes,
+                          onPressed: ready
+                              ? () => _openPlayModes(session)
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+                return scroll ? SingleChildScrollView(child: column) : column;
+              },
             ),
           ),
         ),
       ),
     );
+    return Scaffold(
+      key: const ValueKey('home-screen'),
+      body: sky != null
+          ? DecoratedBox(
+              key: const ValueKey('home-sky'),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: const [0, .4, .78],
+                  colors: sky,
+                ),
+              ),
+              child: content,
+            )
+          : ArcadeBackdrop(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: const [0, .46, .82, 1],
+                    colors: [
+                      colors.background.withValues(alpha: .30),
+                      colors.background.withValues(alpha: .15),
+                      colors.background.withValues(alpha: .96),
+                      colors.background,
+                    ],
+                  ),
+                ),
+                child: content,
+              ),
+            ),
+    );
   }
+
+  /// 지금 갈 곳: 세계와 판 번호, 이 장의 별자리와 남은 판.
+  Widget _destination(
+    AppLocalizations t,
+    GameColors colors,
+    GameSession session,
+    ContinueTarget target,
+    int id,
+    HomeSceneData? scene,
+  ) => Container(
+    padding: const EdgeInsets.fromLTRB(16, 9, 14, 9),
+    decoration: BoxDecoration(
+      color: colors.surface.withValues(alpha: .8),
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: colors.outline.withValues(alpha: .28)),
+    ),
+    child: Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                t.journeyStageLocation(
+                  session.saga
+                          ?.world(target.world)
+                          .title
+                          .inLocale(t.localeName) ??
+                      t.journeyFirstWorld,
+                  target.world == 1 ? id : Worlds.stageNumber(id),
+                ),
+                key: const ValueKey('home-destination'),
+                style: GameTypography.label.copyWith(fontSize: 17),
+              ),
+              if (scene?.chapterName case final name?)
+                Text(
+                  name,
+                  key: const ValueKey('home-chapter'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTypography.body.copyWith(
+                    fontSize: 13,
+                    color: colors.secondaryText,
+                  ),
+                ),
+            ],
+          ),
+        ),
+        if (scene != null && scene.lit.isNotEmpty)
+          Semantics(
+            label: t.homeChapterProgress(scene.litCount, scene.lit.length),
+            child: ExcludeSemantics(
+              child: Row(
+                key: const ValueKey('home-chapter-dots'),
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final (index, lit) in scene.lit.indexed)
+                    Container(
+                      width: 10,
+                      height: 10,
+                      margin: const EdgeInsets.only(left: 6),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: lit
+                            ? colors.reward
+                            : index == scene.pendingNode
+                            ? null
+                            : colors.outline.withValues(alpha: .4),
+                        border: !lit && index == scene.pendingNode
+                            ? Border.all(color: colors.echoInk, width: 2)
+                            : null,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    ),
+  );
+
+  /// 아래 메뉴 한 칸: 아이콘과 이름. [dot]은 오늘 아직 하지 않았다는 표시다.
+  Widget _dock({
+    required Key key,
+    required IconData icon,
+    required String label,
+    required VoidCallback? onPressed,
+    bool dot = false,
+    String? dotLabel,
+    Color? dotColor,
+  }) => Expanded(
+    child: TextButton(
+      key: key,
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        minimumSize: const Size(48, 48),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Icon(icon, size: 22),
+              if (dot)
+                Positioned(
+                  right: -5,
+                  top: -2,
+                  child: Semantics(
+                    label: dotLabel,
+                    child: Container(
+                      key: const ValueKey('home-daily-dot'),
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: dotColor,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          FittedBox(fit: BoxFit.scaleDown, child: Text(label, maxLines: 1)),
+        ],
+      ),
+    ),
+  );
 
   /// 가운데 BLORIQ, 왼쪽 도움말, 오른쪽 설정.
   Widget _homeHeader(AppLocalizations t, GameSession? session) => SizedBox(

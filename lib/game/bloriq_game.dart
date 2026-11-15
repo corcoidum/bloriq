@@ -176,6 +176,12 @@ class BloriqGame extends FlameGame {
 
   /// 착지 충격(먼지·파동·보드 흔들림)과 막힌 이동 흔들림. 표시 전용이다.
   static const _impactDuration = .42;
+
+  /// 블록이 멈춘 뒤에도 지나온 길에 잔영 색이 잠깐 남는다.
+  static const _glowDuration = .7;
+  Position? _glowFrom, _glowTo;
+  bool _glowGoal = false;
+  double _glowTime = 0;
   static const _shakeDuration = .36;
   double _impactTime = 0;
   Position? _impactAt;
@@ -235,6 +241,13 @@ class BloriqGame extends FlameGame {
     Color(0xff92deff),
     Color(0xfff4a9cb),
   ];
+
+  /// 잔영 [id]를 대표하는 색. 공방의 견본과 미리 보기에 쓴다.
+  static Color trailSwatch(String id, GameColors colors) => switch (id) {
+    'meteor' => colors.reward,
+    'mist' => colors.echo,
+    _ => trailPalette[id] ?? colors.primary,
+  };
 
   Color _trailColor(bool isGoal) => switch (trailStyle) {
     'meteor' => _colors.reward,
@@ -467,11 +480,16 @@ class BloriqGame extends FlameGame {
     );
     _impactGoal = id == Level.goalBlockId;
     _impactTime = _impactDuration;
+    _glowFrom = from;
+    _glowTo = block.position;
+    _glowGoal = _impactGoal;
+    _glowTime = _glowDuration;
   }
 
   void clearEffects() {
     _movingId = null;
     _dragId = null;
+    _glowTime = 0;
     _motion = 1;
     _travel = const _BlockTravel();
     _clockTurn = 1;
@@ -537,6 +555,7 @@ class BloriqGame extends FlameGame {
     }
     _blockedTime = math.max(0.0, _blockedTime - dt);
     _impactTime = math.max(0.0, _impactTime - dt);
+    _glowTime = math.max(0.0, _glowTime - dt);
     _shakeTime = math.max(0.0, _shakeTime - dt);
     final gateGoal = _gateTarget ? 1.0 : 0.0;
     _gateOpen = _reduceMotion
@@ -655,6 +674,11 @@ class BloriqGame extends FlameGame {
       );
     }
 
+    if (!_reduceMotion && _glowTime > 0) {
+      if ((_glowFrom, _glowTo) case (final from?, final to?)) {
+        _drawAfterglow(canvas, center(from), center(to), cell);
+      }
+    }
     final exit = center(state.level.exitPosition);
     if (!_reduceMotion && StarArt.garden.isNotEmpty) {
       _drawExitRays(canvas, exit, cell);
@@ -1428,6 +1452,33 @@ class BloriqGame extends FlameGame {
     }
   }
 
+  /// 지나온 길에 남아 천천히 사라지는 빛. 장착한 이동 잔영의 색을 쓴다.
+  void _drawAfterglow(Canvas canvas, Offset start, Offset end, double cell) {
+    if ((end - start).distance < 1) return;
+    final fade = Curves.easeIn.transform(_glowTime / _glowDuration);
+    final color = _trailColor(_glowGoal);
+    canvas.drawLine(
+      start,
+      end,
+      Paint()
+        ..shader = ui.Gradient.linear(
+          start,
+          end,
+          trailStyle == 'first_starlight'
+              ? [
+                  for (final light in firstStarlightColors)
+                    light.withValues(alpha: .42 * fade),
+                ]
+              : [
+                  color.withValues(alpha: .1 * fade),
+                  color.withValues(alpha: .46 * fade),
+                ],
+        )
+        ..strokeWidth = cell * .3
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
   /// 출발 칸의 파동, 빛 꼬리, 잔영 블록으로 속도감을 준다.
   void _drawTrail(
     Canvas canvas,
@@ -1443,7 +1494,7 @@ class BloriqGame extends FlameGame {
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = math.max(1.5, cell * .04 * fade)
-      ..color = color.withValues(alpha: .5 * fade);
+      ..color = color.withValues(alpha: .7 * fade);
     canvas.drawCircle(start, cell * (.3 + .22 * _motion), paint);
     if ((at - start).distance > 1) {
       canvas.drawLine(
@@ -1456,11 +1507,11 @@ class BloriqGame extends FlameGame {
             trailStyle == 'first_starlight'
                 ? [
                     for (final light in firstStarlightColors)
-                      light.withValues(alpha: .38 * fade),
+                      light.withValues(alpha: .55 * fade),
                   ]
                 : [
                     color.withValues(alpha: 0),
-                    color.withValues(alpha: .38 * fade),
+                    color.withValues(alpha: .55 * fade),
                   ],
           )
           ..strokeWidth = cell * .46

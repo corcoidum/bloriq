@@ -138,7 +138,7 @@ void main() {
     expect(
       find.descendant(
         of: releaseKey('starlight-path'),
-        matching: find.text('18'),
+        matching: find.text('−18'),
       ),
       findsOneWidget,
     );
@@ -165,8 +165,15 @@ void main() {
       '{"version":1,"xp":0,"stardust":40,"backfilled":true}',
     );
     await pumpGame(tester, const BloriqApp());
+    // 쓰기 전: 이번에 낼 값과 가진 별가루가 함께 보인다.
+    Text label(String key) => tester.widget<Text>(find.byKey(ValueKey(key)));
+    expect(label('starlight-price').data, '−20');
+    expect(label('starlight-balance').data, '40');
+    expect(find.byKey(const ValueKey('starlight-spent')), findsNothing);
     await tapVisible(tester, find.byKey(const ValueKey('starlight-path')));
     expect(_game(tester).hintMove, isNotNull);
+    expect(label('starlight-balance').data, '20');
+    expect(label('starlight-spent').data, startsWith('−20'));
     await _solve(tester);
     expect(find.text('★★☆'), findsOneWidget);
     final saved = await ProgressionRepository.load();

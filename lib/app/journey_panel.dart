@@ -7,7 +7,6 @@ import '../constellation/constellation_state.dart';
 import '../design/arcade_components.dart';
 import '../design/game_theme.dart';
 import '../design/keep_all_text.dart';
-import '../game/bloriq_game.dart';
 import '../l10n/app_localizations.dart';
 import '../progression/progression_rules.dart';
 import '../settings/game_settings.dart';
@@ -19,6 +18,7 @@ import '../world/world_text.dart';
 import 'game_session.dart';
 import 'journey_constellations.dart';
 import 'level_picker.dart';
+import 'trail_workshop.dart';
 
 enum JourneyTab { status, constellations, companions, rewards }
 
@@ -223,7 +223,14 @@ class _JourneyPanelState extends State<JourneyPanel>
                       ),
                       showCampaignTotal: true,
                     ),
-                    _RewardsTab(session: widget.session, onChanged: _refresh),
+                    _RewardsTab(
+                      session: widget.session,
+                      reduceMotion: prefersReducedMotion(
+                        context,
+                        widget.settings,
+                      ),
+                      onChanged: _refresh,
+                    ),
                   ],
                 ),
               ),
@@ -577,8 +584,13 @@ class PlayerLevelCard extends StatelessWidget {
 
 /// 보상 탭은 모든 보상과 공방을 한 목록에서 이어서 보여 준다.
 class _RewardsTab extends StatelessWidget {
-  const _RewardsTab({required this.session, required this.onChanged});
+  const _RewardsTab({
+    required this.session,
+    required this.reduceMotion,
+    required this.onChanged,
+  });
   final GameSession session;
+  final bool reduceMotion;
   final VoidCallback onChanged;
 
   @override
@@ -736,60 +748,24 @@ class _RewardsTab extends StatelessWidget {
           ),
         ),
         heading('shop', ShopText.heading.resolve(lang)),
-        Row(
-          children: [
-            Expanded(
-              child: KeepAllText(
-                ShopText.intro.resolve(lang),
-                style: GameTypography.body.copyWith(
-                  fontSize: 15,
-                  color: colors.secondaryText,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Icon(Icons.auto_awesome, size: 16, color: colors.rewardInk),
-            const SizedBox(width: 4),
-            Text(
-              '${progression.stardust}',
-              key: const ValueKey('shop-balance'),
-              style: GameTypography.label.copyWith(color: colors.rewardInk),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        for (final item in trailShop)
-          _ShopRow(
-            item: item,
-            owned: progression.ownedTrails.contains(item.trailId),
-            affordable: progression.stardust >= item.price,
-            onBuy: () async {
-              await progression.buyTrail(item.trailId);
-              onChanged();
-            },
-          ),
-        heading('trails', t.rewardsTrails),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            for (final trail in trails)
-              if (shopItemFor(trail.id) == null ||
-                  progression.ownedTrails.contains(trail.id))
-                ChoiceChip(
-                  key: ValueKey('trail-${trail.id}'),
-                  label: Text(trail.name.resolve(lang)),
-                  selected: progression.equippedTrail == trail.id,
-                  onSelected: progression.ownedTrails.contains(trail.id)
-                      ? (_) async {
-                          await progression.equipTrail(trail.id);
-                          onChanged();
-                        }
-                      : null,
-                ),
-          ],
+        TrailWorkshop(
+          progression: progression,
+          trailsHeading: heading('trails', t.rewardsTrails),
+          reduceMotion: reduceMotion,
+          onChanged: onChanged,
         ),
         heading('titles', t.rewardsTitles),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: KeepAllText(
+            t.rewardsTitlesNote,
+            key: const ValueKey('journey-titles-note'),
+            style: GameTypography.body.copyWith(
+              fontSize: 13,
+              color: colors.secondaryText,
+            ),
+          ),
+        ),
         Wrap(
           spacing: 6,
           runSpacing: 6,
@@ -984,59 +960,3 @@ class _AchievementRow extends StatelessWidget {
 }
 
 /// 별빛 공방의 한 줄: 색 견본, 이름, 값, 사기 버튼.
-class _ShopRow extends StatelessWidget {
-  const _ShopRow({
-    required this.item,
-    required this.owned,
-    required this.affordable,
-    required this.onBuy,
-  });
-  final ShopItem item;
-  final bool owned, affordable;
-  final Future<void> Function() onBuy;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = GameTheme.colorsOf(context);
-    final lang = Localizations.localeOf(context).languageCode;
-    final name = trailById(item.trailId)?.name.resolve(lang) ?? item.trailId;
-    final swatch = BloriqGame.trailPalette[item.trailId] ?? colors.primary;
-    return ConstrainedBox(
-      key: ValueKey('shop-${item.trailId}'),
-      constraints: const BoxConstraints(minHeight: 48),
-      child: Row(
-        children: [
-          Container(
-            width: 22,
-            height: 22,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: swatch,
-              border: Border.all(color: colors.outline.withValues(alpha: .5)),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              name,
-              style: GameTypography.label.copyWith(color: colors.text),
-            ),
-          ),
-          const SizedBox(width: 8),
-          if (owned)
-            Text(
-              ShopText.owned.resolve(lang),
-              style: GameTypography.label.copyWith(color: colors.goalInk),
-            )
-          else
-            FilledButton.tonalIcon(
-              key: ValueKey('shop-buy-${item.trailId}'),
-              onPressed: affordable ? onBuy : null,
-              icon: const Icon(Icons.auto_awesome, size: 16),
-              label: Text('${item.price}'),
-            ),
-        ],
-      ),
-    );
-  }
-}

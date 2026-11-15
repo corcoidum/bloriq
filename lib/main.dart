@@ -207,6 +207,10 @@ class _GameScreenState extends State<GameScreen>
   Future<void> Function()? _pendingCampaignReward;
   bool _replaying = false;
   bool _reduceMotion = false;
+
+  /// 방금 별빛 길에 쓴 값. 버튼 위에 잠깐 띄운다.
+  String? _spendNote;
+  int _spendSerial = 0;
   bool _isNewBest = false;
 
   /// 이번 클리어로 받은 경험치·별가루·권능·유대. 결과 팝업에 보여 준다.
@@ -1026,6 +1030,11 @@ class _GameScreenState extends State<GameScreen>
           setState(() {
             if (used.source == StarlightPathSource.free) {
               _starlightFreeUsed = true;
+            } else {
+              _spendSerial++;
+              _spendNote = used.source == StarlightPathSource.charge
+                  ? t.starlightPassSpent
+                  : t.starlightSpent(used.cost);
             }
             if (!_starlightUsed && _trial == null) {
               messenger.showSnackBar(
@@ -2264,7 +2273,12 @@ class _GameScreenState extends State<GameScreen>
                     final starlight =
                         _tutorial == null &&
                             widget.play.mode != PlayMode.tutorialReplay
-                        ? _starlightButton(t, colors, controller)
+                        ? _starlightButton(
+                            t,
+                            colors,
+                            controller,
+                            roomy: !tight && _textScale <= 1.15,
+                          )
                         : null;
                     final levelLabel = Semantics(
                       label: t.levels,
@@ -2972,8 +2986,9 @@ class _GameScreenState extends State<GameScreen>
   Widget _starlightButton(
     AppLocalizations t,
     GameColors colors,
-    PuzzleController controller,
-  ) {
+    PuzzleController controller, {
+    required bool roomy,
+  }) {
     final companion = widget.session.collection.companion;
     final quote = widget.session.progression.quoteStarlightPath(
       freeUsedThisAttempt: _starlightFreeUsed,
@@ -2981,11 +2996,17 @@ class _GameScreenState extends State<GameScreen>
       companionId: companion?.id,
       companionFamily: companion?.family,
     );
+    final progression = widget.session.progression;
     final price = switch (quote.source) {
       StarlightPathSource.free => t.starlightFree,
-      StarlightPathSource.charge => t.starlightPass,
-      StarlightPathSource.stardust => '${quote.cost}',
+      StarlightPathSource.charge => t.starlightPassCount(
+        progression.starlightCharges,
+      ),
+      StarlightPathSource.stardust => t.starlightCost(quote.cost),
     };
+    final short =
+        quote.source == StarlightPathSource.stardust &&
+        quote.cost > progression.stardust;
     final enabled =
         !controller.state.isComplete &&
         !_replaying &&
@@ -2993,10 +3014,12 @@ class _GameScreenState extends State<GameScreen>
         !_hintBusy &&
         !_trialAtLimit;
     final cap = _trial == null ? _starCap : 3;
-    final button = Tooltip(
-      message: cap < 3
-          ? '${t.starlightPath} · ${AssistCapText.kept.resolve(t.localeName)}'
-          : t.starlightPath,
+    final pathButton = Tooltip(
+      message: [
+        t.starlightPath,
+        if (cap < 3) AssistCapText.kept.resolve(t.localeName),
+        t.stardustCount(progression.stardust),
+      ].join(' · '),
       child: Material(
         color: colors.reward.withValues(alpha: .14),
         shape: RoundedRectangleBorder(
@@ -3009,25 +3032,129 @@ class _GameScreenState extends State<GameScreen>
           onTap: enabled ? () => _useStarlight(t) : null,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (_hintBusy)
-                  HintProgress(t.starlightCalculating, color: colors.rewardInk)
-                else
-                  Icon(Icons.auto_awesome, size: 20, color: colors.rewardInk),
-                Text(
+            child: Builder(
+              builder: (context) {
+                final icon = _hintBusy
+                    ? HintProgress(
+                        t.starlightCalculating,
+                        color: colors.rewardInk,
+                      )
+                    : Icon(
+                        Icons.auto_awesome,
+                        size: 20,
+                        color: colors.rewardInk,
+                      );
+                final cost = Text(
                   price,
+                  key: const ValueKey('starlight-price'),
                   style: GameTypography.label.copyWith(
                     fontSize: 11,
-                    color: colors.rewardInk,
+                    color: short ? colors.error : colors.rewardInk,
                   ),
-                ),
-              ],
+                );
+                // 좁은 화면과 큰 글자에서는 값만 보여 주고 잔액은 말풍선에 둔다.
+                if (!roomy) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [icon, cost],
+                  );
+                }
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    icon,
+                    const SizedBox(width: 6),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        cost,
+                        // 지금 가진 별가루.
+                        Semantics(
+                          liveRegion: true,
+                          label: t.stardustCount(progression.stardust),
+                          child: ExcludeSemantics(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.auto_awesome,
+                                  size: 10,
+                                  color: colors.secondaryText,
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  '${progression.stardust}',
+                                  key: const ValueKey('starlight-balance'),
+                                  style: GameTypography.label.copyWith(
+                                    fontSize: 11,
+                                    height: 1.1,
+                                    color: colors.secondaryText,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ),
       ),
+    );
+    final button = Stack(
+      clipBehavior: Clip.none,
+      children: [
+        pathButton,
+        if (_spendNote case final note?)
+          Positioned(
+            // 위쪽에는 별 상한 배지가 붙으므로 아래로 띄운다.
+            right: 0,
+            bottom: -16,
+            child: IgnorePointer(
+              // 방금 쓴 값이 버튼 아래로 흘러내렸다 사라진다.
+              child: TweenAnimationBuilder<double>(
+                key: ValueKey('starlight-spent-$_spendSerial'),
+                tween: Tween(begin: 0, end: 1),
+                duration: const Duration(milliseconds: 1600),
+                builder: (_, value, child) => Opacity(
+                  opacity: value < .6 ? 1 : (1 - value) / .4,
+                  child: Transform.translate(
+                    offset: Offset(0, _reduceMotion ? 0 : 6 * value),
+                    child: child,
+                  ),
+                ),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: colors.surface,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: colors.reward.withValues(alpha: .6),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    child: Text(
+                      note,
+                      key: const ValueKey('starlight-spent'),
+                      style: GameTypography.label.copyWith(
+                        fontSize: 11,
+                        color: colors.rewardInk,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
     if (cap >= 3) return button;
     // 도움을 쓴 판: 다시 시작해도 상한이 남아 있음을 늘 보여 준다.

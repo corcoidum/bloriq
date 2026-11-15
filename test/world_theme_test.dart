@@ -58,7 +58,7 @@ void main() {
     skin.dispose();
   });
 
-  testWidgets('cloud-sea colors apply only to the world 2 play screen', (
+  testWidgets('cloud-sea colors tint the home sky and the play screen', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(360, 740);
@@ -89,7 +89,9 @@ void main() {
     );
     await waitForHome(tester);
     final backdrop = find.byType(ArcadeBackdrop);
-    expect(tester.widget<ArcadeBackdrop>(backdrop).background, isNull);
+    // 홈은 지금 있는 세계의 하늘색을 쓰고, 세계 지도는 기본 배경을 쓴다.
+    expect(backdrop, findsNothing);
+    expect(find.byKey(const ValueKey('home-sky')), findsOneWidget);
 
     await openHomeJourney(tester);
     await tapVisible(tester, find.byKey(const ValueKey('journey-world-2')));

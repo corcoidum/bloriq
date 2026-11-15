@@ -100,7 +100,7 @@ void main() {
     await tester.fling(_status, const Offset(-250, 0), 800);
     await tester.pumpAndSettle();
     expect(find.text('별자리 복원 35 / 35'), findsOneWidget);
-    expect(find.text('첫별자리'), findsOneWidget);
+    expect(find.text('첫별자리').hitTestable(), findsOneWidget);
     expect(find.text('복원 완료 · 별 12 / 15'), findsOneWidget);
     for (var stage = 621; stage <= 625; stage++) {
       final size = tester.getSize(
@@ -132,7 +132,7 @@ void main() {
     expect(find.text('플레이 중'), findsOneWidget);
     await tapVisible(tester, _tab('constellations'));
     expect(find.text('별자리 복원 35 / 35'), findsOneWidget);
-    expect(find.text('첫별자리'), findsOneWidget);
+    expect(find.text('첫별자리').hitTestable(), findsOneWidget);
     expect(find.text('23 다시 도전'), findsOneWidget);
     await tapVisible(tester, _tab('companions'));
     expect(find.text('전체 수집 175 / 175'), findsOneWidget);
