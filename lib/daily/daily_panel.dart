@@ -58,10 +58,7 @@ class DailyPanel extends StatelessWidget {
                               '${t.journeyStreak(daily.streak)}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      color: colors.secondaryText,
-                    ),
+                    style: TextStyle(fontSize: 13, color: colors.secondaryText),
                   ),
                 ],
               ),
@@ -163,7 +160,7 @@ class DailyPanel extends StatelessWidget {
                         Text(
                           '${day.month}/${day.day}',
                           textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 12),
+                          style: const TextStyle(fontSize: 13),
                         ),
                       ],
                     ),

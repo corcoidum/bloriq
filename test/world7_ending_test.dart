@@ -148,8 +148,9 @@ void main() {
         ),
       );
       await tapVisible(tester, releaseKey('credits-continue'));
-      expect(find.text('첫 별의 잔상'), findsOneWidget);
-      expect(find.text('첫 별빛'), findsOneWidget);
+      // 엔딩은 칭호·잔영 보상을 내세우지 않는다.
+      expect(find.text('첫 별의 잔상'), findsNothing);
+      expect(find.text('첫 별빛'), findsNothing);
       await tapVisible(tester, releaseKey('ending-voyage'));
       await waitForReleaseWidget(tester, releaseKey('endless-harbor'));
       await tapVisible(tester, releaseKey('endless-home'));

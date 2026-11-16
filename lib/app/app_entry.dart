@@ -6,7 +6,6 @@ import '../design/arcade_components.dart';
 import '../design/game_theme.dart';
 import '../domain/puzzle.dart';
 import '../l10n/app_localizations.dart';
-import '../progression/progression_rules.dart';
 import '../settings/game_settings.dart';
 import 'experience_dialogs.dart';
 import 'intro_screen.dart';
@@ -23,10 +22,8 @@ import '../world/world_map.dart';
 import '../world/world_text.dart';
 import '../tutorial/world_tutorial.dart';
 import '../trials/trial_catalog.dart';
-import '../weekly/weekly_pool.dart';
-import '../weekly/weekly_screen.dart';
 
-enum _HomeMode { daily, weekly, voyage }
+enum _HomeMode { daily, voyage }
 
 class AppEntry extends StatefulWidget {
   const AppEntry({
@@ -61,7 +58,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   bool _loading = false;
   bool _choosing = false;
   GameSession? _session;
-  Timer? _weeklyRefresh;
   final _modeRefresh = ValueNotifier(0);
 
   @override
@@ -98,7 +94,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
         _session = session;
         _loading = false;
       });
-      _scheduleWeeklyRefresh();
       if (!session.levels.any((level) => level.id == 1)) {
         _startingTutorial = false;
       }
@@ -155,19 +150,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && mounted) {
       _modeRefresh.value++;
-      _scheduleWeeklyRefresh();
     }
-  }
-
-  void _scheduleWeeklyRefresh() {
-    _weeklyRefresh?.cancel();
-    final now = _session?.weekly.clock();
-    if (now == null) return;
-    _weeklyRefresh = Timer(nextWeeklyBoundary(now).difference(now), () {
-      if (!mounted) return;
-      _modeRefresh.value++;
-      _scheduleWeeklyRefresh();
-    });
   }
 
   void _retry() {
@@ -336,10 +319,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                     Navigator.pop(dialogContext, _HomeMode.daily);
                   }),
                   const SizedBox(height: GameSpacing.small),
-                  _weeklyTile(t, colors, session, () {
-                    Navigator.pop(dialogContext, _HomeMode.weekly);
-                  }),
-                  const SizedBox(height: GameSpacing.small),
                   _voyageTile(t, colors, session, () {
                     Navigator.pop(dialogContext, _HomeMode.voyage);
                   }),
@@ -362,7 +341,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     if (!mounted) return;
     await switch (mode) {
       _HomeMode.daily => _openDaily(session),
-      _HomeMode.weekly => _openWeekly(session),
       _HomeMode.voyage => _openEndless(),
       null => Future<void>.value(),
     };
@@ -393,7 +371,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    _weeklyRefresh?.cancel();
     _modeRefresh.dispose();
     WidgetsBinding.instance.removeObserver(this);
     unawaited(_session?.dispose());
@@ -480,8 +457,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                         ),
                       );
                 final id = target?.levelId;
-                final title = titleById(session?.progression.title)?.name
-                    .resolve(t.localeName);
                 final column = Column(
                   mainAxisSize: scroll ? MainAxisSize.min : MainAxisSize.max,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -491,33 +466,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                       SizedBox(height: 200, child: hero)
                     else
                       Expanded(child: hero),
-                    if (title != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: Row(
-                          key: const ValueKey('home-title'),
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.workspace_premium_rounded,
-                              size: 15,
-                              color: colors.rewardInk,
-                            ),
-                            const SizedBox(width: 4),
-                            Flexible(
-                              child: Text(
-                                title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GameTypography.label.copyWith(
-                                  fontSize: 13,
-                                  color: colors.rewardInk,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                     if (session != null && target != null && id != null)
                       _destination(t, colors, session, target, id, scene),
                     if (session != null) ..._notices(t, session),
@@ -840,25 +788,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     play: PlayContext.daily(session.daily.today),
   );
 
-  Future<void> _openWeekly(GameSession session) async {
-    if (_opening || _choosing) return;
-    _choosing = true;
-    try {
-      await Navigator.of(context).push<void>(
-        MaterialPageRoute(
-          builder: (_) => WeeklyScreen(
-            session: session,
-            onPlay: (stage) =>
-                _open(stage.level.id, play: PlayContext.weekly(stage)),
-          ),
-        ),
-      );
-    } finally {
-      _choosing = false;
-      if (mounted) setState(() {});
-    }
-  }
-
   Widget _dailyTile(
     AppLocalizations t,
     GameColors colors,
@@ -880,26 +809,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
           ? t.dailyPerfect
           : WorldText.dailyGoal(challenge.level.minimumMoves)
                 .resolve(t.localeName),
-      onTap: onTap,
-    );
-  }
-
-  Widget _weeklyTile(
-    AppLocalizations t,
-    GameColors colors,
-    GameSession session,
-    VoidCallback onTap,
-  ) {
-    final count = session.weekly.cleared(session.weekly.currentKey);
-    return _modeTile(
-      key: const ValueKey('home-weekly'),
-      icon: count == WeeklyPool.stageCount
-          ? Icons.stars_rounded
-          : Icons.auto_awesome_outlined,
-      color: colors.reward,
-      ink: colors.rewardInk,
-      title: t.weeklyTitle,
-      detail: t.weeklyProgress(count),
       onTap: onTap,
     );
   }
@@ -983,7 +892,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                       Text(
                         detail,
                         style: GameTypography.body.copyWith(
-                          fontSize: 12.5,
+                          fontSize: 13,
                           height: 1.15,
                           color: colors.secondaryText,
                         ),

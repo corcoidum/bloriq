@@ -162,7 +162,7 @@ class _JourneyCompanionsState extends State<JourneyCompanions>
               label,
               style: TextStyle(
                 color: GameTheme.colorsOf(context).secondaryText,
-                fontSize: 12,
+                fontSize: 13,
               ),
             ),
         ],

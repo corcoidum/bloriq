@@ -1,10 +1,7 @@
 import 'dart:convert';
 
 import 'package:bloriq/app/home_scene.dart';
-import 'package:bloriq/app/trail_workshop.dart';
-import 'package:bloriq/design/keep_all_text.dart';
 import 'package:bloriq/progression/progression_repository.dart';
-import 'package:bloriq/progression/progression_rules.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -76,13 +73,8 @@ void main() {
       ),
       findsNWidgets(5),
     );
-    expect(
-      find.descendant(
-        of: releaseKey('home-title'),
-        matching: find.text('정원지기'),
-      ),
-      findsOneWidget,
-    );
+    // 칭호는 홈에 보여 주지 않는다.
+    expect(releaseKey('home-title'), findsNothing);
     expect(find.text('꿈의 서고 등대 · 스테이지 13'), findsOneWidget);
     expect(releaseKey('home-daily-dot'), findsOneWidget);
     await _shot(tester, boundary, 'ko-world6');
@@ -161,7 +153,7 @@ void main() {
     await closeReleaseApp(tester);
   });
 
-  testWidgets('the game shows the stardust balance beside the starlight path', (
+  testWidgets('the starlight path shows its price and reports what it spent', (
     tester,
   ) async {
     seedSaga(throughWorld: 1, extra: 1);
@@ -172,24 +164,16 @@ void main() {
     Text label(String key) => tester.widget<Text>(releaseKey(key));
     // 별빛 길 권능이 있으면 판마다 첫 번은 무료다.
     expect(label('starlight-price').data, '무료');
-    expect(label('starlight-balance').data, '137');
+    // 잔액과 별 상한 배지는 게임 화면에 두지 않는다.
+    expect(releaseKey('starlight-balance'), findsNothing);
     await tapVisible(tester, releaseKey('starlight-path'));
     expect(label('starlight-price').data, '−20');
-    expect(label('starlight-balance').data, '137');
-    final badge = tester.widget<Badge>(releaseKey('assist-cap-badge'));
-    final luminance = [
-      badge.backgroundColor!.computeLuminance(),
-      badge.textColor!.computeLuminance(),
-    ]..sort();
-    expect(
-      (luminance.last + .05) / (luminance.first + .05),
-      greaterThanOrEqualTo(4.5),
-    );
-    expect(find.text('최대 ★2'), findsOneWidget);
-    expect(releaseKey('starlight-spent'), findsNothing);
+    expect(releaseKey('assist-cap-badge'), findsOneWidget);
+    expect(find.text('최대 ★2'), findsNothing);
     await tapVisible(tester, releaseKey('starlight-path'));
-    expect(label('starlight-balance').data, '117');
-    expect(label('starlight-spent').data, '−20 별가루');
+    await tester.pump(const Duration(milliseconds: 800));
+    expect(find.textContaining('−20 별가루'), findsOneWidget);
+    expect((await ProgressionRepository.load()).stardust, 117);
     if (_capture) {
       await captureReleaseScreen(
         tester,
@@ -197,49 +181,6 @@ void main() {
         'docs/screenshots/home-scene/ko-game-balance.png',
       );
     }
-    await closeReleaseApp(tester);
-  });
-
-  testWidgets('the workshop previews a trail before buying it', (tester) async {
-    seedSaga(throughWorld: 1, extra: 1);
-    await _patchProgression({'stardust': 650});
-    final boundary = await openReleaseApp(tester, captureArt: _capture);
-    await openHomeJourney(tester, tab: 'rewards');
-    final list = find.descendant(
-      of: find.byKey(const PageStorageKey('journey-rewards-list')),
-      matching: find.byType(Scrollable),
-    );
-    final preview = releaseKey('trail-preview');
-    await tester.scrollUntilVisible(preview, 200, scrollable: list);
-    TrailPreview shown() => tester.widget<TrailPreview>(preview);
-    String note(String key) => tester.widget<KeepAllText>(releaseKey(key)).data;
-    expect(shown().trailId, defaultTrailId);
-    expect(note('trail-preview-note'), '미리 보기 · 달빛 · 블록을 밀 때 남는 빛의 색이에요');
-
-    await tapVisible(tester, releaseKey('shop-preview-${TrailIds.lilac}'));
-    expect(shown().trailId, TrailIds.lilac);
-    expect(note('trail-preview-note'), '미리 보기 · 라일락 · 블록을 밀 때 남는 빛의 색이에요');
-    if (_capture) {
-      await Scrollable.ensureVisible(tester.element(preview), alignment: .1);
-      await tester.pump();
-      await captureReleaseScreen(
-        tester,
-        boundary,
-        'docs/screenshots/home-scene/ko-trail-preview.png',
-      );
-    }
-
-    // 사면 바로 달고, 미리 보기도 단 잔영으로 돌아온다.
-    await tapVisible(tester, releaseKey('shop-buy-${TrailIds.rose}'));
-    expect(shown().trailId, TrailIds.rose);
-    expect((await ProgressionRepository.load()).equippedTrail, TrailIds.rose);
-
-    await tester.scrollUntilVisible(
-      releaseKey('journey-titles-note'),
-      200,
-      scrollable: list,
-    );
-    expect(note('journey-titles-note'), '칭호는 꾸미기예요. 능력은 달라지지 않아요.');
     await closeReleaseApp(tester);
   });
 }

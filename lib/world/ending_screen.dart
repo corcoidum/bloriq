@@ -6,7 +6,6 @@ import '../design/game_theme.dart';
 import '../endless/endless_rules.dart';
 import '../endless/endless_screen.dart';
 import '../l10n/app_localizations.dart';
-import '../progression/progression_rules.dart';
 import '../settings/game_settings.dart';
 import 'credits_screen.dart';
 import 'ending_art.dart';
@@ -390,34 +389,6 @@ class _EndingScreenState extends State<EndingScreen>
                 style: GameTypography.reward.copyWith(color: colors.rewardInk),
               ),
               const SizedBox(height: 16),
-              Card(
-                child: Column(
-                  children: [
-                    ListTile(
-                      leading: Icon(
-                        Icons.military_tech_rounded,
-                        color: colors.reward,
-                      ),
-                      title: Text(
-                        titleById(sagaCompletionTitleId)!.name
-                            .resolve(t.localeName),
-                      ),
-                      subtitle: Text(t.endingTitleReward),
-                    ),
-                    ListTile(
-                      leading: Icon(
-                        Icons.auto_awesome_rounded,
-                        color: colors.echoInk,
-                      ),
-                      title: Text(
-                        trailById(TrailIds.firstStarlight)!.name
-                            .resolve(t.localeName),
-                      ),
-                      subtitle: Text(t.endingTrailReward),
-                    ),
-                  ],
-                ),
-              ),
               if (_saveFailed) ...[
                 Text(t.saveError, textAlign: TextAlign.center),
                 TextButton(

@@ -284,7 +284,7 @@ class _WorldNode extends StatelessWidget {
                                       ? world.subtitle.inLocale(lang)
                                       : WorldText.mystery.resolve(lang),
                                   style: GameTypography.label.copyWith(
-                                    fontSize: 12.5,
+                                    fontSize: 13,
                                     color: colors.secondaryText,
                                   ),
                                 ),

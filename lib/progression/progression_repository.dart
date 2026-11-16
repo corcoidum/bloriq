@@ -7,8 +7,6 @@ import 'progression_rules.dart';
 
 enum TrialRewardStatus { granted, alreadyOwned, saveFailed }
 
-enum WeeklyRewardStatus { granted, alreadyOwned, saveFailed }
-
 /// 레벨 업 한 번과 그때 받은 트랙 보상(20 초과 레벨은 null).
 class LevelUp {
   const LevelUp(this.level, this.reward);
@@ -632,23 +630,6 @@ class ProgressionRepository {
     return true;
   }
 
-  /// 별빛 공방에서 잔영을 산다. 이미 가졌거나 별가루가 모자라면 false.
-  /// 사면 바로 장착한다.
-  Future<bool> buyTrail(String trailId) async {
-    final item = shopItemFor(trailId);
-    if (!_writable ||
-        item == null ||
-        _ownedTrails.contains(trailId) ||
-        item.price > _stardust) {
-      return false;
-    }
-    _stardust -= item.price;
-    _ownedTrails.add(trailId);
-    _equippedTrail = trailId;
-    await retrySave();
-    return true;
-  }
-
   /// 풀이 따라 하기처럼 별빛 길 밖의 도움을 이 판에 기록한다.
   /// 상한은 더 낮은 쪽을 남긴다.
   Future<bool> markAssist(String levelKey, int cap) async {
@@ -756,24 +737,6 @@ class ProgressionRepository {
     _apply(TitleUnlock(reward.title.id), []);
     if (!await retrySave()) return TrialRewardStatus.saveFailed;
     return missing ? TrialRewardStatus.granted : TrialRewardStatus.alreadyOwned;
-  }
-
-  Future<WeeklyRewardStatus> awardWeeklyReward(int rotation) async {
-    if (!_writable) return WeeklyRewardStatus.saveFailed;
-    final reward = weeklyRewards[rotation];
-    final owned = switch (reward) {
-      TrailUnlock(:final trailId) => _ownedTrails.contains(trailId),
-      TitleUnlock(:final titleId) => _ownedTitles.contains(titleId),
-      _ => throw StateError('Invalid weekly reward'),
-    };
-    if (owned) {
-      await flush();
-      if (!saveFailed) return WeeklyRewardStatus.alreadyOwned;
-    } else {
-      _apply(reward, []);
-    }
-    if (!await retrySave()) return WeeklyRewardStatus.saveFailed;
-    return owned ? WeeklyRewardStatus.alreadyOwned : WeeklyRewardStatus.granted;
   }
 
   // ---- 내부 -------------------------------------------------------------------

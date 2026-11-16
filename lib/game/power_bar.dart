@@ -138,7 +138,7 @@ class _PowerChip extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: GameTypography.label.copyWith(
-                          fontSize: 12,
+                          fontSize: 13,
                           color: ink,
                           decoration: spent ? TextDecoration.lineThrough : null,
                         ),

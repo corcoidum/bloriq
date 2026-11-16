@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../app/game_session.dart';
-import '../design/arcade_components.dart';
 import '../design/game_theme.dart';
 import '../domain/puzzle.dart';
 import '../l10n/app_localizations.dart';
-import '../progression/progression_rules.dart';
 import '../world/world_catalog.dart';
 import 'trial_catalog.dart';
 
@@ -102,10 +100,6 @@ class _TrialScreenState extends State<_TrialScreen> {
         session.saga?.world(widget.world).title.inLocale(t.localeName) ??
         t.journeyFirstWorld;
     final chapter = widget.chapter;
-    final reward = trialRewards[widget.world]!;
-    final rewarded =
-        session.progression.ownedTitles.contains(reward.title.id) &&
-        session.progression.ownedTrails.contains(reward.trail.id);
     return Scaffold(
       backgroundColor: colors.background,
       appBar: AppBar(
@@ -143,30 +137,6 @@ class _TrialScreenState extends State<_TrialScreen> {
                   ),
                   style: GameTypography.label,
                 ),
-                if (chapter == null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8, bottom: 4),
-                    child: ArcadeSurface(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            rewarded
-                                ? t.trialRewardUnlocked
-                                : t.trialRewardGoal,
-                            style: GameTypography.label.copyWith(
-                              color: colors.rewardInk,
-                            ),
-                          ),
-                          Text(
-                            '${reward.title.name.resolve(t.localeName)} · ${reward.trail.name.resolve(t.localeName)}',
-                            style: GameTypography.body,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                 for (final (index, stage) in all.indexed)
                   if (chapter == null || stage.chapter == chapter)
                     Padding(

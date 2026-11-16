@@ -265,10 +265,8 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Moves: 1'), findsOneWidget);
-    expect(
-      find.text('An echo disappears after your next move.'),
-      findsOneWidget,
-    );
+    // 기본 조작 문구는 처음 다섯 판에서만 보여 준다.
+    expect(find.text('An echo disappears after your next move.'), findsNothing);
   });
 
   testWidgets('echo switch opens gate for one move and undo restores it', (

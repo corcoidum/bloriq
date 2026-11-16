@@ -18,7 +18,6 @@ import '../world/world_text.dart';
 import 'game_session.dart';
 import 'journey_constellations.dart';
 import 'level_picker.dart';
-import 'trail_workshop.dart';
 
 enum JourneyTab { status, constellations, companions, rewards }
 
@@ -471,7 +470,7 @@ class _WorldRow extends StatelessWidget {
                             : t.journeyWorldLocked,
                         style: TextStyle(
                           color: colors.secondaryText,
-                          fontSize: 12,
+                          fontSize: 13,
                         ),
                       ),
                     ],
@@ -484,7 +483,7 @@ class _WorldRow extends StatelessWidget {
                       textAlign: TextAlign.end,
                       style: GameTypography.label.copyWith(
                         color: colors.rewardInk,
-                        fontSize: 12,
+                        fontSize: 13,
                       ),
                     ),
                   )
@@ -513,7 +512,6 @@ class PlayerLevelCard extends StatelessWidget {
     final colors = GameTheme.colorsOf(context);
     final progression = session.progression;
     final standing = progression.standing;
-    final title = titleById(progression.title)?.name.resolve(t.localeName);
     return Container(
       key: const ValueKey('player-level'),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -546,11 +544,11 @@ class PlayerLevelCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  title ?? t.xpToNext(standing.xpRemaining),
+                  t.xpToNext(standing.xpRemaining),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: GameTypography.body.copyWith(
-                    fontSize: 12.5,
+                    fontSize: 13,
                     color: colors.secondaryText,
                   ),
                 ),
@@ -617,15 +615,11 @@ class _RewardsTab extends StatelessWidget {
       ),
     );
 
-    String rewardLabel(TrackReward reward) => switch (reward) {
+    // 잔영과 칭호는 더 이상 보여 주지 않는다. 옛 저장 기록에만 남아 있다.
+    String? rewardLabel(TrackReward reward) => switch (reward) {
       StardustBundle(:final amount) => t.rewardStardust(amount),
-      TrailUnlock(:final trailId) => t.rewardTrail(
-        trailById(trailId)?.name.resolve(lang) ?? trailId,
-      ),
-      TitleUnlock(:final titleId) => t.rewardTitle(
-        titleById(titleId)?.name.resolve(lang) ?? titleId,
-      ),
       StarlightCharge(:final charges) => t.rewardCharge(charges),
+      TrailUnlock() || TitleUnlock() => null,
     };
 
     Iterable<Widget> achievementSection(
@@ -641,7 +635,7 @@ class _RewardsTab extends StatelessWidget {
           achievement: achievement,
           progress: progression.achievementProgress(achievement),
           claimed: progression.claimedAchievements.contains(achievement.id),
-          rewards: achievement.rewards.map(rewardLabel).join(' · '),
+          rewards: achievement.rewards.map(rewardLabel).nonNulls.join(' · '),
         );
       }
     }
@@ -675,45 +669,46 @@ class _RewardsTab extends StatelessWidget {
           ),
         heading('track', t.rewardsTrack),
         for (final entry in rewardTrack)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: levelLabelWidth,
-                  child: Text(
-                    t.playerLevel(entry.level),
-                    style: GameTypography.label.copyWith(
-                      color: progression.level >= entry.level
-                          ? colors.goalInk
-                          : colors.secondaryText,
+          if (rewardLabel(entry.reward) case final label?)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: levelLabelWidth,
+                    child: Text(
+                      t.playerLevel(entry.level),
+                      style: GameTypography.label.copyWith(
+                        color: progression.level >= entry.level
+                            ? colors.goalInk
+                            : colors.secondaryText,
+                      ),
                     ),
                   ),
-                ),
-                Expanded(
-                  child: Text(
-                    rewardLabel(entry.reward),
-                    style: GameTypography.body.copyWith(
-                      fontSize: 15,
-                      color: progression.level >= entry.level
-                          ? colors.text
-                          : colors.secondaryText,
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: GameTypography.body.copyWith(
+                        fontSize: 15,
+                        color: progression.level >= entry.level
+                            ? colors.text
+                            : colors.secondaryText,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Icon(
-                  progression.level >= entry.level
-                      ? Icons.check_circle_rounded
-                      : Icons.lock_outline_rounded,
-                  size: 18,
-                  color: progression.level >= entry.level
-                      ? colors.goalInk
-                      : colors.outline,
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  Icon(
+                    progression.level >= entry.level
+                        ? Icons.check_circle_rounded
+                        : Icons.lock_outline_rounded,
+                    size: 18,
+                    color: progression.level >= entry.level
+                        ? colors.goalInk
+                        : colors.outline,
+                  ),
+                ],
+              ),
             ),
-          ),
         ...achievementSection(
           'stars',
           AchievementText.stars.resolve(lang),
@@ -746,43 +741,6 @@ class _RewardsTab extends StatelessWidget {
             (achievement) =>
                 achievement.kind == AchievementKind.bareHandedStars,
           ),
-        ),
-        heading('shop', ShopText.heading.resolve(lang)),
-        TrailWorkshop(
-          progression: progression,
-          trailsHeading: heading('trails', t.rewardsTrails),
-          reduceMotion: reduceMotion,
-          onChanged: onChanged,
-        ),
-        heading('titles', t.rewardsTitles),
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: KeepAllText(
-            t.rewardsTitlesNote,
-            key: const ValueKey('journey-titles-note'),
-            style: GameTypography.body.copyWith(
-              fontSize: 13,
-              color: colors.secondaryText,
-            ),
-          ),
-        ),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            for (final title in titles)
-              ChoiceChip(
-                key: ValueKey('journey-title-${title.id}'),
-                label: Text(title.name.resolve(lang)),
-                selected: progression.title == title.id,
-                onSelected: progression.ownedTitles.contains(title.id)
-                    ? (_) async {
-                        await progression.setTitle(title.id);
-                        onChanged();
-                      }
-                    : null,
-              ),
-          ],
         ),
       ],
     );

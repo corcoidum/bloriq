@@ -221,8 +221,7 @@ class _EndlessScreenState extends State<EndlessScreen> {
     }
     final level = pool.level(run.board)!;
     _controller = PuzzleController(level);
-    _game = BloriqGame(_controller!)
-      ..trailStyle = widget.session.progression.equippedTrail;
+    _game = BloriqGame(_controller!);
     _cancelDrag();
   }
 
@@ -940,7 +939,7 @@ class _EndlessScreenState extends State<EndlessScreen> {
                         EndlessText.hintCostLabel(EndlessRules.hintCost)
                             .resolve(lang),
                         style: GameTypography.label.copyWith(
-                          fontSize: 11,
+                          fontSize: 13,
                           color: colors.secondaryText,
                         ),
                       ),
@@ -1116,13 +1115,6 @@ class _EndlessScreenState extends State<EndlessScreen> {
         EndlessText.milestone(milestone.depth).resolve(lang),
       if (reward?.levelsGained.lastOrNull case final level?)
         EndlessText.levelBadge(level.level).resolve(lang),
-      for (final trail in reward?.newTrails ?? const <String>[])
-        if (trailById(trail) case final definition?)
-          EndlessText.trailBadge(definition.name.resolve(lang)).resolve(lang),
-      for (final milestone in summary.milestones)
-        for (final r in milestone.rewards)
-          if (r case TitleUnlock(:final titleId))
-            if (titleById(titleId) case final title?) title.name.resolve(lang),
     ];
     return ColoredBox(
       color: colors.background.withValues(alpha: .72),

@@ -320,7 +320,7 @@ class _JourneyConstellationsState extends State<JourneyConstellations>
                       '${stage.stars} / 3',
                       style: TextStyle(
                         color: colors.secondaryText,
-                        fontSize: 12,
+                        fontSize: 13,
                       ),
                     ),
                   ],

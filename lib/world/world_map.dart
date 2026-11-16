@@ -396,7 +396,7 @@ class _GuardianAtlasCard extends StatelessWidget {
                 GoldenText.howTo.resolve(lang),
                 textAlign: TextAlign.center,
                 style: GameTypography.body.copyWith(
-                  fontSize: 12.5,
+                  fontSize: 13,
                   color: colors.secondaryText,
                 ),
               ),
@@ -501,7 +501,7 @@ class _StageTile extends StatelessWidget {
                           Text(
                             tag,
                             style: GameTypography.label.copyWith(
-                              fontSize: 11,
+                              fontSize: 13,
                               color: colors.secondaryText,
                             ),
                           ),

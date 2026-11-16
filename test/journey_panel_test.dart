@@ -19,7 +19,7 @@ final _status = find.byKey(const PageStorageKey('journey-status-list'));
 final _stars = find.byKey(const PageStorageKey('journey-constellation-list'));
 final _companions = releaseKey('journey-companion-list');
 final _rewards = find.byKey(const PageStorageKey('journey-rewards-list'));
-final _lastReward = releaseKey('journey-title-${titles.last.id}');
+final _lastReward = releaseKey('journey-rewards-bare-handed');
 
 Finder _tab(String name) => releaseKey('journey-tab-$name');
 
@@ -226,10 +226,6 @@ void main() {
       matching: find.byType(KeepAllText),
     );
     expect(tester.getRect(longReward).bottom, lessThan(tester.getRect(b).top));
-    final buy = releaseKey('shop-buy-${trailShop.first.trailId}');
-    await _reveal(tester, _rewards, buy);
-    await tapVisible(tester, buy);
-    expect(buy, findsNothing);
     await _reveal(tester, _rewards, _lastReward);
 
     await tapVisible(tester, _tab('companions'));

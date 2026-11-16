@@ -105,22 +105,6 @@ void main() {
     });
   });
 
-  group('starlight workshop', () {
-    test('shop items are known trails, unique, priced and ascending', () {
-      final ids = trailShop.map((item) => item.trailId).toList();
-      expect(ids.toSet(), hasLength(ids.length));
-      for (final item in trailShop) {
-        expect(trailById(item.trailId), isNotNull);
-        expect(item.price, greaterThan(0));
-        expect(shopItemFor(item.trailId), same(item));
-      }
-      final prices = trailShop.map((item) => item.price).toList();
-      expect(prices, [...prices]..sort());
-      expect(shopItemFor(TrailIds.moonlight), isNull);
-      expect(shopItemFor(TrailIds.goldForest), isNull);
-    });
-  });
-
   group('golden worlds', () {
     test('chapters map to worlds of five', () {
       expect(worldOfChapter(1), 1);
@@ -187,8 +171,6 @@ void main() {
         ...achievementTitles,
         ...voyageTitles,
         for (final reward in trialRewards.values) reward.title.id,
-        for (final reward in weeklyRewards)
-          if (reward case TitleUnlock(:final titleId)) titleId,
       }, titles.map((t) => t.id).toSet());
       expect(charges, greaterThan(0));
     });
@@ -218,12 +200,6 @@ void main() {
         'frost_bloom',
         'ink_bloom',
         'star_bloom',
-        'weekly_moonlight',
-        'weekly_ripple',
-        'weekly_amber',
-        'weekly_frost',
-        'weekly_nebula',
-        'weekly_daybreak',
         'trial_forest',
         'trial_cloud',
         'trial_lake',
@@ -233,7 +209,7 @@ void main() {
         'trial_star',
       ]);
       expect(defaultTrailId, 'moonlight');
-      expect(titles.length, 40);
+      expect(titles.length, 34);
       for (final text in [
         ...trails.map((t) => t.name),
         ...titles.map((t) => t.name),

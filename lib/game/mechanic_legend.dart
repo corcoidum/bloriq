@@ -53,9 +53,13 @@ class MechanicLegend extends StatelessWidget {
     super.key,
     required this.items,
     this.compact = false,
+    this.collapsed = false,
     this.lines = 2,
   });
   final List<LegendItem> items;
+
+  /// [compact]에서 설명을 접어 두고 아이콘만 보여 준다. 아이콘을 누르면 펼친다.
+  final bool collapsed;
 
   /// [compact]일 때 설명에 쓸 수 있는 줄 수.
   final int lines;
@@ -67,7 +71,7 @@ class MechanicLegend extends StatelessWidget {
   static const _iconGap = 10.0;
   static const _rowPadding = 3.0;
   static const _chipSize = 48.0;
-  static const _noteFontSize = 16.5;
+  static const _noteFontSize = 15.0;
 
   // 첫 문구는 게임 방법에서도 쓰는 기본 설명이다.
   static final _mechanics = <String, _LegendText>{
@@ -192,7 +196,10 @@ class MechanicLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (compact) return _CompactLegend(items: items, lines: lines);
+    if (items.isEmpty) return const SizedBox.shrink();
+    if (compact) {
+      return _CompactLegend(items: items, lines: lines, collapsed: collapsed);
+    }
     final colors = GameTheme.colorsOf(context);
     final style = GameTypography.body.copyWith(color: colors.text);
     if (items.length == 1 && items.single.kind == LegendKind.note) {
@@ -229,9 +236,14 @@ class MechanicLegend extends StatelessWidget {
 
 /// 기믹 아이콘 한 줄과 설명 한 칸. 아이콘을 누르면 그 기믹의 설명으로 바뀐다.
 class _CompactLegend extends StatefulWidget {
-  const _CompactLegend({required this.items, required this.lines});
+  const _CompactLegend({
+    required this.items,
+    required this.lines,
+    required this.collapsed,
+  });
   final List<LegendItem> items;
   final int lines;
+  final bool collapsed;
 
   @override
   State<_CompactLegend> createState() => _CompactLegendState();
@@ -253,12 +265,17 @@ class _CompactLegendState extends State<_CompactLegend> {
         style: style.copyWith(fontSize: MechanicLegend._noteFontSize),
       );
     }
-    // 문이 있으면 지금 상태를 알려 주는 문구가 맨 뒤에 오므로 기본으로 보여 준다.
-    final current =
-        items.where((item) => item.kind == _selected).firstOrNull ?? items.last;
+    final selected = items.where((item) => item.kind == _selected).firstOrNull;
+    // 접힌 범례는 아이콘을 눌러야 설명이 나온다.
+    // 펼친 범례는 문 상태를 알려 주는 맨 뒤 문구를 기본으로 보여 준다.
+    final current = selected ?? (widget.collapsed ? null : items.last);
+    final tappable = widget.collapsed || items.length > 1;
     return Row(
+      mainAxisAlignment: current == null
+          ? MainAxisAlignment.center
+          : MainAxisAlignment.start,
       children: [
-        if (items.length == 1) ...[
+        if (!tappable) ...[
           SizedBox.square(
             dimension: MechanicLegend._iconSize,
             child: MechanicLegend._icon(items.single.kind),
@@ -268,18 +285,24 @@ class _CompactLegendState extends State<_CompactLegend> {
           for (final item in items)
             Semantics(
               button: true,
-              selected: item.kind == current.kind,
+              selected: item.kind == current?.kind,
               label: item.text,
               child: ExcludeSemantics(
                 child: InkResponse(
                   key: ValueKey('legend-${item._keyKind}'),
                   radius: 24,
-                  onTap: () => setState(() => _selected = item.kind),
+                  onTap: () => setState(
+                    () => _selected = widget.collapsed && item.kind == _selected
+                        ? null
+                        : item.kind,
+                  ),
                   child: SizedBox.square(
                     dimension: MechanicLegend._chipSize,
                     child: Center(
                       child: Opacity(
-                        opacity: item.kind == current.kind ? 1 : .55,
+                        opacity: current == null || item.kind == current.kind
+                            ? 1
+                            : .55,
                         child: SizedBox.square(
                           dimension: MechanicLegend._iconSize,
                           child: MechanicLegend._icon(item.kind),
@@ -290,15 +313,16 @@ class _CompactLegendState extends State<_CompactLegend> {
                 ),
               ),
             ),
-          const SizedBox(width: MechanicLegend._iconGap),
+          if (current != null) const SizedBox(width: MechanicLegend._iconGap),
         ],
-        Expanded(
-          child: KeepAllText(
-            current.text,
-            maxLines: widget.lines,
-            style: style,
+        if (current != null)
+          Expanded(
+            child: KeepAllText(
+              current.text,
+              maxLines: widget.lines,
+              style: style,
+            ),
           ),
-        ),
       ],
     );
   }

@@ -212,7 +212,7 @@ void main() {
   );
 
   testWidgets(
-    '625 reveals the identity and restores the title and unique trail',
+    '625 reveals the identity and keeps old trail records without using them',
     (tester) async {
       await _seedFinal();
       await openReleaseApp(tester);
@@ -248,7 +248,8 @@ void main() {
       await openReleaseApp(tester);
       await enterReleaseWorld(tester, 7);
       await tapVisible(tester, releaseKey('world-continue'));
-      expect(releaseGame(tester).trailStyle, TrailIds.firstStarlight);
+      // 옛 저장 기록의 잔영은 남아 있어도 게임은 기본 잔영만 그린다.
+      expect(releaseGame(tester).trailStyle, defaultTrailId);
       await closeReleaseApp(tester);
     },
   );

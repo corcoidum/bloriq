@@ -100,14 +100,14 @@ class GameColors {
   );
 }
 
-/// 글꼴 세 단계:
+/// 글꼴 두 단계:
 /// - 제목·숫자·버튼·라벨: 주아(Jua) — 둥글고 통통한 게임 글씨.
-/// - 본문·대사·설명: 감자꽃(Gamja Flower) — 동글동글한 동화책 손글씨.
-///   글자가 작게 그려지는 글꼴이라 크기를 조금 키우고 줄 간격을 줄였다.
-/// - 두 글꼴에 없는 기호(가운뎃점 등)는 고운돋움 → 나눔고딕 순으로 채운다.
+/// - 본문·대사·설명: 고운돋움(Gowun Dodum) — 작은 크기에서도 또렷한 돋움.
+///   손글씨(감자꽃)는 작은 글씨에서 읽기 어려워 쓰지 않는다.
+/// - 두 글꼴에 없는 기호는 나눔고딕으로 채운다.
 abstract final class GameTypography {
   static const canvasFontFamily = 'Jua';
-  static const storyFontFamily = 'GamjaFlower';
+  static const storyFontFamily = 'GowunDodum';
   static const fallback = ['GowunDodum', 'NanumGothic'];
 
   static const brand = TextStyle(
@@ -124,12 +124,12 @@ abstract final class GameTypography {
     fontWeight: FontWeight.w400,
   );
 
-  /// 판 아래 설명·결과 팝업 본문·정령 대사용 손글씨 글꼴.
+  /// 판 아래 설명·결과 팝업 본문·정령 대사용 본문 글꼴.
   static const body = TextStyle(
     fontFamily: storyFontFamily,
     fontFamilyFallback: fallback,
-    fontSize: 17,
-    height: 1.2,
+    fontSize: 15,
+    height: 1.3,
   );
 
   /// 버튼·라벨·작은 수치. 주아는 굵기가 하나라 가짜 굵게를 쓰지 않는다.
@@ -217,7 +217,7 @@ abstract final class GameTheme {
         );
     final base = ThemeData(
       useMaterial3: true,
-      // 기본 글은 손글씨(감자꽃), 제목·라벨은 아래에서 주아로 바꾼다.
+      // 기본 글은 고운돋움, 제목·라벨은 아래에서 주아로 바꾼다.
       fontFamily: GameTypography.storyFontFamily,
       fontFamilyFallback: GameTypography.fallback,
       brightness: brightness,
@@ -292,6 +292,11 @@ abstract final class GameTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+      ),
+      // 알림이 아래 버튼(되돌리기·다시 시작)을 덮지 않도록 띄운다.
+      snackBarTheme: const SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        insetPadding: EdgeInsets.fromLTRB(16, 0, 16, 84),
       ),
     );
   }

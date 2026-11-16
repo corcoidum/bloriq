@@ -625,45 +625,6 @@ void main() {
     });
   });
 
-  group('starlight workshop', () {
-    test('buying spends stardust, owns and equips the trail', () async {
-      final repo = await _load();
-      for (var id = 1; id <= 12; id++) {
-        await repo.recordClear(
-          levelKey: '$id:1',
-          stars: 3,
-          previousBestStars: null,
-        );
-      }
-      final before = repo.stardust;
-      expect(before, greaterThanOrEqualTo(300));
-      expect(await repo.buyTrail(TrailIds.rose), true);
-      expect(repo.stardust, before - 300);
-      expect(repo.ownedTrails, contains(TrailIds.rose));
-      expect(repo.equippedTrail, TrailIds.rose);
-      // 두 번 사지 않는다.
-      expect(await repo.buyTrail(TrailIds.rose), false);
-      expect(repo.stardust, before - 300);
-      final reloaded = await _load();
-      expect(reloaded.ownedTrails, contains(TrailIds.rose));
-      expect(reloaded.equippedTrail, TrailIds.rose);
-    });
-
-    test('cannot buy without enough stardust or a non-shop trail', () async {
-      final repo = await _load();
-      await repo.recordClear(
-        levelKey: '1:1',
-        stars: 3,
-        previousBestStars: null,
-      );
-      expect(await repo.buyTrail(TrailIds.rose), false);
-      expect(await repo.buyTrail(TrailIds.goldForest), false);
-      expect(await repo.buyTrail(TrailIds.aurora), false);
-      expect(repo.stardust, 25);
-      expect(repo.ownedTrails, {'moonlight'});
-    });
-  });
-
   test('five golden chapters in one world unlock its golden trail', () async {
     final repo = await _load();
     ClearReward? last;

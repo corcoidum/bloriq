@@ -80,7 +80,7 @@ class LevelPicker extends StatelessWidget {
                         t.level(level.id),
                         style: TextStyle(
                           color: colors.secondaryText,
-                          fontSize: 12,
+                          fontSize: 13,
                         ),
                       ),
                       Text(
@@ -146,7 +146,7 @@ class LevelPicker extends StatelessWidget {
                   Text(
                     spirit.levelTitle.inLocale(t.localeName),
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 12),
+                    style: const TextStyle(fontSize: 13),
                   ),
                 ],
                 const SizedBox(height: 4),

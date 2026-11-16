@@ -165,15 +165,16 @@ void main() {
       '{"version":1,"xp":0,"stardust":40,"backfilled":true}',
     );
     await pumpGame(tester, const BloriqApp());
-    // 쓰기 전: 이번에 낼 값과 가진 별가루가 함께 보인다.
+    // 쓰기 전: 이번에 낼 값만 보인다. 쓴 뒤에는 알림으로 쓴 값을 알린다.
     Text label(String key) => tester.widget<Text>(find.byKey(ValueKey(key)));
     expect(label('starlight-price').data, '−20');
-    expect(label('starlight-balance').data, '40');
-    expect(find.byKey(const ValueKey('starlight-spent')), findsNothing);
+    expect(find.byKey(const ValueKey('starlight-balance')), findsNothing);
+    expect(find.byKey(const ValueKey('starlight-note')), findsNothing);
     await tapVisible(tester, find.byKey(const ValueKey('starlight-path')));
     expect(_game(tester).hintMove, isNotNull);
-    expect(label('starlight-balance').data, '20');
-    expect(label('starlight-spent').data, startsWith('−20'));
+    await tester.pump(const Duration(milliseconds: 800));
+    expect(find.textContaining('−20'), findsWidgets);
+    expect((await ProgressionRepository.load()).stardust, 20);
     await _solve(tester);
     expect(find.text('★★☆'), findsOneWidget);
     final saved = await ProgressionRepository.load();
@@ -203,7 +204,7 @@ void main() {
     await tapVisible(tester, find.byIcon(Icons.refresh_rounded));
     expect(_game(tester).hintMove, isNull);
     expect(find.byKey(const ValueKey('assist-cap-badge')), findsOneWidget);
-    expect(find.text('Max ★2'), findsOneWidget);
+    expect(find.text('Max ★2'), findsNothing);
 
     await _solve(tester);
     expect(find.text('★★☆'), findsOneWidget);

@@ -245,7 +245,7 @@ class _SpiritAlbumShelfState extends State<SpiritAlbumShelf>
                       t.level(friend.levelId),
                       style: TextStyle(
                         color: colors.secondaryText,
-                        fontSize: 12,
+                        fontSize: 13,
                       ),
                     ),
                   ],
@@ -392,7 +392,7 @@ class _SpiritAlbumShelfState extends State<SpiritAlbumShelf>
                       number,
                       style: TextStyle(
                         color: colors.secondaryText,
-                        fontSize: 12,
+                        fontSize: 13,
                       ),
                     ),
                   ],

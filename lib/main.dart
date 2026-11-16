@@ -38,7 +38,6 @@ import 'tutorial/echo_tutorial.dart';
 import 'tutorial/world_tutorial.dart';
 import 'analytics/local_analytics.dart';
 import 'story/narrative_controller.dart';
-import 'story/companion_view.dart';
 import 'story/story_catalog.dart';
 import 'story/spirit_album.dart';
 import 'story/discovery_panel.dart';
@@ -58,9 +57,6 @@ import 'world/world_text.dart';
 import 'world/world_theme.dart';
 import 'trials/trial_catalog.dart';
 import 'trials/trial_screen.dart';
-import 'weekly/weekly_pool.dart';
-import 'weekly/weekly_repository.dart';
-import 'weekly/weekly_screen.dart' show weeklyRewardLabel;
 
 void main() => runApp(const BloriqApp());
 
@@ -203,14 +199,11 @@ class _GameScreenState extends State<GameScreen>
   ProgressRepository? _progress;
   CompletionResult? _completion;
   TrialClearResult? _trialResult;
-  WeeklyClearResult? _weeklyResult;
   Future<void> Function()? _pendingCampaignReward;
   bool _replaying = false;
   bool _reduceMotion = false;
 
   /// 방금 별빛 길에 쓴 값. 버튼 위에 잠깐 띄운다.
-  String? _spendNote;
-  int _spendSerial = 0;
   bool _isNewBest = false;
 
   /// 이번 클리어로 받은 경험치·별가루·권능·유대. 결과 팝업에 보여 준다.
@@ -332,8 +325,7 @@ class _GameScreenState extends State<GameScreen>
       unawaited(_loadBoardSkin());
     }
     _controller = _newController(_loaded[_index]);
-    _game = BloriqGame(_controller!)
-      ..trailStyle = widget.session.progression.equippedTrail;
+    _game = BloriqGame(_controller!);
     widget.session.analytics.addListener(_analyticsChanged);
     _startAttempt();
     _trackOpened();
@@ -446,9 +438,6 @@ class _GameScreenState extends State<GameScreen>
     final level = _controller!.state.level;
     if (_trial case final stage?) {
       return widget.session.trialProgress.bestMoves(stage);
-    }
-    if (widget.play.weeklyStage case final stage?) {
-      return widget.session.weekly.bestMoves(stage);
     }
     if (widget.play.mode == PlayMode.daily) {
       return widget.session.daily.bestMoves(widget.play.dailyDate!);
@@ -568,8 +557,7 @@ class _GameScreenState extends State<GameScreen>
     setState(() {
       _index = index;
       _controller = _newController(_loaded[index]);
-      _game = BloriqGame(_controller!)
-        ..trailStyle = widget.session.progression.equippedTrail;
+      _game = BloriqGame(_controller!);
       _dragBlock = null;
       _dragStart = null;
       _gateBlocked = false;
@@ -629,10 +617,6 @@ class _GameScreenState extends State<GameScreen>
     final state = controller.state;
     if (_trial case final stage?) {
       await _recordTrial(controller, stage);
-      return;
-    }
-    if (widget.play.weeklyStage case final stage?) {
-      await _recordWeekly(controller, stage);
       return;
     }
     if (_tutorial?.complete == true) {
@@ -739,32 +723,6 @@ class _GameScreenState extends State<GameScreen>
     }
   }
 
-  Future<void> _recordWeekly(
-    PuzzleController controller,
-    WeeklyStage stage,
-  ) async {
-    final state = controller.state;
-    final result = await widget.session.recordWeeklyClear(stage, state.moves);
-    if (mounted &&
-        identical(controller, _controller) &&
-        identical(state, controller.state)) {
-      setState(() => _weeklyResult = result);
-    }
-  }
-
-  Future<void> _retryWeeklySave(
-    PuzzleController controller,
-    WeeklyStage stage,
-  ) async {
-    if (_retryingSave) return;
-    setState(() => _retryingSave = true);
-    try {
-      await _recordWeekly(controller, stage);
-    } finally {
-      if (mounted) setState(() => _retryingSave = false);
-    }
-  }
-
   Future<void> _recordCampaignReward(
     PuzzleController controller,
     PuzzleState state, {
@@ -816,7 +774,6 @@ class _GameScreenState extends State<GameScreen>
         !identical(controller.state, state)) {
       return;
     }
-    _game?.trailStyle = widget.session.progression.equippedTrail;
     setState(() {
       _reward = reward;
       if (worldEvent?.completed != null) {
@@ -834,7 +791,6 @@ class _GameScreenState extends State<GameScreen>
   void _resetAssist() {
     _reward = null;
     _trialResult = null;
-    _weeklyResult = null;
     _guardianReveal = null;
     _pendingCampaignReward = null;
     _armedPower = null;
@@ -1027,19 +983,27 @@ class _GameScreenState extends State<GameScreen>
               ),
             );
           }
+          // 쓴 값과 별 상한을 한 번에 알린다.
+          final notes = [
+            if (used.source == StarlightPathSource.charge)
+              t.starlightPassSpent
+            else if (used.source == StarlightPathSource.stardust)
+              t.starlightSpent(used.cost),
+            if (!_starlightUsed && _trial == null) t.starlightCapped,
+          ];
+          if (notes.isNotEmpty) {
+            messenger
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                SnackBar(
+                  key: const ValueKey('starlight-note'),
+                  content: Text(notes.join('\n')),
+                ),
+              );
+          }
           setState(() {
             if (used.source == StarlightPathSource.free) {
               _starlightFreeUsed = true;
-            } else {
-              _spendSerial++;
-              _spendNote = used.source == StarlightPathSource.charge
-                  ? t.starlightPassSpent
-                  : t.starlightSpent(used.cost);
-            }
-            if (!_starlightUsed && _trial == null) {
-              messenger.showSnackBar(
-                SnackBar(content: Text(t.starlightCapped)),
-              );
             }
             _starlightUsed = true;
             _game!.hintMove = (
@@ -1198,12 +1162,9 @@ class _GameScreenState extends State<GameScreen>
             moves: state.moves,
             minimumMoves: state.level.minimumMoves,
           ),
-          levelText: switch (widget.play.weeklyStage) {
-            final stage? => t.weeklyStage(stage.index + 1),
-            null when widget.play.mode == PlayMode.daily =>
-              '${t.dailyEcho} ${widget.play.dailyDate}',
-            null => t.level(_displayNumber(state.level)),
-          },
+          levelText: widget.play.mode == PlayMode.daily
+              ? '${t.dailyEcho} ${widget.play.dailyDate}'
+              : t.level(_displayNumber(state.level)),
           movesText: t.moves(state.moves),
           bestText: t.bestMoves(best),
           mirrorSteps: mirrorSteps,
@@ -1368,7 +1329,6 @@ class _GameScreenState extends State<GameScreen>
       _gateBlocked = false;
       _completion = null;
       _trialResult = null;
-      _weeklyResult = null;
       _refreshGuide();
     });
   }
@@ -1671,9 +1631,6 @@ class _GameScreenState extends State<GameScreen>
                   ),
                 ),
               _resultStats(t, colors, state),
-              if (widget.play.weeklyStage case final stage?
-                  when _weeklyResult != null)
-                _weeklyResultView(t, colors, controller, stage, _weeklyResult!),
               // 기록 갱신 배지가 뜨면 같은 칭찬을 두 번 하지 않는다.
               if (state.moves == state.level.minimumMoves && !_isNewBest)
                 Padding(
@@ -1722,7 +1679,6 @@ class _GameScreenState extends State<GameScreen>
   ) {
     final colors = GameTheme.colorsOf(context);
     final result = _trialResult;
-    final reward = trialRewards[stage.world]!;
     return AnimatedBuilder(
       key: const ValueKey('complete'),
       animation: _victory,
@@ -1742,21 +1698,6 @@ class _GameScreenState extends State<GameScreen>
                 t.trialProgress(result.cleared, TrialCatalog.stagesPerWorld),
                 textAlign: TextAlign.center,
               ),
-              if (result.newReward) ...[
-                Text(
-                  t.trialRewardUnlocked,
-                  style: GameTypography.label.copyWith(color: colors.rewardInk),
-                  textAlign: TextAlign.center,
-                ),
-                Text(
-                  reward.title.name.resolve(t.localeName),
-                  textAlign: TextAlign.center,
-                ),
-                Text(
-                  t.rewardTrail(reward.trail.name.resolve(t.localeName)),
-                  textAlign: TextAlign.center,
-                ),
-              ],
               if (!result.saved) ...[
                 Text(t.saveError, textAlign: TextAlign.center),
                 TextButton(
@@ -1793,51 +1734,6 @@ class _GameScreenState extends State<GameScreen>
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _weeklyResultView(
-    AppLocalizations t,
-    GameColors colors,
-    PuzzleController controller,
-    WeeklyStage stage,
-    WeeklyClearResult result,
-  ) {
-    final complete = result.cleared == WeeklyPool.stageCount;
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Column(
-        children: [
-          Text(
-            complete ? t.weeklyComplete : t.weeklyProgress(result.cleared),
-            key: const ValueKey('weekly-result-progress'),
-            textAlign: TextAlign.center,
-            style: GameTypography.label.copyWith(color: colors.goalInk),
-          ),
-          if (result.newReward) ...[
-            Text(
-              t.weeklyRewardEarned,
-              key: const ValueKey('weekly-result-reward'),
-            ),
-            Text(
-              weeklyRewardLabel(
-                t,
-                widget.session.weekly.forWeek(stage.week)!.rotation,
-              ),
-            ),
-          ],
-          if (!result.saved) ...[
-            Text(t.saveError),
-            TextButton(
-              key: const ValueKey('retry-weekly'),
-              onPressed: _retryingSave
-                  ? null
-                  : () => _retryWeeklySave(controller, stage),
-              child: Text(t.retrySave),
-            ),
-          ],
-        ],
       ),
     );
   }
@@ -1998,9 +1894,6 @@ class _GameScreenState extends State<GameScreen>
         (_completion == null ||
             _retryingSave ||
             (_completion?.saved == true && _reward == null));
-    final weekly = widget.play.weeklyStage != null;
-    final awaitingWeeklySave =
-        weekly && (_weeklyResult == null || _retryingSave);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2011,11 +1904,9 @@ class _GameScreenState extends State<GameScreen>
             minimumSize: const Size(0, 54),
             textStyle: GameTypography.label.copyWith(fontSize: 18),
           ),
-          onPressed: awaitingFinalSave || awaitingWeeklySave
+          onPressed: awaitingFinalSave
               ? null
-              : () => weekly
-                    ? _leaveGame()
-                    : widget.play.mode != PlayMode.campaign
+              : () => widget.play.mode != PlayMode.campaign
                     ? Navigator.pop(context)
                     : ending
                     ? _leaveFor(const OpenEnding())
@@ -2038,9 +1929,7 @@ class _GameScreenState extends State<GameScreen>
                 : Icons.arrow_forward,
           ),
           label: Text(
-            weekly
-                ? t.weeklyReturn
-                : widget.play.mode != PlayMode.campaign
+            widget.play.mode != PlayMode.campaign
                 ? t.close
                 : ending
                 ? t.endingEntry
@@ -2132,6 +2021,35 @@ class _GameScreenState extends State<GameScreen>
   }
 
   /// 판 아래에 계속 보여 줄 설명. 기믹이 있으면 기믹마다 한 줄씩 나눈다.
+  /// 세계 1의 첫 다섯 판과 연습 판에서만 기본 조작 문구를 띄운다.
+  bool get _showsBasics =>
+      widget.play.mode == PlayMode.tutorialReplay ||
+      (widget.play.mode == PlayMode.campaign &&
+          !_expansion &&
+          _displayNumber(_loaded[_index]) <= 5);
+
+  /// 기믹 설명은 그 기믹이 이 세계에서 처음 나오는 판에서만 펼친다.
+  /// 이미 깬 판이나 아는 기믹만 있는 판에서는 아이콘만 두고, 누르면 설명이 나온다.
+  /// 닫힌 문에 막혔을 때는 이유를 바로 보여 준다.
+  bool get _legendCollapsed {
+    if (widget.play.mode != PlayMode.campaign || _gateBlocked) return false;
+    final level = _controller!.state.level;
+    // 판을 열 때 한 번 정한다. 깨고 나서 되돌려도 범례가 갑자기 접히지 않는다.
+    if (_legendMemo case (final id, final collapsed) when id == level.id) {
+      return collapsed;
+    }
+    final seen = {
+      for (final earlier in _loaded.take(_index)) ...earlier.mechanics.keys,
+    };
+    final collapsed =
+        _progress?.forLevel(level.id, revision: level.revision) != null ||
+        level.mechanics.keys.every(seen.contains);
+    _legendMemo = (level.id, collapsed);
+    return collapsed;
+  }
+
+  (int, bool)? _legendMemo;
+
   List<LegendItem> _legend(AppLocalizations t, PuzzleController controller) {
     final state = controller.state;
     LegendItem note(String text) => LegendItem(LegendKind.note, text);
@@ -2157,6 +2075,8 @@ class _GameScreenState extends State<GameScreen>
       gateBlocked: _gateBlocked,
     );
     if (mechanics.isNotEmpty) return mechanics;
+    // 기본 조작 안내는 처음 다섯 판에서만 보여 준다.
+    if (!_showsBasics) return const [];
     return [note(state.echo == null ? t.instruction : t.echoInstruction)];
   }
 
@@ -2204,9 +2124,6 @@ class _GameScreenState extends State<GameScreen>
                   builder: (context, constraints) {
                     // 스크롤 없이 한 화면에 고정한다. 보드는 남은 높이를 모두 쓴다.
                     final compact = constraints.maxHeight < 700;
-                    final story = widget.play.mode == PlayMode.campaign
-                        ? widget.session.story.forLevel(_loaded[_index].id)
-                        : null;
                     final canPickLevel =
                         widget.play.mode == PlayMode.campaign &&
                         _tutorial == null;
@@ -2232,7 +2149,6 @@ class _GameScreenState extends State<GameScreen>
                     final minBoard =
                         rows * _minCell + BoardGeometry.defaultFrameInset * 2;
                     final fit = _chooseFit(t, constraints, minBoard);
-                    final tight = fit.index >= _GameFit.tight.index;
                     final scroll = fit == _GameFit.scroll;
                     final boardHeight = math.max(
                       minBoard,
@@ -2273,12 +2189,7 @@ class _GameScreenState extends State<GameScreen>
                     final starlight =
                         _tutorial == null &&
                             widget.play.mode != PlayMode.tutorialReplay
-                        ? _starlightButton(
-                            t,
-                            colors,
-                            controller,
-                            roomy: !tight && _textScale <= 1.15,
-                          )
+                        ? _starlightButton(t, colors, controller)
                         : null;
                     final levelLabel = Semantics(
                       label: t.levels,
@@ -2297,98 +2208,53 @@ class _GameScreenState extends State<GameScreen>
                             children: [
                               Flexible(
                                 child: Text(
-                                  switch (widget.play.weeklyStage) {
-                                    final stage? => t.weeklyStage(
-                                      stage.index + 1,
-                                    ),
-                                    null
-                                        when widget.play.mode ==
-                                            PlayMode.daily =>
-                                      t.dailyEcho,
-                                    null when _trial != null => t.echoTrials,
-                                    null => t.level(
-                                      _displayNumber(_loaded[_index]),
-                                    ),
-                                  },
+                                  widget.play.mode == PlayMode.daily
+                                      ? t.dailyEcho
+                                      : _trial != null
+                                      ? t.echoTrials
+                                      : t.level(
+                                          _displayNumber(_loaded[_index]),
+                                        ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: labelStyle,
                                 ),
                               ),
-                              if (_world?.story.forLevel(_loaded[_index].id)
-                                  case final spirit?
-                                  when !tight && _trial == null)
-                                Flexible(
-                                  child: Text(
-                                    ' · ${spirit.levelTitle.inLocale(t.localeName)}',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: labelStyle.copyWith(
-                                      color: colors.rewardInk,
-                                      decoration: TextDecoration.none,
-                                    ),
-                                  ),
-                                ),
-                              if (!tight && story?.released == true)
-                                Flexible(
-                                  child: Text(
-                                    ' · ${story!.levelTitle.inLocale(t.localeName)}',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: labelStyle.copyWith(
-                                      color: colors.rewardInk,
-                                      decoration: TextDecoration.none,
-                                    ),
-                                  ),
-                                ),
                             ],
                           ),
                         ),
                       ),
                     );
                     final clockPhase = _game!.clockPhase;
-                    final boardTitle = clockPhase == null
-                        ? levelLabel
-                        : Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Flexible(child: levelLabel),
-                              Flexible(
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: ValueListenableBuilder<int>(
-                                    valueListenable: clockPhase,
-                                    builder: (_, phase, _) => Semantics(
-                                      key: const ValueKey('clock-phase'),
-                                      label: t.clockPhaseLabel(
-                                        phase + 1,
-                                        ClockArrow.phaseCount,
-                                      ),
-                                      excludeSemantics: true,
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.schedule_rounded,
-                                            size: 16,
-                                            color: colors.rewardInk,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            '${phase + 1}/${ClockArrow.phaseCount}',
-                                            style: GameTypography.label
-                                                .copyWith(
-                                                  color: colors.rewardInk,
-                                                  fontSize: 13,
-                                                ),
-                                          ),
-                                        ],
-                                      ),
+                    final clockChip = clockPhase == null
+                        ? null
+                        : ValueListenableBuilder<int>(
+                            valueListenable: clockPhase,
+                            builder: (_, phase, _) => Semantics(
+                              key: const ValueKey('clock-phase'),
+                              label: t.clockPhaseLabel(
+                                phase + 1,
+                                ClockArrow.phaseCount,
+                              ),
+                              excludeSemantics: true,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.schedule_rounded,
+                                    size: 18,
+                                    color: colors.rewardInk,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${phase + 1}/${ClockArrow.phaseCount}',
+                                    style: GameTypography.label.copyWith(
+                                      color: colors.rewardInk,
                                     ),
                                   ),
-                                ),
+                                ],
                               ),
-                            ],
+                            ),
                           );
                     final showChallenges =
                         _expansion && widget.play.mode == PlayMode.campaign;
@@ -2396,7 +2262,7 @@ class _GameScreenState extends State<GameScreen>
                         ? Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Flexible(child: boardTitle),
+                              Flexible(child: levelLabel),
                               IconButton(
                                 key: const ValueKey('stage-challenge-card'),
                                 tooltip: t.stageChallenges,
@@ -2425,7 +2291,7 @@ class _GameScreenState extends State<GameScreen>
                               ),
                             ],
                           )
-                        : boardTitle;
+                        : levelLabel;
                     return Center(
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 560),
@@ -2454,9 +2320,7 @@ class _GameScreenState extends State<GameScreen>
                                         ),
                                         child: FittedBox(
                                           fit: BoxFit.scaleDown,
-                                          child: GameWordmark(
-                                            size: compact ? 28 : 32,
-                                          ),
+                                          child: boardHeading,
                                         ),
                                       ),
                                       Align(
@@ -2520,75 +2384,28 @@ class _GameScreenState extends State<GameScreen>
                                     ],
                                   ),
                                 ),
-                                if (tight) ...[
-                                  // 좁은 화면: 스테이지 이름 옆으로 이동 수를 옮긴다.
-                                  SizedBox(
-                                    height: rowHeight,
+                                // 정수 높이로 고정해 아래 보드가 픽셀 경계에 놓이게 한다.
+                                SizedBox(
+                                  height: rowHeight,
+                                  // 큰 글자에서는 줄 전체를 줄여 한 줄에 둔다.
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
                                     child: Row(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Expanded(
-                                          child: Align(
-                                            alignment: Alignment.centerLeft,
-                                            child: boardHeading,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Flexible(
-                                          child: FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            child: movePill,
-                                          ),
-                                        ),
-                                        if (starlight != null) ...[
-                                          const SizedBox(width: 6),
-                                          FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            child: starlight,
-                                          ),
+                                        if (clockChip != null) ...[
+                                          clockChip,
+                                          const SizedBox(width: 10),
                                         ],
-                                      ],
-                                    ),
-                                  ),
-                                ] else ...[
-                                  boardHeading,
-                                  SizedBox(height: compact ? 4 : 8),
-                                  // 정수 높이로 고정해 아래 보드가 픽셀 경계에 놓이게 한다.
-                                  SizedBox(
-                                    height: rowHeight,
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Expanded(
-                                          flex: 3,
-                                          child: JourneyCompanions(
-                                            companion: widget
-                                                .session
-                                                .collection
-                                                .companion,
-                                            narrative: _narrative,
-                                            reduceMotion: _reduceMotion,
-                                            compact: compact,
-                                            inline: true,
-                                            onAlbum: _openAlbum,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Flexible(
-                                          flex: 2,
-                                          child: FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            child: movePill,
-                                          ),
-                                        ),
+                                        movePill,
                                         if (starlight != null) ...[
-                                          const SizedBox(width: 6),
+                                          const SizedBox(width: 8),
                                           starlight,
                                         ],
                                       ],
                                     ),
                                   ),
-                                ],
+                                ),
                                 SizedBox(height: compact ? 4 : 8),
                                 if (_expansion && _ownedPowers.isNotEmpty) ...[
                                   PowerBar(
@@ -2674,7 +2491,10 @@ class _GameScreenState extends State<GameScreen>
                                         children: [
                                           MechanicLegend(
                                             items: legend,
-                                            compact: fit != _GameFit.full,
+                                            compact:
+                                                fit != _GameFit.full ||
+                                                _legendCollapsed,
+                                            collapsed: _legendCollapsed,
                                             lines: fit == _GameFit.minimal
                                                 ? 1
                                                 : 2,
@@ -2986,9 +2806,8 @@ class _GameScreenState extends State<GameScreen>
   Widget _starlightButton(
     AppLocalizations t,
     GameColors colors,
-    PuzzleController controller, {
-    required bool roomy,
-  }) {
+    PuzzleController controller,
+  ) {
     final companion = widget.session.collection.companion;
     final quote = widget.session.progression.quoteStarlightPath(
       freeUsedThisAttempt: _starlightFreeUsed,
@@ -3014,7 +2833,7 @@ class _GameScreenState extends State<GameScreen>
         !_hintBusy &&
         !_trialAtLimit;
     final cap = _trial == null ? _starCap : 3;
-    final pathButton = Tooltip(
+    return Tooltip(
       message: [
         t.starlightPath,
         if (cap < 3) AssistCapText.kept.resolve(t.localeName),
@@ -3044,60 +2863,46 @@ class _GameScreenState extends State<GameScreen>
                         size: 20,
                         color: colors.rewardInk,
                       );
-                final cost = Text(
-                  price,
-                  key: const ValueKey('starlight-price'),
-                  style: GameTypography.label.copyWith(
-                    fontSize: 11,
-                    color: short ? colors.error : colors.rewardInk,
-                  ),
-                );
-                // 좁은 화면과 큰 글자에서는 값만 보여 주고 잔액은 말풍선에 둔다.
-                if (!roomy) {
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [icon, cost],
-                  );
-                }
                 return Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     icon,
                     const SizedBox(width: 6),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        cost,
-                        // 지금 가진 별가루.
-                        Semantics(
-                          liveRegion: true,
-                          label: t.stardustCount(progression.stardust),
-                          child: ExcludeSemantics(
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.auto_awesome,
-                                  size: 10,
-                                  color: colors.secondaryText,
+                    Text(
+                      price,
+                      key: const ValueKey('starlight-price'),
+                      style: GameTypography.label.copyWith(
+                        fontSize: 14,
+                        color: short ? colors.error : colors.rewardInk,
+                      ),
+                    ),
+                    // 도움을 쓴 판: 다시 시작해도 별 상한이 남아 있음을 작게 알린다.
+                    if (cap < 3)
+                      Semantics(
+                        key: const ValueKey('assist-cap-badge'),
+                        label: AssistCapText.badge(cap).resolve(t.localeName),
+                        excludeSemantics: true,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.star_rounded,
+                                size: 16,
+                                color: colors.reward,
+                              ),
+                              Text(
+                                '$cap',
+                                style: GameTypography.label.copyWith(
+                                  fontSize: 14,
+                                  color: colors.rewardInk,
                                 ),
-                                const SizedBox(width: 2),
-                                Text(
-                                  '${progression.stardust}',
-                                  key: const ValueKey('starlight-balance'),
-                                  style: GameTypography.label.copyWith(
-                                    fontSize: 11,
-                                    height: 1.1,
-                                    color: colors.secondaryText,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
+                      ),
                   ],
                 );
               },
@@ -3105,69 +2910,6 @@ class _GameScreenState extends State<GameScreen>
           ),
         ),
       ),
-    );
-    final button = Stack(
-      clipBehavior: Clip.none,
-      children: [
-        pathButton,
-        if (_spendNote case final note?)
-          Positioned(
-            // 위쪽에는 별 상한 배지가 붙으므로 아래로 띄운다.
-            right: 0,
-            bottom: -16,
-            child: IgnorePointer(
-              // 방금 쓴 값이 버튼 아래로 흘러내렸다 사라진다.
-              child: TweenAnimationBuilder<double>(
-                key: ValueKey('starlight-spent-$_spendSerial'),
-                tween: Tween(begin: 0, end: 1),
-                duration: const Duration(milliseconds: 1600),
-                builder: (_, value, child) => Opacity(
-                  opacity: value < .6 ? 1 : (1 - value) / .4,
-                  child: Transform.translate(
-                    offset: Offset(0, _reduceMotion ? 0 : 6 * value),
-                    child: child,
-                  ),
-                ),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: colors.surface,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: colors.reward.withValues(alpha: .6),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    child: Text(
-                      note,
-                      key: const ValueKey('starlight-spent'),
-                      style: GameTypography.label.copyWith(
-                        fontSize: 11,
-                        color: colors.rewardInk,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-    if (cap >= 3) return button;
-    // 도움을 쓴 판: 다시 시작해도 상한이 남아 있음을 늘 보여 준다.
-    return Badge(
-      key: const ValueKey('assist-cap-badge'),
-      backgroundColor: colors.reward,
-      // 금색 바탕 위에는 테마와 관계없이 어두운 글자를 쓴다.
-      textColor: colors.blockSymbol,
-      label: Text(AssistCapText.badge(cap).resolve(t.localeName)),
-      // 버튼 위 가운데에 붙여서 화면 오른쪽 끝을 넘지 않게 한다.
-      alignment: Alignment.topCenter,
-      offset: const Offset(-26, -10),
-      child: button,
     );
   }
 
@@ -3199,20 +2941,6 @@ class _GameScreenState extends State<GameScreen>
           t.rewardPower(power.name.resolve(lang)),
           colors.rewardInk,
         ),
-      for (final trail in reward.newTrails)
-        if (trailById(trail) case final definition?)
-          (
-            Icons.blur_on_rounded,
-            t.rewardTrail(definition.name.resolve(lang)),
-            colors.echoInk,
-          ),
-      for (final title in reward.newTitles)
-        if (titleById(title) case final definition?)
-          (
-            Icons.workspace_premium_rounded,
-            t.rewardTitle(definition.name.resolve(lang)),
-            colors.rewardInk,
-          ),
       if (reward.newStarlightCharges > 0)
         (
           Icons.confirmation_number_outlined,
@@ -3419,13 +3147,8 @@ class _GameScreenState extends State<GameScreen>
     final row = _rowHeight(fit);
     return (compact ? 8.0 : 20.0) +
         48 +
-        (fit.index >= _GameFit.tight.index
-            ? row + gap
-            : math.max(_expansion ? 40.0 : 0.0, 26 * _textScale) +
-                  8 +
-                  gap +
-                  row +
-                  gap) +
+        row +
+        gap +
         (_expansion && _ownedPowers.isNotEmpty
             ? math.max(44.0, 17 * _textScale + 8) + (compact ? 4 : 6)
             : 0) +
@@ -3457,15 +3180,14 @@ class _GameScreenState extends State<GameScreen>
     return MechanicLegend.slotHeight(
       context,
       width: math.min(constraints.maxWidth, 560.0) - GameSpacing.page * 2,
-      compact: fit != _GameFit.full,
+      compact: fit != _GameFit.full || _legendCollapsed,
       lines: fit == _GameFit.minimal ? 1 : 2,
       notes: _tutorial != null
           ? [t.tutorialMove, t.tutorialBlock, t.tutorialFinish]
           : [
               t.noMoves,
               if (!_undoAllowed) t.trialRestartNeeded,
-              t.instruction,
-              t.echoInstruction,
+              if (_showsBasics) ...[t.instruction, t.echoInstruction],
               for (final power in _ownedPowers)
                 WorldText.armed(power).resolve(t.localeName),
             ],

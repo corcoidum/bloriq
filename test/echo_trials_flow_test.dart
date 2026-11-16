@@ -141,7 +141,8 @@ void main() {
     final result = releaseKey('trial-result-return');
     await waitForReleaseWidget(tester, result);
     await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('세계 시련 보상을 얻었어요'), findsOneWidget);
+    // 칭호·잔영 보상 문구는 더 이상 보여 주지 않는다.
+    expect(find.text('세계 시련 보상을 얻었어요'), findsNothing);
     expect(find.text('시련 10 / 10 완료'), findsOneWidget);
     await _shot(tester, boundary, 'trial-reward');
     final progress = await ProgressRepository.load();
