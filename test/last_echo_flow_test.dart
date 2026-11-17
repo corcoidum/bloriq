@@ -5,8 +5,7 @@ import 'package:bloriq/game/bloriq_game.dart';
 import 'package:bloriq/l10n/app_localizations.dart';
 import 'package:bloriq/main.dart';
 import 'package:bloriq/settings/game_settings.dart';
-import 'package:bloriq/story/collection_repository.dart';
-import 'package:bloriq/story/spirit_album.dart';
+import 'package:bloriq/progression/progression_rules.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -64,7 +63,7 @@ void main() {
   );
 
   testWidgets(
-    'first five real puzzles grant one friend each; skip, album, buddy and replay retain records',
+    'first five puzzles show no spirit cards; the first constellation brings its ability spirit',
     (tester) async {
       final settings = GameSettings(reduceMotion: true);
       await tester.pumpWidget(BloriqApp(settings: settings));
@@ -87,34 +86,35 @@ void main() {
           .session;
       for (var id = 1; id <= 5; id++) {
         if (id > 1) await _solve(tester);
-        expect(session.collection.owned.length, id);
-        expect(session.collection.companion?.id, 's1-01');
         expect(
           session.progress
               .forLevel(id, revision: session.levels[id - 1].revision)!
               .completionCount,
           1,
         );
-        expect(find.byKey(const ValueKey('skip-story')), findsOneWidget);
-        if (id == 5) expect(find.text('The Garden’s Promise'), findsOneWidget);
-        await tapVisible(tester, find.byKey(const ValueKey('skip-story')));
-        if (id < 5) await tapVisible(tester, find.text('Next level'));
+        // 능력 없는 정령은 발견 카드로 나오지 않는다.
+        expect(find.byKey(const ValueKey('skip-story')), findsNothing);
+        if (id < 5) {
+          expect(
+            find.byKey(const ValueKey('result-spirit-joined')),
+            findsNothing,
+          );
+          await tapVisible(tester, find.text('Next level'));
+        }
       }
-      // 정령 도감은 결과 팝업의 더 보기 메뉴 안에 있다.
-      await tapVisible(tester, find.byKey(const ValueKey('result-more')));
-      await tester.pump(const Duration(milliseconds: 400));
-      await tester.pump(const Duration(milliseconds: 400));
-      await tapVisible(tester, find.byKey(const ValueKey('result-album')));
-      expect(find.byType(SpiritAlbum), findsOneWidget);
-      await tapVisible(tester, find.byKey(const ValueKey('spirit-s1-02')));
-      await tapVisible(tester, find.byKey(const ValueKey('equip-companion')));
-      expect(session.collection.companion?.id, 's1-02');
-      await tapVisible(tester, find.text('Close').last);
-      await tapVisible(tester, find.byTooltip('Close'));
+      // 첫 별자리를 완성하면 그 장의 능력 정령이 합류한다.
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      expect(session.progression.hasPower(PowerIds.moonflowerLeap), isTrue);
+      expect(
+        find.byKey(const ValueKey('result-spirit-joined')),
+        findsOneWidget,
+      );
+      expect(session.collection.companion, isNull);
       await tapVisible(tester, find.text('Try again'));
       await _solve(tester);
-      expect(find.byKey(const ValueKey('skip-story')), findsNothing);
-      expect(session.collection.owned.length, 5);
+      expect(find.byKey(const ValueKey('result-spirit-joined')), findsNothing);
       expect(
         session.progress
             .forLevel(5, revision: session.levels[4].revision)!
@@ -123,11 +123,10 @@ void main() {
       );
       await tapVisible(tester, find.byKey(const ValueKey('game-home')));
       expect(find.byKey(const ValueKey('home-screen')), findsOneWidget);
+      // 합류한 정령만 홈에서 리크 곁에 선다.
+      expect(find.byKey(const ValueKey('home-companion-0')), findsOneWidget);
+      expect(find.byKey(const ValueKey('home-companion-1')), findsNothing);
       await tester.pumpWidget(const SizedBox());
-      expect(
-        (await CollectionRepository.load(session.story)).companion?.id,
-        's1-02',
-      );
       settings.dispose();
     },
   );

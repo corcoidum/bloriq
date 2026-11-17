@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:bloriq/design/keep_all_text.dart';
 import 'package:bloriq/progression/progression_repository.dart';
 import 'package:bloriq/progression/progression_rules.dart';
 import 'package:flutter/material.dart';
@@ -17,9 +16,7 @@ const _capture = bool.fromEnvironment('CAPTURE_JOURNEY');
 
 final _status = find.byKey(const PageStorageKey('journey-status-list'));
 final _stars = find.byKey(const PageStorageKey('journey-constellation-list'));
-final _companions = releaseKey('journey-companion-list');
-final _rewards = find.byKey(const PageStorageKey('journey-rewards-list'));
-final _lastReward = releaseKey('journey-rewards-bare-handed');
+final _spirits = find.byKey(const PageStorageKey('journey-spirits-list'));
 
 Finder _tab(String name) => releaseKey('journey-tab-$name');
 
@@ -75,14 +72,15 @@ void main() {
     if (_capture) {
       final context = tester.element(find.byKey(const ValueKey('home-screen')));
       await tester.runAsync(() async {
-        for (var stage = 1; stage <= 5; stage++) {
-          await precacheImage(
-            ResizeImage(
-              AssetImage('assets/art/world7/spirits/s7-0$stage.png'),
-              width: 512,
-            ),
-            context,
-          );
+        // 정령 탭의 초상이 캡처에 나오도록 미리 불러 둔다.
+        for (final name in [
+          'last_echo/lunabel',
+          'season1/lumen',
+          'season1/ello',
+          'season1/hamo',
+          'season1/aster',
+        ]) {
+          await precacheImage(AssetImage('assets/art/$name.png'), context);
         }
       });
     }
@@ -93,7 +91,8 @@ void main() {
     expect(find.text('빛길 지도'), findsOneWidget);
     expect(find.text('175 / 175 스테이지'), findsOneWidget);
     expect(find.text('별 522 / 525'), findsOneWidget);
-    expect(find.text('정령 175 / 175'), findsOneWidget);
+    // 정령 수집 수는 더 이상 세지 않는다.
+    expect(find.textContaining('정령 175'), findsNothing);
     expect(find.text('이어서 할 곳'), findsOneWidget);
     await _captureJourney(tester, boundary, 'status');
 
@@ -111,14 +110,16 @@ void main() {
     }
     await _captureJourney(tester, boundary, 'constellations');
 
-    await tapVisible(tester, _tab('companions'));
-    expect(find.text('전체 수집 175 / 175'), findsOneWidget);
-    expect(find.text('이 세계 25 / 25'), findsOneWidget);
-    expect(releaseKey('spirit-s7-01').hitTestable(), findsOneWidget);
-    await _captureJourney(tester, boundary, 'companions');
-    await tapVisible(tester, releaseKey('spirit-s7-01'));
-    expect(releaseKey('spirit-detail-s7-01'), findsOneWidget);
-    await tapVisible(tester, find.text('닫기').last);
+    // 정령 탭에는 능력을 가진 다섯 명만 있다.
+    await tapVisible(tester, _tab('spirits'));
+    expect(find.text('함께하는 정령 5 / 5'), findsOneWidget);
+    for (final power in powerCatalog) {
+      await _reveal(tester, _spirits, releaseKey('ability-spirit-${power.id}'));
+    }
+    expect(find.text('아스테르'), findsOneWidget);
+    expect(releaseKey('spirit-s7-01'), findsNothing);
+    expect(_tab('rewards'), findsNothing);
+    await _captureJourney(tester, boundary, 'spirits');
     await tapVisible(tester, releaseKey('journey-close'));
 
     await tapVisible(tester, releaseKey('home-play'));
@@ -134,8 +135,8 @@ void main() {
     expect(find.text('별자리 복원 35 / 35'), findsOneWidget);
     expect(find.text('첫별자리').hitTestable(), findsOneWidget);
     expect(find.text('23 다시 도전'), findsOneWidget);
-    await tapVisible(tester, _tab('companions'));
-    expect(find.text('전체 수집 175 / 175'), findsOneWidget);
+    await tapVisible(tester, _tab('spirits'));
+    expect(find.text('함께하는 정령 5 / 5'), findsOneWidget);
     await tapVisible(tester, releaseKey('journey-close'));
     expect(releaseGame(tester).controller, same(controller));
     expect(controller.state.moves, 1);
@@ -168,9 +169,7 @@ void main() {
     await closeReleaseApp(tester);
   });
 
-  testWidgets('journey preserves equipment and reward flows across its tabs', (
-    tester,
-  ) async {
+  testWidgets('journey keeps its place across tabs', (tester) async {
     seedSaga(throughWorld: 1, extra: 1);
     final prefs = await SharedPreferences.getInstance();
     final progression = jsonDecode(
@@ -192,46 +191,17 @@ void main() {
     await openHomeJourney(tester);
     expect(find.text('26 / 175 스테이지'), findsOneWidget);
     expect(find.text('별 78 / 525'), findsOneWidget);
-    expect(find.text('정령 26 / 175'), findsOneWidget);
     final world7 = releaseKey('journey-world-7');
     await _reveal(tester, _status, world7);
     expect(tester.widget<InkWell>(world7).onTap, isNull);
 
-    await tapVisible(tester, _tab('companions'));
-    await chooseJourneyWorld(tester, releaseKey('journey-companion-world'), 1);
-    await _reveal(tester, _companions, releaseKey('album-chapter-5'));
-    await tapVisible(tester, releaseKey('album-chapter-5'));
-    final last = releaseKey('spirit-s1-25');
-    await _reveal(tester, _companions, last);
-    await tapVisible(tester, last);
-    await tapVisible(tester, releaseKey('equip-companion'));
-    expect(
-      tester.widget<FilledButton>(releaseKey('equip-companion')).onPressed,
-      isNull,
-    );
-    await tapVisible(tester, find.text('닫기').last);
-
-    await tapVisible(tester, _tab('rewards'));
-    await _reveal(tester, _rewards, releaseKey('journey-rewards-stars'));
-    final a = releaseKey('achievement-w1-stars-75');
-    final b = releaseKey('achievement-w2-stars-25');
-    final aCount = find.descendant(of: a, matching: find.text('75 / 75'));
-    final bCount = find.descendant(of: b, matching: find.text('3 / 25'));
-    expect(
-      tester.getRect(aCount).right,
-      closeTo(tester.getRect(bCount).right, .01),
-    );
-    final longReward = find.descendant(
-      of: a,
-      matching: find.byType(KeepAllText),
-    );
-    expect(tester.getRect(longReward).bottom, lessThan(tester.getRect(b).top));
-    await _reveal(tester, _rewards, _lastReward);
-
-    await tapVisible(tester, _tab('companions'));
+    await tapVisible(tester, _tab('spirits'));
+    final last = releaseKey('ability-spirit-${powerCatalog.last.id}');
+    await _reveal(tester, _spirits, last);
+    // 탭을 오가도 보던 자리를 지킨다.
+    await tapVisible(tester, _tab('status'));
+    await tapVisible(tester, _tab('spirits'));
     expect(last.hitTestable(), findsOneWidget);
-    await tapVisible(tester, _tab('rewards'));
-    expect(_lastReward.hitTestable(), findsOneWidget);
     await closeReleaseApp(tester);
   });
 
@@ -254,13 +224,28 @@ void main() {
         greaterThanOrEqualTo(44),
       );
       await _reveal(tester, _stars, releaseKey('journey-play-stage'));
-      await tapVisible(tester, _tab('companions'));
-      await _reveal(tester, _companions, releaseKey('album-chapter-5'));
-      await tapVisible(tester, releaseKey('album-chapter-5'));
-      await _reveal(tester, _companions, releaseKey('spirit-s1-25'));
-      await tapVisible(tester, _tab('rewards'));
-      await _reveal(tester, _rewards, releaseKey('achievement-w1-stars-75'));
-      await _reveal(tester, _rewards, _lastReward);
+      await tapVisible(tester, _tab('spirits'));
+      // 처음에는 아무도 합류하지 않아 이름을 가린다.
+      expect(
+        tester.widget<Text>(releaseKey('journey-spirits-count')).data,
+        endsWith('0 / 5'),
+      );
+      // 큰 글자에서는 카드가 화면보다 길 수 있어 끝까지 스크롤되는지만 본다.
+      final last = releaseKey('ability-spirit-${powerCatalog.last.id}');
+      await tester.scrollUntilVisible(
+        last,
+        210,
+        maxScrolls: 120,
+        scrollable: find.descendant(
+          of: _spirits,
+          matching: find.byType(Scrollable),
+        ),
+      );
+      expect(
+        find.descendant(of: last, matching: find.text('?')),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
       await closeReleaseApp(tester);
     });
   }

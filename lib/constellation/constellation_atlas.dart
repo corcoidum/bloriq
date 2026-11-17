@@ -3,10 +3,8 @@ import 'package:flutter/material.dart';
 import '../app/game_session.dart';
 import '../design/arcade_components.dart';
 import '../design/game_theme.dart';
-import '../design/keep_all_text.dart';
 import '../design/star_art.dart';
 import '../l10n/app_localizations.dart';
-import '../progression/progression_rules.dart';
 import '../settings/game_settings.dart';
 import '../world/world_catalog.dart';
 import '../world/world_progress.dart';
@@ -299,13 +297,10 @@ class _ConstellationAtlasDialogState extends State<ConstellationAtlasDialog> {
     final lang = t.localeName;
     return ListView.separated(
       key: ValueKey('atlas-list-world-${atlas.world}'),
-      itemCount: atlas.chapters.length + 1,
+      itemCount: atlas.chapters.length,
       separatorBuilder: (_, _) => const SizedBox(height: GameSpacing.medium),
       itemBuilder: (context, index) {
-        if (index == 0) {
-          return GoldenConstellationBenefit(session: widget.session);
-        }
-        final chapter = atlas.chapters[index - 1];
+        final chapter = atlas.chapters[index];
         final info = chapter.chapter;
         final text = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -400,8 +395,6 @@ class _ConstellationAtlasDialogState extends State<ConstellationAtlasDialog> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: GameSpacing.medium),
-        GoldenConstellationBenefit(session: widget.session),
-        const SizedBox(height: GameSpacing.medium),
         for (final stage in chapter.stages)
           Padding(
             padding: const EdgeInsets.only(bottom: GameSpacing.small),
@@ -462,13 +455,10 @@ class _ConstellationAtlasDialogState extends State<ConstellationAtlasDialog> {
     final t = AppLocalizations.of(context)!;
     return ListView.separated(
       key: const ValueKey('atlas-list'),
-      itemCount: atlas.chapters.length + 1,
+      itemCount: atlas.chapters.length,
       separatorBuilder: (_, _) => const SizedBox(height: GameSpacing.medium),
       itemBuilder: (context, index) {
-        if (index == 0) {
-          return GoldenConstellationBenefit(session: widget.session);
-        }
-        final chapter = atlas.chapters[index - 1];
+        final chapter = atlas.chapters[index];
         return Semantics(
           button: true,
           label: constellationSummary(t, chapter),
@@ -573,8 +563,6 @@ class _ConstellationAtlasDialogState extends State<ConstellationAtlasDialog> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: GameSpacing.medium),
-        GoldenConstellationBenefit(session: widget.session),
-        const SizedBox(height: GameSpacing.medium),
         for (final level in chapter.levels)
           Padding(
             padding: const EdgeInsets.only(bottom: GameSpacing.small),
@@ -621,43 +609,6 @@ class _ConstellationAtlasDialogState extends State<ConstellationAtlasDialog> {
             ),
           ),
       ],
-    );
-  }
-}
-
-class GoldenConstellationBenefit extends StatelessWidget {
-  const GoldenConstellationBenefit({super.key, required this.session});
-
-  final GameSession session;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context)!;
-    final colors = GameTheme.colorsOf(context);
-    final discount = goldenStarlightDiscount(
-      session.progression.goldenChapters.length,
-    );
-    return ArcadeSurface(
-      key: const ValueKey('atlas-golden-benefit'),
-      padding: const EdgeInsets.all(GameSpacing.small),
-      accent: discount > 0 ? colors.reward : null,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            t.goldenStarlightDiscount(discount),
-            style: GameTypography.label.copyWith(color: colors.rewardInk),
-          ),
-          const SizedBox(height: GameSpacing.tiny),
-          KeepAllText(
-            t.goldenStarlightRule(
-              StarlightPathRules.goldenDiscountPerConstellation,
-              StarlightPathRules.goldenDiscountCap,
-            ),
-            style: GameTypography.body.copyWith(color: colors.secondaryText),
-          ),
-        ],
-      ),
     );
   }
 }

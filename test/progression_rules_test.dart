@@ -281,43 +281,24 @@ void main() {
       );
     });
 
-    test('free once per attempt, then charges, then stardust', () {
-      expect(
-        starlightPathQuote(
-          powerUnlocked: true,
-          freeUsedThisAttempt: false,
-          charges: 2,
-          goldenConstellations: 2,
-        ),
-        const StarlightPathQuote(StarlightPathSource.free, 0),
-      );
-      expect(
-        starlightPathQuote(
-          powerUnlocked: true,
-          freeUsedThisAttempt: true,
-          charges: 1,
-          goldenConstellations: 2,
-        ),
-        const StarlightPathQuote(StarlightPathSource.charge, 0),
-      );
-      expect(
-        starlightPathQuote(
-          powerUnlocked: false,
-          freeUsedThisAttempt: false,
-          charges: 0,
-        ),
-        const StarlightPathQuote(StarlightPathSource.stardust, 20),
-      );
-      expect(
-        starlightPathQuote(
-          powerUnlocked: true,
-          freeUsedThisAttempt: true,
-          charges: 0,
-          starlightDiscount: true,
-        ),
-        const StarlightPathQuote(StarlightPathSource.stardust, 15),
-      );
-    });
+    test(
+      'the first path per stage keeps the stars once the power is unlocked',
+      () {
+        expect(
+          starlightPathQuote(powerUnlocked: true, freeUsedThisAttempt: false),
+          const StarlightPathQuote(StarlightPathSource.free),
+        );
+        expect(
+          starlightPathQuote(powerUnlocked: true, freeUsedThisAttempt: true),
+          const StarlightPathQuote(StarlightPathSource.capped),
+        );
+        // 능력이 없어도 값은 없다. 별 상한만 걸린다.
+        expect(
+          starlightPathQuote(powerUnlocked: false, freeUsedThisAttempt: false),
+          const StarlightPathQuote(StarlightPathSource.capped),
+        );
+      },
+    );
 
     test('caps the clear at 2 stars and breaks bare-handed', () {
       expect(capAssistedStars(3, usedStarlightPath: true), 2);

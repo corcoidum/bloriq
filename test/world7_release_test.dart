@@ -166,52 +166,6 @@ void main() {
   );
 
   testWidgets(
-    'the first guardian reveals a farewell without the final identity',
-    (tester) async {
-      seedCampaign(_beforeWorld7, cleared: releaseLevels(7).take(4));
-      final boundary = await openReleaseApp(tester, captureArt: _capture);
-      await enterReleaseWorld(tester, 7);
-      await tapVisible(tester, releaseKey('world-continue'));
-      expect(releaseGame(tester).controller.state.level.id, 605);
-      await solveVisibleBoard(tester);
-      await waitForReleaseWidget(tester, releaseKey('result-next'));
-      expect(
-        (await ProgressionRepository.load()).completedChapters,
-        contains(31),
-      );
-      expect(_storyText(_identity), findsNothing);
-      await tapVisible(tester, releaseKey('game-home'));
-      await waitForHome(tester);
-      await enterReleaseWorld(tester, 7);
-      final pages = find.descendant(
-        of: releaseWorldMap(7),
-        matching: find.byType(PageView),
-      );
-      await tester.drag(pages, const Offset(300, 0));
-      await tester.pump(const Duration(milliseconds: 450));
-      await tapVisible(tester, releaseKey('world-guardian-605'));
-      expect(
-        find.descendant(
-          of: releaseKey('guardian-atlas-605'),
-          matching: find.text('등아'),
-        ),
-        findsOneWidget,
-      );
-      expect(_storyText('아스테르가 오래 입구에'), findsOneWidget);
-      expect(_storyText(_identity), findsNothing);
-      await _shot(tester, boundary, 'guardian-atlas');
-      await tapVisible(
-        tester,
-        find.descendant(
-          of: releaseKey('guardian-atlas-605'),
-          matching: find.text('닫기'),
-        ),
-      );
-      await closeReleaseApp(tester);
-    },
-  );
-
-  testWidgets(
     '625 reveals the identity and keeps old trail records without using them',
     (tester) async {
       await _seedFinal();

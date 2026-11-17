@@ -1,4 +1,3 @@
-import 'package:bloriq/design/keep_all_text.dart';
 import 'package:bloriq/design/star_art.dart';
 import 'package:bloriq/progress/progress_repository.dart';
 import 'package:bloriq/progression/progression_repository.dart';
@@ -109,59 +108,6 @@ void main() {
     );
     await closeReleaseApp(tester);
   });
-
-  testWidgets(
-    'clearing the guardian exposes its memory in the constellation atlas',
-    (tester) async {
-      seedCampaign({
-        ..._chaptersThroughWorld2,
-        11,
-      }, cleared: releaseLevels(3).take(5));
-      final boundary = await openReleaseApp(tester, captureArt: _capture);
-      await enterReleaseWorld(tester, 3);
-      final pages = find.descendant(
-        of: releaseWorldMap(3),
-        matching: find.byType(PageView),
-      );
-      await tester.drag(pages, const Offset(300, 0));
-      await tester.pump(const Duration(milliseconds: 450));
-      await waitForReleaseWidget(tester, releaseKey('world-guardian-205'));
-      await tapVisible(tester, releaseKey('world-guardian-205'));
-      final atlas = releaseKey('guardian-atlas-205');
-      expect(atlas, findsOneWidget);
-      expect(
-        find.descendant(of: atlas, matching: find.text('별자리 도감')),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(of: atlas, matching: find.text('고요')),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(
-          of: atlas,
-          matching: find.byWidgetPredicate(
-            (widget) =>
-                widget is KeepAllText && widget.data.contains('발소리는 이어졌어'),
-          ),
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(of: atlas, matching: find.byType(Image)),
-        findsOneWidget,
-      );
-      await _shot(tester, boundary, 'guardian-atlas');
-      await tapVisible(
-        tester,
-        find.descendant(of: atlas, matching: find.text('닫기')),
-      );
-      await tapVisible(tester, releaseKey('world-stage-201'));
-      expect(releaseGame(tester).controller.state.level.id, 201);
-      expect(releaseKey('mirror-guide-1'), findsNothing);
-      await closeReleaseApp(tester);
-    },
-  );
 
   testWidgets('Mirror Lake play and victory fit 320×568 with 200% text', (
     tester,

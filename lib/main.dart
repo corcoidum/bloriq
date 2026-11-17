@@ -12,6 +12,7 @@ import 'domain/puzzle.dart';
 import 'domain/mechanics/clock_arrow.dart';
 import 'domain/mechanics/mirror_pair.dart';
 import 'design/game_theme.dart';
+import 'dev/echo_samples.dart';
 import 'game/bloriq_game.dart';
 import 'game/mechanic_legend.dart';
 import 'design/keep_all_text.dart';
@@ -24,6 +25,7 @@ import 'postcard/echo_postcard.dart';
 import 'progress/progress_repository.dart';
 import 'progress/stage_challenges.dart';
 import 'settings/game_settings.dart';
+import 'app/ability_spirits.dart';
 import 'app/app_entry.dart';
 import 'app/game_session.dart';
 import 'app/experience_dialogs.dart';
@@ -37,11 +39,6 @@ import 'app/play_context.dart';
 import 'tutorial/echo_tutorial.dart';
 import 'tutorial/world_tutorial.dart';
 import 'analytics/local_analytics.dart';
-import 'story/narrative_controller.dart';
-import 'story/story_catalog.dart';
-import 'story/spirit_album.dart';
-import 'story/discovery_panel.dart';
-import 'story/story_share.dart';
 import 'constellation/constellation_atlas.dart';
 import 'constellation/constellation_state.dart';
 import 'constellation/victory_constellation.dart';
@@ -52,7 +49,6 @@ import 'world/saga_map.dart';
 import 'world/world_catalog.dart';
 import 'world/world_map.dart';
 import 'world/world_progress.dart';
-import 'world/world_spirit_album.dart';
 import 'world/world_text.dart';
 import 'world/world_theme.dart';
 import 'trials/trial_catalog.dart';
@@ -172,9 +168,6 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final List<Level> _loaded;
-  final _narrative = NarrativeController();
-  SpiritDefinition? _discovery;
-  bool _storyHidden = false;
   bool _retryingSave = false;
   bool _allowPop = false;
   bool _leaving = false;
@@ -226,6 +219,15 @@ class _GameScreenState extends State<GameScreen>
   Timer? _stuckTimer;
   bool _starlightFreeUsed = false;
 
+  /// 아스테르의 별이 줄지 않는 별빛 길을 이 판에서 썼다. 별은 그대로지만 맨손 별은 아니다.
+  bool _starlightGifted = false;
+
+  bool get _usedGiftedHint {
+    final key = _assistKey;
+    return _starlightGifted ||
+        (key != null && widget.session.progression.freeStarlightUsed(key));
+  }
+
   /// 이번 클리어를 기록할 때 정한 별 상한. 결과 팝업이 이 값을 쓴다
   /// (기록하면서 저장된 도움 상한이 지워지기 때문).
   int? _clearCap;
@@ -254,7 +256,6 @@ class _GameScreenState extends State<GameScreen>
 
   /// 확장 세계 별자리를 저장 전에 떠 둔다.
   WorldAtlas? _worldBefore;
-  WorldChapterView? _guardianReveal;
 
   /// 세계 2부터는 [LoadedWorld] 데이터와 권능 막대를 쓴다.
   bool get _expansion => widget.play.world >= 2;
@@ -443,6 +444,9 @@ class _GameScreenState extends State<GameScreen>
       return widget.session.daily.bestMoves(widget.play.dailyDate!);
     }
     if (widget.play.mode == PlayMode.tutorialReplay) return null;
+    if (widget.play.mode == PlayMode.sample) {
+      return widget.session.sampleBest[level.id];
+    }
     return _progress!.forLevel(level.id, revision: level.revision)?.bestMoves;
   }
 
@@ -492,14 +496,7 @@ class _GameScreenState extends State<GameScreen>
         lightsStar && chapter.litCount == chapter.levels.length - 1;
     // 저장과 별 평가는 애니메이션 타이머/Canvas 성공 여부에 의존하지 않는다.
     unawaited(_recordCompletion(controller));
-    _narrative.react(CompanionReaction.complete);
-    final friend = widget.session.story.forLevel(state.level.id);
-    final newGuardian =
-        friend?.released == true &&
-        friend!.guardian &&
-        widget.play.mode == PlayMode.campaign &&
-        !widget.session.collection.owns(friend.id);
-    _victory.duration = completesChapter || newGuardian
+    _victory.duration = completesChapter
         ? GameEffects.constellationCompleteDuration
         : GameEffects.celebrationDuration;
     _victoryFallback?.cancel();
@@ -519,33 +516,11 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
-  void _acknowledgeDiscovery() {
-    if (_discovery case final friend?) {
-      unawaited(widget.session.collection.acknowledge(friend.id));
-    }
-  }
-
-  Future<void> _openAlbum() async {
-    await _withModal<void>(
-      () => showSpiritAlbum(
-        context,
-        widget.session,
-        widget.settings,
-        initialWorld: widget.play.world,
-      ),
-    );
-    if (mounted) setState(() {});
-  }
-
   void _select(int index) {
-    _acknowledgeDiscovery();
     _resetAssist();
-    _discovery = null;
-    _storyHidden = false;
     _constellation = null;
     _constellationPending = false;
     _atlasBefore = _atlasAfter = null;
-    _narrative.react(CompanionReaction.idle);
     _attempt?.finish(
       'level_end',
       _controller!.state.moves,
@@ -589,7 +564,6 @@ class _GameScreenState extends State<GameScreen>
   void dispose() {
     _stuckTimer?.cancel();
     _attempt?.finish('level_end', _controller!.state.moves, reason: 'leave');
-    _narrative.dispose();
     widget.session.analytics.removeListener(_analyticsChanged);
     _victoryFallback?.cancel();
     WidgetsBinding.instance.removeObserver(this);
@@ -643,6 +617,13 @@ class _GameScreenState extends State<GameScreen>
       }
       return;
     }
+    if (widget.play.mode == PlayMode.sample) {
+      final best = widget.session.sampleBest[state.level.id];
+      if (best == null || state.moves < best) {
+        widget.session.sampleBest[state.level.id] = state.moves;
+      }
+      return;
+    }
     if (widget.play.mode != PlayMode.campaign) return;
     widget.session.struggle.cleared(state.level.id);
     _stuckTimer?.cancel();
@@ -654,8 +635,7 @@ class _GameScreenState extends State<GameScreen>
     _clearCap = starCap;
     final usedStarlight = _starlightUsed || guided || starCap < 3;
     final usedPower = controller.usedPower;
-    // 이번 판에서 새로 만난 정령은 다음 판부터 동행 보상을 준다.
-    final companion = widget.session.collection.companion;
+    final usedGiftedHint = _usedGiftedHint;
     final worldBefore = _worldBefore;
     final worldWasComplete = Worlds.isComplete(
       widget.play.world,
@@ -673,14 +653,9 @@ class _GameScreenState extends State<GameScreen>
         powerUses: controller.moveHistory
             .where((move) => move.power != null)
             .length,
-        usedHelp: usedStarlight || _keyHintSeen,
+        usedHelp: usedStarlight || usedGiftedHint || _keyHintSeen,
       ),
     );
-    final added = result.saved
-        ? await widget.session.collection.reconcile(
-            _progress!.completedCampaignLevelIds,
-          )
-        : <SpiritDefinition>[];
     if (!mounted ||
         !identical(_controller, controller) ||
         !identical(controller.state, state)) {
@@ -688,7 +663,6 @@ class _GameScreenState extends State<GameScreen>
     }
     setState(() {
       _completion = result;
-      _discovery = added.where((f) => f.levelId == state.level.id).firstOrNull;
       _updateConstellation(state.level.id, saved: result.saved);
     });
     Future<void> award() => _recordCampaignReward(
@@ -698,7 +672,7 @@ class _GameScreenState extends State<GameScreen>
       previousStars: previousStars,
       usedStarlight: usedStarlight,
       usedPower: usedPower,
-      companion: companion,
+      usedGiftedHint: usedGiftedHint,
       worldBefore: worldBefore,
       worldWasComplete: worldWasComplete,
     );
@@ -730,7 +704,7 @@ class _GameScreenState extends State<GameScreen>
     required int? previousStars,
     required bool usedStarlight,
     required bool usedPower,
-    required SpiritDefinition? companion,
+    required bool usedGiftedHint,
     required WorldAtlas? worldBefore,
     required bool worldWasComplete,
   }) async {
@@ -746,9 +720,8 @@ class _GameScreenState extends State<GameScreen>
       levelKey: '${state.level.id}:${state.level.revision}',
       stars: stars,
       previousBestStars: previousStars,
+      usedHint: usedGiftedHint,
       usedStarlightPath: usedStarlight,
-      companionId: companion?.id,
-      companionFamily: companion?.family,
       constellationCompletedChapter: worldEvent != null
           ? worldEvent.completed
           : event?.chapterCompleted == true
@@ -764,7 +737,7 @@ class _GameScreenState extends State<GameScreen>
               level: state.level,
               moves: state.moves,
               usedPower: usedPower,
-              usedStarlightPath: usedStarlight,
+              usedStarlightPath: usedStarlight || usedGiftedHint,
             )
           : null,
       starflowersByWorld: widget.session.starflowersByWorld,
@@ -776,9 +749,6 @@ class _GameScreenState extends State<GameScreen>
     }
     setState(() {
       _reward = reward;
-      if (worldEvent?.completed != null) {
-        _guardianReveal = worldAfter?.forLevel(state.level.id);
-      }
       _worldCleared =
           !worldWasComplete &&
           Worlds.isComplete(
@@ -791,12 +761,12 @@ class _GameScreenState extends State<GameScreen>
   void _resetAssist() {
     _reward = null;
     _trialResult = null;
-    _guardianReveal = null;
     _pendingCampaignReward = null;
     _armedPower = null;
     _starlightUsed = false;
     _keyHintSeen = false;
     _starlightFreeUsed = false;
+    _starlightGifted = false;
     _clearCap = null;
     _guided = false;
     _guideState = null;
@@ -810,10 +780,6 @@ class _GameScreenState extends State<GameScreen>
     _skipCelebration();
     _attempt?.restart();
     _attempt?.finish('level_end', controller.state.moves, reason: 'restart');
-    _acknowledgeDiscovery();
-    _discovery = null;
-    _storyHidden = false;
-    _narrative.react(CompanionReaction.idle);
     if (countStruggle && widget.play.mode == PlayMode.campaign) {
       widget.session.struggle.restarted(controller.state.level.id);
     }
@@ -969,12 +935,9 @@ class _GameScreenState extends State<GameScreen>
         );
         return;
       }
-      final companion = widget.session.collection.companion;
-      final quote = await widget.session.progression.useStarlightPath(
+      await widget.session.progression.useStarlightPath(
         freeUsedThisAttempt: _starlightFreeUsed,
         levelKey: _assistKey,
-        companionId: companion?.id,
-        companionFamily: companion?.family,
         onUsed: (used) {
           if (move.power case final power?) {
             messenger.showSnackBar(
@@ -983,21 +946,17 @@ class _GameScreenState extends State<GameScreen>
               ),
             );
           }
-          // 쓴 값과 별 상한을 한 번에 알린다.
-          final notes = [
-            if (used.source == StarlightPathSource.charge)
-              t.starlightPassSpent
-            else if (used.source == StarlightPathSource.stardust)
-              t.starlightSpent(used.cost),
-            if (!_starlightUsed && _trial == null) t.starlightCapped,
-          ];
-          if (notes.isNotEmpty) {
+          // 아스테르가 함께하면 판마다 첫 번은 별이 줄지 않는다.
+          final gifted =
+              used.source == StarlightPathSource.free && _trial == null;
+          // 별 상한이 처음 걸릴 때만 알린다.
+          if (!gifted && !_starlightUsed && _trial == null) {
             messenger
               ..hideCurrentSnackBar()
               ..showSnackBar(
                 SnackBar(
                   key: const ValueKey('starlight-note'),
-                  content: Text(notes.join('\n')),
+                  content: Text(t.starlightCapped),
                 ),
               );
           }
@@ -1005,7 +964,11 @@ class _GameScreenState extends State<GameScreen>
             if (used.source == StarlightPathSource.free) {
               _starlightFreeUsed = true;
             }
-            _starlightUsed = true;
+            if (gifted) {
+              _starlightGifted = true;
+            } else {
+              _starlightUsed = true;
+            }
             _game!.hintMove = (
               from: state.positionOf(move.blockId)!,
               to: move.target,
@@ -1013,9 +976,6 @@ class _GameScreenState extends State<GameScreen>
           });
         },
       );
-      if (quote == null && mounted && current()) {
-        messenger.showSnackBar(SnackBar(content: Text(t.starlightShort)));
-      }
     });
     if (mounted && !current() && _guided) setState(_refreshGuide);
   }
@@ -1027,11 +987,6 @@ class _GameScreenState extends State<GameScreen>
     final state = controller?.state;
     final result = _completion;
     final saved = await _progress!.retrySave();
-    final added = saved
-        ? await widget.session.collection.reconcile(
-            _progress!.completedCampaignLevelIds,
-          )
-        : <SpiritDefinition>[];
     if (!mounted) return;
     final sameAttempt =
         identical(controller, _controller) &&
@@ -1046,9 +1001,6 @@ class _GameScreenState extends State<GameScreen>
           saved: saved,
           newStageChallenges: result.newStageChallenges,
         );
-        _discovery ??= added
-            .where((f) => f.levelId == state.level.id)
-            .firstOrNull;
         _updateConstellation(state.level.id, saved: saved);
       }
     });
@@ -1074,33 +1026,6 @@ class _GameScreenState extends State<GameScreen>
   }
 
   Widget? _constellationView(PuzzleController controller) {
-    if (_guardianReveal case final chapter?) {
-      final guardian = chapter.stages.last;
-      final t = AppLocalizations.of(context)!;
-      return OutlinedButton(
-        key: const ValueKey('world-guardian-reveal'),
-        onPressed: () =>
-            _withModal<void>(() => showWorldGuardian(context, chapter)),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            children: [
-              WorldSpiritPortrait(
-                asset: chapter.portraitFor(guardian),
-                size: 68,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  '${guardian.spirit.name.inLocale(t.localeName)}\n${t.constellationAtlas}',
-                  textAlign: TextAlign.start,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
     final levelId = controller.state.level.id;
     final event = _constellation;
     final atlas = _constellationPending ? _atlasBefore : _atlasAfter;
@@ -1164,7 +1089,7 @@ class _GameScreenState extends State<GameScreen>
           ),
           levelText: widget.play.mode == PlayMode.daily
               ? '${t.dailyEcho} ${widget.play.dailyDate}'
-              : t.level(_displayNumber(state.level)),
+              : _stageLabel(t, state.level),
           movesText: t.moves(state.moves),
           bestText: t.bestMoves(best),
           mirrorSteps: mirrorSteps,
@@ -1208,10 +1133,6 @@ class _GameScreenState extends State<GameScreen>
           ? Offset(delta.dx, 0)
           : Offset(0, delta.dy);
       _game!.setDrag(_dragBlock, aligned, _armedPower);
-      _narrative.react(
-        CompanionReaction.look,
-        direction: aligned.dx.sign.toInt(),
-      );
     }
   }
 
@@ -1260,13 +1181,6 @@ class _GameScreenState extends State<GameScreen>
             unawaited(widget.session.daily.markPlayed(widget.play.challenge!));
           }
           _gateBlocked = false;
-          _narrative.react(
-            !gateWasOpen && controller.state.isGateOpen
-                ? CompanionReaction.gate
-                : controller.state.echo == from
-                ? CompanionReaction.echo
-                : CompanionReaction.idle,
-          );
           _game!.animateMove(controller.lastMove!);
           _refreshGuide();
           if (controller.state.isComplete) _beginCompletion(controller);
@@ -1280,11 +1194,6 @@ class _GameScreenState extends State<GameScreen>
           _audio?.play(effect);
           HapticFeedback.lightImpact();
         } else {
-          _narrative.react(
-            target == controller.state.echo
-                ? CompanionReaction.blocked
-                : CompanionReaction.look,
-          );
           _audio?.play(SoundEffect.blocked);
           _gateBlocked =
               target == controller.state.level.echoGate &&
@@ -1316,14 +1225,10 @@ class _GameScreenState extends State<GameScreen>
 
   void _undo(PuzzleController controller) {
     if (!_undoAllowed) return;
-    _acknowledgeDiscovery();
-    _discovery = null;
-    _storyHidden = false;
     _skipCelebration();
     setState(() {
       controller.undo();
       _armedPower = null;
-      _narrative.react(CompanionReaction.idle);
       _attempt?.undo();
       _game!.clearEffects();
       _gateBlocked = false;
@@ -1468,6 +1373,11 @@ class _GameScreenState extends State<GameScreen>
   int _displayNumber(Level level) =>
       level.world >= 2 ? Worlds.stageNumber(level.id) : level.id;
 
+  String _stageLabel(AppLocalizations t, Level level) =>
+      widget.play.mode == PlayMode.sample
+      ? EchoSampleText.stage(echoSampleNumber(level)).resolve(t.localeName)
+      : t.level(_displayNumber(level));
+
   Future<void> _openJourney() async {
     final session = widget.session;
     final current = _loaded[_index].id;
@@ -1566,7 +1476,6 @@ class _GameScreenState extends State<GameScreen>
             true;
     if (!mounted) return;
     if (leave) {
-      _acknowledgeDiscovery();
       setState(() => _allowPop = true);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) Navigator.pop(context);
@@ -1595,19 +1504,6 @@ class _GameScreenState extends State<GameScreen>
         isNewBest: _isNewBest,
         reduceMotion: _reduceMotion,
         onSkip: _skipCelebration,
-        discovery: _discovery != null && !_storyHidden
-            ? DiscoveryPanel(
-                spirit: _discovery!,
-                chapter: widget.session.story.chapter(_discovery!.chapter),
-                progress: _victory.value,
-                reduceMotion: _reduceMotion,
-                onSkip: () {
-                  _skipCelebration();
-                  _acknowledgeDiscovery();
-                  setState(() => _storyHidden = true);
-                },
-              )
-            : null,
         constellation: _constellationView(controller),
         reward: _rewardView(t),
         result: DefaultTextStyle.merge(
@@ -1652,18 +1548,8 @@ class _GameScreenState extends State<GameScreen>
                     child: Text(t.retrySave),
                   ),
               ],
-              if (widget.play.mode == PlayMode.campaign)
-                CollectionStorageNotice(
-                  session: widget.session,
-                  onChanged: () => setState(() {}),
-                ),
               if (_worldFinished case final finished?)
-                _worldClearCard(t, colors, finished)
-              else if (widget.play.mode == PlayMode.campaign &&
-                  widget.session.collection.owned.length ==
-                      widget.session.story.released.length &&
-                  widget.session.story.released.length == 25)
-                Text(t.seasonComplete),
+                _worldClearCard(t, colors, finished),
             ],
           ),
         ),
@@ -1868,7 +1754,6 @@ class _GameScreenState extends State<GameScreen>
   /// 결과 화면을 닫고 홈에서 다음 세계나 엔딩을 연다.
   void _leaveFor(Object destination) {
     if (_allowPop) return;
-    _acknowledgeDiscovery();
     setState(() => _allowPop = true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) Navigator.pop(context, destination);
@@ -1882,7 +1767,6 @@ class _GameScreenState extends State<GameScreen>
       padding: const EdgeInsets.symmetric(horizontal: 8),
       textStyle: GameTypography.label.copyWith(fontSize: 15.5),
     );
-    final friend = _discovery;
     // 세계를 다 마쳤으면 "첫 스테이지로" 대신 다음 세계(열렸으면 그 지도,
     // 아직 준비 중이면 빛길 지도의 예고)로 안내한다.
     final finished = _worldFinished;
@@ -1976,31 +1860,6 @@ class _GameScreenState extends State<GameScreen>
                     title: Text(t.postcard),
                   ),
                 ),
-                if (friend != null) ...[
-                  PopupMenuItem(
-                    key: const ValueKey('result-album'),
-                    value: _openAlbum,
-                    child: ListTile(
-                      leading: const Icon(Icons.auto_stories_outlined),
-                      title: Text(t.album),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    key: const ValueKey('result-discovery-share'),
-                    value: () => _withModal<void>(
-                      () => showStoryCard(
-                        context,
-                        [friend],
-                        chapter: widget.session.story.chapter(friend.chapter),
-                        reduceMotion: _reduceMotion,
-                      ),
-                    ),
-                    child: ListTile(
-                      leading: const Icon(Icons.ios_share_rounded),
-                      title: Text(t.discoveryCard),
-                    ),
-                  ),
-                ],
               ],
               child: Container(
                 width: 46,
@@ -2180,9 +2039,6 @@ class _GameScreenState extends State<GameScreen>
                               controller.state.moves,
                               trialLimit,
                             )
-                          : _abilities.showMinimumMoves
-                          ? '${t.moves(controller.state.moves)} · '
-                                '${t.minimumMovesChip(controller.state.level.minimumMoves)}'
                           : t.moves(controller.state.moves),
                       color: colors.echoInk,
                     );
@@ -2212,9 +2068,7 @@ class _GameScreenState extends State<GameScreen>
                                       ? t.dailyEcho
                                       : _trial != null
                                       ? t.echoTrials
-                                      : t.level(
-                                          _displayNumber(_loaded[_index]),
-                                        ),
+                                      : _stageLabel(t, _loaded[_index]),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: labelStyle,
@@ -2669,7 +2523,7 @@ class _GameScreenState extends State<GameScreen>
     return AnimatedBuilder(
       animation: _victory,
       builder: (context, child) {
-        final dim = _reduceMotion || _discovery != null
+        final dim = _reduceMotion
             ? 1.0
             : ((_victory.value - .2) / .2).clamp(0.0, 1.0);
         return Stack(
@@ -2759,15 +2613,6 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
-  FamilyAbilities get _abilities {
-    final companion = widget.session.collection.companion;
-    return widget.session.progression.abilitiesFor(
-      companionId: companion?.id,
-      companionFamily: companion?.family,
-    );
-  }
-
-  /// 이동 수 옆의 별빛 길 버튼. 무료·사용권·별가루 비용을 함께 보여 준다.
   /// 풀이 따라 하기 중임을 알리는 띠. "직접 풀기"는 판을 처음부터 다시 연다.
   Widget _guideBanner(AppLocalizations t, GameColors colors) => Container(
     key: const ValueKey('guide-banner'),
@@ -2803,29 +2648,12 @@ class _GameScreenState extends State<GameScreen>
     ),
   );
 
+  /// 이동 수 옆의 별빛 길(힌트) 버튼. 값은 없고, 별 상한이 걸린 판에만 ★ 수를 붙인다.
   Widget _starlightButton(
     AppLocalizations t,
     GameColors colors,
     PuzzleController controller,
   ) {
-    final companion = widget.session.collection.companion;
-    final quote = widget.session.progression.quoteStarlightPath(
-      freeUsedThisAttempt: _starlightFreeUsed,
-      levelKey: _assistKey,
-      companionId: companion?.id,
-      companionFamily: companion?.family,
-    );
-    final progression = widget.session.progression;
-    final price = switch (quote.source) {
-      StarlightPathSource.free => t.starlightFree,
-      StarlightPathSource.charge => t.starlightPassCount(
-        progression.starlightCharges,
-      ),
-      StarlightPathSource.stardust => t.starlightCost(quote.cost),
-    };
-    final short =
-        quote.source == StarlightPathSource.stardust &&
-        quote.cost > progression.stardust;
     final enabled =
         !controller.state.isComplete &&
         !_replaying &&
@@ -2837,7 +2665,6 @@ class _GameScreenState extends State<GameScreen>
       message: [
         t.starlightPath,
         if (cap < 3) AssistCapText.kept.resolve(t.localeName),
-        t.stardustCount(progression.stardust),
       ].join(' · '),
       child: Material(
         color: colors.reward.withValues(alpha: .14),
@@ -2850,7 +2677,7 @@ class _GameScreenState extends State<GameScreen>
           borderRadius: BorderRadius.circular(14),
           onTap: enabled ? () => _useStarlight(t) : null,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             child: Builder(
               builder: (context) {
                 final icon = _hintBusy
@@ -2867,15 +2694,6 @@ class _GameScreenState extends State<GameScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     icon,
-                    const SizedBox(width: 6),
-                    Text(
-                      price,
-                      key: const ValueKey('starlight-price'),
-                      style: GameTypography.label.copyWith(
-                        fontSize: 14,
-                        color: short ? colors.error : colors.rewardInk,
-                      ),
-                    ),
                     // 도움을 쓴 판: 다시 시작해도 별 상한이 남아 있음을 작게 알린다.
                     if (cap < 3)
                       Semantics(
@@ -2883,7 +2701,7 @@ class _GameScreenState extends State<GameScreen>
                         label: AssistCapText.badge(cap).resolve(t.localeName),
                         excludeSemantics: true,
                         child: Padding(
-                          padding: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.only(left: 6),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -2913,54 +2731,21 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
-  /// 결과 팝업의 성장 보상: 경험치 막대, 별가루, 레벨 업, 권능, 유대, 맨손 별.
+  /// 결과 팝업의 소식: 정령 합류와 맨손 별만 알린다. 경험치와 별가루는 보여 주지 않는다.
   Widget? _rewardView(AppLocalizations t) {
     final reward = _reward;
-    if (reward == null || (!reward.saved && reward.xpGained == 0)) return null;
+    if (reward == null) return null;
+    final power = reward.newPower;
+    if (power == null && !reward.newBareHanded) return null;
     final colors = GameTheme.colorsOf(context);
     final lang = t.localeName;
-    final standing = reward.standing;
-    final badges = <(IconData, String, Color)>[
-      // 별 모으기 업적이 가장 큰 소식이라 맨 앞에 둔다.
-      for (final achievement in reward.achievements)
-        (
-          Icons.emoji_events_rounded,
-          achievementReached(achievement.name).resolve(lang),
-          colors.rewardInk,
-        ),
-      // 한 번에 여러 레벨이 올라도 마지막 레벨 한 줄만 보여 준다.
-      if (reward.levelsGained.lastOrNull case final up?)
-        (
-          Icons.keyboard_double_arrow_up_rounded,
-          t.rewardLevelUp(up.level),
-          colors.goalInk,
-        ),
-      if (reward.newPower case final power?)
-        (
-          Icons.auto_awesome,
-          t.rewardPower(power.name.resolve(lang)),
-          colors.rewardInk,
-        ),
-      if (reward.newStarlightCharges > 0)
-        (
-          Icons.confirmation_number_outlined,
-          t.rewardCharge(reward.newStarlightCharges),
-          colors.rewardInk,
-        ),
-      if (reward.bondLevelUp case final level?)
-        if (widget.session.collection.companion case final friend?)
-          (
-            Icons.favorite_rounded,
-            t.rewardBond(friend.name.inLocale(lang), level),
-            colors.echoInk,
-          ),
-      if (reward.newBareHanded)
-        (Icons.back_hand_rounded, t.rewardBareHanded, colors.goalInk),
-    ];
-    final bondLine = reward.bondLevelUp == 2
-        ? widget.session.collection.companion?.bondLine?.inLocale(lang)
-        : null;
+    final joined = power == null
+        ? null
+        : abilitySpirits(widget.session.story)
+              .where((entry) => entry.power.id == power.id)
+              .firstOrNull;
     return Container(
+      key: const ValueKey('result-news'),
       margin: const EdgeInsets.only(bottom: GameSpacing.small),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -2970,107 +2755,75 @@ class _GameScreenState extends State<GameScreen>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: colors.goal.withValues(alpha: .2),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  t.playerLevel(standing.level),
-                  style: GameTypography.reward.copyWith(
-                    fontSize: 16,
-                    color: colors.goalInk,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(5),
-                  child: LinearProgressIndicator(
-                    minHeight: 10,
-                    value: standing.progress,
-                    color: colors.goal,
-                    backgroundColor: colors.outline.withValues(alpha: .25),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 14,
-            children: [
-              Text(
-                t.rewardXp(reward.xpGained),
-                style: GameTypography.label.copyWith(
-                  fontSize: 16,
-                  color: colors.goalInk,
-                ),
-              ),
-              if (reward.stardustGained > 0)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.auto_awesome_rounded,
-                      size: 14,
+          if (power != null)
+            Row(
+              key: const ValueKey('result-spirit-joined'),
+              children: [
+                if (joined?.spirit.asset case final asset?
+                    when asset.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: Image.asset(asset, width: 52, height: 52),
+                  )
+                else
+                  Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: Icon(
+                      Icons.auto_awesome,
+                      size: 28,
                       color: colors.rewardInk,
                     ),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        t.rewardStardust(reward.stardustGained),
+                  ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      KeepAllText(
+                        joined == null
+                            ? t.rewardPower(power.name.resolve(lang))
+                            : AbilitySpiritText.joinedNow(
+                                joined.spirit.name.inLocale(lang),
+                                power.name.resolve(lang),
+                              ).resolve(lang),
                         style: GameTypography.label.copyWith(
                           fontSize: 16,
                           color: colors.rewardInk,
                         ),
                       ),
-                    ),
-                  ],
+                      KeepAllText(
+                        power.description.resolve(lang),
+                        style: GameTypography.body.copyWith(
+                          fontSize: 14,
+                          color: colors.text,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-            ],
-          ),
-          if (reward.companionXpBonus > 0)
-            Text(
-              t.rewardCompanionXp(reward.companionXpBonus),
-              style: GameTypography.body.copyWith(color: colors.echoInk),
+              ],
             ),
-          // 특별 보상은 가장 중요한 두 개만 보여 준다(레벨 업·권능이 먼저).
-          for (final (icon, label, color) in badges.take(2))
+          if (reward.newBareHanded)
             Padding(
-              padding: const EdgeInsets.only(top: 6),
+              padding: EdgeInsets.only(top: power == null ? 0 : 6),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(icon, size: 18, color: color),
+                  Icon(
+                    Icons.back_hand_rounded,
+                    size: 18,
+                    color: colors.goalInk,
+                  ),
                   const SizedBox(width: 6),
                   Flexible(
                     child: KeepAllText(
-                      label,
+                      t.rewardBareHanded,
                       style: GameTypography.body.copyWith(
-                        fontSize: 15.5,
-                        color: color,
+                        color: colors.goalInk,
                       ),
                     ),
                   ),
                 ],
-              ),
-            ),
-          if (bondLine != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: KeepAllText(
-                '“$bondLine”',
-                textAlign: TextAlign.center,
-                style: GameTypography.body.copyWith(
-                  fontSize: 14,
-                  color: colors.secondaryText,
-                ),
               ),
             ),
         ],

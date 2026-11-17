@@ -2,7 +2,7 @@ import '../daily/daily_repository.dart';
 import '../domain/puzzle.dart';
 import '../trials/trial_catalog.dart';
 
-enum PlayMode { campaign, daily, tutorialReplay, trial }
+enum PlayMode { campaign, daily, tutorialReplay, trial, sample }
 
 class PlayContext {
   const PlayContext.campaign({this.guided = false})
@@ -32,6 +32,15 @@ class PlayContext {
       guided = false,
       level = daily.level,
       challenge = daily,
+      trialStage = null,
+      world = 1;
+
+  /// 시험용 echo 샘플 판. 진행 기록에 남기지 않는다.
+  const PlayContext.sample(Level board)
+    : mode = PlayMode.sample,
+      guided = false,
+      level = board,
+      challenge = null,
       trialStage = null,
       world = 1;
   PlayContext.trial(TrialStage stage, Level board)

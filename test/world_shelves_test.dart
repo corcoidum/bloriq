@@ -8,7 +8,6 @@ import 'support/world_release.dart';
 
 const _capture = bool.fromEnvironment('CAPTURE_HOME');
 final _starWorld = releaseKey('journey-constellation-world');
-final _spiritWorld = releaseKey('journey-companion-world');
 
 DropdownButton<int> _picker(WidgetTester tester, Finder key) =>
     tester.widget<DropdownButton<int>>(
@@ -63,34 +62,6 @@ void main() {
       await closeReleaseApp(tester);
     },
   );
-
-  testWidgets('companions shows campaign and world totals and spirit details', (
-    tester,
-  ) async {
-    seedSaga(throughWorld: 5, extra: 12);
-    final boundary = await openReleaseApp(tester, captureArt: _capture);
-    await openHomeJourney(tester, tab: 'companions');
-    expect(_picker(tester, _spiritWorld).value, 6);
-    expect(find.text('전체 수집 137 / 175'), findsOneWidget);
-    expect(find.text('이 세계 12 / 25'), findsOneWidget);
-    await tapVisible(tester, releaseKey('album-world-6-chapter-3'));
-    final met = releaseKey('spirit-${releaseSpiritId(6, 512)}');
-    final unmet = releaseKey('spirit-${releaseSpiritId(6, 513)}');
-    expect(tester.widget<InkWell>(met).onTap, isNotNull);
-    expect(tester.widget<InkWell>(unmet).onTap, isNull);
-    await _shot(tester, boundary, 'album-world6');
-
-    await tapVisible(tester, met);
-    expect(
-      releaseKey('spirit-detail-${releaseSpiritId(6, 512)}'),
-      findsOneWidget,
-    );
-    await tapVisible(tester, find.text('닫기').last);
-    await chooseJourneyWorld(tester, _spiritWorld, 1);
-    expect(find.text('이 세계 25 / 25'), findsOneWidget);
-    expect(releaseKey('album-progress'), findsOneWidget);
-    await closeReleaseApp(tester);
-  });
 
   testWidgets('a fresh player sees seven worlds with only the first enabled', (
     tester,

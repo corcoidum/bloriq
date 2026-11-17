@@ -1,0 +1,754 @@
+[
+  {
+    "id": 9001,
+    "world": 1,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 1,
+      "y": 2
+    },
+    "exitPosition": {
+      "x": 2,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 1,
+        "y": 3
+      },
+      {
+        "id": "b2",
+        "x": 0,
+        "y": 3
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 1
+      }
+    ],
+    "specialRules": [],
+    "availablePowers": [],
+    "minimumMoves": 6,
+    "bareHandedMoves": 6,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "echo-sample",
+    "learningIntent": "잔상이 돌아갈 길을 막는다",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b2", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "b1", "target": {"x": 0, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}}
+    ]
+  },
+  {
+    "id": 9002,
+    "world": 1,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 2,
+      "y": 1
+    },
+    "exitPosition": {
+      "x": 1,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 1,
+        "y": 1
+      },
+      {
+        "id": "b2",
+        "x": 2,
+        "y": 2
+      },
+      {
+        "id": "b3",
+        "x": 3,
+        "y": 2
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 0,
+        "y": 3
+      }
+    ],
+    "specialRules": [],
+    "availablePowers": [],
+    "minimumMoves": 7,
+    "bareHandedMoves": 7,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "echo-sample",
+    "learningIntent": "다른 블록의 잔상을 피해 순서 정하기",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b3", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}},
+      {"blockId": "b2", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}}
+    ]
+  },
+  {
+    "id": 9003,
+    "world": 1,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 0,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 2,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 1,
+        "y": 3
+      },
+      {
+        "id": "b2",
+        "x": 3,
+        "y": 3
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 1
+      }
+    ],
+    "specialRules": [],
+    "availablePowers": [],
+    "minimumMoves": 8,
+    "bareHandedMoves": 8,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "echo-sample",
+    "learningIntent": "잔상이 사라질 한 수를 벌기",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b1", "target": {"x": 2, "y": 3}},
+      {"blockId": "b1", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 3}},
+      {"blockId": "b1", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}}
+    ]
+  },
+  {
+    "id": 9004,
+    "world": 1,
+    "boardWidth": 5,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 1,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 4,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 2,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 3,
+        "y": 1
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 2
+      }
+    ],
+    "specialRules": [],
+    "availablePowers": [],
+    "minimumMoves": 9,
+    "bareHandedMoves": 9,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "echo-sample",
+    "learningIntent": "좁은 통로에서 잔상을 비켜 가기",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 0, "y": 0}},
+      {"blockId": "b2", "target": {"x": 3, "y": 0}},
+      {"blockId": "b1", "target": {"x": 1, "y": 0}},
+      {"blockId": "b1", "target": {"x": 1, "y": 1}},
+      {"blockId": "b2", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 0}},
+      {"blockId": "goal", "target": {"x": 4, "y": 0}}
+    ]
+  },
+  {
+    "id": 9005,
+    "world": 1,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 3,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 2,
+        "y": 2
+      },
+      {
+        "id": "b2",
+        "x": 1,
+        "y": 0
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 3
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 3,
+          "y": 2
+        },
+        "gate": {
+          "x": 1,
+          "y": 2
+        }
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 7,
+    "bareHandedMoves": 7,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "echo-sample",
+    "learningIntent": "수정 위에 잔상을 남기고 바로 지나가기",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b1", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 0}}
+    ]
+  },
+  {
+    "id": 9006,
+    "world": 1,
+    "boardWidth": 5,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 3,
+      "y": 1
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 1
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 4,
+        "y": 1
+      },
+      {
+        "id": "b2",
+        "x": 1,
+        "y": 2
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 2
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 0,
+          "y": 0
+        },
+        "gate": {
+          "x": 2,
+          "y": 1
+        }
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 9,
+    "bareHandedMoves": 9,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "echo-sample",
+    "learningIntent": "문을 여는 잔상과 길을 막는 잔상",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 3, "y": 0}},
+      {"blockId": "b2", "target": {"x": 1, "y": 1}},
+      {"blockId": "b2", "target": {"x": 1, "y": 0}},
+      {"blockId": "b2", "target": {"x": 0, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "b2", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}}
+    ]
+  },
+  {
+    "id": 9007,
+    "world": 1,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 0,
+      "y": 2
+    },
+    "exitPosition": {
+      "x": 3,
+      "y": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 2,
+        "y": 1
+      },
+      {
+        "id": "b2",
+        "x": 1,
+        "y": 2
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 1
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 2,
+            "y": 2
+          },
+          {
+            "x": 1,
+            "y": 0
+          }
+        ]
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 8,
+    "bareHandedMoves": 8,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "echo-sample",
+    "learningIntent": "호박석으로 잔상을 붙잡아 두기",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "goal", "target": {"x": 0, "y": 3}},
+      {"blockId": "b2", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 0}}
+    ]
+  },
+  {
+    "id": 9008,
+    "world": 1,
+    "boardWidth": 4,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 0,
+      "y": 0
+    },
+    "exitPosition": {
+      "x": 3,
+      "y": 1
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 3,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 0,
+        "y": 3
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 2
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 1,
+          "y": 1
+        },
+        "gate": {
+          "x": 1,
+          "y": 0
+        }
+      },
+      {
+        "type": "echoEraser",
+        "positions": [
+          {
+            "x": 2,
+            "y": 1
+          }
+        ]
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 8,
+    "bareHandedMoves": 8,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "echo-sample",
+    "learningIntent": "민들레를 피해 문을 여는 잔상 남기기",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b1", "target": {"x": 2, "y": 0}},
+      {"blockId": "b1", "target": {"x": 2, "y": 1}},
+      {"blockId": "b1", "target": {"x": 1, "y": 1}},
+      {"blockId": "b1", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 0}},
+      {"blockId": "goal", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}}
+    ]
+  },
+  {
+    "id": 9009,
+    "world": 1,
+    "boardWidth": 5,
+    "boardHeight": 4,
+    "startPosition": {
+      "x": 4,
+      "y": 3
+    },
+    "exitPosition": {
+      "x": 0,
+      "y": 3
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 3,
+        "y": 2
+      },
+      {
+        "id": "b2",
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 0
+      }
+    ],
+    "specialRules": [
+      {
+        "type": "echoGate",
+        "switch": {
+          "x": 1,
+          "y": 2
+        },
+        "gate": {
+          "x": 0,
+          "y": 2
+        }
+      },
+      {
+        "type": "echoHold",
+        "positions": [
+          {
+            "x": 1,
+            "y": 1
+          },
+          {
+            "x": 2,
+            "y": 2
+          }
+        ]
+      }
+    ],
+    "availablePowers": [],
+    "minimumMoves": 10,
+    "bareHandedMoves": 10,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "echo-sample",
+    "learningIntent": "붙잡은 잔상으로 문 열어 두기",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b1", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 4, "y": 2}},
+      {"blockId": "goal", "target": {"x": 3, "y": 2}},
+      {"blockId": "b1", "target": {"x": 2, "y": 3}},
+      {"blockId": "goal", "target": {"x": 2, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 2}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}}
+    ]
+  },
+  {
+    "id": 9010,
+    "world": 1,
+    "boardWidth": 5,
+    "boardHeight": 5,
+    "startPosition": {
+      "x": 4,
+      "y": 1
+    },
+    "exitPosition": {
+      "x": 1,
+      "y": 4
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 2,
+        "y": 0
+      },
+      {
+        "id": "b2",
+        "x": 3,
+        "y": 1
+      }
+    ],
+    "obstacles": [
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 4
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 4
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 2
+      }
+    ],
+    "specialRules": [],
+    "availablePowers": [],
+    "minimumMoves": 11,
+    "bareHandedMoves": 11,
+    "requiredPowers": [],
+    "revision": 1,
+    "featuredPower": null,
+    "difficulty": "echo-sample",
+    "learningIntent": "넓은 판에서 잔상 순서 읽기",
+    "reviewStatus": "awaiting_manual_play",
+    "solution": [
+      {"blockId": "b1", "target": {"x": 3, "y": 0}},
+      {"blockId": "b2", "target": {"x": 2, "y": 1}},
+      {"blockId": "b2", "target": {"x": 2, "y": 0}},
+      {"blockId": "goal", "target": {"x": 3, "y": 1}},
+      {"blockId": "goal", "target": {"x": 2, "y": 1}},
+      {"blockId": "goal", "target": {"x": 1, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 1}},
+      {"blockId": "goal", "target": {"x": 0, "y": 2}},
+      {"blockId": "goal", "target": {"x": 0, "y": 3}},
+      {"blockId": "goal", "target": {"x": 0, "y": 4}},
+      {"blockId": "goal", "target": {"x": 1, "y": 4}}
+    ]
+  }
+]

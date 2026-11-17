@@ -19,8 +19,6 @@ import '../game/board_geometry.dart';
 import '../game/hint_search.dart';
 import '../game/mechanic_legend.dart';
 import '../l10n/app_localizations.dart';
-import '../progression/progression_repository.dart';
-import '../progression/progression_rules.dart';
 import '../settings/game_settings.dart';
 import '../world/world_catalog.dart';
 import 'endless_pool.dart';
@@ -91,7 +89,6 @@ class _EndlessScreenState extends State<EndlessScreen> {
   BoardResult? _flash;
   Timer? _flashTimer, _overTimer;
   VoyageSummary? _summary;
-  ClearReward? _reward;
   bool _finishing = false;
   bool _starting = false;
   bool _hintBusy = false;
@@ -204,7 +201,6 @@ class _EndlessScreenState extends State<EndlessScreen> {
     setState(() {
       _run = run;
       _summary = null;
-      _reward = null;
       _finishing = false;
       _flash = null;
       _phase = _Phase.sailing;
@@ -248,7 +244,7 @@ class _EndlessScreenState extends State<EndlessScreen> {
     _finishing = true;
     final run = _run!;
     final summary = await _repo.finish(run);
-    final reward = await widget.session.progression.recordVoyage(
+    await widget.session.progression.recordVoyage(
       xp: summary.xp,
       stardust: summary.stardust,
       rewards: [for (final m in summary.milestones) ...m.rewards],
@@ -259,7 +255,6 @@ class _EndlessScreenState extends State<EndlessScreen> {
       if (!mounted) return;
       setState(() {
         _summary = summary;
-        _reward = reward;
         _phase = _Phase.over;
       });
     });
@@ -1103,18 +1098,11 @@ class _EndlessScreenState extends State<EndlessScreen> {
   /// 등불이 꺼졌을 때: 기록, 보상, 다시 출항.
   Widget _overCard(String lang, GameColors colors) {
     final summary = _summary!;
-    final reward = _reward;
-    final milestoneDust = summary.milestones
-        .expand((m) => m.rewards)
-        .whereType<StardustBundle>()
-        .fold<int>(0, (total, bundle) => total + bundle.amount);
     final badges = <String>[
       if (summary.newBestScore || summary.newBestDepth)
         EndlessText.newRecord.resolve(lang),
       for (final milestone in summary.milestones)
         EndlessText.milestone(milestone.depth).resolve(lang),
-      if (reward?.levelsGained.lastOrNull case final level?)
-        EndlessText.levelBadge(level.level).resolve(lang),
     ];
     return ColoredBox(
       color: colors.background.withValues(alpha: .72),
@@ -1196,38 +1184,6 @@ class _EndlessScreenState extends State<EndlessScreen> {
                     ],
                   ),
                 ],
-                const SizedBox(height: 10),
-                Text(
-                  EndlessText.rewards.resolve(lang),
-                  textAlign: TextAlign.center,
-                  style: GameTypography.label.copyWith(
-                    fontSize: 14,
-                    color: colors.secondaryText,
-                  ),
-                ),
-                Row(
-                  key: const ValueKey('endless-rewards'),
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.auto_awesome, size: 20, color: colors.rewardInk),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${(reward?.clearStardust ?? summary.stardust) + milestoneDust}',
-                      style: GameTypography.label.copyWith(
-                        fontSize: 18,
-                        color: colors.text,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Text(
-                      'XP +${reward?.xpGained ?? summary.xp}',
-                      style: GameTypography.label.copyWith(
-                        fontSize: 18,
-                        color: colors.text,
-                      ),
-                    ),
-                  ],
-                ),
                 const SizedBox(height: 14),
                 FilledButton.icon(
                   key: const ValueKey('endless-again'),

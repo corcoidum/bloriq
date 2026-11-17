@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:bloriq/audio/game_audio.dart';
-import 'package:bloriq/design/star_art.dart';
 import 'package:bloriq/domain/puzzle.dart';
 import 'package:bloriq/game/bloriq_game.dart';
 import 'package:bloriq/main.dart';
@@ -56,105 +55,70 @@ void main() {
   });
 
   testWidgets(
-    'a first clear grants XP and stardust and shows them in the result',
+    'a first clear shows stars only; growth records stay out of the result',
     (tester) async {
       await pumpGame(tester, const BloriqApp());
       await _solve(tester);
       expect(find.text('Our star, at last!'), findsOneWidget);
-      // 첫 클리어 3별: 40 + 30 경험치, 별가루 15 + 10.
-      expect(find.text('+70 XP'), findsOneWidget);
-      expect(find.text('+25 stardust'), findsOneWidget);
+      expect(find.text('★★★'), findsOneWidget);
+      expect(find.textContaining('XP'), findsNothing);
+      expect(find.textContaining('stardust'), findsNothing);
+      // 저장 형식은 그대로라 기록은 계속 쌓인다. 화면만 보여 주지 않는다.
       final saved = await ProgressionRepository.load();
       expect(saved.xp, 70);
       expect(saved.stardust, 25);
     },
   );
 
-  testWidgets('atlas and companion perks reach the campaign board and result', (
-    tester,
-  ) async {
-    const capture = bool.fromEnvironment('CAPTURE_COLLECTION_PERKS');
-    final levels = (jsonDecode(
-      File('assets/levels/levels.json').readAsStringSync(),
-    ) as List).cast<Map<String, dynamic>>();
-    seedCampaign({1}, cleared: levels.take(5).map(Level.fromJson));
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      ProgressionRepository.storageKey,
-      jsonEncode({
-        'version': ProgressionRepository.schemaVersion,
-        'backfilled': true,
-        'stardust': 40,
-        'completedChapters': [1],
-        'goldenChapters': [1],
-        'claimedAchievements': ['golden-1'],
-        'bonds': {'s1-01': 8},
-      }),
-    );
-    final boundary = await openReleaseApp(tester, captureArt: capture);
-    if (capture) {
-      await tester.runAsync(() => StarArt.loadPortrait(StarArt.lunabel));
-    }
-    final backfill = releaseKey('dismiss-backfill');
-    if (backfill.evaluate().isNotEmpty) await tapVisible(tester, backfill);
+  testWidgets(
+    'a joined spirit shows in the journey; old perks leave no trace',
+    (tester) async {
+      final levels = (jsonDecode(
+        File('assets/levels/levels.json').readAsStringSync(),
+      ) as List).cast<Map<String, dynamic>>();
+      seedCampaign({1}, cleared: levels.take(5).map(Level.fromJson));
+      final prefs = await SharedPreferences.getInstance();
+      // 옛 기록의 별가루·황금 별자리·유대는 읽기만 하고 화면에 쓰지 않는다.
+      await prefs.setString(
+        ProgressionRepository.storageKey,
+        jsonEncode({
+          'version': ProgressionRepository.schemaVersion,
+          'backfilled': true,
+          'stardust': 40,
+          'completedChapters': [1],
+          'goldenChapters': [1],
+          'claimedAchievements': ['golden-1'],
+          'bonds': {'s1-01': 8},
+        }),
+      );
+      await openReleaseApp(tester);
+      final backfill = releaseKey('dismiss-backfill');
+      if (backfill.evaluate().isNotEmpty) await tapVisible(tester, backfill);
 
-    await openHomeJourney(tester, tab: 'constellations');
-    await tapVisible(tester, releaseKey('journey-chapter-1'));
-    expect(find.textContaining('별 15 / 15'), findsOneWidget);
-    await tapVisible(tester, releaseKey('journey-tab-rewards'));
-    final benefit = releaseKey('atlas-golden-benefit');
-    await tester.scrollUntilVisible(
-      benefit,
-      240,
-      scrollable: find.descendant(
-        of: find.byKey(const PageStorageKey('journey-rewards-list')),
-        matching: find.byType(Scrollable),
-      ),
-    );
-    expect(find.text('유료 별빛 길 할인 · 별가루 2'), findsOneWidget);
-    if (capture) {
-      await captureReleaseScreen(
-        tester,
-        boundary,
-        'docs/screenshots/economy/ko-golden-starlight-discount.png',
-      );
-    }
-    await tapVisible(tester, releaseKey('journey-tab-companions'));
-    await tapVisible(tester, releaseKey('spirit-s1-01'));
-    expect(find.text('동행 혜택 · 유대 Lv 3'), findsOneWidget);
-    if (capture) {
-      await tester.ensureVisible(releaseKey('spirit-companion-benefits'));
-      await captureReleaseScreen(
-        tester,
-        boundary,
-        'docs/screenshots/economy/ko-companion-perks.png',
-      );
-    }
-    await tapVisible(tester, find.text('닫기').last);
+      await openHomeJourney(tester, tab: 'spirits');
+      expect(find.text('함께하는 정령 1 / 5'), findsOneWidget);
+      expect(find.text('루나벨'), findsOneWidget);
+      expect(releaseKey('atlas-golden-benefit'), findsNothing);
+      expect(releaseKey('journey-tab-rewards'), findsNothing);
+      expect(releaseKey('player-level'), findsNothing);
 
-    await openCampaignMap(tester);
-    await selectOpenLevel(tester, 6);
-    await waitForReleaseWidget(tester, _board);
-    expect(
-      find.descendant(
-        of: releaseKey('starlight-path'),
-        matching: find.text('−18'),
-      ),
-      findsOneWidget,
-    );
-    await _solve(tester);
-    expect(find.text('+75 경험치'), findsOneWidget);
-    expect(find.text('동행 보너스 +5 경험치 포함'), findsOneWidget);
-    expect((await ProgressionRepository.load()).xp, 75);
-    if (capture) {
-      await captureReleaseScreen(
-        tester,
-        boundary,
-        'docs/screenshots/economy/ko-companion-first-clear.png',
+      await openCampaignMap(tester);
+      await selectOpenLevel(tester, 6);
+      await waitForReleaseWidget(tester, _board);
+      // 힌트 버튼에는 값이 없다.
+      expect(
+        find.descendant(
+          of: releaseKey('starlight-path'),
+          matching: find.byType(Text),
+        ),
+        findsNothing,
       );
-    }
-    await closeReleaseApp(tester);
-  });
+      await _solve(tester);
+      expect(find.textContaining('경험치'), findsNothing);
+      expect(find.textContaining('별가루'), findsNothing);
+      await closeReleaseApp(tester);
+    },
+  );
 
   testWidgets('the starlight path shows a move and caps the clear at 2 stars', (
     tester,
@@ -165,20 +129,17 @@ void main() {
       '{"version":1,"xp":0,"stardust":40,"backfilled":true}',
     );
     await pumpGame(tester, const BloriqApp());
-    // 쓰기 전: 이번에 낼 값만 보인다. 쓴 뒤에는 알림으로 쓴 값을 알린다.
-    Text label(String key) => tester.widget<Text>(find.byKey(ValueKey(key)));
-    expect(label('starlight-price').data, '−20');
-    expect(find.byKey(const ValueKey('starlight-balance')), findsNothing);
+    // 값은 없다. 쓰면 별 상한만 알린다.
+    expect(find.byKey(const ValueKey('starlight-price')), findsNothing);
     expect(find.byKey(const ValueKey('starlight-note')), findsNothing);
     await tapVisible(tester, find.byKey(const ValueKey('starlight-path')));
     expect(_game(tester).hintMove, isNotNull);
     await tester.pump(const Duration(milliseconds: 800));
-    expect(find.textContaining('−20'), findsWidgets);
-    expect((await ProgressionRepository.load()).stardust, 20);
+    expect(find.byKey(const ValueKey('starlight-note')), findsOneWidget);
+    expect((await ProgressionRepository.load()).stardust, 40);
     await _solve(tester);
     expect(find.text('★★☆'), findsOneWidget);
     final saved = await ProgressionRepository.load();
-    expect(saved.stardust, lessThan(40 + 25));
     expect(saved.bareHanded, isEmpty);
   });
 
@@ -209,8 +170,8 @@ void main() {
     await _solve(tester);
     expect(find.text('★★☆'), findsOneWidget);
     final saved = await ProgressionRepository.load();
-    // 별빛 길 값(20)은 돌려받지 않고, 2별 첫 클리어 별가루(20)만 받는다.
-    expect(saved.stardust, 40 - 20 + 20);
+    // 별빛 길은 값이 없다. 2별 첫 클리어 기록(20)만 더해진다.
+    expect(saved.stardust, 40 + 20);
     expect(saved.bareHanded, isEmpty);
     expect(saved.assistCap('1:1'), 3);
   });

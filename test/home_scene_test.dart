@@ -63,7 +63,8 @@ void main() {
     expect(scene.glow, closeTo(12 / 25, .001));
     expect(scene.lit, [true, true, false, false, false]);
     expect(scene.pendingNode, 2);
-    expect(scene.friendHidden, isTrue);
+    // 곁에 서는 것은 합류한 능력 정령뿐이다.
+    expect(scene.companions, hasLength(5));
     expect(releaseKey('home-sky'), findsOneWidget);
     expect(releaseKey('home-constellation'), findsOneWidget);
     expect(
@@ -153,27 +154,27 @@ void main() {
     await closeReleaseApp(tester);
   });
 
-  testWidgets('the starlight path shows its price and reports what it spent', (
+  testWidgets('the starlight path is free and Aster keeps the stars once', (
     tester,
   ) async {
     seedSaga(throughWorld: 1, extra: 1);
-    await _patchProgression({'stardust': 137});
     final boundary = await openReleaseApp(tester, captureArt: _capture);
     await tapVisible(tester, releaseKey('home-play'));
     await waitForReleaseWidget(tester, releaseBoard);
-    Text label(String key) => tester.widget<Text>(releaseKey(key));
-    // 별빛 길 권능이 있으면 판마다 첫 번은 무료다.
-    expect(label('starlight-price').data, '무료');
-    // 잔액과 별 상한 배지는 게임 화면에 두지 않는다.
+    // 값과 잔액은 게임 화면에 없다.
+    expect(releaseKey('starlight-price'), findsNothing);
     expect(releaseKey('starlight-balance'), findsNothing);
+    // 아스테르가 함께하면 판마다 첫 별빛 길은 별이 줄지 않는다.
     await tapVisible(tester, releaseKey('starlight-path'));
-    expect(label('starlight-price').data, '−20');
-    expect(releaseKey('assist-cap-badge'), findsOneWidget);
-    expect(find.text('최대 ★2'), findsNothing);
+    expect(releaseGame(tester).hintMove, isNotNull);
+    expect(releaseKey('assist-cap-badge'), findsNothing);
+    expect(releaseKey('starlight-note'), findsNothing);
+    // 두 번째부터는 별 2개 상한이 걸리고, 한 번만 알린다.
     await tapVisible(tester, releaseKey('starlight-path'));
     await tester.pump(const Duration(milliseconds: 800));
-    expect(find.textContaining('−20 별가루'), findsOneWidget);
-    expect((await ProgressionRepository.load()).stardust, 117);
+    expect(releaseKey('assist-cap-badge'), findsOneWidget);
+    expect(find.text('별빛 길을 쓴 판은 별 2개까지 받아요'), findsOneWidget);
+    expect(find.text('최대 ★2'), findsNothing);
     if (_capture) {
       await captureReleaseScreen(
         tester,

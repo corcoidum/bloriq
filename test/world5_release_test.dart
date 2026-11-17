@@ -113,58 +113,6 @@ void main() {
     await closeReleaseApp(tester);
   });
 
-  testWidgets('clearing 405 reveals the Frost guardian memory and atlas', (
-    tester,
-  ) async {
-    seedCampaign(_chaptersThroughWorld4, cleared: releaseLevels(5).take(4));
-    final boundary = await openReleaseApp(tester, captureArt: _capture);
-    await enterReleaseWorld(tester, 5);
-    await tapVisible(tester, releaseKey('world-continue'));
-    expect(releaseGame(tester).controller.state.level.id, 405);
-    await solveVisibleBoard(tester);
-    await waitForReleaseWidget(tester, releaseKey('result-next'));
-    expect(
-      (await ProgressionRepository.load()).completedChapters,
-      contains(21),
-    );
-    await tapVisible(tester, releaseKey('game-home'));
-    await waitForHome(tester);
-
-    await enterReleaseWorld(tester, 5);
-    final pages = find.descendant(
-      of: releaseWorldMap(5),
-      matching: find.byType(PageView),
-    );
-    await tester.drag(pages, const Offset(300, 0));
-    await tester.pump(const Duration(milliseconds: 450));
-    final guardian = releaseKey('world-guardian-405');
-    await waitForReleaseWidget(tester, guardian);
-    await tapVisible(tester, guardian);
-    final atlas = releaseKey('guardian-atlas-405');
-    expect(
-      find.descendant(of: atlas, matching: find.text('별자리 도감')),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(of: atlas, matching: find.text('서온')),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(of: atlas, matching: _storyText('작은 장면들이 갇혀 있었어')),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(of: atlas, matching: find.byType(Image)),
-      findsOneWidget,
-    );
-    await _shot(tester, boundary, 'guardian-atlas');
-    await tapVisible(
-      tester,
-      find.descendant(of: atlas, matching: find.text('닫기')),
-    );
-    await closeReleaseApp(tester);
-  });
-
   testWidgets('all three unlocked guides fit home help at 200% text', (
     tester,
   ) async {

@@ -9,6 +9,7 @@ import '../design/game_theme.dart';
 import '../design/star_art.dart';
 import '../l10n/app_localizations.dart';
 import '../world/world_theme.dart';
+import 'ability_spirits.dart';
 import 'game_session.dart';
 
 /// 홈 장면에 그릴 것. 저장하지 않고 기록에서 매번 계산한다.
@@ -25,8 +26,7 @@ class HomeSceneData {
     this.lit = const [],
     this.pendingNode,
     this.golden = false,
-    this.friendAsset,
-    this.friendHidden = true,
+    this.companions = const [],
   });
 
   /// "이어하기"가 갈 판을 기준으로 지금 서 있는 곳을 고른다.
@@ -39,6 +39,12 @@ class HomeSceneData {
     final id = target.levelId;
     final saga = session.saga;
     final info = saga?.world(world);
+    // 함께 다니는 것은 능력을 가진 정령뿐이다. 합류한 순서(장 순서)대로 선다.
+    final companions = [
+      for (final entry in abilitySpirits(session.story))
+        if (session.progression.hasPower(entry.power.id))
+          if (entry.spirit.asset case final asset? when asset.isNotEmpty) asset,
+    ];
     final before =
         saga?.worlds
             .where((other) => other.lighthouse != null && other.number < world)
@@ -60,8 +66,7 @@ class HomeSceneData {
         lit: chapter?.litMask ?? const [],
         pendingNode: index < 0 ? null : index,
         golden: chapter?.golden ?? false,
-        friendAsset: id == null ? null : session.story.forLevel(id)?.asset,
-        friendHidden: id == null || !(chapter?.isLit(id) ?? false),
+        companions: companions,
       );
     }
     final atlas = session.worldAtlas(world);
@@ -70,7 +75,6 @@ class HomeSceneData {
         : atlas?.forLevel(id);
     final index =
         chapter?.stages.indexWhere((stage) => stage.level.id == id) ?? -1;
-    final stage = index < 0 ? null : chapter!.stages[index];
     final total = atlas?.stages.length ?? 0;
     return HomeSceneData(
       world: world,
@@ -84,11 +88,7 @@ class HomeSceneData {
       lit: chapter?.lit ?? const [],
       pendingNode: index < 0 ? null : index,
       golden: chapter?.golden ?? false,
-      friendAsset: stage?.spirit.asset,
-      friendHidden:
-          stage == null ||
-          !stage.cleared ||
-          (stage.spirit.guardian && !chapter!.complete),
+      companions: companions,
     );
   }
 
@@ -115,9 +115,8 @@ class HomeSceneData {
   final int? pendingNode;
   final bool golden;
 
-  /// 다음 판에서 기다리는 정령. 아직 못 만났으면 그림자로 보인다.
-  final String? friendAsset;
-  final bool friendHidden;
+  /// 합류한 능력 정령의 그림. 리크 곁에 함께 선다.
+  final List<String> companions;
 
   int get litCount => lit.where((value) => value).length;
 
@@ -228,7 +227,11 @@ class _HomeSceneState extends State<HomeScene>
           child: child,
         );
         final riqLeft = width * .5 - riq / 2;
-        final friend = riq * .46;
+        final friend = riq * .36;
+        // 오른쪽에 셋, 나머지는 리크의 echo 왼쪽에 선다.
+        double companionLeft(int index) => index < 3
+            ? width * .5 + riq * .44 + friend * .64 * index
+            : riqLeft - riq * .4 - friend * (.7 + .64 * (index - 3));
         return Stack(
           clipBehavior: Clip.none,
           children: [
@@ -266,21 +269,17 @@ class _HomeSceneState extends State<HomeScene>
                   ),
                 ),
               ),
-            if (data.friendAsset case final asset?)
+            for (final (index, asset) in data.companions.indexed)
               standing(
-                left: width * .5 + riq * .44,
+                left: companionLeft(index),
                 size: friend,
-                delay: .5,
+                delay: .3 + .12 * index,
                 child: ExcludeSemantics(
                   child: Image.asset(
                     asset,
-                    key: const ValueKey('home-friend'),
+                    key: ValueKey('home-companion-$index'),
                     cacheWidth: 256,
                     fit: BoxFit.contain,
-                    color: data.friendHidden
-                        ? colors.secondaryText.withValues(alpha: .5)
-                        : null,
-                    colorBlendMode: data.friendHidden ? BlendMode.srcIn : null,
                     errorBuilder: (_, _, _) => const SizedBox.shrink(),
                   ),
                 ),

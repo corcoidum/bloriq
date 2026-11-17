@@ -2,7 +2,7 @@ import 'package:bloriq/domain/puzzle.dart';
 import 'package:bloriq/game/bloriq_game.dart';
 import 'package:bloriq/main.dart';
 import 'package:bloriq/settings/game_settings.dart';
-import 'package:bloriq/story/collection_repository.dart';
+import 'package:bloriq/progression/progression_rules.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -20,7 +20,7 @@ void main() {
     });
   });
   testWidgets(
-    'all 25 original puzzles award one friend, five correct endings, and restore a late companion',
+    'all 25 original puzzles bring the five ability spirits and open the next world',
     (tester) async {
       final settings = GameSettings(reduceMotion: true);
       await pumpGame(tester, BloriqApp(settings: settings));
@@ -56,21 +56,27 @@ void main() {
           await tester.pump(const Duration(milliseconds: 20));
         }
         expect(game().controller.state.isComplete, true);
-        expect(session.collection.owned.length, id);
-        expect(session.collection.memoryIds.length, id);
         expect(
           session.progress
               .forLevel(id, revision: level.revision)!
               .completionCount,
           1,
         );
-        final chapter = session.story.chapterForLevel(id);
+        // 판마다 뜨던 정령 발견 카드는 없다. 장을 마칠 때만 능력 정령이 합류한다.
+        expect(find.byKey(const ValueKey('skip-story')), findsNothing);
+        final joined = find.byKey(const ValueKey('result-spirit-joined'));
         if (id % 5 == 0) {
-          expect(find.text(chapter.endingTitle.en), findsOneWidget);
-          expect(find.text(chapter.ending.en), findsOneWidget);
-          expect(session.collection.chapterComplete(chapter.number), true);
+          for (var i = 0; i < 10 && joined.evaluate().isEmpty; i++) {
+            await tester.pump(const Duration(milliseconds: 50));
+          }
+          expect(joined, findsOneWidget, reason: 'stage $id');
+          expect(
+            session.progression.hasPower(powerCatalog[id ~/ 5 - 1].id),
+            isTrue,
+          );
+        } else {
+          expect(joined, findsNothing, reason: 'stage $id');
         }
-        await tapVisible(tester, find.byKey(const ValueKey('skip-story')));
         if (id < 25) await tapVisible(tester, find.text('Next level'));
       }
       // 세계 1을 다 마치면 "첫 스테이지로" 대신 다음 세계 안내가 나온다.
@@ -82,52 +88,12 @@ void main() {
       );
       expect(find.text('To the Cloud-Sea Lighthouse'), findsOneWidget);
       expect(find.text('First level'), findsNothing);
-      // 정령 도감은 결과 팝업의 더 보기 메뉴 안에 있다.
-      await tapVisible(tester, find.byKey(const ValueKey('result-more')));
-      await tester.pump(const Duration(milliseconds: 400));
-      await tester.pump(const Duration(milliseconds: 400));
-      await tapVisible(tester, find.byKey(const ValueKey('result-album')));
-      await tapVisible(tester, find.byKey(const ValueKey('album-chapter-5')));
-      await tapVisible(tester, find.byKey(const ValueKey('spirit-s1-25')));
-      await tapVisible(tester, find.byKey(const ValueKey('equip-companion')));
-      expect(session.collection.companion?.id, 's1-25');
-      await tapVisible(tester, find.text('Close').last);
-      await tapVisible(tester, find.byTooltip('Close'));
-      await tapVisible(tester, find.text('Try again'));
-      final level = game().controller.state.level;
-      for (final move in const PuzzleSolver().solve(level)!) {
-        await tester.ensureVisible(board);
-        await tester.pump();
-        final block = game().controller.state.blocks.firstWhere(
-          (b) => b.id == move.blockId,
-        );
-        final geometry = game().geometry;
-        await tester.dragFrom(
-          tester.getTopLeft(board) + geometry.center(block.position),
-          Offset(
-                (move.target.x - block.position.x).toDouble(),
-                (move.target.y - block.position.y).toDouble(),
-              ) *
-              geometry.cellSize *
-              .7,
-        );
-        await tester.pump(const Duration(milliseconds: 60));
-      }
-      for (var i = 0; i < 10; i++) {
-        await tester.pump(const Duration(milliseconds: 20));
-      }
-      expect(session.collection.owned.length, 25);
-      expect(find.byKey(const ValueKey('skip-story')), findsNothing);
       expect(
-        session.progress
-            .forLevel(25, revision: level.revision)!
-            .completionCount,
-        2,
+        powerCatalog.every((power) => session.progression.hasPower(power.id)),
+        isTrue,
       );
+      expect(session.collection.companion, isNull);
       await tester.pumpWidget(const SizedBox());
-      final restored = await CollectionRepository.load(session.story);
-      expect(restored.owned.length, 25);
-      expect(restored.companion?.id, 's1-25');
       settings.dispose();
     },
   );

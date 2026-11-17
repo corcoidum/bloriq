@@ -125,59 +125,6 @@ void main() {
     await closeReleaseApp(tester);
   });
 
-  testWidgets('clearing 505 reveals the Bookworm guardian memory and atlas', (
-    tester,
-  ) async {
-    seedCampaign(_chaptersThroughWorld5, cleared: releaseLevels(6).take(4));
-    final boundary = await openReleaseApp(tester, captureArt: _capture);
-    await enterReleaseWorld(tester, 6);
-    await tapVisible(tester, releaseKey('world-continue'));
-    expect(releaseGame(tester).controller.state.level.id, 505);
-    await solveVisibleBoard(tester);
-    await waitForReleaseWidget(tester, releaseKey('result-next'));
-    expect(
-      (await ProgressionRepository.load()).completedChapters,
-      contains(26),
-    );
-    await tapVisible(tester, releaseKey('game-home'));
-    await waitForHome(tester);
-
-    await enterReleaseWorld(tester, 6);
-    final pages = find.descendant(
-      of: releaseWorldMap(6),
-      matching: find.byType(PageView),
-    );
-    await tester.drag(pages, const Offset(300, 0));
-    await tester.pump(const Duration(milliseconds: 450));
-    final guardian = releaseKey('world-guardian-505');
-    await waitForReleaseWidget(tester, guardian);
-    expect(_storyText('누군가가 꾼 꿈의 기록'), findsOneWidget);
-    await tapVisible(tester, guardian);
-    final atlas = releaseKey('guardian-atlas-505');
-    expect(
-      find.descendant(of: atlas, matching: find.text('별자리 도감')),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(of: atlas, matching: find.text('문온')),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(of: atlas, matching: _storyText('서고에 새 책이 생겼어')),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(of: atlas, matching: find.byType(Image)),
-      findsOneWidget,
-    );
-    await _shot(tester, boundary, 'guardian-atlas');
-    await tapVisible(
-      tester,
-      find.descendant(of: atlas, matching: find.text('닫기')),
-    );
-    await closeReleaseApp(tester);
-  });
-
   testWidgets(
     'clearing 525 lights the fifth lighthouse and opens the First Star map',
     (tester) async {

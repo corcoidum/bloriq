@@ -7,12 +7,10 @@ import '../design/keep_all_text.dart';
 import '../game/power_bar.dart';
 import '../game/stage_challenge_card.dart';
 import '../l10n/app_localizations.dart';
-import '../progression/progression_rules.dart';
 import '../trials/trial_screen.dart';
 import '../world/saga.dart';
 import 'world_catalog.dart';
 import 'world_progress.dart';
-import 'world_spirit_album.dart';
 import 'world_text.dart';
 
 /// 확장 세계 지도. 고른 스테이지 id를 돌려준다(닫으면 null).
@@ -29,17 +27,6 @@ Future<int?> showWorldMap(
       world: world,
       buildTrialGame: buildTrialGame,
     ),
-  ),
-);
-
-Future<void> showWorldGuardian(
-  BuildContext context,
-  WorldChapterView chapter,
-) => showDialog<void>(
-  context: context,
-  builder: (context) => _GuardianAtlasCard(
-    chapter: chapter,
-    lang: Localizations.localeOf(context).languageCode,
   ),
 );
 
@@ -92,18 +79,6 @@ class _WorldMapState extends State<WorldMap> {
           icon: const Icon(Icons.close_rounded),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        actions: [
-          IconButton(
-            key: const ValueKey('world-album'),
-            tooltip: t.album,
-            icon: const Icon(Icons.auto_stories_outlined),
-            onPressed: () => Navigator.of(context).push<void>(
-              MaterialPageRoute(
-                builder: (_) => WorldSpiritAlbum(atlas: _atlas, story: story),
-              ),
-            ),
-          ),
-        ],
       ),
       body: SafeArea(
         child: Column(
@@ -196,7 +171,6 @@ class _ChapterPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = GameTheme.colorsOf(context);
     final info = chapter.chapter;
-    final guardian = chapter.stages.last;
     // 보통 폰에서는 별자리가 남는 높이를 채우고, 모자라면 장 전체를 스크롤한다.
     return CustomScrollView(
       key: const ValueKey('world-chapter-scroll'),
@@ -225,27 +199,10 @@ class _ChapterPage extends StatelessWidget {
                     color: colors.rewardInk,
                   ),
                 ),
-                if (guardian.cleared)
-                  Tooltip(
-                    message: AppLocalizations.of(context)!.constellationAtlas,
-                    child: TextButton.icon(
-                      key: ValueKey('world-guardian-${guardian.level.id}'),
-                      onPressed: () => showWorldGuardian(context, chapter),
-                      icon: Icon(
-                        chapter.golden
-                            ? Icons.workspace_premium_rounded
-                            : Icons.auto_awesome_rounded,
-                        size: 16,
-                        color: chapter.golden ? colors.reward : null,
-                      ),
-                      label: Text(info.constellation.inLocale(lang)),
-                    ),
-                  )
-                else
-                  Text(
-                    info.constellation.inLocale(lang),
-                    style: GameTypography.label.copyWith(color: colors.goalInk),
-                  ),
+                Text(
+                  info.constellation.inLocale(lang),
+                  style: GameTypography.label.copyWith(color: colors.goalInk),
+                ),
                 if (info.power case final power?)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
@@ -320,116 +277,6 @@ class _ChapterPage extends StatelessWidget {
   }
 }
 
-class _GuardianAtlasCard extends StatelessWidget {
-  const _GuardianAtlasCard({required this.chapter, required this.lang});
-
-  final WorldChapterView chapter;
-  final String lang;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context)!;
-    final colors = GameTheme.colorsOf(context);
-    final spirit = chapter.stages.last.spirit;
-    final info = chapter.chapter;
-    final asset = chapter.portraitFor(chapter.stages.last);
-    return AlertDialog(
-      key: ValueKey('guardian-atlas-${spirit.levelId}'),
-      scrollable: true,
-      title: Text(t.constellationAtlas, textAlign: TextAlign.center),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            info.constellation.inLocale(lang),
-            textAlign: TextAlign.center,
-            style: GameTypography.label.copyWith(color: colors.goalInk),
-          ),
-          SizedBox(
-            width: 220,
-            height: 96,
-            child: CustomPaint(
-              painter: ConstellationPainter(
-                definition: chapter.definition,
-                lit: chapter.lit,
-                colors: colors,
-                golden: chapter.golden ? 1 : 0,
-              ),
-            ),
-          ),
-          DecoratedBox(
-            key: ValueKey(
-              chapter.golden ? 'guardian-golden-frame' : 'guardian-frame',
-            ),
-            // 황금 별자리의 수호 정령은 금빛 테두리와 후광을 두른다.
-            decoration: chapter.golden
-                ? BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: colors.reward, width: 3),
-                    boxShadow: [
-                      BoxShadow(
-                        color: colors.reward.withValues(alpha: .55),
-                        blurRadius: 18,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  )
-                : const BoxDecoration(),
-            child: Padding(
-              padding: EdgeInsets.all(chapter.golden ? 6 : 0),
-              child: WorldSpiritPortrait(asset: asset, size: 120),
-            ),
-          ),
-          if (chapter.golden)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text(
-                GoldenText.guardian.resolve(lang),
-                textAlign: TextAlign.center,
-                style: GameTypography.label.copyWith(color: colors.rewardInk),
-              ),
-            )
-          else
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: KeepAllText(
-                GoldenText.howTo.resolve(lang),
-                textAlign: TextAlign.center,
-                style: GameTypography.body.copyWith(
-                  fontSize: 13,
-                  color: colors.secondaryText,
-                ),
-              ),
-            ),
-          Text(
-            spirit.name.inLocale(lang),
-            textAlign: TextAlign.center,
-            style: GameTypography.reward.copyWith(color: colors.rewardInk),
-          ),
-          Text(info.familyName.inLocale(lang), textAlign: TextAlign.center),
-          const SizedBox(height: 10),
-          KeepAllText(
-            spirit.memory.inLocale(lang),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 6),
-          KeepAllText(
-            spirit.quote.inLocale(lang),
-            textAlign: TextAlign.center,
-            style: GameTypography.body.copyWith(color: colors.goalInk),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(t.close),
-        ),
-      ],
-    );
-  }
-}
-
 class _StageTile extends StatelessWidget {
   const _StageTile({required this.stage, required this.lang});
   final WorldStageView stage;
@@ -440,9 +287,7 @@ class _StageTile extends StatelessWidget {
     final colors = GameTheme.colorsOf(context);
     final number = Worlds.stageNumber(stage.level.id);
     final spirit = stage.spirit;
-    final title = stage.cleared
-        ? '${spirit.levelTitle.inLocale(lang)} · ${spirit.name.inLocale(lang)}'
-        : stage.unlocked
+    final title = stage.unlocked
         ? spirit.levelTitle.inLocale(lang)
         : WorldText.lockedStage.resolve(lang);
     final tag = stage.level.requiredPowers.isNotEmpty

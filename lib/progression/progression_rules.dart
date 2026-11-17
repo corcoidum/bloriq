@@ -569,8 +569,8 @@ const powerCatalog = <PowerDefinition>[
     chapter: 5,
     name: ProgressionText('별빛 길', 'Starlight Path'),
     description: ProgressionText(
-      '다음 최적의 한 수를 보여 준다.',
-      'Reveal the next best move.',
+      '판마다 첫 별빛 길은 별이 줄지 않는다.',
+      'The first starlight path on each stage keeps all your stars.',
     ),
     activeInWorld1: true,
   ),
@@ -616,59 +616,39 @@ int starlightPathCost({
     (starlightDiscount ? StarlightPathRules.starlightBondDiscount : 0) -
     goldenStarlightDiscount(goldenConstellations);
 
+/// 별빛 길은 값이 없다. 남는 차이는 별 상한이 걸리느냐뿐이다.
 enum StarlightPathSource {
-  /// `starlight_path` 능력: 시도마다 한 번 무료.
+  /// `starlight_path` 능력(아스테르): 판마다 첫 번은 별이 줄지 않는다.
   free,
 
-  /// 보상 트랙의 무료 사용권.
-  charge,
-
-  /// 별가루 결제.
-  stardust,
+  /// 그 밖의 별빛 길: 그 판은 별 2개까지만 받는다.
+  capped,
 }
 
 class StarlightPathQuote {
-  const StarlightPathQuote(this.source, this.cost);
+  const StarlightPathQuote(this.source);
   final StarlightPathSource source;
-
-  /// 별가루 비용. [source] 가 stardust 가 아니면 0.
-  final int cost;
 
   @override
   bool operator ==(Object other) =>
-      other is StarlightPathQuote &&
-      other.source == source &&
-      other.cost == cost;
+      other is StarlightPathQuote && other.source == source;
 
   @override
-  int get hashCode => Object.hash(source, cost);
+  int get hashCode => source.hashCode;
 
   @override
-  String toString() => 'StarlightPathQuote($source, $cost)';
+  String toString() => 'StarlightPathQuote($source)';
 }
 
-/// 무료(능력) → 사용권 → 별가루 순으로 결제 수단을 고른다.
+/// 능력이 있고 이 판에서 아직 쓰지 않았으면 별이 줄지 않는 한 번을 준다.
 StarlightPathQuote starlightPathQuote({
   required bool powerUnlocked,
   required bool freeUsedThisAttempt,
-  required int charges,
-  bool starlightDiscount = false,
-  int goldenConstellations = 0,
-}) {
-  if (powerUnlocked && !freeUsedThisAttempt) {
-    return const StarlightPathQuote(StarlightPathSource.free, 0);
-  }
-  if (charges > 0) {
-    return const StarlightPathQuote(StarlightPathSource.charge, 0);
-  }
-  return StarlightPathQuote(
-    StarlightPathSource.stardust,
-    starlightPathCost(
-      starlightDiscount: starlightDiscount,
-      goldenConstellations: goldenConstellations,
-    ),
-  );
-}
+}) => StarlightPathQuote(
+  powerUnlocked && !freeUsedThisAttempt
+      ? StarlightPathSource.free
+      : StarlightPathSource.capped,
+);
 
 /// 별빛 길을 쓴 클리어는 최대 2별.
 int capAssistedStars(int stars, {required bool usedStarlightPath}) =>

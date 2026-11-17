@@ -9,6 +9,7 @@ import '../progress/last_played.dart';
 import '../progress/progress_repository.dart';
 import '../tutorial/echo_tutorial.dart';
 import '../daily/daily_repository.dart';
+import '../dev/echo_samples.dart' as samples;
 import '../analytics/local_analytics.dart';
 import '../story/story_catalog.dart';
 import '../story/collection_repository.dart';
@@ -111,6 +112,16 @@ class GameSession {
 
   /// 별지기 레벨·별가루·권능·유대. 처음 열 때 기존 기록을 한 번 환산한다.
   final ProgressionRepository progression;
+
+  /// 시험용 echo 샘플 판과 이번 실행 동안의 최고 기록. 저장하지 않는다.
+  Future<List<Level>>? _echoSamples;
+  final sampleBest = <int, int>{};
+
+  Future<List<Level>> loadEchoSamples() =>
+      _echoSamples ??= samples.loadEchoSamples().onError((error, stack) {
+        _echoSamples = null;
+        Error.throwWithStackTrace(error!, stack);
+      });
 
   /// 별바다 항해(끝없는 모드) 기록과 진행 중인 항해.
   final EndlessRepository endless;

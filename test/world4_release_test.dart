@@ -1,4 +1,3 @@
-import 'package:bloriq/design/keep_all_text.dart';
 import 'package:bloriq/design/star_art.dart';
 import 'package:bloriq/domain/mechanics/clock_arrow.dart';
 import 'package:bloriq/progress/progress_repository.dart';
@@ -116,58 +115,6 @@ void main() {
     await closeReleaseApp(tester);
   });
 
-  testWidgets('clearing 305 reveals the Winding guardian memory and atlas', (
-    tester,
-  ) async {
-    seedCampaign(_chaptersThroughWorld3, cleared: releaseLevels(4).take(4));
-    final boundary = await openReleaseApp(tester, captureArt: _capture);
-    await enterReleaseWorld(tester, 4);
-    await tapVisible(tester, releaseKey('world-continue'));
-    expect(releaseGame(tester).controller.state.level.id, 305);
-    await solveVisibleBoard(tester);
-    await waitForReleaseWidget(tester, releaseKey('result-next'));
-    expect(
-      (await ProgressionRepository.load()).completedChapters,
-      contains(16),
-    );
-    await tapVisible(tester, releaseKey('game-home'));
-    await waitForHome(tester);
-
-    await enterReleaseWorld(tester, 4);
-    final pages = find.descendant(
-      of: releaseWorldMap(4),
-      matching: find.byType(PageView),
-    );
-    await tester.drag(pages, const Offset(300, 0));
-    await tester.pump(const Duration(milliseconds: 450));
-    final guardian = releaseKey('world-guardian-305');
-    await waitForReleaseWidget(tester, guardian);
-    await tapVisible(tester, guardian);
-    final atlas = releaseKey('guardian-atlas-305');
-    expect(
-      find.descendant(of: atlas, matching: find.text('별자리 도감')),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(of: atlas, matching: find.text('모루')),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(of: atlas, matching: _storyText('시계를 멈추려는 손길이었어')),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(of: atlas, matching: find.byType(Image)),
-      findsOneWidget,
-    );
-    await _shot(tester, boundary, 'guardian-atlas');
-    await tapVisible(
-      tester,
-      find.descendant(of: atlas, matching: find.text('닫기')),
-    );
-    await closeReleaseApp(tester);
-  });
-
   for (final (lang, firstCard, help) in [
     ('ko', '바늘 쪽으로만 나가요', '게임 방법'),
     ('en', 'Leave the way the hand points', 'How to play'),
@@ -213,10 +160,6 @@ void main() {
     );
   }
 }
-
-Finder _storyText(String part) => find.byWidgetPredicate(
-  (widget) => widget is KeepAllText && widget.data.contains(part),
-);
 
 Future<void> _shot(WidgetTester tester, GlobalKey boundary, String name) async {
   if (_capture) {

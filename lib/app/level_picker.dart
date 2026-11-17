@@ -7,7 +7,6 @@ import '../settings/game_settings.dart';
 import '../trials/trial_screen.dart';
 import 'game_session.dart';
 import '../progress/chapter_progress.dart';
-import '../story/companion_view.dart';
 
 Future<int?> showLevelPicker(
   BuildContext context,
@@ -66,12 +65,6 @@ class LevelPicker extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
-                SpiritPortrait(
-                  spirit: friend,
-                  size: 52,
-                  hidden: !session.collection.owns(friend.id),
-                ),
-                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,13 +131,8 @@ class LevelPicker extends StatelessWidget {
                   style: GameTypography.label,
                 ),
                 if (spirit?.released == true) ...[
-                  SpiritPortrait(
-                    spirit: spirit!,
-                    size: 36,
-                    hidden: !session.collection.owns(spirit.id),
-                  ),
                   Text(
-                    spirit.levelTitle.inLocale(t.localeName),
+                    spirit!.levelTitle.inLocale(t.localeName),
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 13),
                   ),

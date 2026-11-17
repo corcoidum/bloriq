@@ -90,7 +90,7 @@ void main() {
     expect(find.text('Moves: 0'), findsOneWidget);
     await move(0, 1, 1, 0);
     await move(1, 1, 1, 0);
-    await tester.pump(const Duration(milliseconds: 1600));
+    await tester.pump(const Duration(milliseconds: 2600));
     await tester.pump();
     expect(find.text('Our star, at last!'), findsOneWidget);
     // 첫 최소 이동 클리어는 기록 갱신 배지 하나로만 칭찬한다.
@@ -109,7 +109,7 @@ void main() {
     await move(1, 0, 1, 0);
     await move(0, 1, 1, 0);
     await move(1, 1, 1, 0);
-    await tester.pump(const Duration(milliseconds: 1600));
+    await tester.pump(const Duration(milliseconds: 2600));
     await tester.pump();
     expect(find.text('Our star, at last!'), findsOneWidget);
   });
@@ -141,7 +141,7 @@ void main() {
     await move(0, 0, 1, 0);
     await move(1, 0, 0, 1);
     await move(1, 1, 1, 0);
-    await tester.pump(const Duration(milliseconds: 1600));
+    await tester.pump(const Duration(milliseconds: 2600));
     await tester.pump();
     // 결과 팝업은 이번 이동 수와 최소 이동 수를 큰 숫자로 나란히 보여 준다.
     expect(
@@ -205,7 +205,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       expect(controller.move(move.blockId, move.target), isTrue);
     }
-    await tester.pump(const Duration(milliseconds: 1600));
+    await tester.pump(const Duration(milliseconds: 2600));
     await tester.pump();
     expect(find.text('First level'), findsOneWidget);
     await tester.ensureVisible(find.text('First level'));
@@ -355,7 +355,7 @@ void main() {
     }
     expect(observedOpen, isTrue);
     expect(observedOccupied, isTrue);
-    await tester.pump(const Duration(milliseconds: 1600));
+    await tester.pump(const Duration(milliseconds: 2600));
     await tester.pump();
     expect(find.text('Our star, at last!'), findsOneWidget);
     await tester.ensureVisible(find.text('Undo'));

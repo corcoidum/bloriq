@@ -25,8 +25,6 @@
   "gateOccupied": "A block on a closed gate can still leave.",
   "noMoves": "No moves left. Undo and try another way.",
   "boardLabel": "Slide RIQ and the rune stones one square at a time. Guide mint-marked RIQ to the star gate.",
-  "soundOn": "Turn sound effects off",
-  "soundOff": "Turn sound effects on",
   "help": "How to play",
   "helpBody": "Slide one block one square at a time. Move the mint-marked RIQ to the star.\n\nThe square a block leaves behind becomes an echo. It blocks movement until another valid move finishes.\n\nOn gate stages, an echo on the moon crystal opens the gate for the next move. A block on a closed gate can still leave.\n\nUse Undo to try a different move.\n\nThe marks below also appear in the guide under the board.",
   "undo": "Undo",
@@ -63,7 +61,6 @@
   "shareError": "Could not create or share the postcard. Please try again.",
   "bestMoves": "Personal best: {count} moves",
   "newBest": "New personal best!",
-  "noBest": "No personal best yet",
   "starsLabel": "Stars: {count} of 3",
   "saveError": "Progress could not be saved on this device.",
   "@bestMoves": {
@@ -80,8 +77,6 @@
       }
     }
   },
-  "musicOn": "Turn music off",
-  "musicOff": "Turn music on",
   "eraserRule": "Dandelion tile: leaving it scatters the echo.",
   "holdRule": "Aurora amber tile: leaving it keeps the previous echo.",
   "oneWayRule": "Stream tile: a block can leave only the way the water flows.",
@@ -138,10 +133,7 @@
   "settingsSaveError": "Settings could not be saved. Your choice still applies for this session.",
   "skipCelebration": "Skip celebration",
   "home": "Home",
-  "homeTagline": "Every little step leaves an Echo.",
-  "playLevel": "Continue · Gate {number}",
   "completedLevels": "{count} / {total} completed",
-  "collectedStars": "{count} stars",
   "skipIntro": "Skip intro",
   "replayIntro": "Watch intro again",
   "introLabel": "Riq wakes up, leaves a purple Echo, reaches the star gate and lights a constellation.",
@@ -153,30 +145,14 @@
   "leaveGameBody": "This unfinished board and its Undo history will reset. Your completed levels and stars are saved.",
   "leaveGame": "Return home",
   "keepPlaying": "Keep playing",
-  "chooseLevel": "Choose your next move",
   "currentLevel": "Current level",
-  "homeProgress": "Your progress",
   "introSection": "Opening sequence",
-  "@playLevel": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
   "@completedLevels": {
     "placeholders": {
       "count": {
         "type": "int"
       },
       "total": {
-        "type": "int"
-      }
-    }
-  },
-  "@collectedStars": {
-    "placeholders": {
-      "count": {
         "type": "int"
       }
     }
@@ -242,9 +218,6 @@
       }
     }
   },
-  "storyTitle": "A Little Star Home",
-  "storyInvite": "Time to find our star!",
-  "courierName": "RIQ",
   "homeSubtitle": "Find friends sleeping beyond the star gates. Bring their memories home.",
   "credits": "Fonts & open source",
   "endingEntry": "To the end of the Lightroad",
@@ -260,57 +233,11 @@
   "endingThankYou": "Thank you for playing",
   "endingContinue": "Continue",
   "endingComplete": "The Lightroad of Five Lighthouses is complete!",
-  "riqName": "RIQ",
-  "gardenName": "Crescent Garden",
   "album": "Spirit Album",
   "journeyMap": "Journey Map",
-  "unknownSpirit": "A sleeping friend",
-  "unknownMemory": "Open the star gate to discover this friend and its memory.",
-  "equipCompanion": "Walk together",
-  "equippedCompanion": "Your companion",
-  "recoveredMemory": "A memory restored",
-  "readMemory": "Read the memory",
-  "skipMemory": "Read later",
-  "discoveryCard": "Spirit discovery card",
-  "collectionCard": "Crescent Garden collection card",
-  "collectionError": "The album could not be saved. Friends can be restored from completed stages.",
-  "collectionFuture": "This album was saved by a newer version. Its data is protected; puzzles remain playable.",
-  "collectionCorrupt": "The album could not be read. Keep a backup and restore it from completed stages.",
-  "restoreAlbum": "Restore from progress",
   "retrySave": "Retry saving",
   "backfillDismiss": "Got it",
-  "familyForest": "Forest spirit",
-  "familyStarlight": "Starlight spirit",
-  "familyLetter": "Letter spirit",
-  "familyCloud": "Cloud spirit",
-  "familyMemory": "Memory spirit",
-  "guardianEndingTitle": "The Garden’s Promise",
-  "guardianEnding": "The friends had not vanished. They were sleeping inside the star gates. Who kept them safe?",
-  "futureStoryNote": "Stages 6–25 remain playable. Their friends and stories are still being prepared.",
-  "storySoon": "Story coming later · Puzzles available",
   "dailyWalk": "A little walk today",
-  "riqIdle": "Shall we visit that star gate?",
-  "riqEcho": "Look! A little light stayed behind!",
-  "riqBlocked": "An Echo is in the way. Shall we try another path?",
-  "riqGate": "The path is open!",
-  "riqWelcome": "A new friend is awake!",
-  "journeySeason": "Footprints of a Forgotten Star",
-  "gardenProgress": "Garden memories {count}/5",
-  "@gardenProgress": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "newFriend": "Meet {name}!",
-  "@newFriend": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "newGuardian": "Guardian {name}!",
   "@newGuardian": {
     "placeholders": {
@@ -319,67 +246,7 @@
       }
     }
   },
-  "backfillSummary": "Restored {count} friends and their memories from your progress.",
-  "@backfillSummary": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "pendingMemories": "{count} memories waiting to be read",
-  "@pendingMemories": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "foundAtStage": "Found at star gate {level}",
-  "@foundAtStage": {
-    "placeholders": {
-      "level": {
-        "type": "int"
-      }
-    }
-  },
-  "seasonComplete": "Every light in Season 1 is home.",
   "backfillUpdated": "Your star-gate progress restored new friends and memories to the album.",
-  "seasonProgress": "Season 1 friends {count}/25",
-  "@seasonProgress": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "chapterFriends": "Friends {count}/5",
-  "@chapterFriends": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "chapterCollection": "{name} · friends {count}/5",
-  "@chapterCollection": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      },
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "chapterCard": "{name} collection card",
-  "@chapterCard": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "constellationAtlas": "Constellation Atlas",
   "constellationName1": "Moonflower",
   "constellationName2": "Five Lights",
@@ -413,10 +280,6 @@
   "constellationGolden": "Golden",
   "goldenStarlightDiscount": "Paid Starlight Path discount · {amount} stardust",
   "@goldenStarlightDiscount": {"placeholders": {"amount": {"type": "int"}}},
-  "goldenStarlightRule": "Earn every star in a constellation to make it golden. Save {amount} stardust per golden constellation, up to {cap} total.",
-  "@goldenStarlightRule": {
-    "placeholders": {"amount": {"type": "int"}, "cap": {"type": "int"}}
-  },
   "constellationSummary": "{name} constellation. {lit} of {total} stars lit. Best stars {stars} of {max}. {status}.",
   "@constellationSummary": {
     "placeholders": {
@@ -491,8 +354,6 @@
   "journey": "Journey",
   "journeyStatus": "Status",
   "journeyConstellations": "Stars",
-  "journeyCompanions": "Friends",
-  "journeyRewards": "Rewards",
   "journeyMenu": "Menu",
   "homeRiq": "Pet Riq",
   "homeDaily": "Daily Echo",
@@ -513,12 +374,6 @@
   "journeyLightroadStory": "Lightroad story",
   "journeyContinueWorld": "Continue here",
   "journeyPlayingWorld": "Playing now",
-  "journeySpiritCount": "Spirits {count} / {total}",
-  "@journeySpiritCount": {"placeholders": {"count": {"type": "int"}, "total": {"type": "int"}}},
-  "journeyCollectionTotal": "Collected {count} / {total} overall",
-  "@journeyCollectionTotal": {"placeholders": {"count": {"type": "int"}, "total": {"type": "int"}}},
-  "journeyWorldCollection": "This world {count} / {total}",
-  "@journeyWorldCollection": {"placeholders": {"count": {"type": "int"}, "total": {"type": "int"}}},
   "journeyRestoredTotal": "Restored {count} / {total} constellations",
   "@journeyRestoredTotal": {"placeholders": {"count": {"type": "int"}, "total": {"type": "int"}}},
   "journeyChapter": "Ch. {number}",
@@ -531,90 +386,30 @@
   "@journeyCleared": {"placeholders": {"count": {"type": "int"}, "total": {"type": "int"}}},
   "journeyStarCount": "Stars {count} / {total}",
   "@journeyStarCount": {"placeholders": {"count": {"type": "int"}, "total": {"type": "int"}}},
-  "journeyFriends": "Friends {count} / {total}",
-  "@journeyFriends": {"placeholders": {"count": {"type": "int"}, "total": {"type": "int"}}},
   "journeyStreak": "{days}-day streak",
   "@journeyStreak": {"placeholders": {"days": {"type": "int"}}},
-  "journeyWorldProgress": "Progress by world",
   "journeyFirstWorld": "Moonlit Forest Garden",
   "journeyWorldName": "World {number} · {name}",
   "@journeyWorldName": {"placeholders": {"number": {"type": "int"}, "name": {"type": "String"}}},
   "journeyWorldLocked": "Locked",
-  "journeyWorldActive": "In progress",
-  "journeyWorldComplete": "Complete",
-  "journeyCompanionCollection": "Collected {count} / {total}",
-  "@journeyCompanionCollection": {"placeholders": {"count": {"type": "int"}, "total": {"type": "int"}}},
-  "companionEquip": "Travel together",
-  "companionEquipped": "Traveling with you",
-  "companionUnknown": "A friend not met yet",
-  "journeyPageHint": "Swipe up or down",
-  "playerLevel": "Lv {level}",
-  "@playerLevel": {"placeholders": {"level": {"type": "int"}}},
-  "stardustCount": "Stardust {count}",
-  "@stardustCount": {"placeholders": {"count": {"type": "int"}}},
-  "rewardXp": "+{xp} XP",
-  "@rewardXp": {"placeholders": {"xp": {"type": "int"}}},
-  "rewardCompanionXp": "Includes +{xp} companion XP",
-  "@rewardCompanionXp": {"placeholders": {"xp": {"type": "int"}}},
-  "rewardStardust": "+{count} stardust",
-  "@rewardStardust": {"placeholders": {"count": {"type": "int"}}},
-  "rewardLevelUp": "Level up! Lv {level}",
-  "@rewardLevelUp": {"placeholders": {"level": {"type": "int"}}},
   "rewardPower": "New power: {name}",
   "@rewardPower": {"placeholders": {"name": {"type": "String"}}},
-  "rewardBond": "Bond with {name} Lv {level}",
-  "@rewardBond": {"placeholders": {"name": {"type": "String"}, "level": {"type": "int"}}},
   "rewardBareHanded": "Bare-handed star! No hints, fewest moves",
-  "rewardCharge": "Starlight path pass +{count}",
-  "@rewardCharge": {"placeholders": {"count": {"type": "int"}}},
   "starlightPath": "Starlight path",
-  "starlightFree": "Free",
-  "starlightPass": "Pass",
-  "starlightPassCount": "Pass ×{count}",
-  "@starlightPassCount": {"placeholders": {"count": {"type": "int"}}},
-  "starlightCost": "−{count}",
-  "@starlightCost": {"placeholders": {"count": {"type": "int"}}},
-  "starlightSpent": "−{count} stardust",
-  "@starlightSpent": {"placeholders": {"count": {"type": "int"}}},
-  "starlightPassSpent": "Pass −1",
-  "starlightShort": "Not enough stardust",
   "starlightNoMove": "No path from here. Try undoing.",
   "starlightSearchLimit": "Restart the board to try a Starlight hint from the start.",
   "starlightCalculating": "Finding the next move",
   "starlightCapped": "Using the starlight path caps this clear at 2 stars",
   "minimumMovesChip": "Best {count}",
   "@minimumMovesChip": {"placeholders": {"count": {"type": "int"}}},
-  "rewardsPowers": "Constellation powers",
-  "rewardsTrack": "Level rewards",
   "powerLocked": "Wakes when {constellation} is complete",
   "@powerLocked": {"placeholders": {"constellation": {"type": "String"}}},
   "powerWorld2": "Usable in the Cloud-Sea Lighthouse",
   "powerActive": "Ready to use",
-  "trackClaimed": "Claimed",
   "equip": "Equip",
   "equipped": "Equipped",
   "bondLevel": "Bond Lv {level}",
   "@bondLevel": {"placeholders": {"level": {"type": "int"}}},
-  "companionBenefits": "Companion benefits",
-  "companionFirstClearBenefit": "+{xp} XP on campaign first clears",
-  "@companionFirstClearBenefit": {"placeholders": {"xp": {"type": "int"}}},
-  "companionBondBenefit": "Bond Lv {level} · {benefit}",
-  "@companionBondBenefit": {
-    "placeholders": {"level": {"type": "int"}, "benefit": {"type": "String"}}
-  },
-  "companionNextBond": "Next bond level in {clears, plural, one{1 clear together} other{{clears} clears together}}",
-  "@companionNextBond": {"placeholders": {"clears": {"type": "int"}}},
-  "companionForestBenefit": "+{percent}% stardust on clears",
-  "@companionForestBenefit": {"placeholders": {"percent": {"type": "int"}}},
-  "companionStarlightBenefit": "Save {amount} stardust on paid Starlight Paths",
-  "@companionStarlightBenefit": {"placeholders": {"amount": {"type": "int"}}},
-  "companionLetterBenefit": "+{xp} XP added to the first clear bonus",
-  "@companionLetterBenefit": {"placeholders": {"xp": {"type": "int"}}},
-  "companionCloudBenefit": "Unlocks the Mist Trail",
-  "companionMemoryBenefit": "Shows the minimum move count",
-  "nextWorldTeaser": "The star gate is open · Cloud-Sea Lighthouse — coming soon",
-  "xpToNext": "{xp} XP to next level",
-  "@xpToNext": {"placeholders": {"xp": {"type": "int"}}},
   "resultMoves": "This run",
   "resultBest": "Best",
   "resultFewest": "Fewest",

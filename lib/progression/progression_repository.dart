@@ -645,64 +645,38 @@ class ProgressionRepository {
   StarlightPathQuote quoteStarlightPath({
     required bool freeUsedThisAttempt,
     String? levelKey,
-    String? companionId,
-    String? companionFamily,
   }) => starlightPathQuote(
     powerUnlocked: hasPower(PowerIds.starlightPath),
     freeUsedThisAttempt:
         freeUsedThisAttempt ||
         (levelKey != null && _freeStarlightUsed.contains(levelKey)),
-    charges: _charges,
-    goldenConstellations: _goldenChapters.length,
-    starlightDiscount: abilitiesFor(
-      companionId: companionId,
-      companionFamily: companionFamily,
-    ).starlightDiscount,
   );
 
-  /// 별빛 길을 결제한다. 별가루가 모자라면 null(변화 없음).
-  /// 성공하면 이번 클리어는 [recordClear] 에 `usedStarlightPath: true` 로 넘긴다.
-  /// [levelKey] 를 주면(캠페인) 그 판에 2별 상한과 무료 사용을 저장해서,
-  /// 다시 시작하거나 판을 나갔다 와도 지워지지 않는다.
-  /// [onUsed]는 비용을 확정한 직후 저장을 기다리기 전에 실행된다.
+  /// 별빛 길을 쓴다. 값은 없다. 저장할 수 없는 상태면 null(변화 없음).
+  /// [StarlightPathSource.capped]면 이번 클리어를 [recordClear] 에
+  /// `usedStarlightPath: true` 로 넘긴다. free 는 별을 줄이지 않고 맨손 별만 막는다.
+  /// [levelKey] 를 주면(캠페인) 그 판의 2별 상한과 별이 줄지 않는 한 번을 쓴 사실을
+  /// 저장해서, 다시 시작하거나 판을 나갔다 와도 지워지지 않는다.
+  /// [onUsed]는 종류를 확정한 직후 저장을 기다리기 전에 실행된다.
   Future<StarlightPathQuote?> useStarlightPath({
     required bool freeUsedThisAttempt,
     String? levelKey,
-    String? companionId,
-    String? companionFamily,
     void Function(StarlightPathQuote)? onUsed,
   }) async {
     if (!_writable) return null;
     final quote = quoteStarlightPath(
       freeUsedThisAttempt: freeUsedThisAttempt,
       levelKey: levelKey,
-      companionId: companionId,
-      companionFamily: companionFamily,
     );
-    if (quote.source == StarlightPathSource.stardust &&
-        quote.cost > _stardust) {
-      return null;
-    }
     if (levelKey != null) {
-      if (assistCap(levelKey) > StarlightPathRules.assistedStarCap) {
-        _assistCaps[levelKey] = StarlightPathRules.assistedStarCap;
-      }
       if (quote.source == StarlightPathSource.free) {
         _freeStarlightUsed.add(levelKey);
+      } else if (assistCap(levelKey) > StarlightPathRules.assistedStarCap) {
+        _assistCaps[levelKey] = StarlightPathRules.assistedStarCap;
       }
     }
-    switch (quote.source) {
-      case StarlightPathSource.free:
-        onUsed?.call(quote);
-        if (levelKey != null) await retrySave();
-        return quote;
-      case StarlightPathSource.charge:
-        _charges--;
-      case StarlightPathSource.stardust:
-        _stardust -= quote.cost;
-    }
     onUsed?.call(quote);
-    await retrySave();
+    if (levelKey != null) await retrySave();
     return quote;
   }
 

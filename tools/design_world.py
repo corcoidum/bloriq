@@ -27,6 +27,7 @@ from tools.validate_levels import (
     available_powers,
     check_world,
     decorative_mechanic,
+    echo_gain,
     first_level_id,
     power_profile,
     published_worlds,
@@ -185,6 +186,12 @@ def full_check(
         level, minimum, powers=slot.powers, max_states=slot.full_states, deadline=deadline,
     ) is not None:
         return None
+    if slot.min_echo_gain:
+        gain = echo_gain(
+            level, minimum, powers=slot.powers, max_states=slot.full_states, deadline=deadline,
+        )
+        if gain is not None and gain < slot.min_echo_gain:
+            return None
     profile = power_profile(level, max_states=slot.full_states, deadline=deadline, solution=solution)
     bare = profile['bareHandedMoves']
     if slot.featured is not None:

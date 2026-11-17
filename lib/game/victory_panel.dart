@@ -17,7 +17,6 @@ class VictoryPanel extends StatelessWidget {
     required this.onSkip,
     required this.result,
     required this.actions,
-    this.discovery,
     this.constellation,
     this.reward,
     this.heading,
@@ -34,9 +33,6 @@ class VictoryPanel extends StatelessWidget {
   /// 카드 아래에 늘 보이는 버튼 묶음. 발견 이야기 중에도 바로 넘어갈 수 있다.
   final Widget actions;
 
-  /// 새 친구 발견 이야기. 결과 위에 함께 보여 주고, 넘기면 접힌다.
-  final Widget? discovery;
-
   /// 새로 켜진 별자리. 같은 결과 패널 안에 표시한다.
   final Widget? constellation;
 
@@ -47,13 +43,9 @@ class VictoryPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
     final colors = GameTheme.colorsOf(context);
-    final panel = reduceMotion || discovery != null
-        ? 1.0
-        : ((progress - .78) / .22).clamp(0.0, 1.0);
+    final panel = reduceMotion ? 1.0 : ((progress - .78) / .22).clamp(0.0, 1.0);
     // 리크가 별문에 들어간 뒤 카드가 가운데에서 튀어 오르듯 나타난다.
-    final appear = reduceMotion || discovery != null
-        ? 1.0
-        : ((progress - .26) / .2).clamp(0.0, 1.0);
+    final appear = reduceMotion ? 1.0 : ((progress - .26) / .2).clamp(0.0, 1.0);
     final card = Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
@@ -219,7 +211,6 @@ class VictoryPanel extends StatelessWidget {
                     ],
                     const SizedBox(height: GameSpacing.small),
                     ?reward,
-                    ?discovery,
                     ?constellation,
                     const SizedBox(height: GameSpacing.medium),
                     actions,

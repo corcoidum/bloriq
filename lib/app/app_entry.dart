@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../design/arcade_components.dart';
 import '../design/game_theme.dart';
+import '../dev/echo_samples.dart';
 import '../domain/puzzle.dart';
 import '../l10n/app_localizations.dart';
 import '../settings/game_settings.dart';
@@ -11,7 +12,6 @@ import 'experience_dialogs.dart';
 import 'intro_screen.dart';
 import 'game_session.dart';
 import 'home_scene.dart';
-import '../story/spirit_album.dart';
 import 'journey_panel.dart';
 import 'play_context.dart';
 import '../endless/endless_rules.dart';
@@ -23,7 +23,7 @@ import '../world/world_text.dart';
 import '../tutorial/world_tutorial.dart';
 import '../trials/trial_catalog.dart';
 
-enum _HomeMode { daily, voyage }
+enum _HomeMode { daily, voyage, samples }
 
 class AppEntry extends StatefulWidget {
   const AppEntry({
@@ -322,6 +322,17 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                   _voyageTile(t, colors, session, () {
                     Navigator.pop(dialogContext, _HomeMode.voyage);
                   }),
+                  const SizedBox(height: GameSpacing.small),
+                  _modeTile(
+                    key: const ValueKey('home-echo-samples'),
+                    icon: Icons.science_outlined,
+                    color: colors.goal,
+                    ink: colors.goalInk,
+                    title: EchoSampleText.title.resolve(t.localeName),
+                    detail: EchoSampleText.detail.resolve(t.localeName),
+                    onTap: () =>
+                        Navigator.pop(dialogContext, _HomeMode.samples),
+                  ),
                 ],
               ),
             ),
@@ -342,6 +353,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     await switch (mode) {
       _HomeMode.daily => _openDaily(session),
       _HomeMode.voyage => _openEndless(),
+      _HomeMode.samples => _openSamples(session),
       null => Future<void>.value(),
     };
   }
@@ -783,6 +795,43 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     if (play != null) await _open(id, play: play);
   }
 
+  Future<void> _openSamples(GameSession session) async {
+    if (_opening || _choosing) return;
+    _choosing = true;
+    try {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) => EchoSamplesScreen(
+            session: session,
+            onPlay: (level) async {
+              final audio = session.audio;
+              final wasVisible = audio.gameVisible;
+              audio.setMusicTrack(session.saga?.world(1).theme?.bgm);
+              audio.setGameVisible(true);
+              audio.onUserInteraction();
+              try {
+                await Navigator.of(context).push<void>(
+                  MaterialPageRoute(
+                    builder: (_) => widget.gameBuilder(
+                      session,
+                      level.id,
+                      PlayContext.sample(level),
+                    ),
+                  ),
+                );
+              } finally {
+                audio.setGameVisible(wasVisible);
+              }
+            },
+          ),
+        ),
+      );
+    } finally {
+      _choosing = false;
+      if (mounted) setState(() {});
+    }
+  }
+
   Future<void> _openDaily(GameSession session) => _open(
     session.daily.today.level.id,
     play: PlayContext.daily(session.daily.today),
@@ -930,7 +979,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
           ),
         ],
       ),
-    CollectionStorageNotice(session: session, onChanged: () => setState(() {})),
     if (session.progress.saveFailed || session.onboarding.saveFailed)
       Text(t.saveError, textAlign: TextAlign.center),
   ];

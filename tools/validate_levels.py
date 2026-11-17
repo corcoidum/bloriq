@@ -17,6 +17,10 @@ ROOT = Path(__file__).resolve().parents[1]
 LEVELS_FILE = ROOT / 'assets/levels/levels.json'
 COURSE2_BASELINE_FILE = ROOT / 'assets/levels/course2_baseline.json'
 SAGA_FILE = ROOT / 'assets/worlds/saga.json'
+# 캠페인을 바꾸기 전에 사람이 먼저 해 보는 시험용 판 묶음. tools/design_echo_samples.py 가 만든다.
+ECHO_SAMPLES_FILE = ROOT / 'assets/levels/echo_samples_v1.json'
+ECHO_SAMPLE_FIRST_ID = 9001
+ECHO_SAMPLE_GAIN = 2
 Move = tuple[str, Position, Position] | tuple[str, Position, Position, str]
 
 # 확장 세계 권능. lib/domain/puzzle.dart 의 PuzzlePower 순서·규칙과 같다.
@@ -283,6 +287,42 @@ def decorative_mechanic(
     return None
 
 
+def echo_gain(
+    level: dict, minimum: int, *, powers: tuple[str, ...] = (),
+    max_states: int = 200_000, deadline: float | None = None,
+) -> int | None:
+    """잔상을 끄고 다시 풀었을 때 최단 수가 달라지는 정도. 잔상 없이는 못 풀면 None.
+
+    0이면 잔상이 있든 없든 최단 수가 같다. 이런 판은 잔상을 의식하지 않고도 풀린다."""
+    without = solve_or_none(
+        level, use_echo=False, powers=powers, max_states=max_states, deadline=deadline,
+    )
+    return None if without is None else abs(len(without) - minimum)
+
+
+def check_echo_samples(levels: list[dict], *, expected: int | None = None) -> None:
+    """시험용 판: 세계 1 규칙만 쓰고, 잔상을 끄면 2수 이상 달라지거나 풀 수 없어야 한다."""
+    if expected is not None:
+        assert len(levels) == expected, f'Echo samples need {expected} boards, found {len(levels)}'
+    assert [level['id'] for level in levels] == list(
+        range(ECHO_SAMPLE_FIRST_ID, ECHO_SAMPLE_FIRST_ID + len(levels)))
+    for level in levels:
+        assert level.get('world') == 1 and not available_powers(level)
+        moves = validate_level(level)
+        assert len(moves) == level['minimumMoves'], (
+            f"Sample {level['id']}: expected {level['minimumMoves']}, got {len(moves)}")
+        record_solution(level, moves, write=False)
+        decorative = decorative_mechanic(level, len(moves))
+        assert decorative is None, f"Sample {level['id']}: {decorative} has no effect on optimum"
+        gain = echo_gain(level, len(moves))
+        assert gain is None or gain >= ECHO_SAMPLE_GAIN, (
+            f"Sample {level['id']}: echo changes the optimum by only {gain}")
+        types = ', '.join(rule['type'] for rule in level['specialRules']) or 'basic'
+        effect = 'echo required' if gain is None else f'echo gain {gain}'
+        print(f"Sample {level['id']}: minimum={len(moves)}, {effect}, {types}")
+    print(f'{len(levels)} echo sample boards valid.')
+
+
 def first_level_id(world: int) -> int:
     """lib/world/world_catalog.dart 의 Worlds.firstLevelId 와 같다."""
     return (world - 1) * 100 + 1
@@ -407,6 +447,9 @@ def main() -> None:
         record_solution(level, moves, write=args.write_solutions)
     verified[COURSE2_BASELINE_FILE] = archived
     print(f'{len(archived)} archived levels valid.')
+
+    if ECHO_SAMPLES_FILE.exists():
+        check_echo_samples(json.loads(ECHO_SAMPLES_FILE.read_text(encoding='utf-8')))
 
     if args.write_solutions:
         for path, verified_levels in verified.items():

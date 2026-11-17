@@ -35,6 +35,8 @@ class Slot:
     mechanic_count: int = 0
     fixed_start: tuple[int, int] | None = None
     fixed_exit: tuple[int, int] | None = None
+    # 잔상을 껐을 때 최단 수가 이만큼은 달라져야 한다(잔상 없이 못 푸는 판은 통과). 0이면 검사하지 않는다.
+    min_echo_gain: int = 0
 
     def __post_init__(self) -> None:
         width, height = self.size
@@ -49,6 +51,8 @@ class Slot:
             raise ValueError('A required or featured power must be available in the slot')
         if self.move_tolerance is not None and self.move_tolerance < 0:
             raise ValueError('Move tolerance must be nonnegative')
+        if type(self.min_echo_gain) is not int or self.min_echo_gain < 0:
+            raise ValueError('Echo gain must be a nonnegative whole number')
         candidates = set(self.mechanic_candidates)
         if (type(self.mechanic_count) is not int
                 or not 0 <= self.mechanic_count <= len(candidates)

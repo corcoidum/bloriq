@@ -5,7 +5,6 @@ import 'dart:convert';
 
 import 'package:bloriq/design/game_theme.dart';
 import 'package:bloriq/story/story_catalog.dart';
-import 'package:bloriq/story/companion_view.dart';
 
 import 'dart:ui' as ui;
 
@@ -316,9 +315,10 @@ void main() {
                                     width: 66,
                                     child: Column(
                                       children: [
-                                        SpiritPortrait(
-                                          spirit: friend,
-                                          size: 48,
+                                        Image.asset(
+                                          friend.asset!,
+                                          width: 48,
+                                          height: 48,
                                         ),
                                         Text(
                                           friend.name.inLocale(locale),

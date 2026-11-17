@@ -1,25 +1,19 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
-import '../constellation/constellation_atlas.dart';
-import '../constellation/constellation_state.dart';
 import '../design/arcade_components.dart';
 import '../design/game_theme.dart';
-import '../design/keep_all_text.dart';
 import '../l10n/app_localizations.dart';
-import '../progression/progression_rules.dart';
 import '../settings/game_settings.dart';
-import '../story/spirit_album.dart';
 import '../trials/trial_screen.dart';
 import '../world/saga_map.dart';
 import '../world/world_map.dart';
 import '../world/world_text.dart';
+import 'ability_spirits.dart';
 import 'game_session.dart';
 import 'journey_constellations.dart';
 import 'level_picker.dart';
 
-enum JourneyTab { status, constellations, companions, rewards }
+enum JourneyTab { status, constellations, spirits }
 
 /// 홈과 게임에서 같은 여정을 열고, 선택한 캠페인 스테이지 id를 돌려준다.
 Future<int?> showJourneyPanel(
@@ -188,8 +182,10 @@ class _JourneyPanelState extends State<JourneyPanel>
                 tabs: [
                   tab(JourneyTab.status, t.journeyStatus),
                   tab(JourneyTab.constellations, t.journeyConstellations),
-                  tab(JourneyTab.companions, t.journeyCompanions),
-                  tab(JourneyTab.rewards, t.journeyRewards),
+                  tab(
+                    JourneyTab.spirits,
+                    AbilitySpiritText.tab.resolve(t.localeName),
+                  ),
                 ],
               ),
               Expanded(
@@ -213,23 +209,7 @@ class _JourneyPanelState extends State<JourneyPanel>
                       initialLevelId: _levelId,
                       onPlay: onPlay,
                     ),
-                    SpiritAlbumShelf(
-                      session: widget.session,
-                      initialWorld: _world,
-                      reduceMotion: prefersReducedMotion(
-                        context,
-                        widget.settings,
-                      ),
-                      showCampaignTotal: true,
-                    ),
-                    _RewardsTab(
-                      session: widget.session,
-                      reduceMotion: prefersReducedMotion(
-                        context,
-                        widget.settings,
-                      ),
-                      onChanged: _refresh,
-                    ),
+                    AbilitySpiritsTab(session: widget.session),
                   ],
                 ),
               ),
@@ -364,14 +344,9 @@ class _StatusTab extends StatelessWidget {
                 t.journeyStarCount(overall.stars, overall.total * 3),
                 style: statsStyle.copyWith(color: colors.rewardInk),
               ),
-              Text(
-                t.journeySpiritCount(overall.friends, overall.friendTotal),
-                style: statsStyle.copyWith(color: colors.echoInk),
-              ),
             ],
           ),
           const SizedBox(height: 10),
-          PlayerLevelCard(session: session),
           if (session.daily.streak > 0)
             Text(t.journeyStreak(session.daily.streak)),
           if (onReadLightroad != null)
@@ -501,420 +476,3 @@ class _WorldRow extends StatelessWidget {
     );
   }
 }
-
-class PlayerLevelCard extends StatelessWidget {
-  const PlayerLevelCard({super.key, required this.session});
-  final GameSession session;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context)!;
-    final colors = GameTheme.colorsOf(context);
-    final progression = session.progression;
-    final standing = progression.standing;
-    return Container(
-      key: const ValueKey('player-level'),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: colors.surface.withValues(alpha: .7),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.goal.withValues(alpha: .4)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: colors.goal.withValues(alpha: .2),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              t.playerLevel(standing.level),
-              style: GameTypography.reward.copyWith(
-                fontSize: 16,
-                color: colors.goalInk,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            flex: 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  t.xpToNext(standing.xpRemaining),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTypography.body.copyWith(
-                    fontSize: 13,
-                    color: colors.secondaryText,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    minHeight: 7,
-                    value: standing.progress,
-                    color: colors.goal,
-                    backgroundColor: colors.outline.withValues(alpha: .25),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          Flexible(
-            flex: 2,
-            child: Text(
-              t.stardustCount(progression.stardust),
-              textAlign: TextAlign.end,
-              style: GameTypography.label.copyWith(color: colors.rewardInk),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// 보상 탭은 모든 보상과 공방을 한 목록에서 이어서 보여 준다.
-class _RewardsTab extends StatelessWidget {
-  const _RewardsTab({
-    required this.session,
-    required this.reduceMotion,
-    required this.onChanged,
-  });
-  final GameSession session;
-  final bool reduceMotion;
-  final VoidCallback onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context)!;
-    final colors = GameTheme.colorsOf(context);
-    final lang = t.localeName;
-    final progression = session.progression;
-    final atlas = ConstellationAtlas.derive(session.levels, session.progress);
-    final levelLabelWidth = math.max(
-      56.0,
-      MediaQuery.textScalerOf(context).scale(48),
-    );
-
-    Widget heading(String id, String title) => Padding(
-      key: ValueKey('journey-rewards-$id'),
-      padding: const EdgeInsets.only(top: 16, bottom: 8),
-      child: Text(
-        title,
-        style: GameTypography.reward.copyWith(
-          fontSize: 19,
-          color: colors.rewardInk,
-        ),
-      ),
-    );
-
-    // 잔영과 칭호는 더 이상 보여 주지 않는다. 옛 저장 기록에만 남아 있다.
-    String? rewardLabel(TrackReward reward) => switch (reward) {
-      StardustBundle(:final amount) => t.rewardStardust(amount),
-      StarlightCharge(:final charges) => t.rewardCharge(charges),
-      TrailUnlock() || TitleUnlock() => null,
-    };
-
-    Iterable<Widget> achievementSection(
-      String id,
-      String title,
-      Iterable<Achievement> items, {
-      Widget? summary,
-    }) sync* {
-      yield heading(id, title);
-      if (summary != null) yield summary;
-      for (final achievement in items) {
-        yield _AchievementRow(
-          achievement: achievement,
-          progress: progression.achievementProgress(achievement),
-          claimed: progression.claimedAchievements.contains(achievement.id),
-          rewards: achievement.rewards.map(rewardLabel).nonNulls.join(' · '),
-        );
-      }
-    }
-
-    return ListView(
-      key: const PageStorageKey('journey-rewards-list'),
-      primary: false,
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      children: [
-        heading('powers', t.rewardsPowers),
-        for (final power in powerCatalog)
-          _PowerCard(
-            power: power,
-            unlocked: progression.hasPower(power.id),
-            constellation: atlas.chapters
-                .where((chapter) => chapter.definition.chapter == power.chapter)
-                .firstOrNull
-                ?.definition
-                .name(t),
-          ),
-        if (progression.completedChapters.length >= 5)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: KeepAllText(
-              session.worldUnlocked(2) && session.saga != null
-                  ? WorldText.opened(session.saga!.world(2).title).resolve(lang)
-                  : t.nextWorldTeaser,
-              textAlign: TextAlign.center,
-              style: GameTypography.body.copyWith(color: colors.goalInk),
-            ),
-          ),
-        heading('track', t.rewardsTrack),
-        for (final entry in rewardTrack)
-          if (rewardLabel(entry.reward) case final label?)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: levelLabelWidth,
-                    child: Text(
-                      t.playerLevel(entry.level),
-                      style: GameTypography.label.copyWith(
-                        color: progression.level >= entry.level
-                            ? colors.goalInk
-                            : colors.secondaryText,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      label,
-                      style: GameTypography.body.copyWith(
-                        fontSize: 15,
-                        color: progression.level >= entry.level
-                            ? colors.text
-                            : colors.secondaryText,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    progression.level >= entry.level
-                        ? Icons.check_circle_rounded
-                        : Icons.lock_outline_rounded,
-                    size: 18,
-                    color: progression.level >= entry.level
-                        ? colors.goalInk
-                        : colors.outline,
-                  ),
-                ],
-              ),
-            ),
-        ...achievementSection(
-          'stars',
-          AchievementText.stars.resolve(lang),
-          achievements.where(
-            (achievement) => achievement.kind == AchievementKind.worldStars,
-          ),
-        ),
-        ...achievementSection(
-          'golden',
-          AchievementText.golden.resolve(lang),
-          achievements.where(
-            (achievement) =>
-                achievement.kind == AchievementKind.worldGolden ||
-                achievement.kind == AchievementKind.goldenConstellations,
-          ),
-          summary: GoldenConstellationBenefit(session: session),
-        ),
-        ...achievementSection(
-          'starflowers',
-          AchievementText.starflowers.resolve(lang),
-          achievements.where(
-            (achievement) =>
-                achievement.kind == AchievementKind.worldStarflowers,
-          ),
-        ),
-        ...achievementSection(
-          'bare-handed',
-          AchievementText.bareHanded.resolve(lang),
-          achievements.where(
-            (achievement) =>
-                achievement.kind == AchievementKind.bareHandedStars,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _PowerCard extends StatelessWidget {
-  const _PowerCard({
-    required this.power,
-    required this.unlocked,
-    required this.constellation,
-  });
-  final PowerDefinition power;
-  final bool unlocked;
-  final String? constellation;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context)!;
-    final colors = GameTheme.colorsOf(context);
-    final lang = t.localeName;
-    final status = !unlocked
-        ? t.powerLocked(constellation ?? '')
-        : power.activeInWorld1
-        ? t.powerActive
-        : t.powerWorld2;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: unlocked
-            ? colors.reward.withValues(alpha: .12)
-            : colors.background.withValues(alpha: .4),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: unlocked
-              ? colors.reward.withValues(alpha: .6)
-              : colors.outline.withValues(alpha: .3),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            unlocked ? Icons.auto_awesome : Icons.lock_outline_rounded,
-            color: unlocked ? colors.rewardInk : colors.outline,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  power.name.resolve(lang),
-                  style: GameTypography.reward.copyWith(
-                    fontSize: 16,
-                    color: unlocked ? colors.rewardInk : colors.secondaryText,
-                  ),
-                ),
-                KeepAllText(
-                  '${power.description.resolve(lang)} · $status',
-                  style: GameTypography.body.copyWith(
-                    fontSize: 15,
-                    color: colors.secondaryText,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// 별 모으기 업적 한 줄: 이름, 진행 막대, 보상.
-class _AchievementRow extends StatelessWidget {
-  const _AchievementRow({
-    required this.achievement,
-    required this.progress,
-    required this.claimed,
-    required this.rewards,
-  });
-  final Achievement achievement;
-  final int progress;
-  final bool claimed;
-  final String rewards;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = GameTheme.colorsOf(context);
-    final lang = Localizations.localeOf(context).languageCode;
-    final value = progress.clamp(0, achievement.target);
-    final name = achievement.name.resolve(lang);
-    final count = '$value / ${achievement.target}';
-    final largeLabels = MediaQuery.textScalerOf(context).scale(14) > 21;
-    final title = Text(
-      name,
-      style: GameTypography.label.copyWith(
-        height: 1.2,
-        color: claimed ? colors.rewardInk : colors.text,
-      ),
-    );
-    final counter = Text(
-      count,
-      textAlign: TextAlign.end,
-      style: GameTypography.label.copyWith(
-        fontSize: 14,
-        color: colors.secondaryText,
-      ),
-    );
-    return Semantics(
-      container: true,
-      excludeSemantics: true,
-      label: '$name, $count. $rewards',
-      child: Padding(
-        key: ValueKey('achievement-${achievement.id}'),
-        padding: const EdgeInsets.symmetric(vertical: 9),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              claimed ? Icons.emoji_events_rounded : Icons.star_outline_rounded,
-              size: 22,
-              color: claimed ? colors.reward : colors.outline,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (largeLabels) ...[
-                    title,
-                    Align(
-                      alignment: AlignmentDirectional.centerEnd,
-                      child: counter,
-                    ),
-                  ] else
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Expanded(child: title),
-                        const SizedBox(width: 8),
-                        counter,
-                      ],
-                    ),
-                  const SizedBox(height: 5),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      minHeight: 6,
-                      value: value / achievement.target,
-                      color: claimed ? colors.reward : colors.goal,
-                      backgroundColor: colors.outline.withValues(alpha: .2),
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  KeepAllText(
-                    rewards,
-                    style: GameTypography.body.copyWith(
-                      fontSize: 15,
-                      color: colors.secondaryText,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// 별빛 공방의 한 줄: 색 견본, 이름, 값, 사기 버튼.

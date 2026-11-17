@@ -352,77 +352,18 @@ void main() {
   });
 
   group('starlight path', () {
-    test(
-      'saved golden chapters stack with the starlight bond discount',
-      () async {
-        SharedPreferences.setMockInitialValues({
-          ProgressionRepository.storageKey: jsonEncode({
-            'version': ProgressionRepository.schemaVersion,
-            'stardust': 30,
-            'goldenChapters': [1, 6],
-            'bonds': {'s1-06': 8},
-          }),
-        });
-        final repo = await _load();
-        final quote = await repo.useStarlightPath(
-          freeUsedThisAttempt: false,
-          levelKey: '102:1',
-          companionId: 's1-06',
-          companionFamily: 'starlight',
-        );
-        expect(
-          quote,
-          const StarlightPathQuote(StarlightPathSource.stardust, 11),
-        );
-        final reloaded = await _load();
-        expect(reloaded.stardust, 19);
-        expect(reloaded.assistCap('102:1'), 2);
-        expect(reloaded.goldenChapters, {1, 6});
-      },
-    );
-
-    test('costs 20 stardust and needs enough of it', () async {
+    test('is free and caps the stage at 2 stars without the power', () async {
       final repo = await _load();
-      expect(await repo.useStarlightPath(freeUsedThisAttempt: false), isNull);
-      await repo.recordClear(
-        levelKey: '1:1',
-        stars: 3,
-        previousBestStars: null,
+      expect(repo.stardust, 0);
+      final quote = await repo.useStarlightPath(
+        freeUsedThisAttempt: false,
+        levelKey: '102:1',
       );
-      expect(repo.stardust, 25);
-      final quote = await repo.useStarlightPath(freeUsedThisAttempt: false);
-      expect(quote, const StarlightPathQuote(StarlightPathSource.stardust, 20));
-      expect(repo.stardust, 5);
-      expect((await _load()).stardust, 5);
-    });
-
-    test('starlight companion at bond Lv3 lowers the cost to 15', () async {
-      final repo = await _load();
-      for (var i = 0; i < 8; i++) {
-        await repo.recordClear(
-          levelKey: '6:1',
-          stars: 3,
-          previousBestStars: i == 0 ? null : 3,
-          companionId: 's1-06',
-          companionFamily: 'starlight',
-        );
-      }
-      expect(
-        repo.quoteStarlightPath(
-          freeUsedThisAttempt: false,
-          companionId: 's1-06',
-          companionFamily: 'starlight',
-        ),
-        const StarlightPathQuote(StarlightPathSource.stardust, 15),
-      );
-      expect(
-        repo.quoteStarlightPath(
-          freeUsedThisAttempt: false,
-          companionId: 's1-01',
-          companionFamily: 'forest',
-        ),
-        const StarlightPathQuote(StarlightPathSource.stardust, 20),
-      );
+      expect(quote, const StarlightPathQuote(StarlightPathSource.capped));
+      final reloaded = await _load();
+      expect(reloaded.stardust, 0);
+      expect(reloaded.assistCap('102:1'), 2);
+      expect(reloaded.freeStarlightUsed('102:1'), false);
     });
 
     test('caps the clear at 2 stars and is never bare-handed', () async {
@@ -440,7 +381,7 @@ void main() {
       expect(repo.bareHanded, isEmpty);
     });
 
-    test('free once per attempt after the power, then charges', () async {
+    test('the power keeps the stars for the first path only', () async {
       final repo = await _load();
       await repo.backfill(
         records: _allThreeStars(),
@@ -448,20 +389,25 @@ void main() {
         goldenChapters: {1, 2, 3, 4, 5},
       );
       expect(repo.hasPower('starlight_path'), true);
-      expect(repo.starlightCharges, 2);
       final stardust = repo.stardust;
       expect(
-        await repo.useStarlightPath(freeUsedThisAttempt: false),
-        const StarlightPathQuote(StarlightPathSource.free, 0),
+        await repo.useStarlightPath(
+          freeUsedThisAttempt: false,
+          levelKey: '101:1',
+        ),
+        const StarlightPathQuote(StarlightPathSource.free),
       );
-      expect(repo.starlightCharges, 2);
+      // 별이 줄지 않는 한 번은 상한을 남기지 않는다.
+      expect(repo.assistCap('101:1'), 3);
       expect(
-        await repo.useStarlightPath(freeUsedThisAttempt: true),
-        const StarlightPathQuote(StarlightPathSource.charge, 0),
+        await repo.useStarlightPath(
+          freeUsedThisAttempt: true,
+          levelKey: '101:1',
+        ),
+        const StarlightPathQuote(StarlightPathSource.capped),
       );
-      expect(repo.starlightCharges, 1);
+      expect(repo.assistCap('101:1'), 2);
       expect(repo.stardust, stardust);
-      expect((await _load()).starlightCharges, 1);
     });
   });
 
@@ -525,18 +471,6 @@ void main() {
       },
     );
 
-    test('a failed payment leaves no cap behind', () async {
-      final repo = await _load();
-      expect(
-        await repo.useStarlightPath(
-          freeUsedThisAttempt: false,
-          levelKey: '1:1',
-        ),
-        isNull,
-      );
-      expect(repo.assistCap('1:1'), 3);
-    });
-
     test('following the solution caps at 1 and keeps the lower cap', () async {
       final repo = await rich();
       expect(await repo.markAssist('7:1', 1), true);
@@ -563,7 +497,7 @@ void main() {
           freeUsedThisAttempt: false,
           levelKey: '101:1',
         ),
-        const StarlightPathQuote(StarlightPathSource.free, 0),
+        const StarlightPathQuote(StarlightPathSource.free),
       );
       // 다시 시작하면 시도 상태(freeUsedThisAttempt)는 false 로 돌아가지만
       // 판에 남은 기록 때문에 무료가 다시 생기지 않는다.
@@ -574,9 +508,9 @@ void main() {
           freeUsedThisAttempt: false,
           levelKey: '101:1',
         ),
-        const StarlightPathQuote(StarlightPathSource.charge, 0),
+        const StarlightPathQuote(StarlightPathSource.capped),
       );
-      // 다른 판에서는 여전히 무료.
+      // 다른 판에서는 여전히 별이 줄지 않는다.
       expect(
         reloaded
             .quoteStarlightPath(freeUsedThisAttempt: false, levelKey: '102:1')
@@ -1006,7 +940,6 @@ void main() {
       expect(reward.clearStardust, 25 + StardustRules.goldenConstellation);
       expect(reward.achievements.map((a) => a.id), contains('golden-1'));
       expect(repo.ownedTitles, contains('golden_first'));
-      expect(repo.quoteStarlightPath(freeUsedThisAttempt: false).cost, 18);
     });
 
     test('five bare-handed stars earn the explorer title', () async {
