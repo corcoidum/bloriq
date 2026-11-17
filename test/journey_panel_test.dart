@@ -96,8 +96,9 @@ void main() {
     expect(find.text('이어서 할 곳'), findsOneWidget);
     await _captureJourney(tester, boundary, 'status');
 
-    await tester.fling(_status, const Offset(-250, 0), 800);
-    await tester.pumpAndSettle();
+    // 별하늘을 좌우로 움직여야 하므로 탭은 눌러서 바꾼다.
+    await tapVisible(tester, _tab('constellations'));
+    expect(releaseKey('star-sky'), findsOneWidget);
     expect(find.text('별자리 복원 35 / 35'), findsOneWidget);
     expect(find.text('첫별자리').hitTestable(), findsOneWidget);
     expect(find.text('복원 완료 · 별 12 / 15'), findsOneWidget);
@@ -109,6 +110,10 @@ void main() {
       expect(size.height, greaterThanOrEqualTo(44));
     }
     await _captureJourney(tester, boundary, 'constellations');
+    // 물러나면 일곱 세계가 한 하늘에 이어져 보인다.
+    await tapVisible(tester, releaseKey('journey-sky-overview'));
+    expect(find.text('별자리 복원 35 / 35'), findsOneWidget);
+    await _captureJourney(tester, boundary, 'sky-overview');
 
     // 정령 탭에는 능력을 가진 다섯 명만 있다.
     await tapVisible(tester, _tab('spirits'));
@@ -143,11 +148,7 @@ void main() {
 
     await tapVisible(tester, releaseKey('game-journey'));
     await tapVisible(tester, _tab('constellations'));
-    await chooseJourneyWorld(
-      tester,
-      releaseKey('journey-constellation-world'),
-      2,
-    );
+    await tapVisible(tester, releaseKey('journey-sky-world-2'));
     await tapVisible(tester, releaseKey('journey-play-stage'));
     expect(find.text('다른 스테이지로 이동할까요?'), findsOneWidget);
     await tapVisible(tester, find.text('계속 플레이'));
@@ -218,12 +219,28 @@ void main() {
       await openHomeJourney(tester);
       await _reveal(tester, _status, releaseKey('journey-world-7'));
       await tapVisible(tester, _tab('constellations'));
-      await _reveal(tester, _stars, releaseKey('journey-stage-5'));
-      expect(
-        tester.getSize(releaseKey('journey-stage-5')).width,
-        greaterThanOrEqualTo(44),
+      // 큰 글자에서는 시작 버튼이 하늘 위에 있어, 하늘을 건드리지 않고 닿는다.
+      final sky = find
+          .descendant(of: _stars, matching: find.byType(Scrollable))
+          .first;
+      final play = releaseKey('journey-play-stage');
+      await tester.scrollUntilVisible(
+        play,
+        120,
+        maxScrolls: 120,
+        scrollable: sky,
       );
-      await _reveal(tester, _stars, releaseKey('journey-play-stage'));
+      await tester.pumpAndSettle();
+      expect(play.hitTestable(), findsOneWidget);
+      // 하늘은 그 아래에 있고, 별의 누르는 자리는 44보다 작아지지 않는다.
+      final star = releaseKey('journey-stage-1');
+      await tester.scrollUntilVisible(
+        star,
+        150,
+        maxScrolls: 120,
+        scrollable: sky,
+      );
+      expect(tester.getSize(star).width, greaterThanOrEqualTo(44));
       await tapVisible(tester, _tab('spirits'));
       // 처음에는 아무도 합류하지 않아 이름을 가린다.
       expect(

@@ -1,32 +1,25 @@
 import 'package:flutter/material.dart';
 
-import '../constellation/constellation_atlas.dart';
-import '../constellation/constellation_catalog.dart';
-import '../constellation/constellation_painter.dart';
-import '../constellation/constellation_state.dart';
+import '../constellation/star_sky.dart';
 import '../design/game_theme.dart';
+import '../design/keep_all_text.dart';
 import '../l10n/app_localizations.dart';
-import '../world/world_catalog.dart';
-import '../world/world_shelf.dart';
+import '../progression/progression_rules.dart';
 import '../world/world_text.dart';
 import 'game_session.dart';
 
-typedef _Stage = ({int id, int number, int stars, bool lit, bool unlocked});
-
-class _Chapter {
-  const _Chapter(this.definition, this.name, this.status, this.stages);
-
-  final ConstellationDefinition definition;
-  final String name, status;
-  final List<_Stage> stages;
-
-  bool get complete => stages.every((stage) => stage.lit);
-  bool get golden => stages.every((stage) => stage.stars == 3);
-  bool get unlocked => stages.any((stage) => stage.unlocked);
-  int get stars => stages.fold(0, (total, stage) => total + stage.stars);
+abstract final class StarSkyText {
+  static const overview = ProgressionText('하늘 전체 보기', 'See the whole sky');
+  static const hint = ProgressionText(
+    '별을 눌러 판을 골라요',
+    'Tap a star to pick a stage',
+  );
+  static ProgressionText world(int number, String title) =>
+      ProgressionText('세계 $number · $title', 'World $number · $title');
 }
 
-/// 한 세계 안에서는 장을 바로 고르고, 판을 고른 뒤 플레이를 시작한다.
+/// 일곱 세계의 별자리를 한 장의 별하늘로 보여 준다.
+/// 별을 눌러 판을 고르고 아래 칸에서 플레이를 시작한다.
 class JourneyConstellations extends StatefulWidget {
   const JourneyConstellations({
     super.key,
@@ -34,12 +27,14 @@ class JourneyConstellations extends StatefulWidget {
     required this.initialWorld,
     required this.initialLevelId,
     required this.onPlay,
+    this.reduceMotion = false,
   });
 
   final GameSession session;
   final int initialWorld;
   final int? initialLevelId;
   final ValueChanged<int>? onPlay;
+  final bool reduceMotion;
 
   @override
   State<JourneyConstellations> createState() => _JourneyConstellationsState();
@@ -47,111 +42,34 @@ class JourneyConstellations extends StatefulWidget {
 
 class _JourneyConstellationsState extends State<JourneyConstellations>
     with AutomaticKeepAliveClientMixin<JourneyConstellations> {
-  late int _world = widget.initialWorld;
+  final _sky = GlobalKey<StarSkyState>();
   late int? _levelId = widget.initialLevelId;
-  int? _chapterIndex;
+
+  /// 고른 별자리의 순서. null이면 고른 판이나 처음 세계에서 정한다.
+  int? _focusIndex;
 
   @override
   bool get wantKeepAlive => true;
 
-  List<_Chapter> _chapters(AppLocalizations t, ConstellationAtlas worldOne) {
-    if (_world == 1) {
-      return [
-        for (final chapter in worldOne.chapters)
-          _Chapter(
-            chapter.definition,
-            chapter.definition.name(t),
-            constellationStatus(t, chapter),
-            [
-              for (final level in chapter.levels)
-                (
-                  id: level.id,
-                  number: level.id,
-                  stars: chapter.bestStars[level.id] ?? 0,
-                  lit: chapter.isLit(level.id),
-                  unlocked: true,
-                ),
-            ],
-          ),
-      ];
-    }
+  SkyConstellation? _focus(StarSkyData data) =>
+      (_focusIndex == null
+          ? null
+          : data.constellations
+                .where((item) => item.index == _focusIndex)
+                .firstOrNull) ??
+      data.forLevel(_levelId) ??
+      data.entryOf(widget.initialWorld) ??
+      data.constellations.firstOrNull;
 
-    final atlas = widget.session.worldAtlas(_world);
-    return [
-      for (final chapter in atlas?.chapters ?? const [])
-        _Chapter(
-          chapter.definition,
-          chapter.chapter.constellation.inLocale(t.localeName),
-          chapter.unlocked
-              ? worldChapterStatus(t, chapter)
-              : t.journeyWorldLocked,
-          [
-            for (final stage in chapter.stages)
-              (
-                id: stage.level.id,
-                number: Worlds.stageNumber(stage.level.id),
-                stars: stage.stars,
-                lit: stage.cleared,
-                unlocked: stage.unlocked,
-              ),
-          ],
-        ),
-    ];
-  }
-
-  Widget _choices(List<Widget> choices) => LayoutBuilder(
-    builder: (context, area) {
-      final scaled = MediaQuery.textScalerOf(context).scale(32);
-      const gap = 6.0;
-      final minWidth = scaled < 44 ? 44.0 : scaled;
-      final columns = ((area.maxWidth + gap) / (minWidth + gap)).floor().clamp(
-        1,
-        choices.length,
-      );
-      final width = (area.maxWidth - (columns - 1) * gap) / columns;
-      return Wrap(
-        spacing: gap,
-        runSpacing: gap,
-        children: [
-          for (final child in choices) SizedBox(width: width, child: child),
-        ],
-      );
-    },
-  );
-
-  Widget _choice({
-    required Key key,
-    required bool selected,
-    required Widget child,
-    required VoidCallback? onPressed,
-    String? label,
-  }) {
-    final colors = GameTheme.colorsOf(context);
-    return Semantics(
-      selected: selected,
-      label: label,
-      child: OutlinedButton(
-        key: key,
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size(44, 46),
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 7),
-          backgroundColor: selected
-              ? colors.reward.withValues(alpha: .12)
-              : colors.surface,
-          foregroundColor: selected ? colors.rewardInk : colors.text,
-          side: BorderSide(
-            color: selected
-                ? colors.reward
-                : colors.outline.withValues(alpha: .35),
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        onPressed: onPressed,
-        child: child,
-      ),
-    );
+  void _visit(StarSkyData data, int world) {
+    final entry = data.entryOf(world);
+    if (entry == null) return;
+    setState(() {
+      _focusIndex = entry.index;
+      _levelId = entry.next?.levelId;
+    });
+    // 같은 별자리를 다시 골라도 그쪽으로 돌아간다.
+    _sky.currentState?.lookAt(entry.center);
   }
 
   @override
@@ -159,195 +77,215 @@ class _JourneyConstellationsState extends State<JourneyConstellations>
     super.build(context);
     final t = AppLocalizations.of(context)!;
     final colors = GameTheme.colorsOf(context);
-    final session = widget.session;
-    final worldOne = ConstellationAtlas.derive(
-      session.levels,
-      session.progress,
-    );
-    final chapters = _chapters(t, worldOne);
-    final worldChapters = [
-      for (final world in session.worlds.keys)
-        ...?session.worldAtlas(world)?.chapters,
-    ];
-    final restored =
-        worldOne.chapters.where((chapter) => chapter.complete).length +
-        worldChapters.where((chapter) => chapter.complete).length;
-    final total = worldOne.chapters.length + worldChapters.length;
-    final preferred = chapters.indexWhere(
-      (chapter) => chapter.stages.any((stage) => stage.id == _levelId),
-    );
-    final next = chapters.indexWhere(
-      (chapter) => chapter.unlocked && !chapter.complete,
-    );
-    final index =
-        _chapterIndex ??
-        (preferred >= 0
-            ? preferred
-            : next >= 0
-            ? next
-            : 0);
-    final chapter = chapters.isEmpty ? null : chapters[index];
-    final stages = chapter?.stages ?? const <_Stage>[];
+    final lang = t.localeName;
+    final data = StarSkyData.of(widget.session, t, colors);
+    final focus = _focus(data);
     final selected =
-        stages
-            .where((stage) => stage.unlocked && stage.id == _levelId)
+        focus?.stars
+            .where((star) => star.unlocked && star.levelId == _levelId)
             .firstOrNull ??
-        stages.where((stage) => stage.unlocked && !stage.lit).firstOrNull ??
-        stages.where((stage) => stage.unlocked).firstOrNull;
-    final stageIndex = selected == null ? null : stages.indexOf(selected);
+        focus?.next;
     final onPlay = widget.onPlay;
 
-    return ListView(
-      key: const PageStorageKey('journey-constellation-list'),
-      primary: false,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-      children: [
-        Text(
-          t.journeyRestoredTotal(restored, total),
-          key: const ValueKey('journey-constellation-total'),
-          style: GameTypography.reward.copyWith(fontSize: 22),
-        ),
-        const SizedBox(height: 8),
-        WorldPicker(
-          key: const ValueKey('journey-constellation-world'),
-          session: session,
-          selected: _world,
-          onSelected: (world) => setState(() {
-            if (world == _world) return;
-            _world = world;
-            _chapterIndex = null;
-            _levelId = null;
-          }),
-        ),
-        if (chapter != null) ...[
-          const SizedBox(height: 8),
-          _choices([
-            for (final (slot, item) in chapters.indexed)
-              _choice(
-                key: ValueKey('journey-chapter-${slot + 1}'),
-                selected: slot == index,
-                label: item.name,
-                onPressed: () => setState(() {
-                  _chapterIndex = slot;
-                  _levelId = null;
-                }),
-                child: Text(
-                  t.journeyChapter(slot + 1),
-                  textAlign: TextAlign.center,
-                ),
+    Widget worldChip(SkyWorld world) {
+      final here = world.number == focus?.world;
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2),
+        child: Semantics(
+          selected: here,
+          label: StarSkyText.world(world.number, world.title).resolve(lang),
+          excludeSemantics: true,
+          child: OutlinedButton(
+            key: ValueKey('journey-sky-world-${world.number}'),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(40, 46),
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              backgroundColor: here
+                  ? colors.reward.withValues(alpha: .14)
+                  : colors.surface,
+              foregroundColor: here
+                  ? colors.rewardInk
+                  : world.unlocked
+                  ? colors.text
+                  : colors.secondaryText,
+              side: BorderSide(
+                color: here
+                    ? colors.reward
+                    : colors.outline.withValues(alpha: .35),
               ),
-          ]),
-          const SizedBox(height: 12),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: colors.outline.withValues(alpha: .35)),
-              gradient: RadialGradient(
-                center: const Alignment(0, .25),
-                radius: .9,
-                colors: [
-                  Color.alphaBlend(
-                    colors.primary.withValues(alpha: .13),
-                    colors.surface,
-                  ),
-                  colors.background,
-                ],
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(23),
               ),
             ),
-            child: Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Column(
-                children: [
-                  Text(
-                    chapter.name,
-                    textAlign: TextAlign.center,
-                    style: GameTypography.reward.copyWith(fontSize: 24),
+            onPressed: () => _visit(data, world.number),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!world.unlocked)
+                  const Padding(
+                    padding: EdgeInsets.only(right: 4),
+                    child: Icon(Icons.lock_outline_rounded, size: 15),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(
-                      '${chapter.status} · ${t.journeyStarCount(chapter.stars, stages.length * 3)}',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: colors.secondaryText),
-                    ),
-                  ),
-                  Semantics(
-                    image: true,
-                    label: t.constellationSummary(
-                      chapter.name,
-                      stages.where((stage) => stage.lit).length,
-                      stages.length,
-                      chapter.stars,
-                      stages.length * 3,
-                      chapter.status,
-                    ),
-                    child: SizedBox(
-                      height: 170,
-                      width: double.infinity,
-                      child: CustomPaint(
-                        painter: ConstellationPainter(
-                          definition: chapter.definition,
-                          lit: [for (final stage in stages) stage.lit],
-                          colors: colors,
-                          golden: chapter.golden ? 1 : 0,
-                          highlightNode: stageIndex,
-                          chart: true,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                Text('${world.number}', style: GameTypography.label),
+              ],
             ),
           ),
-          const SizedBox(height: 8),
-          _choices([
-            for (final stage in stages)
-              _choice(
-                key: ValueKey('journey-stage-${stage.id}'),
-                selected: selected == stage,
-                label: stage.lit
-                    ? t.constellationLevelStars(stage.number, stage.stars)
-                    : t.constellationLevelDark(stage.number),
-                onPressed: stage.unlocked
-                    ? () => setState(() => _levelId = stage.id)
-                    : null,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('${stage.number}', style: GameTypography.label),
-                    Text(
-                      '${stage.stars} / 3',
-                      style: TextStyle(
+        ),
+      );
+    }
+
+    final header = Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 8, 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              t.journeyRestoredTotal(data.restored, data.total),
+              key: const ValueKey('journey-constellation-total'),
+              style: GameTypography.reward.copyWith(fontSize: 20),
+            ),
+          ),
+          IconButton(
+            key: const ValueKey('journey-sky-overview'),
+            tooltip: StarSkyText.overview.resolve(lang),
+            onPressed: () => _sky.currentState?.overview(),
+            icon: const Icon(Icons.zoom_out_map_rounded),
+          ),
+        ],
+      ),
+    );
+
+    // 일곱 개뿐이라 한 번에 다 만든다. 좁은 화면에서는 옆으로 민다.
+    final worlds = SizedBox(
+      height: 46,
+      child: SingleChildScrollView(
+        key: const ValueKey('journey-sky-worlds'),
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 13),
+        child: Row(
+          children: [for (final world in data.worlds) worldChip(world)],
+        ),
+      ),
+    );
+
+    final sky = Padding(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+      child: StarSky(
+        key: _sky,
+        data: data,
+        focus: focus,
+        selectedLevelId: selected?.levelId,
+        reduceMotion: widget.reduceMotion,
+        starLabel: (star) => star.lit
+            ? t.constellationLevelStars(star.number, star.stars)
+            : t.constellationLevelDark(star.number),
+        onStar: (star) => setState(() {
+          _levelId = star.levelId;
+          _focusIndex = data.forLevel(star.levelId)?.index;
+        }),
+      ),
+    );
+
+    final panel = focus == null
+        ? const SizedBox.shrink()
+        : Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            child: Semantics(
+              container: true,
+              label: t.constellationSummary(
+                focus.name,
+                focus.litCount,
+                focus.stars.length,
+                focus.starCount,
+                focus.stars.length * 3,
+                focus.status,
+              ),
+              child: Column(
+                key: const ValueKey('journey-sky-panel'),
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    focus.name,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTypography.reward.copyWith(
+                      fontSize: 22,
+                      color: focus.golden ? colors.rewardInk : colors.text,
+                    ),
+                  ),
+                  Text(
+                    '${focus.status} · ${t.journeyStarCount(focus.starCount, focus.stars.length * 3)}',
+                    textAlign: TextAlign.center,
+                    style: GameTypography.body.copyWith(
+                      color: colors.secondaryText,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  if (selected != null && onPlay != null)
+                    FilledButton(
+                      key: const ValueKey('journey-play-stage'),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(44, 50),
+                      ),
+                      onPressed: () => onPlay(selected.levelId),
+                      child: Text(
+                        selected.lit
+                            ? t.journeyReplayStage(selected.number)
+                            : t.journeyPlayStage(selected.number),
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  else if (!focus.unlocked)
+                    KeepAllText(
+                      WorldText.chapterLocked.resolve(lang),
+                      textAlign: TextAlign.center,
+                      style: GameTypography.body.copyWith(
                         color: colors.secondaryText,
-                        fontSize: 13,
+                      ),
+                    )
+                  else
+                    KeepAllText(
+                      StarSkyText.hint.resolve(lang),
+                      textAlign: TextAlign.center,
+                      style: GameTypography.body.copyWith(
+                        color: colors.secondaryText,
                       ),
                     ),
-                  ],
-                ),
-              ),
-          ]),
-          if (!chapter.unlocked)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(WorldText.chapterLocked.resolve(t.localeName)),
-            ),
-          if (selected != null && onPlay != null) ...[
-            const SizedBox(height: 10),
-            FilledButton(
-              key: const ValueKey('journey-play-stage'),
-              style: FilledButton.styleFrom(minimumSize: const Size(44, 50)),
-              onPressed: () => onPlay(selected.id),
-              child: Text(
-                selected.lit
-                    ? t.journeyReplayStage(selected.number)
-                    : t.journeyPlayStage(selected.number),
-                textAlign: TextAlign.center,
+                ],
               ),
             ),
+          );
+
+    return LayoutBuilder(
+      builder: (context, area) {
+        // 아주 낮은 화면이나 큰 글자에서는 하늘 높이를 지키고 전체를 스크롤한다.
+        final roomy =
+            area.maxHeight >= 430 &&
+            MediaQuery.textScalerOf(context).scale(10) <= 14;
+        if (roomy) {
+          return Column(
+            children: [
+              header,
+              worlds,
+              Expanded(child: sky),
+              panel,
+            ],
+          );
+        }
+        return ListView(
+          key: const PageStorageKey('journey-constellation-list'),
+          primary: false,
+          // 하늘 안에서 끄는 손짓은 하늘을 움직이므로, 시작 버튼을 하늘 위에 둔다.
+          children: [
+            header,
+            worlds,
+            panel,
+            SizedBox(height: 300, child: sky),
           ],
-        ],
-      ],
+        );
+      },
     );
   }
 }

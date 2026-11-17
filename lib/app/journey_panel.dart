@@ -191,6 +191,8 @@ class _JourneyPanelState extends State<JourneyPanel>
               Expanded(
                 child: TabBarView(
                   controller: _tabs,
+                  // 별하늘을 좌우로 움직여야 하므로 탭은 눌러서만 바꾼다.
+                  physics: const NeverScrollableScrollPhysics(),
                   children: [
                     _StatusTab(
                       session: widget.session,
@@ -208,6 +210,10 @@ class _JourneyPanelState extends State<JourneyPanel>
                       initialWorld: _world,
                       initialLevelId: _levelId,
                       onPlay: onPlay,
+                      reduceMotion: prefersReducedMotion(
+                        context,
+                        widget.settings,
+                      ),
                     ),
                     AbilitySpiritsTab(session: widget.session),
                   ],

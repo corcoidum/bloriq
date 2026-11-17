@@ -154,7 +154,7 @@ void main() {
     // 3. 여정의 황금 별자리
     await launch();
     await openHomeJourney(tester, tab: 'constellations');
-    await tapVisible(tester, find.byKey(const ValueKey('journey-chapter-1')));
+    await tapVisible(tester, find.byKey(const ValueKey('journey-sky-world-1')));
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 200)),
     );

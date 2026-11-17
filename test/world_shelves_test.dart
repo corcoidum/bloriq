@@ -7,13 +7,6 @@ import 'support/start_game.dart';
 import 'support/world_release.dart';
 
 const _capture = bool.fromEnvironment('CAPTURE_HOME');
-final _starWorld = releaseKey('journey-constellation-world');
-
-DropdownButton<int> _picker(WidgetTester tester, Finder key) =>
-    tester.widget<DropdownButton<int>>(
-      find.descendant(of: key, matching: find.byType(DropdownButton<int>)),
-    );
-
 Future<void> _shot(WidgetTester tester, GlobalKey boundary, String name) async {
   if (!_capture) return;
   await captureReleaseScreen(
@@ -32,15 +25,14 @@ void main() {
     seedSaga(throughWorld: 5, extra: 12);
     final boundary = await openReleaseApp(tester, captureArt: _capture);
     await openHomeJourney(tester, tab: 'constellations');
-    expect(_picker(tester, _starWorld).value, 6);
     expect(find.text('별자리 복원 27 / 35'), findsOneWidget);
     expect(releaseKey('journey-stage-513').hitTestable(), findsOneWidget);
     await _shot(tester, boundary, 'atlas-world6');
 
-    await chooseJourneyWorld(tester, _starWorld, 1);
-    expect(releaseKey('journey-stage-1'), findsOneWidget);
-    await chooseJourneyWorld(tester, _starWorld, 6);
-    await tapVisible(tester, releaseKey('journey-chapter-3'));
+    // 세계 번호를 누르면 하늘이 그 세계로 옮겨 간다.
+    await tapVisible(tester, releaseKey('journey-sky-world-1'));
+    expect(releaseKey('journey-stage-1').hitTestable(), findsOneWidget);
+    await tapVisible(tester, releaseKey('journey-sky-world-6'));
     await tapVisible(tester, releaseKey('journey-stage-513'));
     await tapVisible(tester, releaseKey('journey-play-stage'));
     await waitForReleaseWidget(tester, releaseBoard);
@@ -54,10 +46,15 @@ void main() {
       seedSaga(throughWorld: 5, extra: 12);
       await openReleaseApp(tester);
       await openHomeJourney(tester, tab: 'constellations');
-      expect(_picker(tester, _starWorld).items!.last.enabled, isFalse);
-      await tapVisible(tester, releaseKey('journey-chapter-5'));
+      // 아직 열리지 않은 장의 별은 눌러도 고를 수 없다.
       final locked = releaseKey('journey-stage-521');
-      expect(tester.widget<OutlinedButton>(locked).onPressed, isNull);
+      expect(tester.widget<GestureDetector>(locked).onTap, isNull);
+      // 잠긴 세계는 구경만 할 수 있고 시작 버튼이 없다.
+      await tapVisible(tester, releaseKey('journey-sky-world-7'));
+      expect(
+        tester.widget<GestureDetector>(releaseKey('journey-stage-601')).onTap,
+        isNull,
+      );
       expect(releaseKey('journey-play-stage'), findsNothing);
       await closeReleaseApp(tester);
     },
@@ -69,10 +66,16 @@ void main() {
     seedSaga(throughWorld: 0);
     await openReleaseApp(tester);
     await openHomeJourney(tester, tab: 'constellations');
-    final items = _picker(tester, _starWorld).items!;
-    expect(items, hasLength(7));
-    expect(items.where((item) => item.enabled).map((item) => item.value), [1]);
-    expect(releaseKey('journey-stage-1'), findsOneWidget);
+    // 일곱 세계가 모두 한 하늘에 있고, 첫 세계의 별만 고를 수 있다.
+    for (var world = 1; world <= 7; world++) {
+      expect(releaseKey('journey-sky-world-$world'), findsOneWidget);
+      final first = releaseKey('journey-stage-${(world - 1) * 100 + 1}');
+      expect(
+        tester.widget<GestureDetector>(first).onTap,
+        world == 1 ? isNotNull : isNull,
+      );
+    }
+    expect(releaseKey('journey-stage-1').hitTestable(), findsOneWidget);
     await closeReleaseApp(tester);
   });
 }

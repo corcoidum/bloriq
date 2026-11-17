@@ -140,10 +140,18 @@ class HomeSceneData {
 
 /// 리크가 지금 서 있는 곳: 지금 장의 별자리, 이 세계의 등대, 리크와 echo.
 class HomeScene extends StatefulWidget {
-  const HomeScene({super.key, required this.data, required this.reduceMotion});
+  const HomeScene({
+    super.key,
+    required this.data,
+    required this.reduceMotion,
+    this.onSky,
+  });
 
   final HomeSceneData data;
   final bool reduceMotion;
+
+  /// 하늘의 별자리를 누르면 별하늘을 연다.
+  final VoidCallback? onSky;
 
   @override
   State<HomeScene> createState() => _HomeSceneState();
@@ -256,15 +264,20 @@ class _HomeSceneState extends State<HomeScene>
                 height: height * .5,
                 child: Semantics(
                   key: const ValueKey('home-constellation'),
+                  button: widget.onSky != null,
                   label: data.chapterName,
                   value: '${data.litCount} / ${data.lit.length}',
-                  child: CustomPaint(
-                    painter: ConstellationPainter(
-                      definition: definition,
-                      lit: data.lit,
-                      colors: colors,
-                      golden: data.golden ? 1 : 0,
-                      pendingNode: data.pendingNode,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: widget.onSky,
+                    child: CustomPaint(
+                      painter: ConstellationPainter(
+                        definition: definition,
+                        lit: data.lit,
+                        colors: colors,
+                        golden: data.golden ? 1 : 0,
+                        pendingNode: data.pendingNode,
+                      ),
                     ),
                   ),
                 ),

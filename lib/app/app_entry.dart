@@ -274,7 +274,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   Widget _buildTrialGame(TrialStage stage, Level board) =>
       widget.gameBuilder(_session!, board.id, PlayContext.trial(stage, board));
 
-  Future<void> _journey() async {
+  Future<void> _journey([JourneyTab initial = JourneyTab.status]) async {
     final session = _session;
     if (session == null || _opening || _choosing) return;
     _choosing = true;
@@ -283,6 +283,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
         context,
         session,
         widget.settings,
+        initial: initial,
         buildTrialGame: _buildTrialGame,
       );
       if (id != null && mounted) await _openLevel(id);
@@ -467,6 +468,9 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                           context,
                           widget.settings,
                         ),
+                        onSky: ready
+                            ? () => _journey(JourneyTab.constellations)
+                            : null,
                       );
                 final id = target?.levelId;
                 final column = Column(
@@ -528,7 +532,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                           key: const ValueKey('home-journey'),
                           icon: Icons.map_outlined,
                           label: t.journey,
-                          onPressed: ready ? _journey : null,
+                          onPressed: ready ? () => _journey() : null,
                         ),
                         _dock(
                           key: const ValueKey('home-daily'),
