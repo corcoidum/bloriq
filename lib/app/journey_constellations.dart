@@ -87,7 +87,7 @@ class _JourneyConstellationsState extends State<JourneyConstellations>
         focus?.next;
     final onPlay = widget.onPlay;
 
-    Widget worldChip(SkyWorld world) {
+    Widget worldChip(SkyWorld world, double width) {
       final here = world.number == focus?.world;
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 2),
@@ -98,8 +98,10 @@ class _JourneyConstellationsState extends State<JourneyConstellations>
           child: OutlinedButton(
             key: ValueKey('journey-sky-world-${world.number}'),
             style: OutlinedButton.styleFrom(
-              minimumSize: const Size(40, 46),
-              padding: const EdgeInsets.symmetric(horizontal: 6),
+              minimumSize: Size(width, 46),
+              maximumSize: Size(width, 46),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
               backgroundColor: here
                   ? colors.reward.withValues(alpha: .14)
                   : colors.surface,
@@ -118,16 +120,20 @@ class _JourneyConstellationsState extends State<JourneyConstellations>
               ),
             ),
             onPressed: () => _visit(data, world.number),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (!world.unlocked)
-                  const Padding(
-                    padding: EdgeInsets.only(right: 4),
-                    child: Icon(Icons.lock_outline_rounded, size: 15),
-                  ),
-                Text('${world.number}', style: GameTypography.label),
-              ],
+            // 큰 글자에서도 칸을 넘지 않게 줄여 넣는다.
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (!world.unlocked)
+                    const Padding(
+                      padding: EdgeInsets.only(right: 4),
+                      child: Icon(Icons.lock_outline_rounded, size: 15),
+                    ),
+                  Text('${world.number}', style: GameTypography.label),
+                ],
+              ),
             ),
           ),
         ),
@@ -155,16 +161,28 @@ class _JourneyConstellationsState extends State<JourneyConstellations>
       ),
     );
 
-    // 일곱 개뿐이라 한 번에 다 만든다. 좁은 화면에서는 옆으로 민다.
+    // 일곱 세계가 한 줄에 다 보이게 너비를 나눈다. 아주 좁으면 옆으로 민다.
     final worlds = SizedBox(
       height: 46,
-      child: SingleChildScrollView(
-        key: const ValueKey('journey-sky-worlds'),
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 13),
-        child: Row(
-          children: [for (final world in data.worlds) worldChip(world)],
-        ),
+      child: LayoutBuilder(
+        builder: (context, area) {
+          const side = 12.0, gap = 4.0;
+          final count = data.worlds.length;
+          final shared = count == 0
+              ? 44.0
+              : (area.maxWidth - side * 2) / count - gap;
+          final width = shared < 38 ? 44.0 : shared;
+          return SingleChildScrollView(
+            key: const ValueKey('journey-sky-worlds'),
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: side),
+            child: Row(
+              children: [
+                for (final world in data.worlds) worldChip(world, width),
+              ],
+            ),
+          );
+        },
       ),
     );
 
@@ -264,26 +282,38 @@ class _JourneyConstellationsState extends State<JourneyConstellations>
         final roomy =
             area.maxHeight >= 430 &&
             MediaQuery.textScalerOf(context).scale(10) <= 14;
-        if (roomy) {
-          return Column(
-            children: [
-              header,
-              worlds,
-              Expanded(child: sky),
-              panel,
-            ],
-          );
-        }
-        return ListView(
-          key: const PageStorageKey('journey-constellation-list'),
-          primary: false,
-          // 하늘 안에서 끄는 손짓은 하늘을 움직이므로, 시작 버튼을 하늘 위에 둔다.
-          children: [
-            header,
-            worlds,
-            panel,
-            SizedBox(height: 300, child: sky),
-          ],
+        final content = roomy
+            ? Column(
+                children: [
+                  header,
+                  worlds,
+                  Expanded(child: sky),
+                  panel,
+                ],
+              )
+            : ListView(
+                key: const PageStorageKey('journey-constellation-list'),
+                primary: false,
+                // 하늘 안에서 끄는 손짓은 하늘을 움직이므로, 시작 버튼을 하늘 위에 둔다.
+                children: [
+                  header,
+                  worlds,
+                  panel,
+                  SizedBox(height: 300, child: sky),
+                ],
+              );
+        // 오른쪽에 있는 별이나 버튼에 초점이 가면(화면 읽기, 키보드) 바깥의 탭 화면이
+        // 그 요소를 왼쪽 끝으로 끌어오려다 옆 탭으로 넘어간다. 움직이지 않는 가로
+        // 스크롤로 감싸면 바깥은 이 칸 전체만 보이게 하므로 탭이 넘어가지 않는다.
+        return SingleChildScrollView(
+          key: const ValueKey('journey-sky-guard'),
+          scrollDirection: Axis.horizontal,
+          physics: const NeverScrollableScrollPhysics(),
+          child: SizedBox(
+            width: area.maxWidth,
+            height: area.maxHeight,
+            child: content,
+          ),
         );
       },
     );

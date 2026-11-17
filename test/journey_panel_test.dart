@@ -112,8 +112,13 @@ void main() {
     await _captureJourney(tester, boundary, 'constellations');
     // 물러나면 일곱 세계가 한 하늘에 이어져 보인다.
     await tapVisible(tester, releaseKey('journey-sky-overview'));
-    expect(find.text('별자리 복원 35 / 35'), findsOneWidget);
+    // 오른쪽 끝 버튼에 초점이 가도 옆 탭으로 넘어가지 않는다.
+    expect(releaseKey('star-sky').hitTestable(), findsOneWidget);
+    expect(find.text('별자리 복원 35 / 35').hitTestable(), findsOneWidget);
     await _captureJourney(tester, boundary, 'sky-overview');
+    // 세계 번호를 누르면 다시 그 세계로 다가간다.
+    await tapVisible(tester, releaseKey('journey-sky-world-7'));
+    expect(find.text('7 다시 도전').hitTestable(), findsNothing);
 
     // 정령 탭에는 능력을 가진 다섯 명만 있다.
     await tapVisible(tester, _tab('spirits'));

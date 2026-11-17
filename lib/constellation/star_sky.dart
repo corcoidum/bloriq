@@ -98,18 +98,22 @@ class StarSkyData {
   StarSkyData._(this.worlds, this.size, this.firstStar);
 
   static const width = 900.0;
-  static const bandHeight = 540.0;
+  static const bandHeight = 600.0;
   static const _top = 280.0;
   static const _bottom = 110.0;
   static const _box = Size(232, 192);
 
+  /// 한 별자리 안에서 별과 별 사이에 둘 최소 거리. 누르는 자리(48)보다 넓다.
+  static const _starGap = 52.0;
+
   // 한 세계 안의 다섯 자리. 아래 줄 셋, 윗줄 둘로 빛길이 굽이친다.
+  // 윗줄은 세계 이름 아래에, 아랫줄의 별자리 이름은 다음 세계 이름 위에 오게 잡았다.
   static const _slots = [
-    Offset(.19, .76),
-    Offset(.50, .82),
+    Offset(.19, .74),
+    Offset(.50, .78),
     Offset(.81, .72),
-    Offset(.67, .30),
-    Offset(.33, .24),
+    Offset(.67, .31),
+    Offset(.33, .29),
   ];
 
   factory StarSkyData.of(
@@ -145,7 +149,25 @@ class StarSkyData {
       // 짝수 세계는 좌우를 뒤집어 길이 지그재그로 오른다.
       final at = _slots[slot % _slots.length];
       final x = world.isEven ? 1 - at.dx : at.dx;
-      final scale = .9 + random.nextDouble() * .18;
+      // 별이 너무 붙은 모양은 누르는 자리가 겹치지 않을 만큼 키운다.
+      var nearest = double.infinity;
+      for (final (a, first) in definition.nodes.indexed) {
+        for (final second in definition.nodes.skip(a + 1)) {
+          nearest = math.min(
+            nearest,
+            Offset(
+              (first.dx - second.dx) * _box.width,
+              (first.dy - second.dy) * _box.height,
+            ).distance,
+          );
+        }
+      }
+      final scale = math
+          .max(
+            .9 + random.nextDouble() * .18,
+            nearest.isFinite && nearest > 0 ? _starGap / nearest : 1.0,
+          )
+          .clamp(.9, 1.6);
       final box = Rect.fromCenter(
         center: Offset(
           band.left + band.width * x,
@@ -316,6 +338,7 @@ class StarSkyPainter extends CustomPainter {
     required this.selectedLevelId,
     required this.focus,
     required this.viewport,
+    required this.scale,
     required this.reduceMotion,
     super.repaint,
   });
@@ -332,9 +355,15 @@ class StarSkyPainter extends CustomPainter {
 
   /// 지금 화면에 보이는 영역(별하늘 좌표). 별똥별을 이 안에 떨어뜨린다.
   final ValueGetter<Rect> viewport;
+
+  /// 지금 배율. 멀리서 볼 때는 읽을 수 없는 별자리 이름을 감춘다.
+  final ValueGetter<double> scale;
   final bool reduceMotion;
 
   static const _gold = Color(0xffffd36b);
+
+  /// 이보다 멀리서 보면 별자리 이름이 너무 작아 감춘다.
+  static const _nameScale = .5;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -347,9 +376,13 @@ class StarSkyPainter extends CustomPainter {
     _firstStar(canvas, now);
     for (final world in data.worlds) {
       if (!world.band.inflate(80).overlaps(seen)) continue;
+      // 세계 이름은 옆으로 움직여도 화면 왼쪽에 붙어 따라온다.
       labels['w${world.number}']?.paint(
         canvas,
-        Offset(28, world.band.top + 22),
+        Offset(
+          math.max(28.0, viewport().left + 14 / scale()),
+          world.band.top + 22,
+        ),
       );
       for (final item in world.constellations) {
         if (item.box.inflate(60).overlaps(seen)) {
@@ -660,7 +693,7 @@ class StarSkyPainter extends CustomPainter {
     }
 
     final label = labels['c${item.index}'];
-    if (label != null) {
+    if (label != null && scale() >= _nameScale) {
       label.paint(
         canvas,
         Offset(item.center.dx - label.width / 2, item.box.bottom + 10),
@@ -844,7 +877,8 @@ class StarSkyState extends State<StarSky> with TickerProviderStateMixin {
         0,
         1,
       )
-      ..scaleByDouble(scale, scale, 1, 1);
+      // 세 축을 같이 줄여야 배율을 다시 읽을 때 1로 잘못 나오지 않는다.
+      ..scaleByDouble(scale, scale, scale, 1);
   }
 
   double get _scale => _camera?.value.getMaxScaleOnAxis() ?? _startScale;
@@ -985,6 +1019,7 @@ class StarSkyState extends State<StarSky> with TickerProviderStateMixin {
                           selectedLevelId: widget.selectedLevelId,
                           focus: widget.focus,
                           viewport: () => _seen,
+                          scale: () => _scale,
                           reduceMotion: widget.reduceMotion,
                           repaint: Listenable.merge([_clock, _intro, camera]),
                         ),

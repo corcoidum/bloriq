@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -76,6 +78,25 @@ void main() {
       );
     }
     expect(releaseKey('journey-stage-1').hitTestable(), findsOneWidget);
+
+    // 별 175개가 모두 하늘에 있고, 누르는 자리가 서로 겹쳐 가려지지 않는다.
+    final centers = <Offset>[];
+    for (var world = 1; world <= 7; world++) {
+      for (var stage = 1; stage <= 25; stage++) {
+        final star = releaseKey('journey-stage-${(world - 1) * 100 + stage}');
+        expect(star, findsOneWidget);
+        expect(tester.getSize(star), const Size(48, 48));
+        centers.add(tester.getCenter(star));
+      }
+    }
+    var nearest = double.infinity;
+    for (var a = 0; a < centers.length; a++) {
+      for (var b = a + 1; b < centers.length; b++) {
+        nearest = math.min(nearest, (centers[a] - centers[b]).distance);
+      }
+    }
+    // 화면에는 0.7배로 보인다. 별하늘 좌표로는 누르는 자리(48)보다 멀리 떨어져 있다.
+    expect(nearest / .7, greaterThan(48));
     await closeReleaseApp(tester);
   });
 }
