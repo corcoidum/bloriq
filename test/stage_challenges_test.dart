@@ -5,6 +5,7 @@ import 'package:bloriq/progress/progress_repository.dart';
 import 'package:bloriq/progress/stage_challenges.dart';
 import 'package:bloriq/progression/progression_repository.dart';
 import 'package:bloriq/progression/progression_rules.dart';
+import 'package:bloriq/world/world_catalog.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -197,7 +198,12 @@ void main() {
   });
 
   test('시작할 때 과제를 소급하고, 소급한 별꽃의 업적도 지급한다', () async {
-    seedCampaign({1, 2, 3, 4, 5}, cleared: releaseLevels(2));
+    final worldTwoChapters = Worlds.chaptersOf(2).toSet();
+    seedCampaign(
+      {...Worlds.chaptersOf(1), ...worldTwoChapters},
+      cleared: releaseLevels(2),
+      goldenChapters: worldTwoChapters,
+    );
     for (var load = 0; load < 2; load++) {
       final session = await GameSession.load();
       try {

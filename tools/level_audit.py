@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Iterable
 
 from tools.mechanics import REGISTRY
-from tools.validate_levels import available_powers, decorative_mechanic, expansion_worlds, validate_level
+from tools.validate_levels import available_powers, decorative_mechanic, echo_gain, expansion_worlds, validate_level
 
 ROOT = Path(__file__).resolve().parents[1]
 SIMILARITY_THRESHOLD = .8
@@ -61,7 +61,7 @@ def similarity(a: dict, b: dict) -> float:
     return max(len(left & right) / len(left | right) for right in orientations(b))
 
 
-def inspect(levels: list[dict], *, prior_levels: Iterable[dict] = ()) -> list[dict]:
+def inspect(levels: list[dict], *, prior_levels: Iterable[dict] = (), measure_echo: bool = False) -> list[dict]:
     earlier = list(prior_levels)
     seen = {canonical(level): level['id'] for level in earlier}
     reports = []
@@ -99,6 +99,8 @@ def inspect(levels: list[dict], *, prior_levels: Iterable[dict] = ()) -> list[di
                         'visited': stats['visited'], 'fingerprint': hashlib.sha256(identity.encode()).hexdigest(),
                         'warnings': warnings, 'solution': solution,
                         'manual': level.get('reviewStatus', 'existing_content')})
+        if measure_echo:
+            reports[-1]['echo_gain'] = echo_gain(level, len(solution), powers=powers, max_states=budget)
         earlier.append(level)
         known_rules.update(rules)
         previous = len(solution)
@@ -113,6 +115,7 @@ def main() -> None:
                         help='검토할 공개 또는 제작 중인 세계 번호. 기본 1')
     parser.add_argument('--world2', action='store_const', const=2, dest='world', help='--world 2 와 같다')
     parser.add_argument('--output', type=Path)
+    parser.add_argument('--echo-impact', action='store_true', help='echo를 끈 최단 풀이와 비교한다')
     args = parser.parse_args()
     paths = {1: ROOT / 'assets/levels/levels.json', **dict(expansion_worlds())}
     path = paths.get(args.world)
@@ -123,11 +126,17 @@ def main() -> None:
         levels += json.loads((ROOT / 'assets/levels/draft_levels_26_40.json').read_text(encoding='utf-8'))
     prior_levels = (level for world, earlier in paths.items() if world < args.world
                     for level in json.loads(earlier.read_text(encoding='utf-8')))
-    reports = inspect(levels, prior_levels=prior_levels)
+    reports = inspect(levels, prior_levels=prior_levels, measure_echo=args.echo_impact)
     lines = ['# 레벨 자동 검토', '', '경고는 휴리스틱이며 수동 플레이 검토를 대체하지 않습니다.', '',
              '| ID | revision | 최소 이동 | 탐색 상태 | 경고 | 수동 상태 |', '|---|---|---|---|---|---|']
+    if args.echo_impact:
+        lines[-2] += ' echo 제거 시 최단 수 차이 |'
+        lines[-1] += '---|'
     for report in reports:
         lines.append(f"| {report['id']} | {report['revision']} | {report['minimum']} | {report['visited']} | {', '.join(report['warnings']) or '-'} | {report['manual']} |")
+        if args.echo_impact:
+            gain = report['echo_gain']
+            lines[-1] += f" {gain if gain is not None else '풀이 없음'} |"
     for level, report in zip(levels, reports):
         lines += ['', f"## {report['id']}", '', level.get('learningIntent', '기존 콘텐츠 또는 초반 Echo 학습'),
                   '', f"- Fingerprint: `{report['fingerprint']}`", f"- 해법: `{report['solution']}`",

@@ -159,44 +159,62 @@ class EndlessRepository {
   }
 
   /// 등불이 꺼져 항해를 마친다. 기록을 갱신하고 처음 넘은 이정표를 돌려준다.
-  Future<VoyageSummary> finish(VoyageRun run) async {
-    final boards = run.cleared;
-    final week = currentWeek;
-    if (_weekKey != week) {
-      _weekKey = week;
-      _weekBest = 0;
-    }
-    final newBestScore = run.score > bestScore;
-    final newBestDepth = boards > bestDepth;
-    final newWeekBest =
-        identical(_run, run) && _runClearWeek == week && run.score > _weekBest;
-    if (newBestScore) bestScore = run.score;
-    if (newBestDepth) bestDepth = boards;
-    if (newWeekBest) _weekBest = run.score;
-    voyages++;
-    totalBoards += boards;
-    final milestones = [
-      for (final milestone in voyageMilestones)
-        if (boards >= milestone.depth && _milestones.add(milestone.id))
-          milestone,
-    ];
-    _run = null;
-    _runClearWeek = null;
-    await _save();
-    return VoyageSummary(
-      score: run.score,
-      boards: boards,
-      perfects: run.perfects,
-      newBestScore: newBestScore && run.score > 0,
-      newBestDepth: newBestDepth,
-      newWeekBest: newWeekBest && run.score > 0,
-      milestones: milestones,
-      stardust: EndlessRules.voyageStardust(
+  Future<VoyageSummary?> finish(VoyageRun run) {
+    final task = _queue.then((_) async {
+      if (!identical(_run, run)) return null;
+      final boards = run.cleared;
+      final week = currentWeek;
+      final weekly = _archivedWeekBest(week);
+      final newBestScore = run.score > bestScore;
+      final newBestDepth = boards > bestDepth;
+      final newWeekBest = _runClearWeek == week && run.score > weekly;
+      final milestones = [
+        for (final milestone in voyageMilestones)
+          if (boards >= milestone.depth && !_milestones.contains(milestone.id))
+            milestone,
+      ];
+      final snapshot = {
+        ..._snapshot(),
+        'bestScore': math.max(bestScore, run.score),
+        'bestDepth': math.max(bestDepth, boards),
+        'voyages': voyages + 1,
+        'totalBoards': totalBoards + boards,
+        'weekKey': week,
+        'weekBest': newWeekBest ? run.score : weekly,
+        'milestones': {
+          ..._milestones,
+          ...milestones.map((item) => item.id),
+        }.toList()..sort(),
+        'run': null,
+        'runClearWeek': null,
+      };
+      if (!await _write(snapshot)) {
+        // 쓰기 실패 때 먼저 바뀐 SharedPreferences 캐시를 롤백한다.
+        try {
+          await _preferences?.reload();
+        } catch (_) {}
+        return null;
+      }
+      _read(snapshot);
+      _run = null;
+      _runClearWeek = null;
+      return VoyageSummary(
+        score: run.score,
         boards: boards,
         perfects: run.perfects,
-      ),
-      xp: EndlessRules.voyageXp(boards),
-    );
+        newBestScore: newBestScore,
+        newBestDepth: newBestDepth,
+        newWeekBest: newWeekBest,
+        milestones: milestones,
+        stardust: EndlessRules.voyageStardust(
+          boards: boards,
+          perfects: run.perfects,
+        ),
+        xp: EndlessRules.voyageXp(boards),
+      );
+    });
+    _queue = task.then<void>((_) {});
+    return task;
   }
 
   Map<String, dynamic> _snapshot() => {

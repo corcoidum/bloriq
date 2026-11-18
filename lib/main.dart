@@ -169,6 +169,7 @@ class _GameScreenState extends State<GameScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final List<Level> _loaded;
   bool _retryingSave = false;
+  bool _campaignRewardSaveFailed = false;
   bool _allowPop = false;
   bool _leaving = false;
   EchoTutorial? _tutorial;
@@ -253,9 +254,6 @@ class _GameScreenState extends State<GameScreen>
 
   /// 확장 세계: 권능 막대에서 고른 권능. 다음 밀기가 이 권능으로 움직인다.
   PuzzlePower? _armedPower;
-
-  /// 확장 세계 별자리를 저장 전에 떠 둔다.
-  WorldAtlas? _worldBefore;
 
   /// 세계 2부터는 [LoadedWorld] 데이터와 권능 막대를 쓴다.
   bool get _expansion => widget.play.world >= 2;
@@ -486,9 +484,6 @@ class _GameScreenState extends State<GameScreen>
     _atlasBefore = widget.play.mode == PlayMode.campaign
         ? ConstellationAtlas.derive(widget.session.levels, _progress!)
         : null;
-    _worldBefore = _expansion
-        ? widget.session.worldAtlas(widget.play.world)
-        : null;
     _armedPower = null;
     final chapter = _atlasBefore?.forLevel(state.level.id);
     final lightsStar = chapter != null && !chapter.isLit(state.level.id);
@@ -636,7 +631,6 @@ class _GameScreenState extends State<GameScreen>
     final usedStarlight = _starlightUsed || guided || starCap < 3;
     final usedPower = controller.usedPower;
     final usedGiftedHint = _usedGiftedHint;
-    final worldBefore = _worldBefore;
     final worldWasComplete = Worlds.isComplete(
       widget.play.world,
       widget.session.progression.completedChapters,
@@ -656,15 +650,16 @@ class _GameScreenState extends State<GameScreen>
         usedHelp: usedStarlight || usedGiftedHint || _keyHintSeen,
       ),
     );
-    if (!mounted ||
-        !identical(_controller, controller) ||
-        !identical(controller.state, state)) {
-      return;
+    final sameAttempt =
+        mounted &&
+        identical(_controller, controller) &&
+        identical(controller.state, state);
+    if (sameAttempt) {
+      setState(() {
+        _completion = result;
+        _updateConstellation(state.level.id, saved: result.saved);
+      });
     }
-    setState(() {
-      _completion = result;
-      _updateConstellation(state.level.id, saved: result.saved);
-    });
     Future<void> award() => _recordCampaignReward(
       controller,
       state,
@@ -673,12 +668,11 @@ class _GameScreenState extends State<GameScreen>
       usedStarlight: usedStarlight,
       usedPower: usedPower,
       usedGiftedHint: usedGiftedHint,
-      worldBefore: worldBefore,
       worldWasComplete: worldWasComplete,
     );
     if (result.saved) {
       await award();
-    } else {
+    } else if (sameAttempt) {
       // 스테이지 기록을 다시 저장하면 클리어 보상과 세계 공개도 이어서 처리한다.
       _pendingCampaignReward = award;
     }
@@ -705,32 +699,39 @@ class _GameScreenState extends State<GameScreen>
     required bool usedStarlight,
     required bool usedPower,
     required bool usedGiftedHint,
-    required WorldAtlas? worldBefore,
     required bool worldWasComplete,
   }) async {
-    final event = _constellation;
-    final chapter = _atlasAfter?.forLevel(state.level.id);
-    final worldAfter = worldBefore == null
+    final session = widget.session;
+    final world = state.level.world;
+    final garden = world == 1
+        ? ConstellationAtlas.derive(
+            session.levels,
+            _progress!,
+          ).forLevel(state.level.id)
+        : null;
+    final expansion = session.world(world);
+    final chapter = expansion == null
         ? null
-        : widget.session.worldAtlas(worldBefore.world);
-    final worldEvent = worldBefore == null || worldAfter == null
-        ? null
-        : WorldAtlas.diff(worldBefore, worldAfter, state.level.id);
+        : WorldAtlas.derive(
+            expansion,
+            _progress!,
+            saved: true,
+          ).forLevel(state.level.id);
     final reward = await widget.session.progression.recordClear(
       levelKey: '${state.level.id}:${state.level.revision}',
       stars: stars,
       previousBestStars: previousStars,
       usedHint: usedGiftedHint,
       usedStarlightPath: usedStarlight,
-      constellationCompletedChapter: worldEvent != null
-          ? worldEvent.completed
-          : event?.chapterCompleted == true
-          ? chapter?.definition.chapter
+      constellationCompletedChapter: chapter?.complete == true
+          ? chapter?.chapter.globalChapter
+          : garden?.complete == true
+          ? garden?.chapter
           : null,
-      constellationGoldenChapter: worldEvent != null
-          ? worldEvent.golden
-          : event?.becameGolden == true
-          ? chapter?.definition.chapter
+      constellationGoldenChapter: chapter?.golden == true
+          ? chapter?.chapter.globalChapter
+          : garden?.golden == true
+          ? garden?.chapter
           : null,
       bareHandedClear: state.level.world >= 2
           ? isBareHandedClear(
@@ -749,6 +750,7 @@ class _GameScreenState extends State<GameScreen>
     }
     setState(() {
       _reward = reward;
+      _campaignRewardSaveFailed = !reward.saved;
       _worldCleared =
           !worldWasComplete &&
           Worlds.isComplete(
@@ -760,6 +762,7 @@ class _GameScreenState extends State<GameScreen>
 
   void _resetAssist() {
     _reward = null;
+    _campaignRewardSaveFailed = false;
     _trialResult = null;
     _pendingCampaignReward = null;
     _armedPower = null;
@@ -986,6 +989,18 @@ class _GameScreenState extends State<GameScreen>
     final controller = _controller;
     final state = controller?.state;
     final result = _completion;
+    if (_campaignRewardSaveFailed) {
+      final saved = await widget.session.progression.retrySave();
+      if (!mounted) return;
+      setState(() {
+        _retryingSave = false;
+        if (identical(controller, _controller) &&
+            identical(state, controller?.state)) {
+          _campaignRewardSaveFailed = !saved;
+        }
+      });
+      return;
+    }
     final saved = await _progress!.retrySave();
     if (!mounted) return;
     final sameAttempt =
@@ -1539,7 +1554,7 @@ class _GameScreenState extends State<GameScreen>
                     ),
                   ),
                 ),
-              if (_completion?.saved == false) ...[
+              if (_completion?.saved == false || _campaignRewardSaveFailed) ...[
                 Text(t.saveError),
                 if (widget.play.mode == PlayMode.campaign)
                   TextButton(
@@ -1688,7 +1703,11 @@ class _GameScreenState extends State<GameScreen>
   /// (아직 준비 중이거나 데이터가 없으면 null).
   ({SagaWorld world, SagaWorld? next})? get _worldFinished {
     final saga = widget.session.saga;
-    if (saga == null || widget.play.mode != PlayMode.campaign) return null;
+    if (saga == null ||
+        widget.play.mode != PlayMode.campaign ||
+        _campaignRewardSaveFailed) {
+      return null;
+    }
     final number = widget.play.world;
     final complete = Worlds.isComplete(
       number,
@@ -1773,10 +1792,11 @@ class _GameScreenState extends State<GameScreen>
     final worldFinished = finished != null;
     final nextWorld = finished?.next;
     final ending = finished?.world.number == Worlds.finalWorld;
-    final awaitingFinalSave =
-        widget.play.world == Worlds.finalWorld &&
+    final awaitingCampaignSave =
+        widget.play.mode == PlayMode.campaign &&
         (_completion == null ||
             _retryingSave ||
+            _campaignRewardSaveFailed ||
             (_completion?.saved == true && _reward == null));
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1788,7 +1808,7 @@ class _GameScreenState extends State<GameScreen>
             minimumSize: const Size(0, 54),
             textStyle: GameTypography.label.copyWith(fontSize: 18),
           ),
-          onPressed: awaitingFinalSave
+          onPressed: awaitingCampaignSave
               ? null
               : () => widget.play.mode != PlayMode.campaign
                     ? Navigator.pop(context)
@@ -2734,7 +2754,7 @@ class _GameScreenState extends State<GameScreen>
   /// 결과 팝업의 소식: 정령 합류와 맨손 별만 알린다. 경험치와 별가루는 보여 주지 않는다.
   Widget? _rewardView(AppLocalizations t) {
     final reward = _reward;
-    if (reward == null) return null;
+    if (reward == null || _campaignRewardSaveFailed) return null;
     final power = reward.newPower;
     if (power == null && !reward.newBareHanded) return null;
     final colors = GameTheme.colorsOf(context);

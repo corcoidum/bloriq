@@ -90,6 +90,7 @@ class _EndlessScreenState extends State<EndlessScreen> {
   Timer? _flashTimer, _overTimer;
   VoyageSummary? _summary;
   bool _finishing = false;
+  bool _finishSaveFailed = false;
   bool _starting = false;
   bool _hintBusy = false;
 
@@ -103,7 +104,11 @@ class _EndlessScreenState extends State<EndlessScreen> {
   EndlessRepository get _repo => widget.session.endless;
   GameAudio get _audio => widget.session.audio;
   int get _minimum => _controller!.state.level.minimumMoves;
-  bool get _busy => _flash != null || _finishing || _phase != _Phase.sailing;
+  bool get _busy =>
+      _flash != null ||
+      _finishing ||
+      _finishSaveFailed ||
+      _phase != _Phase.sailing;
   Set<int> get _completedWorlds {
     final chapters = widget.session.progression.completedChapters;
     return {
@@ -194,7 +199,9 @@ class _EndlessScreenState extends State<EndlessScreen> {
 
   void _resume() {
     final run = _repo.savedRun;
-    if (run != null && !_starting) _sail(run);
+    if (run == null || _starting) return;
+    _sail(run);
+    if (run.isOut(_minimum)) unawaited(_lanternOut());
   }
 
   void _sail(VoyageRun run) {
@@ -202,6 +209,7 @@ class _EndlessScreenState extends State<EndlessScreen> {
       _run = run;
       _summary = null;
       _finishing = false;
+      _finishSaveFailed = false;
       _flash = null;
       _phase = _Phase.sailing;
       _loadBoard();
@@ -241,9 +249,19 @@ class _EndlessScreenState extends State<EndlessScreen> {
   }
 
   Future<void> _lanternOut() async {
-    _finishing = true;
+    if (_finishing) return;
+    setState(() => _finishing = true);
     final run = _run!;
     final summary = await _repo.finish(run);
+    if (summary == null) {
+      if (mounted) {
+        setState(() {
+          _finishing = false;
+          _finishSaveFailed = true;
+        });
+      }
+      return;
+    }
     await widget.session.progression.recordVoyage(
       xp: summary.xp,
       stardust: summary.stardust,
@@ -255,6 +273,7 @@ class _EndlessScreenState extends State<EndlessScreen> {
       if (!mounted) return;
       setState(() {
         _summary = summary;
+        _finishSaveFailed = false;
         _phase = _Phase.over;
       });
     });
@@ -444,6 +463,32 @@ class _EndlessScreenState extends State<EndlessScreen> {
                             if (_flash case final flash?)
                               _flashCard(lang, colors, flash),
                             if (_phase == _Phase.over) _overCard(lang, colors),
+                            if (_finishSaveFailed)
+                              Center(
+                                child: Card(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          t.saveError,
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        FilledButton(
+                                          key: const ValueKey(
+                                            'endless-retry-finish',
+                                          ),
+                                          onPressed: _finishing
+                                              ? null
+                                              : _lanternOut,
+                                          child: Text(t.retrySave),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
                       },

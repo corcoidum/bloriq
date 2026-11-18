@@ -406,7 +406,6 @@
       "chapter": 1,
       "family": "bookworm",
       "guardian": false,
-      "asset": "assets/art/world6/spirits/s6-01.png",
       "motionKind": "sway",
       "name": {
         "ko": "갈피",
@@ -439,7 +438,6 @@
       "chapter": 1,
       "family": "bookworm",
       "guardian": false,
-      "asset": "assets/art/world6/spirits/s6-02.png",
       "motionKind": "sway",
       "name": {
         "ko": "북실",
@@ -472,7 +470,6 @@
       "chapter": 1,
       "family": "bookworm",
       "guardian": false,
-      "asset": "assets/art/world6/spirits/s6-03.png",
       "motionKind": "sway",
       "name": {
         "ko": "돋보",
@@ -505,7 +502,6 @@
       "chapter": 1,
       "family": "bookworm",
       "guardian": false,
-      "asset": "assets/art/world6/spirits/s6-04.png",
       "motionKind": "sway",
       "name": {
         "ko": "여백",
@@ -538,7 +534,6 @@
       "chapter": 1,
       "family": "bookworm",
       "guardian": true,
-      "asset": "assets/art/world6/spirits/s6-05.png",
       "motionKind": "sway",
       "name": {
         "ko": "문온",
@@ -571,7 +566,6 @@
       "chapter": 2,
       "family": "paper_bird",
       "guardian": false,
-      "asset": "assets/art/world6/spirits/s6-06.png",
       "motionKind": "sway",
       "name": {
         "ko": "접새",
@@ -604,7 +598,6 @@
       "chapter": 2,
       "family": "paper_bird",
       "guardian": false,
-      "asset": "assets/art/world6/spirits/s6-07.png",
       "motionKind": "sway",
       "name": {
         "ko": "날루",
@@ -637,7 +630,6 @@
       "chapter": 2,
       "family": "paper_bird",
       "guardian": false,
-      "asset": "assets/art/world6/spirits/s6-08.png",
       "motionKind": "sway",
       "name": {
         "ko": "종달",
@@ -670,7 +662,6 @@
       "chapter": 2,
       "family": "paper_bird",
       "guardian": false,
-      "asset": "assets/art/world6/spirits/s6-09.png",
       "motionKind": "sway",
       "name": {
         "ko": "펴리",
@@ -703,7 +694,6 @@
       "chapter": 2,
       "family": "paper_bird",
       "guardian": true,
-      "asset": "assets/art/world6/spirits/s6-10.png",
       "motionKind": "sway",
       "name": {
         "ko": "비람",
@@ -736,7 +726,6 @@
       "chapter": 3,
       "family": "ink",
       "guardian": false,
-      "asset": "assets/art/world6/spirits/s6-11.png",
       "motionKind": "sway",
       "name": {
         "ko": "먹빛",
@@ -769,7 +758,6 @@
       "chapter": 3,
       "family": "ink",
       "guardian": false,
-      "asset": "assets/art/world6/spirits/s6-12.png",
       "motionKind": "sway",
       "name": {
         "ko": "번짐",
@@ -802,7 +790,6 @@
       "chapter": 3,
       "family": "ink",
       "guardian": false,
-      "asset": "assets/art/world6/spirits/s6-13.png",
       "motionKind": "sway",
       "name": {
         "ko": "점묵",
@@ -835,7 +822,6 @@
       "chapter": 3,
       "family": "ink",
       "guardian": false,
-      "asset": "assets/art/world6/spirits/s6-14.png",
       "motionKind": "sway",
       "name": {
         "ko": "글새",
@@ -868,7 +854,6 @@
       "chapter": 3,
       "family": "ink",
       "guardian": true,
-      "asset": "assets/art/world6/spirits/s6-15.png",
       "motionKind": "sway",
       "name": {
         "ko": "묵선",
@@ -901,7 +886,6 @@
       "chapter": 4,
       "family": "hourglass",
       "guardian": false,
-      "asset": "assets/art/world6/spirits/s6-16.png",
       "motionKind": "sway",
       "name": {
         "ko": "모알",
@@ -934,7 +918,6 @@
       "chapter": 4,
       "family": "hourglass",
       "guardian": false,
-      "asset": "assets/art/world6/spirits/s6-17.png",
       "motionKind": "sway",
       "name": {
         "ko": "찰나",
@@ -967,7 +950,6 @@
       "chapter": 4,
       "family": "hourglass",
       "guardian": false,
-      "asset": "assets/art/world6/spirits/s6-18.png",
       "motionKind": "sway",
       "name": {
         "ko": "사르",
@@ -1000,7 +982,6 @@
       "chapter": 4,
       "family": "hourglass",
       "guardian": false,
-      "asset": "assets/art/world6/spirits/s6-19.png",
       "motionKind": "sway",
       "name": {
         "ko": "반각",
@@ -1033,7 +1014,6 @@
       "chapter": 4,
       "family": "hourglass",
       "guardian": true,
-      "asset": "assets/art/world6/spirits/s6-20.png",
       "motionKind": "sway",
       "name": {
         "ko": "사온",
@@ -1066,7 +1046,6 @@
       "chapter": 5,
       "family": "star_librarian",
       "guardian": false,
-      "asset": "assets/art/world6/spirits/s6-21.png",
       "motionKind": "sway",
       "name": {
         "ko": "서명",
@@ -1099,7 +1078,6 @@
       "chapter": 5,
       "family": "star_librarian",
       "guardian": false,
-      "asset": "assets/art/world6/spirits/s6-22.png",
       "motionKind": "sway",
       "name": {
         "ko": "금엽",
@@ -1132,7 +1110,6 @@
       "chapter": 5,
       "family": "star_librarian",
       "guardian": false,
-      "asset": "assets/art/world6/spirits/s6-23.png",
       "motionKind": "sway",
       "name": {
         "ko": "권지",
@@ -1165,7 +1142,6 @@
       "chapter": 5,
       "family": "star_librarian",
       "guardian": false,
-      "asset": "assets/art/world6/spirits/s6-24.png",
       "motionKind": "sway",
       "name": {
         "ko": "등표",

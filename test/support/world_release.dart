@@ -27,7 +27,11 @@ final releaseVictory = find.byType(VictoryPanel);
 
 Finder releaseKey(String value) => find.byKey(ValueKey(value));
 
-void seedCampaign(Set<int> chapters, {Iterable<Level> cleared = const []}) {
+void seedCampaign(
+  Set<int> chapters, {
+  Iterable<Level> cleared = const [],
+  Set<int> goldenChapters = const {},
+}) {
   SharedPreferences.setMockInitialValues({
     'bloriq.onboarding.v1': 'skipped',
     GameAudio.musicKey: false,
@@ -36,6 +40,7 @@ void seedCampaign(Set<int> chapters, {Iterable<Level> cleared = const []}) {
       'version': 1,
       'backfilled': true,
       'completedChapters': chapters.toList()..sort(),
+      'goldenChapters': goldenChapters.toList()..sort(),
     }),
     ProgressRepository.storageKey: jsonEncode({
       'version': ProgressRepository.schemaVersion,

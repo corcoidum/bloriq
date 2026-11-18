@@ -14,6 +14,14 @@ abstract final class StarSkyText {
     '별을 눌러 판을 골라요',
     'Tap a star to pick a stage',
   );
+  static const stages = ProgressionText('스테이지 목록', 'Stage list');
+  static ProgressionText ready(int number) =>
+      ProgressionText('스테이지 $number · 플레이 가능', 'Stage $number · Ready to play');
+  static ProgressionText lockedWorld(int number, String title) =>
+      ProgressionText(
+        '세계 $number · $title · 잠김',
+        'World $number · $title · Locked',
+      );
   static ProgressionText world(int number, String title) =>
       ProgressionText('세계 $number · $title', 'World $number · $title');
 }
@@ -86,15 +94,27 @@ class _JourneyConstellationsState extends State<JourneyConstellations>
             .firstOrNull ??
         focus?.next;
     final onPlay = widget.onPlay;
+    void selectStar(SkyStar star) => setState(() {
+      _levelId = star.levelId;
+      _focusIndex = data.forLevel(star.levelId)?.index;
+    });
+    String starLabel(SkyStar star) => star.lit
+        ? t.constellationLevelStars(star.number, star.stars)
+        : star.unlocked
+        ? StarSkyText.ready(star.number).resolve(lang)
+        : t.constellationLevelDark(star.number);
 
     Widget worldChip(SkyWorld world, double width) {
       final here = world.number == focus?.world;
+      final label =
+          (world.unlocked
+                  ? StarSkyText.world(world.number, world.title)
+                  : StarSkyText.lockedWorld(world.number, world.title))
+              .resolve(lang);
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 2),
         child: Semantics(
           selected: here,
-          label: StarSkyText.world(world.number, world.title).resolve(lang),
-          excludeSemantics: true,
           child: OutlinedButton(
             key: ValueKey('journey-sky-world-${world.number}'),
             style: OutlinedButton.styleFrom(
@@ -131,7 +151,11 @@ class _JourneyConstellationsState extends State<JourneyConstellations>
                       padding: EdgeInsets.only(right: 4),
                       child: Icon(Icons.lock_outline_rounded, size: 15),
                     ),
-                  Text('${world.number}', style: GameTypography.label),
+                  Text(
+                    '${world.number}',
+                    semanticsLabel: label,
+                    style: GameTypography.label,
+                  ),
                 ],
               ),
             ),
@@ -194,13 +218,8 @@ class _JourneyConstellationsState extends State<JourneyConstellations>
         focus: focus,
         selectedLevelId: selected?.levelId,
         reduceMotion: widget.reduceMotion,
-        starLabel: (star) => star.lit
-            ? t.constellationLevelStars(star.number, star.stars)
-            : t.constellationLevelDark(star.number),
-        onStar: (star) => setState(() {
-          _levelId = star.levelId;
-          _focusIndex = data.forLevel(star.levelId)?.index;
-        }),
+        starLabel: starLabel,
+        onStar: selectStar,
       ),
     );
 
@@ -242,18 +261,46 @@ class _JourneyConstellationsState extends State<JourneyConstellations>
                   ),
                   const SizedBox(height: 8),
                   if (selected != null && onPlay != null)
-                    FilledButton(
-                      key: const ValueKey('journey-play-stage'),
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size(44, 50),
-                      ),
-                      onPressed: () => onPlay(selected.levelId),
-                      child: Text(
-                        selected.lit
-                            ? t.journeyReplayStage(selected.number)
-                            : t.journeyPlayStage(selected.number),
-                        textAlign: TextAlign.center,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: FilledButton(
+                            key: const ValueKey('journey-play-stage'),
+                            style: FilledButton.styleFrom(
+                              minimumSize: const Size(44, 50),
+                            ),
+                            onPressed: () => onPlay(selected.levelId),
+                            child: Text(
+                              selected.lit
+                                  ? t.journeyReplayStage(selected.number)
+                                  : t.journeyPlayStage(selected.number),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        PopupMenuButton<SkyStar>(
+                          key: const ValueKey('journey-sky-stage-list'),
+                          tooltip: StarSkyText.stages.resolve(lang),
+                          icon: const Icon(Icons.format_list_bulleted_rounded),
+                          style: IconButton.styleFrom(
+                            minimumSize: const Size(48, 48),
+                          ),
+                          initialValue: selected,
+                          onSelected: selectStar,
+                          itemBuilder: (_) => [
+                            for (final star in focus.stars)
+                              PopupMenuItem(
+                                key: ValueKey(
+                                  'journey-sky-list-stage-${star.levelId}',
+                                ),
+                                enabled: star.unlocked,
+                                value: star,
+                                child: Text(starLabel(star)),
+                              ),
+                          ],
+                        ),
+                      ],
                     )
                   else if (!focus.unlocked)
                     KeepAllText(

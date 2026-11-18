@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:bloriq/app/game_session.dart';
 import 'package:bloriq/l10n/app_localizations.dart';
 import 'package:bloriq/main.dart';
 import 'package:bloriq/progress/progress_repository.dart';
@@ -11,6 +12,7 @@ import 'package:bloriq/world/world_catalog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // ignore: depend_on_referenced_packages
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
@@ -26,11 +28,18 @@ class _FinalClearStore extends InMemorySharedPreferencesStore {
   _FinalClearStore(super.data) : super.withData();
 
   bool failNextClear = false;
+  bool failNextUnlock = false;
+  bool failUnlockWrites = false;
 
   @override
   Future<bool> setValue(String valueType, String key, Object value) async {
     if (failNextClear && key == 'flutter.${ProgressRepository.storageKey}') {
       failNextClear = false;
+      return false;
+    }
+    if ((failNextUnlock || failUnlockWrites) &&
+        key == 'flutter.${ProgressionRepository.storageKey}') {
+      failNextUnlock = false;
       return false;
     }
     return super.setValue(valueType, key, value);
@@ -53,6 +62,49 @@ AppLocalizations _strings(WidgetTester tester, Finder finder) =>
 
 void main() {
   setUp(rootBundle.clear);
+
+  test(
+    'startup restores missing garden and expansion unlocks exactly once',
+    () async {
+      final garden = Worlds.parseLevels(
+        File('assets/levels/levels.json').readAsStringSync(),
+        1,
+      );
+      seedCampaign({1, 2, 3, 4}, cleared: [...garden, ...releaseLevels(2)]);
+      final oldStore = SharedPreferencesStorePlatform.instance;
+      final store = _FinalClearStore(await oldStore.getAll())
+        ..failUnlockWrites = true;
+      SharedPreferencesStorePlatform.instance = store;
+      addTearDown(() => SharedPreferencesStorePlatform.instance = oldStore);
+      final initial = await GameSession.load();
+      expect(initial.progression.saveFailed, isTrue);
+      await initial.dispose();
+      store.failUnlockWrites = false;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.reload();
+      expect((await ProgressionRepository.load()).completedChapters, {
+        1,
+        2,
+        3,
+        4,
+      });
+
+      final restored = await GameSession.load();
+      expect(restored.worldUnlocked(2), isTrue);
+      expect(restored.worldUnlocked(3), isTrue);
+      expect(restored.progression.goldenChapters, {
+        for (var i = 1; i <= 10; i++) i,
+      });
+      expect(restored.progression.saveFailed, isFalse);
+      final xp = restored.progression.xp;
+      await restored.dispose();
+      await prefs.reload();
+      final reopened = await GameSession.load();
+      expect(reopened.worldUnlocked(3), isTrue);
+      expect(reopened.progression.xp, xp);
+      await reopened.dispose();
+    },
+  );
 
   testWidgets(
     'seven successive worlds open, and the last clear leads to the ending',
@@ -104,6 +156,13 @@ void main() {
           final retry = releaseKey('retry-progress');
           await waitForReleaseWidget(tester, retry);
           expect(session.sagaComplete, isFalse);
+          store.failNextUnlock = true;
+          await tapVisible(tester, retry);
+          expect(store.failNextUnlock, isFalse);
+          expect(progression.saveFailed, isTrue);
+          expect(releaseKey('world-clear'), findsNothing);
+          expect(tester.widget<FilledButton>(resultNext).onPressed, isNull);
+          await waitForReleaseWidget(tester, retry);
           await tapVisible(tester, retry);
         }
         await waitForReleaseWidget(tester, releaseKey('world-clear'));

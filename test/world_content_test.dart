@@ -47,11 +47,9 @@ void main() {
 
     group('world $n', () {
       if (expansion != null) {
-        test('five guardian portraits and complete 256px board art', () async {
+        test('the ending portrait and complete 256px board art', () async {
           final theme = world.theme!;
-          final portraits = expansion.spirits.where(
-            (spirit) => spirit.guardian,
-          );
+          final spirit = expansion.spirits.last;
           final tilePaths = [
             ...theme.floorAssets,
             ...theme.rockAssets,
@@ -66,12 +64,9 @@ void main() {
             6 => {'shelfDoor'},
             _ => <String>{},
           });
-          var bytes = 0;
-          for (final spirit in portraits) {
-            final path = 'assets/art/world$n/spirits/${spirit.id}.png';
-            expect(spirit.asset, path);
-            bytes += await _checkPng(path, 512, transparent: true);
-          }
+          final portrait = 'assets/art/world$n/spirits/${spirit.id}.png';
+          expect(spirit.asset, portrait);
+          var bytes = await _checkPng(portrait, 512, transparent: true);
           for (final path in tilePaths) {
             expect(path, startsWith('assets/art/world$n/board/'));
             bytes += await _checkPng(path, 256);

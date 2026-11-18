@@ -402,7 +402,6 @@
       "chapter": 1,
       "family": "winding",
       "guardian": false,
-      "asset": "assets/art/world4/spirits/s4-01.png",
       "motionKind": "sway",
       "name": {
         "ko": "티오",
@@ -435,7 +434,6 @@
       "chapter": 1,
       "family": "winding",
       "guardian": false,
-      "asset": "assets/art/world4/spirits/s4-02.png",
       "motionKind": "sway",
       "name": {
         "ko": "두리",
@@ -468,7 +466,6 @@
       "chapter": 1,
       "family": "winding",
       "guardian": false,
-      "asset": "assets/art/world4/spirits/s4-03.png",
       "motionKind": "sway",
       "name": {
         "ko": "노치",
@@ -501,7 +498,6 @@
       "chapter": 1,
       "family": "winding",
       "guardian": false,
-      "asset": "assets/art/world4/spirits/s4-04.png",
       "motionKind": "sway",
       "name": {
         "ko": "키키",
@@ -534,7 +530,6 @@
       "chapter": 1,
       "family": "winding",
       "guardian": true,
-      "asset": "assets/art/world4/spirits/s4-05.png",
       "motionKind": "sway",
       "name": {
         "ko": "모루",
@@ -567,7 +562,6 @@
       "chapter": 2,
       "family": "gear",
       "guardian": false,
-      "asset": "assets/art/world4/spirits/s4-06.png",
       "motionKind": "sway",
       "name": {
         "ko": "코그",
@@ -600,7 +594,6 @@
       "chapter": 2,
       "family": "gear",
       "guardian": false,
-      "asset": "assets/art/world4/spirits/s4-07.png",
       "motionKind": "sway",
       "name": {
         "ko": "앰비",
@@ -633,7 +626,6 @@
       "chapter": 2,
       "family": "gear",
       "guardian": false,
-      "asset": "assets/art/world4/spirits/s4-08.png",
       "motionKind": "sway",
       "name": {
         "ko": "피니",
@@ -666,7 +658,6 @@
       "chapter": 2,
       "family": "gear",
       "guardian": false,
-      "asset": "assets/art/world4/spirits/s4-09.png",
       "motionKind": "sway",
       "name": {
         "ko": "위브",
@@ -699,7 +690,6 @@
       "chapter": 2,
       "family": "gear",
       "guardian": true,
-      "asset": "assets/art/world4/spirits/s4-10.png",
       "motionKind": "sway",
       "name": {
         "ko": "기어라",
@@ -732,7 +722,6 @@
       "chapter": 3,
       "family": "bell",
       "guardian": false,
-      "asset": "assets/art/world4/spirits/s4-11.png",
       "motionKind": "sway",
       "name": {
         "ko": "링고",
@@ -765,7 +754,6 @@
       "chapter": 3,
       "family": "bell",
       "guardian": false,
-      "asset": "assets/art/world4/spirits/s4-12.png",
       "motionKind": "sway",
       "name": {
         "ko": "레니",
@@ -798,7 +786,6 @@
       "chapter": 3,
       "family": "bell",
       "guardian": false,
-      "asset": "assets/art/world4/spirits/s4-13.png",
       "motionKind": "sway",
       "name": {
         "ko": "차임",
@@ -831,7 +818,6 @@
       "chapter": 3,
       "family": "bell",
       "guardian": false,
-      "asset": "assets/art/world4/spirits/s4-14.png",
       "motionKind": "sway",
       "name": {
         "ko": "여울",
@@ -864,7 +850,6 @@
       "chapter": 3,
       "family": "bell",
       "guardian": true,
-      "asset": "assets/art/world4/spirits/s4-15.png",
       "motionKind": "sway",
       "name": {
         "ko": "루멘",
@@ -897,7 +882,6 @@
       "chapter": 4,
       "family": "pendulum",
       "guardian": false,
-      "asset": "assets/art/world4/spirits/s4-16.png",
       "motionKind": "sway",
       "name": {
         "ko": "추리",
@@ -930,7 +914,6 @@
       "chapter": 4,
       "family": "pendulum",
       "guardian": false,
-      "asset": "assets/art/world4/spirits/s4-17.png",
       "motionKind": "sway",
       "name": {
         "ko": "반디",
@@ -963,7 +946,6 @@
       "chapter": 4,
       "family": "pendulum",
       "guardian": false,
-      "asset": "assets/art/world4/spirits/s4-18.png",
       "motionKind": "sway",
       "name": {
         "ko": "틸트",
@@ -996,7 +978,6 @@
       "chapter": 4,
       "family": "pendulum",
       "guardian": false,
-      "asset": "assets/art/world4/spirits/s4-19.png",
       "motionKind": "sway",
       "name": {
         "ko": "스윙",
@@ -1029,7 +1010,6 @@
       "chapter": 4,
       "family": "pendulum",
       "guardian": true,
-      "asset": "assets/art/world4/spirits/s4-20.png",
       "motionKind": "sway",
       "name": {
         "ko": "온추",
@@ -1062,7 +1042,6 @@
       "chapter": 5,
       "family": "midnight",
       "guardian": false,
-      "asset": "assets/art/world4/spirits/s4-21.png",
       "motionKind": "sway",
       "name": {
         "ko": "미드",
@@ -1095,7 +1074,6 @@
       "chapter": 5,
       "family": "midnight",
       "guardian": false,
-      "asset": "assets/art/world4/spirits/s4-22.png",
       "motionKind": "sway",
       "name": {
         "ko": "자오",
@@ -1128,7 +1106,6 @@
       "chapter": 5,
       "family": "midnight",
       "guardian": false,
-      "asset": "assets/art/world4/spirits/s4-23.png",
       "motionKind": "sway",
       "name": {
         "ko": "고요",
@@ -1161,7 +1138,6 @@
       "chapter": 5,
       "family": "midnight",
       "guardian": false,
-      "asset": "assets/art/world4/spirits/s4-24.png",
       "motionKind": "sway",
       "name": {
         "ko": "시나",

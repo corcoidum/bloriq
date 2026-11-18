@@ -31,12 +31,6 @@ class WorldChapterView {
   bool get golden => complete && stages.every((stage) => stage.stars == 3);
   bool get unlocked => stages.any((stage) => stage.unlocked);
   List<bool> get lit => [for (final stage in stages) stage.cleared];
-
-  /// 수호 정령 원화는 별자리의 다섯 별을 모두 켠 뒤 공개한다.
-  String? portraitFor(WorldStageView stage) =>
-      stage.cleared && (!stage.spirit.guardian || complete)
-      ? stage.spirit.asset
-      : null;
 }
 
 /// 기록에서 매번 다시 계산하는 확장 세계 진행 상황. 따로 저장하지 않는다.
@@ -46,11 +40,15 @@ class WorldAtlas {
   /// 장 안에서는 다섯 판을 아무 순서로나 할 수 있다. 첫 장은 처음부터 열리고,
   /// 다음 장은 앞 장에서 [Worlds.chapterUnlockClears]판을 깨면 열린다.
   /// 한 판에 막혀도 다른 판으로 진행을 이어 가도록 하기 위해서다.
-  factory WorldAtlas.derive(LoadedWorld world, ProgressRepository progress) {
+  factory WorldAtlas.derive(
+    LoadedWorld world,
+    ProgressRepository progress, {
+    bool saved = false,
+  }) {
     const size = Worlds.stagesPerChapter;
     final records = [
       for (final level in world.levels)
-        progress.forLevel(level.id, revision: level.revision),
+        progress.forLevel(level.id, revision: level.revision, saved: saved),
     ];
     final chapters = <WorldChapterView>[];
     var chapterOpen = true;

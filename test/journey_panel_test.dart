@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' show SemanticsAction;
 
 import 'package:bloriq/progression/progression_repository.dart';
 import 'package:bloriq/progression/progression_rules.dart';
@@ -237,15 +238,12 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(play.hitTestable(), findsOneWidget);
-      // 하늘은 그 아래에 있고, 별의 누르는 자리는 44보다 작아지지 않는다.
-      final star = releaseKey('journey-stage-1');
-      await tester.scrollUntilVisible(
-        star,
-        150,
-        maxScrolls: 120,
-        scrollable: sky,
-      );
-      expect(tester.getSize(star).width, greaterThanOrEqualTo(44));
+      final list = releaseKey('journey-sky-stage-list');
+      expect(tester.getRect(list).height, greaterThanOrEqualTo(48));
+      await tapVisible(tester, list);
+      final stage = releaseKey('journey-sky-list-stage-1');
+      expect(tester.getRect(stage).height, greaterThanOrEqualTo(48));
+      await tapVisible(tester, stage);
       await tapVisible(tester, _tab('spirits'));
       // 처음에는 아무도 합류하지 않아 이름을 가린다.
       expect(
@@ -271,4 +269,29 @@ void main() {
       await closeReleaseApp(tester);
     });
   }
+
+  testWidgets(
+    'world shortcut exposes a screen reader tap and the zoomed-out sky has stage choices',
+    (tester) async {
+      seedSaga(throughWorld: 1);
+      final boundary = await openReleaseApp(tester, captureArt: _capture);
+      final shortcut = releaseKey('journey-sky-world-1');
+      final semantics = tester.ensureSemantics();
+      try {
+        await openHomeJourney(tester, tab: 'constellations');
+        final node = tester.getSemantics(shortcut);
+        expect(node.label, contains('세계 1'));
+        expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
+      } finally {
+        semantics.dispose();
+      }
+      await tapVisible(tester, shortcut);
+      await tapVisible(tester, releaseKey('journey-sky-overview'));
+      await tapVisible(tester, releaseKey('journey-sky-stage-list'));
+      await _captureJourney(tester, boundary, 'stage-list');
+      await tapVisible(tester, releaseKey('journey-sky-list-stage-2'));
+      expect(find.text('2 다시 도전'), findsOneWidget);
+      await closeReleaseApp(tester);
+    },
+  );
 }

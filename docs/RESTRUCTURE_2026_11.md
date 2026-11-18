@@ -14,7 +14,8 @@
 
 ## 2단계: echo 샘플 판
 
-- 기준: 잔상을 끄고 다시 풀었을 때 최단 수가 2수 이상 달라지거나 아예 풀 수 없어야 한다. 기존 캠페인 175판 중 73판은 잔상을 꺼도 최단 수가 같았다.
+- 기준은 echo를 끄고 다시 풀었을 때 최단 수가 2수 이상 달라지거나 풀이가 없는 것이다. 세계 1은 권능 없이, 세계 2~7은 각 판의 허용 권능으로 비교하면 캠페인 175판 중 73판의 최단 수가 같다. `python -m tools.level_audit --world 1 --echo-impact`로 판별 결과를 볼 수 있다.
+- 샘플 플레이에서 첫 의도적인 echo 사용 시점, 힌트 사용, 클리어까지 걸린 시간을 기록한다. 이후 최단 수가 같은 판 중 echo 학습 목표가 있는 판부터 교체 여부를 판단한다.
 - 생성: `python -m tools.design_echo_samples` (빈 슬롯만 채운다. `--only 4 8 --replace`로 일부만 교체).
 - 검증: `python -m tools.design_echo_samples --check`. `tools/validate_levels.py`도 같은 검사를 돌린다.
 - 판: `assets/levels/echo_samples_v1.json`, id 9001~9010, 세계 1 규칙만 쓴다(권능 없음). 최단 6~11수.
@@ -76,5 +77,5 @@
 - `ProgressionRepository`는 경험치·별가루·칭호·잔영·유대·업적·사용권을 여전히 계산하고 저장한다. 어느 화면도 읽지 않는다.
 - `bloriq.collection.v1`(정령 수집)과 `bloriq.weekly.v1`(주간)은 기기에 남아 있어도 새로 쓰지 않는다.
 - 이야기 JSON의 정령 175명 자료는 그대로다. 판 제목(`levelTitle`)과 엔딩 장면이 이 자료를 쓴다.
-- 세계 2~7 정령 초상 150장(약 26MB)은 아직 앱에 들어 있다. 화면에 나오는 것은 엔딩의 여섯 장뿐이다. 지우려면 이야기 JSON의 `asset`과 `test/world_art_test.dart`, `test/world_content_test.dart`, `test/world7_ending_test.dart`를 함께 고쳐야 한다.
+- 세계 2~7 정령 원화는 저장소에 보관한다. 앱에는 엔딩에 나오는 여섯 장을 포함한다.
 - 감자꽃 글꼴 파일은 테스트 10곳이 불러와서 남아 있다. 화면에서는 쓰지 않는다.

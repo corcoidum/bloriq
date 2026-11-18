@@ -121,3 +121,15 @@ flutter build apk --release \
 ```
 
 결과: `build/app/outputs/flutter-apk/app-release.apk`. 이 테스트 앱은 debug 키로 서명한다. 일반 `flutter build apk --release`는 기존 앱 ID와 기본 진입점을 사용하며 가짜 기록을 만들지 않는다.
+
+## 처음부터 플레이하는 테스트 APK
+
+같은 **BLORIQ Test** 앱 ID로 기록을 주입하지 않는 빌드를 만들 수 있다. 새 설치에서는 튜토리얼부터 시작하며, 같은 서명의 테스트 앱을 업데이트하면 그 앱의 진행 기록을 이어서 사용한다.
+
+```bash
+flutter build apk --release \
+  --target lib/dev/random_clear_main.dart \
+  --dart-define=PREVIEW_SEED_PROGRESS=false \
+  --dart-define=BUILD_TAG=review-tester-20261118 \
+  --build-number=12
+```

@@ -295,28 +295,6 @@ class GameSession {
       );
     }
     final progression = await ProgressionRepository.load();
-    if (!progress.saveFailed && !progression.backfilled) {
-      final atlas = ConstellationAtlas.derive(levels, progress);
-      await progression.backfill(
-        records: [
-          for (final level in levels)
-            if (progress.forLevel(level.id, revision: level.revision)
-                case final record?)
-              (
-                levelKey: '${level.id}:${level.revision}',
-                bestStars: record.bestStars,
-              ),
-        ],
-        completedChapters: {
-          for (final chapter in atlas.chapters)
-            if (chapter.complete) chapter.definition.chapter,
-        },
-        goldenChapters: {
-          for (final chapter in atlas.chapters)
-            if (chapter.golden) chapter.definition.chapter,
-        },
-      );
-    }
     final daily = await DailyRepository.load(clock: clock);
     final analytics = await LocalAnalytics.load(clock: clock);
     final audio = await GameAudio.load();
@@ -336,6 +314,37 @@ class GameSession {
         // 한 세계가 깨져도 나머지 세계는 그대로 플레이할 수 있어야 한다.
         debugPrint('World ${info.number} unavailable: $error');
       }
+    }
+    if (!progress.saveFailed) {
+      final garden = ConstellationAtlas.derive(levels, progress);
+      final chapters = [
+        for (final world in worlds)
+          ...WorldAtlas.derive(world, progress).chapters,
+      ];
+      await progression.reconcileConstellations(
+        records: [
+          if (!progression.backfilled)
+            for (final level in levels)
+              if (progress.forLevel(level.id, revision: level.revision)
+                  case final record?)
+                (
+                  levelKey: '${level.id}:${level.revision}',
+                  bestStars: record.bestStars,
+                ),
+        ],
+        completedChapters: {
+          for (final chapter in garden.chapters)
+            if (chapter.complete) chapter.definition.chapter,
+          for (final chapter in chapters)
+            if (chapter.complete) chapter.chapter.globalChapter,
+        },
+        goldenChapters: {
+          for (final chapter in garden.chapters)
+            if (chapter.golden) chapter.definition.chapter,
+          for (final chapter in chapters)
+            if (chapter.golden) chapter.chapter.globalChapter,
+        },
+      );
     }
     final session = GameSession(
       levels: levels,

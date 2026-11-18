@@ -386,7 +386,6 @@
       "chapter": 1,
       "family": "frost",
       "guardian": false,
-      "asset": "assets/art/world5/spirits/s5-01.png",
       "motionKind": "sway",
       "name": {
         "ko": "설콩",
@@ -419,7 +418,6 @@
       "chapter": 1,
       "family": "frost",
       "guardian": false,
-      "asset": "assets/art/world5/spirits/s5-02.png",
       "motionKind": "sway",
       "name": {
         "ko": "보솜",
@@ -452,7 +450,6 @@
       "chapter": 1,
       "family": "frost",
       "guardian": false,
-      "asset": "assets/art/world5/spirits/s5-03.png",
       "motionKind": "sway",
       "name": {
         "ko": "하얀",
@@ -485,7 +482,6 @@
       "chapter": 1,
       "family": "frost",
       "guardian": false,
-      "asset": "assets/art/world5/spirits/s5-04.png",
       "motionKind": "sway",
       "name": {
         "ko": "서이",
@@ -518,7 +514,6 @@
       "chapter": 1,
       "family": "frost",
       "guardian": true,
-      "asset": "assets/art/world5/spirits/s5-05.png",
       "motionKind": "sway",
       "name": {
         "ko": "서온",
@@ -551,7 +546,6 @@
       "chapter": 2,
       "family": "icicle",
       "guardian": false,
-      "asset": "assets/art/world5/spirits/s5-06.png",
       "motionKind": "sway",
       "name": {
         "ko": "울린",
@@ -584,7 +578,6 @@
       "chapter": 2,
       "family": "icicle",
       "guardian": false,
-      "asset": "assets/art/world5/spirits/s5-07.png",
       "motionKind": "sway",
       "name": {
         "ko": "솔비",
@@ -617,7 +610,6 @@
       "chapter": 2,
       "family": "icicle",
       "guardian": false,
-      "asset": "assets/art/world5/spirits/s5-08.png",
       "motionKind": "sway",
       "name": {
         "ko": "종비",
@@ -650,7 +642,6 @@
       "chapter": 2,
       "family": "icicle",
       "guardian": false,
-      "asset": "assets/art/world5/spirits/s5-09.png",
       "motionKind": "sway",
       "name": {
         "ko": "바온",
@@ -683,7 +674,6 @@
       "chapter": 2,
       "family": "icicle",
       "guardian": true,
-      "asset": "assets/art/world5/spirits/s5-10.png",
       "motionKind": "sway",
       "name": {
         "ko": "결유",
@@ -716,7 +706,6 @@
       "chapter": 3,
       "family": "snowflake",
       "guardian": false,
-      "asset": "assets/art/world5/spirits/s5-11.png",
       "motionKind": "sway",
       "name": {
         "ko": "솔눈",
@@ -749,7 +738,6 @@
       "chapter": 3,
       "family": "snowflake",
       "guardian": false,
-      "asset": "assets/art/world5/spirits/s5-12.png",
       "motionKind": "sway",
       "name": {
         "ko": "별결",
@@ -782,7 +770,6 @@
       "chapter": 3,
       "family": "snowflake",
       "guardian": false,
-      "asset": "assets/art/world5/spirits/s5-13.png",
       "motionKind": "sway",
       "name": {
         "ko": "눈담",
@@ -815,7 +802,6 @@
       "chapter": 3,
       "family": "snowflake",
       "guardian": false,
-      "asset": "assets/art/world5/spirits/s5-14.png",
       "motionKind": "sway",
       "name": {
         "ko": "설결",
@@ -848,7 +834,6 @@
       "chapter": 3,
       "family": "snowflake",
       "guardian": true,
-      "asset": "assets/art/world5/spirits/s5-15.png",
       "motionKind": "sway",
       "name": {
         "ko": "설미",
@@ -881,7 +866,6 @@
       "chapter": 4,
       "family": "blizzard",
       "guardian": false,
-      "asset": "assets/art/world5/spirits/s5-16.png",
       "motionKind": "sway",
       "name": {
         "ko": "숨이",
@@ -914,7 +898,6 @@
       "chapter": 4,
       "family": "blizzard",
       "guardian": false,
-      "asset": "assets/art/world5/spirits/s5-17.png",
       "motionKind": "sway",
       "name": {
         "ko": "흰솔",
@@ -947,7 +930,6 @@
       "chapter": 4,
       "family": "blizzard",
       "guardian": false,
-      "asset": "assets/art/world5/spirits/s5-18.png",
       "motionKind": "sway",
       "name": {
         "ko": "길봄",
@@ -980,7 +962,6 @@
       "chapter": 4,
       "family": "blizzard",
       "guardian": false,
-      "asset": "assets/art/world5/spirits/s5-19.png",
       "motionKind": "sway",
       "name": {
         "ko": "푸리",
@@ -1013,7 +994,6 @@
       "chapter": 4,
       "family": "blizzard",
       "guardian": true,
-      "asset": "assets/art/world5/spirits/s5-20.png",
       "motionKind": "sway",
       "name": {
         "ko": "흰결",
@@ -1046,7 +1026,6 @@
       "chapter": 5,
       "family": "iceheart",
       "guardian": false,
-      "asset": "assets/art/world5/spirits/s5-21.png",
       "motionKind": "sway",
       "name": {
         "ko": "온숨",
@@ -1079,7 +1058,6 @@
       "chapter": 5,
       "family": "iceheart",
       "guardian": false,
-      "asset": "assets/art/world5/spirits/s5-22.png",
       "motionKind": "sway",
       "name": {
         "ko": "빛울",
@@ -1112,7 +1090,6 @@
       "chapter": 5,
       "family": "iceheart",
       "guardian": false,
-      "asset": "assets/art/world5/spirits/s5-23.png",
       "motionKind": "sway",
       "name": {
         "ko": "담온",
@@ -1145,7 +1122,6 @@
       "chapter": 5,
       "family": "iceheart",
       "guardian": false,
-      "asset": "assets/art/world5/spirits/s5-24.png",
       "motionKind": "sway",
       "name": {
         "ko": "해숨",

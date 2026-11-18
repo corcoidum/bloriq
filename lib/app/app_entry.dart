@@ -983,7 +983,9 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
           ),
         ],
       ),
-    if (session.progress.saveFailed || session.onboarding.saveFailed)
+    if (session.progress.saveFailed ||
+        session.progression.saveFailed ||
+        session.onboarding.saveFailed)
       Text(t.saveError, textAlign: TextAlign.center),
   ];
 }

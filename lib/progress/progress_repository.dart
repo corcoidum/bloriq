@@ -194,8 +194,11 @@ class ProgressRepository {
       _preferences?.containsKey(course2StorageKey) == true ||
       _preferences?.containsKey(storageKey) == true;
   bool saveFailed = false;
-  LevelProgress? forLevel(int levelId, {int revision = 1}) =>
-      _levels['$levelId:$revision'];
+  LevelProgress? forLevel(
+    int levelId, {
+    int revision = 1,
+    bool saved = false,
+  }) => (saved ? _persistedLevels : _levels)['$levelId:$revision'];
 
   /// 업적은 지금 플레이할 수 있는 판의 저장된 기록만 센다.
   int starflowerCount(Iterable<Level> levels) => levels.fold(0, (sum, level) {

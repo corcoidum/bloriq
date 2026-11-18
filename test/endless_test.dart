@@ -29,10 +29,13 @@ import 'support/world_release.dart'
 
 class _FailingVoyageStore extends InMemorySharedPreferencesStore {
   _FailingVoyageStore(super.data) : super.withData();
+  bool failWrites = true;
 
   @override
   Future<bool> setValue(String valueType, String key, Object value) async =>
-      false;
+      failWrites && key == 'flutter.${EndlessRepository.storageKey}'
+      ? false
+      : super.setValue(valueType, key, value);
 }
 
 EndlessPool _pool({bool includeWorlds = false}) => EndlessPool.parse(
@@ -523,7 +526,7 @@ void main() {
         ..score = 900
         ..perfects = 4;
       await repo.saveRun(run, clearedBoard: true);
-      final first = await repo.finish(run);
+      final first = (await repo.finish(run))!;
       expect(first.newBestScore, isTrue);
       expect(first.newBestDepth, isTrue);
       expect(first.milestones.map((m) => m.depth), [10, 25]);
@@ -531,11 +534,12 @@ void main() {
       expect(first.xp, 26 * 6);
       expect(repo.weekBest, 900);
 
-      final second = await repo.finish(
-        VoyageRun.start(pool, seed: 2)
-          ..depth = 30
-          ..score = 400,
-      );
+      expect(await repo.finish(run), isNull);
+      final next = VoyageRun.start(pool, seed: 2)
+        ..depth = 30
+        ..score = 400;
+      await repo.saveRun(next);
+      final second = (await repo.finish(next))!;
       expect(second.newBestScore, isFalse);
       expect(second.newBestDepth, isTrue);
       expect(second.milestones, isEmpty);
@@ -889,50 +893,77 @@ void main() {
       expect(geometry.cellSize, greaterThanOrEqualTo(40));
     });
 
-    testWidgets('the lantern goes out and the voyage is scored', (
-      tester,
-    ) async {
-      final pool = _pool();
-      final run = VoyageRun.start(pool, seed: 21)..lanternAtStart = 1;
-      final level = pool.level(run.board)!;
-      for (var i = 0; i < level.minimumMoves; i++) {
-        run.pushed();
-      }
-      await _seed(
-        extra: {
-          EndlessRepository.storageKey: jsonEncode({
-            'version': 1,
-            'bestScore': 0,
-            'run': run.toJson(),
-          }),
-        },
-      );
-      await tester.pumpWidget(const BloriqApp());
-      await waitForHome(tester);
-      await openPlayModes(tester);
-      expect(find.textContaining('Continue voyage'), findsOneWidget);
-      await tapVisible(tester, find.byKey(const ValueKey('home-voyage')));
-      for (var i = 0; i < 50; i++) {
-        await tester.pump(const Duration(milliseconds: 20));
-        if (find
-            .byKey(const ValueKey('endless-resume'))
-            .evaluate()
-            .isNotEmpty) {
-          break;
+    testWidgets(
+      'a failed voyage finish can be retried without duplicate scoring',
+      (tester) async {
+        final pool = _pool();
+        final run = VoyageRun.start(pool, seed: 21)..lanternAtStart = 1;
+        final level = pool.level(run.board)!;
+        for (var i = 0; i < level.minimumMoves; i++) {
+          run.pushed();
         }
-      }
-      await tapVisible(tester, find.byKey(const ValueKey('endless-resume')));
-      // 최단 수를 이미 다 썼으니 한 번만 더 밀어도 등불이 꺼진다.
-      await _drag(tester, const PuzzleSolver().solve(level)!.first);
-      await tester.pump(const Duration(seconds: 1));
-      expect(find.byKey(const ValueKey('endless-over')), findsOneWidget);
-      expect(find.text('The lantern went out'), findsOneWidget);
-      expect((await EndlessRepository.load()).savedRun, isNull);
-      expect((await EndlessRepository.load()).voyages, 1);
+        await _seed(
+          extra: {
+            EndlessRepository.storageKey: jsonEncode({
+              'version': 1,
+              'bestScore': 0,
+              'run': run.toJson(),
+            }),
+          },
+        );
+        final previousStore = SharedPreferencesStorePlatform.instance;
+        final store = _FailingVoyageStore(await previousStore.getAll());
+        SharedPreferencesStorePlatform.instance = store;
+        addTearDown(
+          () => SharedPreferencesStorePlatform.instance = previousStore,
+        );
+        const capture = bool.fromEnvironment('CAPTURE_ENDLESS');
+        final boundary = await openReleaseApp(
+          tester,
+          captureArt: capture,
+          locale: const Locale('en'),
+        );
+        await openPlayModes(tester);
+        expect(find.textContaining('Continue voyage'), findsOneWidget);
+        await tapVisible(tester, find.byKey(const ValueKey('home-voyage')));
+        for (var i = 0; i < 50; i++) {
+          await tester.pump(const Duration(milliseconds: 20));
+          if (find
+              .byKey(const ValueKey('endless-resume'))
+              .evaluate()
+              .isNotEmpty) {
+            break;
+          }
+        }
+        await tapVisible(tester, find.byKey(const ValueKey('endless-resume')));
+        // 최단 수를 이미 다 썼으니 한 번만 더 밀어도 등불이 꺼진다.
+        await _drag(tester, const PuzzleSolver().solve(level)!.first);
+        await tester.pump(const Duration(seconds: 1));
+        final retry = find.byKey(const ValueKey('endless-retry-finish'));
+        expect(retry, findsOneWidget);
+        expect(find.byKey(const ValueKey('endless-over')), findsNothing);
+        if (capture) {
+          await captureReleaseScreen(
+            tester,
+            boundary,
+            'docs/screenshots/endless/save-retry.png',
+          );
+        }
+        final beforeRetry = await EndlessRepository.load();
+        expect(beforeRetry.savedRun?.seed, run.seed);
+        expect(beforeRetry.voyages, 0);
+        store.failWrites = false;
+        await tapVisible(tester, retry);
+        await tester.pump(const Duration(seconds: 1));
+        expect(find.byKey(const ValueKey('endless-over')), findsOneWidget);
+        expect(find.text('The lantern went out'), findsOneWidget);
+        expect((await EndlessRepository.load()).savedRun, isNull);
+        expect((await EndlessRepository.load()).voyages, 1);
 
-      await tapVisible(tester, find.byKey(const ValueKey('endless-again')));
-      expect(find.text('Sea 1'), findsOneWidget);
-      expect(find.byKey(const ValueKey('endless-over')), findsNothing);
-    });
+        await tapVisible(tester, find.byKey(const ValueKey('endless-again')));
+        expect(find.text('Sea 1'), findsOneWidget);
+        expect(find.byKey(const ValueKey('endless-over')), findsNothing);
+      },
+    );
   });
 }

@@ -16,7 +16,7 @@ void main() {
   setUp(rootBundle.clear);
 
   test(
-    'all 150 expansion spirit portraits are bundled and decodable',
+    'only the six expansion portraits used by the ending are bundled',
     () async {
       final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
       final assets = manifest.listAssets().toSet();
@@ -26,29 +26,37 @@ void main() {
           'assets/story/world$world.json',
         );
         final story = WorldStory.parse(source, world);
-        for (final spirit in story.spirits) {
-          final asset = 'assets/art/world$world/spirits/${spirit.id}.png';
-          expect(spirit.asset, asset);
-          expect(assets, contains(asset));
-          expect(portraits.add(asset), isTrue);
-          final data = await rootBundle.load(asset);
-          final codec = await ui.instantiateImageCodec(
-            data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+        for (final spirit in story.spirits.take(Worlds.stageCount - 1)) {
+          expect(spirit.asset, isNull);
+        }
+        final spirit = story.spirits.last;
+        final asset = 'assets/art/world$world/spirits/${spirit.id}.png';
+        expect(spirit.asset, asset);
+        expect(assets, contains(asset));
+        expect(portraits.add(asset), isTrue);
+        final data = await rootBundle.load(asset);
+        final codec = await ui.instantiateImageCodec(
+          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+        );
+        try {
+          final frame = await codec.getNextFrame();
+          expect(
+            (frame.image.width, frame.image.height),
+            (512, 512),
+            reason: asset,
           );
-          try {
-            final frame = await codec.getNextFrame();
-            expect(
-              (frame.image.width, frame.image.height),
-              (512, 512),
-              reason: asset,
-            );
-            frame.image.dispose();
-          } finally {
-            codec.dispose();
-          }
+          frame.image.dispose();
+        } finally {
+          codec.dispose();
         }
       }
-      expect(portraits, hasLength(150));
+      expect(portraits, hasLength(6));
+      expect(
+        assets.where(
+          (path) => RegExp(r'^assets/art/world[2-7]/spirits/').hasMatch(path),
+        ),
+        unorderedEquals(portraits),
+      );
     },
   );
 

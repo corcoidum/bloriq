@@ -82,7 +82,11 @@ class ConstellationAtlas {
               for (final level in group.levels)
                 level.id:
                     progress
-                        .forLevel(level.id, revision: level.revision)
+                        .forLevel(
+                          level.id,
+                          revision: level.revision,
+                          saved: true,
+                        )
                         ?.bestStars ??
                     0,
             },

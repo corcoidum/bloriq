@@ -566,8 +566,21 @@ class ProgressionRepository {
     required Iterable<BackfillRecord> records,
     required Set<int> completedChapters,
     required Set<int> goldenChapters,
+  }) => _backfilled
+      ? Future.value(null)
+      : reconcileConstellations(
+          records: records,
+          completedChapters: completedChapters,
+          goldenChapters: goldenChapters,
+        );
+
+  /// 클리어 저장과 해금 저장 사이에 중단된 경우 누락된 해금만 보충한다.
+  Future<BackfillReward?> reconcileConstellations({
+    Iterable<BackfillRecord> records = const [],
+    required Set<int> completedChapters,
+    required Set<int> goldenChapters,
   }) async {
-    if (!_writable || _backfilled) return null;
+    if (!_writable) return null;
     var xpGained = 0, dust = 0;
     for (final record in records) {
       final best = record.bestStars;
@@ -595,10 +608,12 @@ class ProgressionRepository {
         dust += StardustRules.goldenConstellation;
       }
     }
+    if (_backfilled && xpGained == 0 && dust == 0) return null;
     _backfilled = true;
     _xp += xpGained;
     _stardust += dust;
     final levels = _claimLevelRewards([]);
+    if (_finalWorldComplete) _grantSagaRewards([]);
     final saved = await retrySave();
     return BackfillReward(
       xpGained: xpGained,
