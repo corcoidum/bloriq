@@ -50,7 +50,8 @@ Future<void> openHomeJourney(
 
 Future<void> openCampaignMap(WidgetTester tester) async {
   await openHomeJourney(tester);
-  await tapVisible(tester, find.byKey(const ValueKey('journey-world-1')));
+  // 큰 글자에서는 세계 카드가 화면보다 길어 가운데를 누를 수 없다. 들어가기 버튼을 누른다.
+  await tapVisible(tester, find.byKey(const ValueKey('saga-enter-1')));
 }
 
 Future<void> openPlayModes(WidgetTester tester) =>

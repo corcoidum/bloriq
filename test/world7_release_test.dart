@@ -9,7 +9,6 @@ import 'package:bloriq/progress/progress_repository.dart';
 import 'package:bloriq/progression/progression_repository.dart';
 import 'package:bloriq/progression/progression_rules.dart';
 import 'package:bloriq/world/saga.dart';
-import 'package:bloriq/world/saga_map.dart';
 import 'package:bloriq/world/world_catalog.dart';
 import 'package:bloriq/world/world_theme.dart';
 import 'package:flutter/material.dart';
@@ -119,9 +118,10 @@ void main() {
         find.descendant(of: node, matching: find.text('0 / 25 스테이지')),
         findsOneWidget,
       );
+      // 빛길 지도는 여정의 현황 탭 안에 있다.
       final scrollable = find
           .descendant(
-            of: find.byType(SagaMap),
+            of: find.byKey(const PageStorageKey('journey-status-list')),
             matching: find.byType(Scrollable),
           )
           .first;

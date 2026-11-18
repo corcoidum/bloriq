@@ -34,13 +34,11 @@ Future<void> _seed(Set<int> chapters) async {
   });
 }
 
+/// 빛길 지도는 여정의 현황 탭에 바로 있다. 따로 여는 버튼은 없다.
 Future<void> _openSaga(WidgetTester tester) async {
   await openHomeJourney(tester);
-  await tapVisible(
-    tester,
-    find.byKey(const ValueKey('journey-lightroad-story')),
-  );
-  await tester.pump(const Duration(milliseconds: 400));
+  expect(find.byKey(const ValueKey('journey-lightroad-story')), findsNothing);
+  expect(find.byKey(const ValueKey('saga-lit')), findsOneWidget);
 }
 
 Map<String, dynamic> _sagaJson() =>

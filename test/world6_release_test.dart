@@ -6,7 +6,6 @@ import 'package:bloriq/postcard/echo_postcard.dart';
 import 'package:bloriq/progress/progress_repository.dart';
 import 'package:bloriq/progression/progression_repository.dart';
 import 'package:bloriq/world/saga.dart';
-import 'package:bloriq/world/saga_map.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -45,7 +44,13 @@ void main() {
 
       await enterReleaseWorld(tester, 6);
       expect(releaseMapText(6, '꿈의 서고 등대'), findsOneWidget);
-      expect(_storyText("'첫 잔상'이라는 빈 책"), findsOneWidget);
+      expect(
+        find.descendant(
+          of: releaseWorldMap(6),
+          matching: _storyText("'첫 잔상'이라는 빈 책"),
+        ),
+        findsOneWidget,
+      );
       expect(releaseKey('world-guardian-505'), findsNothing);
       await _shot(tester, boundary, 'dream-library-map');
       await tapVisible(tester, releaseKey('world-continue'));
@@ -99,7 +104,6 @@ void main() {
     await openLightroad(tester, 6);
     expect(releaseKey('saga-enter-6'), findsNothing);
     await closeLightroad(tester);
-    await tapVisible(tester, releaseKey('journey-close'));
     final help = find.byTooltip('게임 방법').hitTestable();
     await waitForReleaseWidget(tester, help);
     await tapVisible(tester, help);
@@ -150,10 +154,12 @@ void main() {
       await tapVisible(tester, releaseKey('world-close'));
       await waitForHome(tester);
       await openLightroad(tester, 6);
-      final saga = find.byType(SagaMap);
-      await waitForReleaseWidget(tester, saga);
+      // 빛길 지도는 여정의 현황 탭 안에 있다.
       final scrollable = find
-          .descendant(of: saga, matching: find.byType(Scrollable))
+          .descendant(
+            of: find.byKey(const PageStorageKey('journey-status-list')),
+            matching: find.byType(Scrollable),
+          )
           .first;
       tester.state<ScrollableState>(scrollable).position.jumpTo(0);
       await tester.pump();

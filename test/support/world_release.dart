@@ -11,7 +11,6 @@ import 'package:bloriq/main.dart';
 import 'package:bloriq/progress/progress_repository.dart';
 import 'package:bloriq/progression/progression_repository.dart';
 import 'package:bloriq/settings/game_settings.dart';
-import 'package:bloriq/world/saga_map.dart';
 import 'package:bloriq/world/world_catalog.dart';
 import 'package:bloriq/world/world_map.dart';
 import 'package:flame/game.dart';
@@ -97,15 +96,18 @@ Future<void> closeReleaseApp(WidgetTester tester) async {
   await tester.pump();
 }
 
+/// 여정의 현황 탭에서 빛길 지도의 [world] 카드까지 내려간다.
 Future<Finder> openLightroad(WidgetTester tester, int world) async {
   await openHomeJourney(tester);
-  await tapVisible(tester, releaseKey('journey-lightroad-story'));
   final node = releaseKey('saga-world-$world');
   await tester.scrollUntilVisible(
     node,
     160,
     scrollable: find
-        .descendant(of: find.byType(SagaMap), matching: find.byType(Scrollable))
+        .descendant(
+          of: find.byKey(const PageStorageKey('journey-status-list')),
+          matching: find.byType(Scrollable),
+        )
         .first,
   );
   await Scrollable.ensureVisible(tester.element(node), alignment: .8);
@@ -114,7 +116,7 @@ Future<Finder> openLightroad(WidgetTester tester, int world) async {
 }
 
 Future<void> closeLightroad(WidgetTester tester) async {
-  await tapVisible(tester, releaseKey('saga-close'));
+  await tapVisible(tester, releaseKey('journey-close'));
   await tester.pumpAndSettle();
 }
 
@@ -136,7 +138,7 @@ Finder releaseWorldMap(int world) => find.byWidgetPredicate(
 /// 홈의 여정에서 [world]의 스테이지 지도를 연다.
 Future<void> enterReleaseWorld(WidgetTester tester, int world) async {
   await openHomeJourney(tester);
-  await tapVisible(tester, releaseKey('journey-world-$world'));
+  await tapVisible(tester, releaseKey('saga-enter-$world'));
   await waitForReleaseWidget(tester, releaseWorldMap(world));
 }
 

@@ -185,7 +185,6 @@
   "journeyWorldPicker": "세계 선택",
   "journeyWorldsCleared": "세계 {count} / {total} 완료",
   "journeyProgressSummary": "전체 진행",
-  "journeyLightroadStory": "빛길 이야기",
   "journeyContinueWorld": "이어서 할 곳",
   "journeyPlayingWorld": "플레이 중",
   "journeyRestoredTotal": "별자리 복원 {count} / {total}",

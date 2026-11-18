@@ -371,7 +371,6 @@
   "journeyWorldsCleared": "{count} / {total} worlds complete",
   "@journeyWorldsCleared": {"placeholders": {"count": {"type": "int"}, "total": {"type": "int"}}},
   "journeyProgressSummary": "Overall progress",
-  "journeyLightroadStory": "Lightroad story",
   "journeyContinueWorld": "Continue here",
   "journeyPlayingWorld": "Playing now",
   "journeyRestoredTotal": "Restored {count} / {total} constellations",

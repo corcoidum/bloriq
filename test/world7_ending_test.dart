@@ -7,7 +7,6 @@ import 'package:bloriq/progression/progression_repository.dart';
 import 'package:bloriq/progression/progression_rules.dart';
 import 'package:bloriq/world/credits_screen.dart';
 import 'package:bloriq/world/ending_art.dart';
-import 'package:bloriq/world/saga_map.dart';
 import 'package:bloriq/world/world_catalog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -157,9 +156,8 @@ void main() {
 
       await openLightroad(tester, 1);
       expect(find.text('켜진 등대 5 / 5'), findsOneWidget);
-      await tapVisible(tester, releaseKey('saga-close'));
-      await tester.pump(const Duration(milliseconds: 200));
-      expect(find.byType(SagaMap), findsNothing);
+      await closeLightroad(tester);
+      expect(find.byKey(const ValueKey('saga-lit')), findsNothing);
       await closeReleaseApp(tester);
     },
   );

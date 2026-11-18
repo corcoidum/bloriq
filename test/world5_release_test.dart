@@ -90,7 +90,6 @@ void main() {
     expect(releaseKey('saga-enter-5'), findsNothing);
     await closeLightroad(tester);
 
-    await tapVisible(tester, releaseKey('journey-close'));
     await tapVisible(tester, find.byTooltip('게임 방법'));
     expect(releaseKey('replay-ice-guide'), findsNothing);
     await tapVisible(tester, find.text('닫기'));

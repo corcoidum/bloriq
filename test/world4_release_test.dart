@@ -34,7 +34,6 @@ void main() {
       expect(releaseKey('saga-enter-4'), findsOneWidget);
       await _shot(tester, boundary, 'lightroad');
       await closeLightroad(tester);
-      await tapVisible(tester, releaseKey('journey-close'));
 
       await tapVisible(tester, find.byTooltip('게임 방법'));
       await tapVisible(tester, releaseKey('replay-clock-guide'));
