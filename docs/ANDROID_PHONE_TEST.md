@@ -133,3 +133,14 @@ flutter build apk --release \
   --dart-define=BUILD_TAG=review-tester-20261118 \
   --build-number=12
 ```
+
+## 모든 판을 별 1개로 클리어한 테스트 APK
+
+**BLORIQ 1-Star Test**(`com.corcoidum.bloriq.preview.onestar`)는 최초 실행 시 캠페인 175판에 별을 1개씩 기록한다. 여정에서 `175 / 175 스테이지`, `별 175 / 525`, `별자리 복원 35 / 35`를 확인할 수 있다. 이후 플레이에서 갱신한 별과 기록은 앱을 다시 열어도 유지된다.
+
+```bash
+flutter build apk --release \
+  --target lib/dev/one_star_main.dart \
+  --dart-define=BUILD_TAG=one-star-preview-20261119 \
+  --build-number=13
+```

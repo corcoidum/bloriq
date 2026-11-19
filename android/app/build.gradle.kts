@@ -7,8 +7,14 @@ plugins {
 }
 
 // 테스트 전용 진입점은 앱 ID와 표시 이름을 분리해 기존 앱 기록을 보호한다.
-val isRandomClearPreview = project.findProperty("target")
-    ?.toString()?.replace('\\', '/')?.endsWith("lib/dev/random_clear_main.dart") == true
+val targetPath = project.findProperty("target")?.toString()?.replace('\\', '/')
+val preview = when {
+    targetPath?.endsWith("lib/dev/random_clear_main.dart") == true ->
+        ".preview" to "BLORIQ Test"
+    targetPath?.endsWith("lib/dev/one_star_main.dart") == true ->
+        ".preview.onestar" to "BLORIQ 1-Star Test"
+    else -> null
+}
 
 val keyPropertiesFile = rootProject.file("key.properties")
 val keyProperties = if (keyPropertiesFile.exists()) {
@@ -33,13 +39,8 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = if (isRandomClearPreview) {
-            "com.corcoidum.bloriq.preview"
-        } else {
-            "com.corcoidum.bloriq"
-        }
-        manifestPlaceholders["appLabel"] =
-            if (isRandomClearPreview) "BLORIQ Test" else "BLORIQ"
+        applicationId = "com.corcoidum.bloriq${preview?.first.orEmpty()}"
+        manifestPlaceholders["appLabel"] = preview?.second ?: "BLORIQ"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -52,7 +53,7 @@ android {
         versionName = flutter.versionName
     }
 
-    val releaseSigning = if (isRandomClearPreview) null else keyProperties?.let { properties ->
+    val releaseSigning = if (preview != null) null else keyProperties?.let { properties ->
         signingConfigs.create("release") {
             storeFile = rootProject.file(properties.requireKey("storeFile")).also {
                 if (!it.isFile) throw GradleException("Release keystore file was not found")

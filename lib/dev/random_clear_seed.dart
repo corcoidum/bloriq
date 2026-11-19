@@ -14,10 +14,16 @@ import '../world/world_catalog.dart';
 
 /// 일반 main.dart에서는 호출하지 않는다. 테스트 앱의 최초 실행에만 기록을 만든다.
 const randomClearPreviewKey = 'bloriq.preview.random-clear.v1';
+const oneStarPreviewKey = 'bloriq.preview.one-star.v1';
 
-Future<bool> seedRandomClearPreview({int seed = 20261115}) async {
+Future<bool> seedRandomClearPreview({int seed = 20261115}) =>
+    _seedClearPreview(randomClearPreviewKey, random: math.Random(seed));
+
+Future<bool> seedOneStarPreview() => _seedClearPreview(oneStarPreviewKey);
+
+Future<bool> _seedClearPreview(String key, {math.Random? random}) async {
   final preferences = await SharedPreferences.getInstance();
-  final state = preferences.getString(randomClearPreviewKey);
+  final state = preferences.getString(key);
   if (state == 'complete') return false;
 
   // 다른 진입점에서 생긴 실제 진행 기록은 덮어쓰지 않는다.
@@ -44,16 +50,15 @@ Future<bool> seedRandomClearPreview({int seed = 20261115}) async {
     );
   }
 
-  final random = math.Random(seed);
   final records = <LevelProgress>[];
   for (final level in levels) {
-    final stars = 1 + random.nextInt(3);
+    final stars = 1 + (random?.nextInt(3) ?? 0);
     final allowance = math.max(2, (level.minimumMoves + 3) ~/ 4);
     // 별 수와 최소 이동 수가 서로 모순되지 않는 가짜 클리어 기록.
     final moves = switch (stars) {
       3 => level.minimumMoves,
-      2 => level.minimumMoves + 1 + random.nextInt(allowance),
-      _ => level.minimumMoves + allowance + 1 + random.nextInt(6),
+      2 => level.minimumMoves + 1 + (random?.nextInt(allowance) ?? 0),
+      _ => level.minimumMoves + allowance + 1 + (random?.nextInt(6) ?? 0),
     };
     records.add(
       LevelProgress(
@@ -86,7 +91,7 @@ Future<bool> seedRandomClearPreview({int seed = 20261115}) async {
     }
   }
 
-  await _requireSaved(preferences.setString(randomClearPreviewKey, 'pending'));
+  await _requireSaved(preferences.setString(key, 'pending'));
   await _requireSaved(
     preferences.setString(
       ProgressRepository.storageKey,
@@ -121,7 +126,7 @@ Future<bool> seedRandomClearPreview({int seed = 20261115}) async {
   );
   await _requireSaved(collection.acknowledgeBackfill());
   await _requireSaved(preferences.setString(Onboarding.storageKey, 'skipped'));
-  await _requireSaved(preferences.setString(randomClearPreviewKey, 'complete'));
+  await _requireSaved(preferences.setString(key, 'complete'));
   return true;
 }
 

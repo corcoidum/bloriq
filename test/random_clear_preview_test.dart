@@ -12,6 +12,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'support/start_game.dart';
+import 'support/world_release.dart';
+
 List<Level> _levels() => [
   for (var world = 1; world <= Worlds.finalWorld; world++)
     ...Worlds.parseLevels(
@@ -84,6 +87,60 @@ void main() {
       2,
     );
   });
+
+  testWidgets('one-star preview opens every world with exactly 175 stars', (
+    tester,
+  ) async {
+    expect(await tester.runAsync(seedOneStarPreview), isTrue);
+    rootBundle.clear();
+    await openReleaseApp(tester);
+    final progress = await ProgressRepository.load();
+    for (final level in _levels()) {
+      final record = progress.forLevel(level.id, revision: level.revision)!;
+      expect(record.bestStars, 1, reason: 'Stage ${level.id}');
+      expect(record.completionCount, 1);
+      expect(
+        starRating(moves: record.bestMoves, minimumMoves: level.minimumMoves),
+        1,
+      );
+    }
+    expect(progress.completedCampaignLevelIds, hasLength(175));
+    final progression = await ProgressionRepository.load();
+    expect(progression.completedChapters, hasLength(35));
+    expect(progression.goldenChapters, isEmpty);
+    for (var world = 1; world <= Worlds.finalWorld; world++) {
+      expect(Worlds.isUnlocked(world, progression.completedChapters), isTrue);
+    }
+
+    await openHomeJourney(tester);
+    expect(find.text('175 / 175 스테이지'), findsOneWidget);
+    expect(find.text('별 175 / 525'), findsOneWidget);
+    await openHomeJourney(tester, tab: 'constellations');
+    expect(find.text('별자리 복원 35 / 35'), findsOneWidget);
+    await closeReleaseApp(tester);
+  });
+
+  test(
+    'one-star preview preserves stars earned after the first launch',
+    () async {
+      expect(await seedOneStarPreview(), isTrue);
+      final level = _levels().first;
+      final progress = await ProgressRepository.load();
+      await progress.recordCompletion(
+        levelId: level.id,
+        revision: level.revision,
+        moves: level.minimumMoves,
+        minimumMoves: level.minimumMoves,
+      );
+      expect(await seedOneStarPreview(), isFalse);
+      expect(
+        (await ProgressRepository.load())
+            .forLevel(level.id, revision: level.revision)
+            ?.bestStars,
+        3,
+      );
+    },
+  );
 
   test(
     'existing and legacy saves are preserved without injecting test data',
