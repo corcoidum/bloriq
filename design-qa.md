@@ -1,3 +1,18 @@
+# 달빛의 각인 디자인 QA
+
+**final result: passed**
+
+첫 번째 시안의 달빛 숲, 황동 테두리, 청록색 각인을 기준으로 360×740 Flutter 캡처를 확인했다. 보드는 실제 echo 샘플 9006번의 5×4 배치이며, 헤더의 여정·도움말·설정과 하단의 기믹 안내는 실제 플레이에 필요한 위치에 둔다.
+
+- [홈](docs/screenshots/moonlight-imprint/home.png) · [여정](docs/screenshots/moonlight-imprint/journey.png) · [결과](docs/screenshots/moonlight-imprint/result.png)
+- [문이 닫힌 상태](docs/screenshots/moonlight-imprint/gate-closed.png) → [달 수정에서 문으로 전달되는 빛](docs/screenshots/moonlight-imprint/gate-signal.png) → [문이 열린 상태](docs/screenshots/moonlight-imprint/gate-open.png)
+- 이동 중에 안내 두 줄이 겹치던 부분을 수정해 현재 문구 한 줄만 표시한다. 실제 이동 뒤에 문 열림, 고정된 보드 위치, 되돌리기와 클리어를 확인했다.
+- 내장 ImageGen으로 숲 배경을 별도 제작했다. 첫 번째 시안의 초승달과 작은 마을 불빛을 오른쪽에, 숲과 들꽃을 바깥쪽에 배치하고 보드가 놓이는 중앙은 어둡게 비워 달라는 프롬프트를 사용했다. [배경 에셋](assets/art/moon_garden/moonlight_forest.png)
+
+이 검증은 Flutter 위젯 테스트에서 렌더링한 화면을 대상으로 했다. Android 실기기의 화면과 프레임 성능은 별도 확인이 필요하다.
+
+---
+
 최신 전체 시즌 검증: [달빛 석판 시즌 1 QA](docs/MOONSTONE_SEASON1_QA.md).
 
 최신 첫 챕터 검증은 [THE LAST ECHO 디자인 QA](docs/LAST_ECHO_DESIGN_QA.md)에 있습니다. 아래는 이전 2번 시안 적용 기록입니다.

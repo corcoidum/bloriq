@@ -568,37 +568,25 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     );
     return Scaffold(
       key: const ValueKey('home-screen'),
-      body: sky != null
-          ? DecoratedBox(
-              key: const ValueKey('home-sky'),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  stops: const [0, .4, .78],
-                  colors: sky,
-                ),
-              ),
-              child: content,
-            )
-          : ArcadeBackdrop(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    stops: const [0, .46, .82, 1],
-                    colors: [
-                      colors.background.withValues(alpha: .30),
-                      colors.background.withValues(alpha: .15),
-                      colors.background.withValues(alpha: .96),
-                      colors.background,
-                    ],
-                  ),
-                ),
-                child: content,
-              ),
+      body: ArcadeBackdrop(
+        child: DecoratedBox(
+          key: sky == null ? null : const ValueKey('home-sky'),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              stops: const [0, .46, .78, 1],
+              colors: [
+                (sky?.first ?? colors.background).withValues(alpha: .16),
+                (sky?[1] ?? colors.background).withValues(alpha: .32),
+                colors.background.withValues(alpha: .80),
+                colors.background,
+              ],
             ),
+          ),
+          child: content,
+        ),
+      ),
     );
   }
 

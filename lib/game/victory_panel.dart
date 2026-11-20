@@ -44,7 +44,7 @@ class VictoryPanel extends StatelessWidget {
     final t = AppLocalizations.of(context)!;
     final colors = GameTheme.colorsOf(context);
     final panel = reduceMotion ? 1.0 : ((progress - .78) / .22).clamp(0.0, 1.0);
-    // 리크가 별문에 들어간 뒤 카드가 가운데에서 튀어 오르듯 나타난다.
+    // 별문이 밝아진 뒤 결과가 빛 속에서 떠오른다.
     final appear = reduceMotion ? 1.0 : ((progress - .26) / .2).clamp(0.0, 1.0);
     final card = Container(
       width: double.infinity,
@@ -79,10 +79,8 @@ class VictoryPanel extends StatelessWidget {
     );
     return Opacity(
       opacity: appear,
-      child: Transform.scale(
-        scale: reduceMotion
-            ? 1
-            : .82 + .18 * Curves.easeOutBack.transform(appear),
+      child: Transform.translate(
+        offset: Offset(0, 12 * (1 - Curves.easeOutCubic.transform(appear))),
         child: card,
       ),
     );
@@ -104,7 +102,7 @@ class VictoryPanel extends StatelessWidget {
             heading ?? t.complete,
             textAlign: TextAlign.center,
             style: GameTypography.reward.copyWith(
-              color: colors.goalInk,
+              color: colors.rewardInk,
               fontSize: 28,
             ),
           ),

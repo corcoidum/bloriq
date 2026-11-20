@@ -134,81 +134,92 @@ class _JourneyPanelState extends State<JourneyPanel>
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(22),
-        side: BorderSide(color: colors.outline.withValues(alpha: .4)),
+        side: BorderSide(color: colors.rewardInk.withValues(alpha: .42)),
       ),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520),
         child: SizedBox(
           width: size.width,
           height: size.height,
-          child: Column(
-            children: [
-              SizedBox(
-                height: 52,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 52),
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(t.journey, style: GameTypography.brand),
+          child: ArcadeBackdrop(
+            veil: .89,
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 52,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 52),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            t.journey,
+                            style: GameTypography.brand.copyWith(
+                              color: colors.rewardInk,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                    Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: IconButton(
-                        key: const ValueKey('journey-close'),
-                        tooltip: t.close,
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close_rounded),
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: IconButton(
+                          key: const ValueKey('journey-close'),
+                          tooltip: t.close,
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.close_rounded),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              TabBar(
-                controller: _tabs,
-                labelStyle: GameTypography.label.copyWith(fontSize: 16),
-                labelPadding: const EdgeInsets.symmetric(horizontal: 6),
-                tabs: [
-                  tab(JourneyTab.status, t.journeyStatus),
-                  tab(JourneyTab.constellations, t.journeyConstellations),
-                  tab(
-                    JourneyTab.spirits,
-                    AbilitySpiritText.tab.resolve(t.localeName),
+                    ],
                   ),
-                ],
-              ),
-              Expanded(
-                child: TabBarView(
+                ),
+                TabBar(
                   controller: _tabs,
-                  // 별하늘을 좌우로 움직여야 하므로 탭은 눌러서만 바꾼다.
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    _StatusTab(
-                      session: widget.session,
-                      focusWorld: _world,
-                      playing: widget.initialLevelId != null,
-                      onChooseWorld: widget.allowStageSelection
-                          ? _chooseWorld
-                          : null,
+                  indicatorColor: colors.rewardInk,
+                  labelColor: colors.rewardInk,
+                  unselectedLabelColor: colors.secondaryText,
+                  labelStyle: GameTypography.label.copyWith(fontSize: 16),
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+                  tabs: [
+                    tab(JourneyTab.status, t.journeyStatus),
+                    tab(JourneyTab.constellations, t.journeyConstellations),
+                    tab(
+                      JourneyTab.spirits,
+                      AbilitySpiritText.tab.resolve(t.localeName),
                     ),
-                    JourneyConstellations(
-                      session: widget.session,
-                      initialWorld: _world,
-                      initialLevelId: _levelId,
-                      onPlay: onPlay,
-                      reduceMotion: prefersReducedMotion(
-                        context,
-                        widget.settings,
-                      ),
-                    ),
-                    AbilitySpiritsTab(session: widget.session),
                   ],
                 ),
-              ),
-            ],
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabs,
+                    // 별하늘을 좌우로 움직여야 하므로 탭은 눌러서만 바꾼다.
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      _StatusTab(
+                        session: widget.session,
+                        focusWorld: _world,
+                        playing: widget.initialLevelId != null,
+                        onChooseWorld: widget.allowStageSelection
+                            ? _chooseWorld
+                            : null,
+                      ),
+                      JourneyConstellations(
+                        session: widget.session,
+                        initialWorld: _world,
+                        initialLevelId: _levelId,
+                        onPlay: onPlay,
+                        reduceMotion: prefersReducedMotion(
+                          context,
+                          widget.settings,
+                        ),
+                      ),
+                      AbilitySpiritsTab(session: widget.session),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

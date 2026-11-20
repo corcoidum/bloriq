@@ -8,8 +8,85 @@ import '../design/star_art.dart';
 import '../design/board_material.dart';
 import 'board_geometry.dart';
 
+enum EchoImprintStyle { moonlight, ink, constellation }
+
 /// 게임판과 시작 연출이 같은 블록의 소재감과 기호를 사용한다.
 abstract final class BlockArt {
+  /// 바닥에 새겨진 echo. 실제 룬석과 달리 채워진 면이나 그림자를 갖지 않는다.
+  static void echoImprint(
+    Canvas canvas,
+    Offset at,
+    double cell,
+    GameColors colors, {
+    double reveal = 1,
+    double opacity = 1,
+    double pulse = 0,
+    EchoImprintStyle style = EchoImprintStyle.moonlight,
+  }) {
+    final shape = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: at, width: cell * .82, height: cell * .82),
+      Radius.circular(cell * .15),
+    );
+    final ink = colors.echoInk;
+    final paint = Paint()
+      ..color = colors.echo.withValues(alpha: (.10 + pulse * .15) * opacity);
+    canvas.drawRRect(shape, paint);
+    paint
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(1.3, cell * .023)
+      ..color = ink.withValues(alpha: opacity * (.70 + pulse * .3));
+    canvas.drawRRect(shape, paint);
+    paint
+      ..strokeWidth = math.max(1.6, cell * .036)
+      ..strokeCap = StrokeCap.round;
+    final ring = Rect.fromCircle(center: at, radius: cell * .20);
+    if (style == EchoImprintStyle.ink) {
+      // 서고의 echo에는 판화처럼 작은 끊김을 남긴다.
+      for (var i = 0; i < 4; i++) {
+        final sweep = (reveal * 4 - i).clamp(0.0, 1.0) * math.pi * .44;
+        canvas.drawArc(ring, (i - 1) * math.pi / 2, sweep, false, paint);
+      }
+    } else {
+      canvas.drawArc(ring, -math.pi / 2, 2 * math.pi * reveal, false, paint);
+    }
+    if (style == EchoImprintStyle.constellation) {
+      paint.style = PaintingStyle.fill;
+      for (final corner in const [
+        Offset(-1, -1),
+        Offset(1, -1),
+        Offset(1, 1),
+        Offset(-1, 1),
+      ]) {
+        canvas.drawCircle(
+          at + corner * cell * .30,
+          cell * .035 * reveal,
+          paint,
+        );
+      }
+    }
+  }
+
+  /// 민들레 칸을 떠날 때 문양이 생길 자리에서 빛이 흩어진다.
+  static void scatterEcho(
+    Canvas canvas,
+    Offset at,
+    double cell,
+    GameColors colors,
+    double progress,
+  ) {
+    final paint = Paint()
+      ..color = colors.echoInk.withValues(alpha: .72 * (1 - progress));
+    for (var i = 0; i < 6; i++) {
+      final angle = i * math.pi / 3;
+      final drift = cell * (.11 + progress * .24);
+      canvas.drawCircle(
+        at + Offset(math.cos(angle), math.sin(angle)) * drift,
+        cell * .025,
+        paint,
+      );
+    }
+  }
+
   static void block(
     Canvas canvas,
     Offset at,

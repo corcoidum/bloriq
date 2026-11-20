@@ -45,13 +45,12 @@ class BoardMaterial {
                   Color.lerp(palette.border, palette.board, .45)!,
                 ]
               : dark
-              ? const [Color(0xff283b4e), Color(0xff172635)]
-              : const [Color(0xffa2b4c4), Color(0xff667d93)],
+              ? const [Color(0xffb89b67), Color(0xff634f38)]
+              : const [Color(0xffd8ba83), Color(0xff987b57)],
         ).createShader(rim.outerRect),
     );
     final reflection =
-        palette?.accent ??
-        (dark ? const Color(0xff678094) : const Color(0xffe0e9f1));
+        palette?.accent ?? (dark ? colors.reward : const Color(0xffffedc7));
     canvas.drawRRect(
       rim.deflate(.5),
       Paint()
@@ -114,7 +113,7 @@ class BoardMaterial {
       final useWood = wood != null;
       if (useGarden) {
         paint.colorFilter = ColorFilter.mode(
-          dark ? const Color(0xffa9b8d6) : const Color(0xfff4f1ea),
+          dark ? const Color(0xff8094a6) : const Color(0xfff4f1ea),
           BlendMode.modulate,
         );
         canvas.drawRRect(

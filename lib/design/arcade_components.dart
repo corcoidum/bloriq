@@ -72,37 +72,39 @@ class GameWordmark extends StatelessWidget {
 }
 
 class ArcadeBackdrop extends StatelessWidget {
-  const ArcadeBackdrop({super.key, required this.child, this.background});
+  const ArcadeBackdrop({
+    super.key,
+    required this.child,
+    this.background,
+    this.veil,
+  });
   final Widget child;
   final Color? background;
+  final double? veil;
 
   @override
   Widget build(BuildContext context) {
-    if (background case final color?) {
-      return ColoredBox(color: color, child: child);
-    }
     final colors = GameTheme.colorsOf(context);
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final base = dark ? background ?? colors.background : colors.background;
+    final opacity = veil ?? (dark ? (background == null ? .14 : .62) : .92);
     return Stack(
       fit: StackFit.expand,
       children: [
-        ColoredBox(color: colors.background),
+        ColoredBox(color: base),
         Positioned.fill(
           child: ExcludeSemantics(
             child: Image.asset(
-              StarArt.forest,
+              StarArt.moonlightForest,
               fit: BoxFit.cover,
               alignment: Alignment.topCenter,
-              cacheWidth: 1080,
-              color: dark
-                  ? Colors.white
-                  : colors.background.withValues(alpha: .92),
-              colorBlendMode: dark ? BlendMode.modulate : BlendMode.srcOver,
+              cacheWidth: 900,
+              errorBuilder: (_, _, _) => const SizedBox.shrink(),
             ),
           ),
         ),
         Positioned.fill(
-          child: ColoredBox(color: colors.background.withValues(alpha: .08)),
+          child: ColoredBox(color: base.withValues(alpha: opacity)),
         ),
         child,
       ],

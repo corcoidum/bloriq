@@ -89,9 +89,19 @@ void main() {
     );
     await waitForHome(tester);
     final backdrop = find.byType(ArcadeBackdrop);
-    // 홈은 지금 있는 세계의 하늘색을 쓰고, 세계 지도는 기본 배경을 쓴다.
-    expect(backdrop, findsNothing);
-    expect(find.byKey(const ValueKey('home-sky')), findsOneWidget);
+    // 홈은 달빛 숲 위에 현재 세계의 하늘색을 입힌다.
+    expect(backdrop, findsOneWidget);
+    final sky = find.descendant(
+      of: backdrop,
+      matching: find.byKey(const ValueKey('home-sky')),
+    );
+    final decoration =
+        tester.widget<DecoratedBox>(sky).decoration as BoxDecoration;
+    final skyGradient = decoration.gradient! as LinearGradient;
+    expect(
+      skyGradient.colors[1],
+      const Color(0xff263b58).withValues(alpha: .32),
+    );
 
     await openHomeJourney(tester);
     await tapVisible(tester, find.byKey(const ValueKey('journey-world-2')));

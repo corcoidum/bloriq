@@ -76,13 +76,13 @@ class GameColors {
   );
 
   static const dark = GameColors(
-    background: Color(0xFF101C38),
-    surface: Color(0xFF1B2947),
+    background: Color(0xFF0D172C),
+    surface: Color(0xFF1B2639),
     boardSurface: Color(0xFF141F3B),
     tileTop: Color(0xFF223254),
     tileBottom: Color(0xFF1D2B4B),
     primary: Color(0xFFA9B6EF),
-    echo: Color(0xFFC2AAFF),
+    echo: Color(0xFF79D6E4),
     goal: Color(0xFF99E0BF),
     reward: Color(0xFFF3D18B),
     text: Color(0xFFFFF1D3),
@@ -91,10 +91,10 @@ class GameColors {
     cyan: Color(0xFF91D7E2),
     error: Color(0xFFFFADB8),
     primaryInk: Color(0xFFA9B6EF),
-    echoInk: Color(0xFFC2AAFF),
+    echoInk: Color(0xFF9EE8F0),
     goalInk: Color(0xFF99E0BF),
     rewardInk: Color(0xFFF3D18B),
-    outline: Color(0xFF6B79BB),
+    outline: Color(0xFF727E99),
     highlight: Color(0xFFFFF1D3),
     blockSymbol: Color(0xFF101C38),
   );

@@ -13,6 +13,7 @@ import 'board_material.dart';
 /// 한 번 디코딩한 작은 스프라이트를 Flutter 연출과 Flame이 공유한다.
 abstract final class StarArt {
   static const forest = 'assets/art/star_courier/night_forest.png';
+  static const moonlightForest = 'assets/art/moon_garden/moonlight_forest.png';
   static const courier = 'assets/art/star_courier/courier.png';
   static const restingCourier = 'assets/art/star_courier/courier_rest.png';
   static const portal = 'assets/art/star_courier/star_portal.png';

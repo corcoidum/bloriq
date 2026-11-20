@@ -44,12 +44,16 @@ void main() {
           expect(alpha(image.width - 1, image.height - 1), 0);
           final edgeX = g.framedBoardRect.center.dx.floor();
           final boardTop = g.framedBoardRect.top.floor();
-          final slatePixel = (image.width * (boardTop - 4) + edgeX) * 4;
+          final brassPixel = (image.width * (boardTop - 4) + edgeX) * 4;
           expect(alpha(edgeX, boardTop - 4), 255);
           expect(alpha(edgeX, boardTop - 16), 0);
           expect(
-            data.getUint8(slatePixel + 2),
-            greaterThan(data.getUint8(slatePixel)),
+            data.getUint8(brassPixel),
+            greaterThan(data.getUint8(brassPixel + 1)),
+          );
+          expect(
+            data.getUint8(brassPixel + 1),
+            greaterThan(data.getUint8(brassPixel + 2)),
           );
           final center =
               g.center(const Position(0, 0)) +

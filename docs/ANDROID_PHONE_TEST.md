@@ -144,3 +144,14 @@ flutter build apk --release \
   --dart-define=BUILD_TAG=one-star-preview-20261119 \
   --build-number=13
 ```
+
+## 달빛의 각인 디자인 테스트 APK
+
+빌드 14는 빌드 13과 같은 **BLORIQ 1-Star Test** 앱의 업데이트다. 새로 설치하면 캠페인 175판이 별 1개씩 열린다. 기존 테스터 앱을 업데이트하면 기기에 저장한 진행 기록으로 시작한다. 모션 확인은 **플레이 모드 → echo 샘플 판 → 샘플 6**에서 할 수 있다.
+
+```bash
+flutter build apk --release \
+  --target lib/dev/one_star_main.dart \
+  --dart-define=BUILD_TAG=moonlight-imprint-20261120 \
+  --build-number=14
+```

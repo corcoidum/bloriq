@@ -2007,7 +2007,7 @@ class _GameScreenState extends State<GameScreen>
                         widget.play.mode == PlayMode.campaign &&
                         _tutorial == null;
                     final labelStyle = TextStyle(
-                      color: colors.echoInk,
+                      color: colors.rewardInk,
                       fontSize: 15,
                       decoration: canPickLevel
                           ? TextDecoration.underline
@@ -2060,7 +2060,7 @@ class _GameScreenState extends State<GameScreen>
                               trialLimit,
                             )
                           : t.moves(controller.state.moves),
-                      color: colors.echoInk,
+                      color: colors.primaryInk,
                     );
                     final starlight =
                         _tutorial == null &&
@@ -2346,19 +2346,9 @@ class _GameScreenState extends State<GameScreen>
                                           _reduceMotion || _tutorial != null
                                           ? Duration.zero
                                           : GameEffects.panelDuration,
-                                      layoutBuilder: (current, previous) =>
-                                          Stack(
-                                            alignment: Alignment.topCenter,
-                                            children: [
-                                              for (final child in previous)
-                                                IgnorePointer(
-                                                  child: ExcludeSemantics(
-                                                    child: child,
-                                                  ),
-                                                ),
-                                              ?current,
-                                            ],
-                                          ),
+                                      // 문이 열리는 순간에도 두 안내 문구가 겹치지 않는다.
+                                      layoutBuilder: (current, _) =>
+                                          current ?? const SizedBox.shrink(),
                                       child: Column(
                                         key: ValueKey(hint),
                                         mainAxisSize: MainAxisSize.min,

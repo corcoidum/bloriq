@@ -2,13 +2,17 @@ import 'dart:io';
 
 import 'package:bloriq/dev/echo_samples.dart';
 import 'package:bloriq/domain/puzzle.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/saga_seed.dart';
 import 'support/start_game.dart';
 import 'support/world_release.dart';
 
+const _captureImprint = bool.fromEnvironment('CAPTURE_IMPRINT');
+
 void main() {
+  setUp(rootBundle.clear);
   final samples = parseEchoSamples(
     File('assets/levels/echo_samples_v1.json').readAsStringSync(),
   );
@@ -65,6 +69,81 @@ void main() {
     await waitForReleaseWidget(tester, releaseKey('echo-sample-1'));
     final minimum = samples.first.minimumMoves;
     expect(find.text('내 기록 $minimum수 · 최소 $minimum수'), findsOneWidget);
+    await closeReleaseApp(tester);
+  });
+
+  testWidgets('the moonlight board shows the real gate turn and undo', (
+    tester,
+  ) async {
+    seedSaga(throughWorld: 0);
+    final boundary = await openReleaseApp(
+      tester,
+      captureArt: _captureImprint,
+      reduceMotion: false,
+    );
+    Future<void> capture(String name) async {
+      if (_captureImprint) {
+        await captureReleaseScreen(
+          tester,
+          boundary,
+          'docs/screenshots/moonlight-imprint/$name.png',
+        );
+      }
+    }
+
+    await tester.pump(const Duration(milliseconds: 500));
+    await capture('home');
+    await openHomeJourney(tester);
+    await capture('journey');
+    await tapVisible(tester, releaseKey('journey-close'));
+    await tapVisible(tester, releaseKey('home-play-modes'));
+    await tapVisible(tester, releaseKey('home-echo-samples'));
+    final sample = releaseKey('echo-sample-6');
+    await tester.scrollUntilVisible(sample, 140);
+    await tapVisible(tester, sample);
+    await waitForReleaseWidget(tester, releaseBoard);
+    await tester.pump(const Duration(milliseconds: 450));
+    final game = releaseGame(tester);
+    final level = game.controller.state.level;
+    final rect = tester.getRect(releaseBoard);
+    expect(level.id, 9006);
+
+    Future<void> play(PuzzleMove move) async {
+      final from = game.controller.state.positionOf(move.blockId)!;
+      final offset = Offset(
+        (move.target.x - from.x).toDouble(),
+        (move.target.y - from.y).toDouble(),
+      );
+      await tester.dragFrom(
+        rect.topLeft + game.geometry.center(from),
+        offset * game.geometry.cellSize * .74,
+      );
+      await tester.pump();
+    }
+
+    for (final move in level.solution.take(5)) {
+      await play(move);
+      await tester.pump(const Duration(milliseconds: 240));
+    }
+    expect(game.controller.state.isGateOpen, isFalse);
+    await capture('gate-closed');
+    await play(level.solution[5]);
+    expect(game.controller.state.isGateOpen, isTrue);
+    expect(game.controller.state.echo, level.echoSwitch);
+    await tester.pump(const Duration(milliseconds: 100));
+    await capture('gate-signal');
+    await tester.pump(const Duration(milliseconds: 140));
+    await capture('gate-open');
+    expect(tester.getRect(releaseBoard), rect);
+    await tapVisible(tester, find.text('되돌리기'));
+    expect(game.controller.state.isGateOpen, isFalse);
+    for (final move in level.solution.skip(5)) {
+      await play(move);
+      await tester.pump(const Duration(milliseconds: 240));
+    }
+    expect(game.controller.state.isComplete, isTrue);
+    await tester.pump(const Duration(seconds: 2));
+    await capture('result');
     await closeReleaseApp(tester);
   });
 }

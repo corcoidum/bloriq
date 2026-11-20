@@ -162,7 +162,7 @@ class BloriqGame extends FlameGame {
   Position? tutorialTarget;
   String? _movingId;
   Position? _from;
-  Position? _oldEcho;
+  MoveRecord? _echoMove;
   double _motion = 1;
   _BlockTravel _travel = const _BlockTravel();
   static const _twinDelay = .1;
@@ -251,8 +251,6 @@ class BloriqGame extends FlameGame {
   };
 
   /// 덩굴 문이 열린 정도(0~1). 도메인의 문 상태를 따라 부드럽게 움직인다.
-  double _gateOpen = 0;
-  bool _gateTarget = false;
   String? _dragId;
   Offset _dragOffset = Offset.zero;
   PuzzlePower? _dragPower;
@@ -399,7 +397,7 @@ class BloriqGame extends FlameGame {
     _motion = 1;
     _movingId = null;
     _from = null;
-    _oldEcho = null;
+    _echoMove = null;
     _syncClockPhase();
     final callback = _onReplayFinished;
     _onReplayFinished = null;
@@ -426,7 +424,7 @@ class BloriqGame extends FlameGame {
     hintMove = null;
     _movingId = move.blockId;
     _from = move.from;
-    _oldEcho = move.previousEcho;
+    _echoMove = move;
     _motion = _reduceMotion ? 1 : 0;
     _travel = _BlockTravel.primary(move);
     if (_clockPhase != null) {
@@ -482,6 +480,7 @@ class BloriqGame extends FlameGame {
 
   void clearEffects() {
     _movingId = null;
+    _echoMove = null;
     _dragId = null;
     _glowTime = 0;
     _motion = 1;
@@ -551,10 +550,6 @@ class BloriqGame extends FlameGame {
     _impactTime = math.max(0.0, _impactTime - dt);
     _glowTime = math.max(0.0, _glowTime - dt);
     _shakeTime = math.max(0.0, _shakeTime - dt);
-    final gateGoal = _gateTarget ? 1.0 : 0.0;
-    _gateOpen = _reduceMotion
-        ? gateGoal
-        : _gateOpen + (gateGoal - _gateOpen).clamp(-dt / .35, dt / .35);
     if (!_reduceMotion) _hintTime += dt;
   }
 
@@ -575,7 +570,7 @@ class BloriqGame extends FlameGame {
       state = move.after;
       _movingId = move.blockId;
       _from = move.from;
-      _oldEcho = move.previousEcho;
+      _echoMove = move;
       travel = _BlockTravel.primary(move);
       final secondsPerMove = _replayDuration / _replay!.length;
       final elapsed = fraction * secondsPerMove;
@@ -612,17 +607,8 @@ class BloriqGame extends FlameGame {
     final mirror = state.level.mechanic<MirrorPair>(MirrorPair.typeId);
     final mirrorTexture = _skin?.mechanicArt[MirrorPair.typeId];
 
-    // 착지 순간 보드 전체가 이동 방향으로 살짝 밀렸다가 돌아온다.
+    // 타일 격자는 고정하고 착지 효과는 움직인 말에만 적용한다.
     canvas.save();
-    if (_impactTime > 0) {
-      final p = 1 - _impactTime / _impactDuration;
-      if (p < .4) {
-        canvas.translate(
-          _impactDirection.dx * cell * .03 * math.sin(p / .4 * math.pi),
-          _impactDirection.dy * cell * .03 * math.sin(p / .4 * math.pi),
-        );
-      }
-    }
 
     final material = BoardMaterial(_colors, skin: _skin);
     final palette = _skin?.palette;
@@ -640,7 +626,6 @@ class BloriqGame extends FlameGame {
       shelfFrame: shelfFrame,
       twinShelfFrame: twinShelfFrame,
     );
-    _gateTarget = state.isGateOpen;
     _drawMechanics(mechanicCanvas, badges: false);
     for (final p in state.level.obstacles) {
       final variant = p.x * 7 + p.y * 3;
@@ -679,18 +664,7 @@ class BloriqGame extends FlameGame {
     }
     BlockArt.exit(canvas, exit, cell, _colors);
 
-    void drawEcho(Position p, double alpha) =>
-        BlockArt.echo(canvas, center(p), cell, _colors, opacity: alpha);
-
-    if (_oldEcho != null && _motion < 1 && _oldEcho != state.echo) {
-      drawEcho(_oldEcho!, 1 - _motion);
-    }
-    if (state.echo != null) {
-      drawEcho(state.echo!, _motion < 1 ? .5 + .5 * _motion : 1);
-    }
-    if (previewState?.echo != null && previewState!.echo != state.echo) {
-      drawEcho(previewState.echo!, .5);
-    }
+    _drawEchoImprints(canvas, state, previewState, layout);
     if (preview case DragPreview(:final from, :final target, slides: true)) {
       IceArt.trajectory(
         canvas,
@@ -1159,6 +1133,78 @@ class BloriqGame extends FlameGame {
     }
   }
 
+  double _movePhase(double start, double end) => Curves.easeOutCubic.transform(
+    ((_motion - start) / (end - start)).clamp(0.0, 1.0),
+  );
+
+  void _drawEchoImprints(
+    Canvas canvas,
+    PuzzleState state,
+    PuzzleState? preview,
+    BoardGeometry layout,
+  ) {
+    final move = _echoMove;
+    final animating = !_reduceMotion && _motion < 1 && move != null;
+    final oldEcho = move?.previousEcho;
+    final echo = state.echo;
+    final cell = layout.cellSize;
+    final style = switch (state.level.world) {
+      6 => EchoImprintStyle.ink,
+      7 => EchoImprintStyle.constellation,
+      _ => EchoImprintStyle.moonlight,
+    };
+    if (animating && oldEcho != null && oldEcho != echo) {
+      final fade = 1 - _movePhase(0, .52);
+      BlockArt.echoImprint(
+        canvas,
+        layout.center(oldEcho),
+        cell,
+        _colors,
+        opacity: fade,
+        reveal: fade,
+        style: style,
+      );
+    }
+    if (echo != null) {
+      final isNew = animating && oldEcho != echo;
+      final reveal = isNew ? _movePhase(.13, .58) : 1.0;
+      BlockArt.echoImprint(
+        canvas,
+        layout.center(echo),
+        cell,
+        _colors,
+        reveal: reveal,
+        opacity: isNew ? .25 + .75 * reveal : 1,
+        pulse: isNew ? reveal * (1 - _movePhase(.49, 1)) : 0,
+        style: style,
+      );
+    } else if (animating &&
+        state.level
+                .mechanic<EchoEraser>(EchoEraser.typeId)
+                ?.cells
+                .contains(move.from) ==
+            true) {
+      BlockArt.scatterEcho(
+        canvas,
+        layout.center(move.from),
+        cell,
+        _colors,
+        _movePhase(.14, .94),
+      );
+    }
+    if (preview?.echo case final next? when next != echo) {
+      BlockArt.echoImprint(
+        canvas,
+        layout.center(next),
+        cell,
+        _colors,
+        opacity: .40,
+        reveal: .65,
+        style: style,
+      );
+    }
+  }
+
   void _drawGateMechanic(
     _MechanicCanvas board,
     EchoGate mechanic,
@@ -1200,13 +1246,32 @@ class BloriqGame extends FlameGame {
       return;
     }
 
-    _drawVineLink(canvas, center(switchPosition), center(gatePosition), cell);
+    final open = mechanic.isOpen(state.echo);
+    final move = _echoMove;
+    final animating = !_reduceMotion && _motion < 1 && move != null;
+    final wasOpen = animating ? mechanic.isOpen(move.previousEcho) : open;
+    final opening = open && !wasOpen;
+    final closing = !open && wasOpen;
+    final gateReveal = opening
+        ? _movePhase(.43, 1)
+        : closing
+        ? 1 - _movePhase(.05, .70)
+        : (open ? 1.0 : 0.0);
+    final switchLight = opening ? _movePhase(.16, .48) : gateReveal;
+    _drawVineLink(
+      canvas,
+      center(switchPosition),
+      center(gatePosition),
+      cell,
+      glow: gateReveal,
+      signal: opening ? _movePhase(.27, .65) : null,
+    );
     if (!BlockArt.switchPlate(
       canvas,
       center(switchPosition),
       cell,
       _colors,
-      glow: _gateOpen,
+      glow: switchLight,
     )) {
       final switchCenter = center(switchPosition);
       final plateRect = Rect.fromCenter(
@@ -1240,7 +1305,7 @@ class BloriqGame extends FlameGame {
       center(gatePosition),
       cell,
       _colors,
-      open: _gateOpen,
+      open: gateReveal,
     )) {
       final gateCenter = center(gatePosition);
       final gateRect = Rect.fromCenter(
@@ -1256,7 +1321,7 @@ class BloriqGame extends FlameGame {
       canvas.drawRRect(
         gate,
         paint
-          ..color = gateColor.withValues(alpha: state.isGateOpen ? .10 : .18)
+          ..color = gateColor.withValues(alpha: .18 - .08 * gateReveal)
           ..style = PaintingStyle.fill,
       );
       canvas.drawRRect(
@@ -1267,7 +1332,7 @@ class BloriqGame extends FlameGame {
           ..strokeWidth = math.max(2.5, cell * .035),
       );
       // Closed gates have visible bars. An open gate is an unobstructed frame.
-      if (!state.isGateOpen) {
+      if (gateReveal < .55) {
         paint
           ..strokeWidth = math.max(2.0, cell * .035)
           ..strokeCap = StrokeCap.round;
@@ -1338,8 +1403,15 @@ class BloriqGame extends FlameGame {
     );
   }
 
-  /// 스위치와 문을 잇는 희미한 덩굴 빛줄기. 열리면 빛이 문 쪽으로 흐른다.
-  void _drawVineLink(Canvas canvas, Offset from, Offset to, double cell) {
+  /// 문이 열리는 수에만 스위치에서 문으로 빛이 한 번 움직인다.
+  void _drawVineLink(
+    Canvas canvas,
+    Offset from,
+    Offset to,
+    double cell, {
+    required double glow,
+    double? signal,
+  }) {
     final bend = Offset(-(to - from).dy, (to - from).dx) * .18;
     final control = Offset.lerp(from, to, .5)! + bend;
     final path = Path()
@@ -1356,24 +1428,18 @@ class BloriqGame extends FlameGame {
     canvas.drawPath(
       path,
       Paint()
-        ..color = _colors.cyan.withValues(alpha: .18 + .42 * _gateOpen)
+        ..color = _colors.cyan.withValues(alpha: .12 + .22 * glow)
         ..style = PaintingStyle.stroke
         ..strokeWidth = math.max(1.2, cell * .018)
         ..strokeCap = StrokeCap.round,
     );
-    if (_gateOpen > 0 && !_reduceMotion) {
-      final metric = path.computeMetrics().first;
-      for (var i = 0; i < 3; i++) {
-        final t = (_hintTime * .6 + i / 3) % 1;
-        final spot = metric.getTangentForOffset(metric.length * t)!.position;
-        canvas.drawCircle(
-          spot,
-          cell * .045,
-          Paint()
-            ..color = _colors.cyan.withValues(
-              alpha: .8 * _gateOpen * math.sin(t * math.pi),
-            ),
-        );
+    if (signal != null && signal > 0 && signal < 1) {
+      final metric = path.computeMetrics().firstOrNull;
+      final spot = metric
+          ?.getTangentForOffset(metric.length * signal)
+          ?.position;
+      if (spot != null) {
+        canvas.drawCircle(spot, cell * .055, Paint()..color = _colors.echoInk);
       }
     }
   }

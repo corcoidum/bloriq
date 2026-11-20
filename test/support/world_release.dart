@@ -218,6 +218,10 @@ Future<void> _loadArt(BuildContext context) async {
   await StarArt.load();
   await Future.wait([
     precacheImage(
+      const ResizeImage(AssetImage(StarArt.moonlightForest), width: 900),
+      context,
+    ),
+    precacheImage(
       const ResizeImage(AssetImage(StarArt.forest), width: 1080),
       context,
     ),
